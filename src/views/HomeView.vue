@@ -6,6 +6,18 @@
           <h1 class="text-2xl font-bold text-gray-900">MethodMate</h1>
           <div class="flex items-center space-x-4">
             <button
+              @click="router.push('/scholar-search')"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              文献搜索
+            </button>
+            <button
+              @click="router.push('/recommendations')"
+              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              智能推荐
+            </button>
+            <button
               class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
               新建方案
@@ -20,6 +32,45 @@
         </div>
       </div>
     </header>
+
+    <!-- 添加功能快捷入口 -->
+    <div class="bg-white border-b">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 cursor-pointer transition-colors"
+               @click="router.push('/scholar-search')">
+            <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <div>
+              <h3 class="font-semibold text-gray-900">文献搜索</h3>
+              <p class="text-sm text-gray-600">在 Google Scholar 上搜索学术文献</p>
+            </div>
+          </div>
+          
+          <div class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 cursor-pointer transition-colors"
+               @click="router.push('/recommendations')">
+            <svg class="w-8 h-8 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+            <div>
+              <h3 class="font-semibold text-gray-900">智能推荐</h3>
+              <p class="text-sm text-gray-600">基于种子论文获取相关文献推荐</p>
+            </div>
+          </div>
+          
+          <div class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 cursor-pointer transition-colors">
+            <svg class="w-8 h-8 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+            <div>
+              <h3 class="font-semibold text-gray-900">研究方案</h3>
+              <p class="text-sm text-gray-600">生成和管理研究计划</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -63,7 +114,7 @@
       </div>
 
       <!-- 聊天框 -->
-      <div class="h-[calc(100vh-24rem)]">
+      <div class="h-[calc(100vh-32rem)]">
         <ChatBox />
       </div>
     </main>

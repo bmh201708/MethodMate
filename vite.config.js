@@ -10,8 +10,15 @@ export default defineConfig({
     }
   },
   server: {
-    port: 3000
-    // 暂时移除API代理，因为我们使用Vercel Edge Functions
-    // 在部署到Vercel后，API会自动可用
+    port: 3000,
+    // API代理配置：将API请求转发到本地Express服务器
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path
+      }
+    }
   }
 })

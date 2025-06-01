@@ -230,6 +230,7 @@ export default {
       this.lastSearchQuery = this.searchQuery
 
       try {
+        // 使用相对路径，代理会自动转发到Vercel
         const response = await fetch('/api/scholar-search', {
           method: 'POST',
           headers: {
@@ -269,6 +270,7 @@ export default {
       paper.downloadMessage = ''
 
       try {
+        // 使用相对路径，代理会自动转发到Vercel
         const response = await fetch('/api/paper-download', {
           method: 'POST',
           headers: {

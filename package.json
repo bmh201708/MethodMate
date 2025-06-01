@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "api": "node server/local-api.js",
+    "dev:all": "concurrently \"npm run api\" \"npm run dev\"",
     "build": "vite build",
     "preview": "vite preview",
     "serve": "vue-cli-service serve",
@@ -12,6 +14,8 @@
   "dependencies": {
     "@coze/api": "^1.2.0",
     "@tailwindcss/typography": "^0.5.10",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
     "marked": "^12.0.1",
     "vue": "^3.2.13",
     "vue-router": "^4.0.3"
@@ -23,6 +27,7 @@
     "@vue/cli-plugin-router": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
     "autoprefixer": "^10.4.17",
+    "concurrently": "^9.1.2",
     "eslint": "^7.32.0",
     "eslint-plugin-vue": "^8.0.3",
     "postcss": "^8.4.35",
