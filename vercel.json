@@ -1,7 +1,7 @@
 {
   "functions": {
-    "api/chat.js": { "runtime": "edge" },
-    "api/recommend-papers.js": { "runtime": "edge" }
+    "api/chat.js": { "runtime": "nodejs18.x" },
+    "api/recommend-papers.js": { "runtime": "nodejs18.x" }
   },
   "routes": [
     {
