@@ -1,15 +1,15 @@
-# MethodMate - 智能文献推荐系统
+# MethodMate - 学术文献搜索系统
 
-MethodMate是一个基于Semantic Scholar API的智能文献推荐系统，帮助研究人员快速发现相关的高质量学术论文。
+MethodMate是一个基于Google Scholar的学术文献搜索系统，帮助研究人员快速发现相关的高质量学术论文。
 
 ## ✨ 特点
 
-- 🤖 基于AI的智能推荐算法
-- 📚 支持正面和负面种子论文筛选
-- 🔍 多维度论文分类和分析
-- 📊 引用数量和相关性评分
+- 🔍 强大的学术文献搜索功能
+- 📚 Google Scholar数据库集成
 - 📥 多源论文下载链接
-- 🌐 集成Semantic Scholar API
+- 📊 论文引用数量和相关性信息
+- 🌐 现代化的Web界面
+- 🚀 快速响应的搜索体验
 
 ## 🚀 快速开始
 
@@ -28,17 +28,11 @@ npm install
 
 3. **启动开发服务器**
 ```bash
-# 同时启动前端和API服务器
-npm run dev:all
-
-# 或分别启动
-npm run api    # 启动API服务器
-npm run dev    # 启动前端开发服务器
+npm run dev
 ```
 
 4. **访问应用**
-- 前端: http://localhost:3000
-- API服务器: http://localhost:3002
+- 应用: http://localhost:5173
 
 ### 生产部署
 
@@ -57,28 +51,26 @@ npm run preview
 - **前端框架**: Vue 3
 - **UI框架**: TailwindCSS
 - **构建工具**: Vite
-- **API集成**: Semantic Scholar
-- **服务端**: Express
+- **路由**: Vue Router
 - **部署**: Vercel
 
 ## 📖 使用指南
 
-1. **获取论文ID**
-   - 访问 [Semantic Scholar](https://www.semanticscholar.org/)
-   - 搜索并打开目标论文
-   - 复制URL中的ID部分或使用完整URL
+1. **搜索文献**
+   - 在搜索框中输入关键词或论文标题
+   - 选择搜索语言和结果数量
+   - 点击搜索按钮查看结果
 
-2. **获取推荐**
-   - 输入1-5个正面种子论文ID
-   - 可选择添加负面种子论文
-   - 设置推荐数量和排序方式
-   - 点击"获取推荐"
-
-3. **查看结果**
-   - 查看推荐论文列表
-   - 按引用数或相关性排序
+2. **查看结果**
+   - 浏览搜索结果列表
+   - 查看论文标题、作者、期刊信息
    - 获取论文下载链接
-   - 查看分类和推荐原因
+   - 查看引用数量和相关性评分
+
+3. **下载论文**
+   - 点击下载按钮获取论文链接
+   - 支持多种下载源
+   - 优先显示免费下载资源
 
 ## 🤝 贡献
 
@@ -96,7 +88,7 @@ npm run preview
 
 ## 🙏 致谢
 
-- [Semantic Scholar](https://www.semanticscholar.org/) - 提供API支持
+- [Google Scholar](https://scholar.google.com/) - 学术搜索数据源
 - [Vue.js](https://vuejs.org/) - 前端框架
 - [TailwindCSS](https://tailwindcss.com/) - UI框架
 - [Vercel](https://vercel.com/) - 部署平台

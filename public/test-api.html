@@ -110,35 +110,18 @@
 
     <div class="test-grid">
         <div class="test-section">
-            <h3>🌐 测试 1: 直接访问 Vercel API</h3>
-            <p>直接调用 Vercel 部署的 API，绕过本地代理。</p>
-            <button onclick="testDirectVercelAPI()">测试 Vercel API</button>
-            <div id="vercelResult" class="result"></div>
+            <h3>🌐 测试 1: 文献搜索功能</h3>
+            <p>测试Google Scholar文献搜索API功能。</p>
+            <button onclick="testScholarSearch()">测试搜索功能</button>
+            <div id="searchResult" class="result"></div>
         </div>
         
         <div class="test-section">
-            <h3>🔄 测试 2: 本地代理 API</h3>
-            <p>通过本地开发服务器的代理访问 API。</p>
-            <button onclick="testProxyAPI()">测试代理 API</button>
-            <div id="proxyResult" class="result"></div>
+            <h3>🔄 测试 2: 下载链接获取</h3>
+            <p>测试论文下载链接获取API功能。</p>
+            <button onclick="testPaperDownload()">测试下载功能</button>
+            <div id="downloadResult" class="result"></div>
         </div>
-    </div>
-
-    <div class="test-section">
-        <h3>🧪 测试 3: 推荐功能完整测试</h3>
-        <div class="info">
-            <p><strong>测试论文：</strong>"Attention Is All You Need" - Transformer架构的开创性论文</p>
-            <p><strong>论文ID：</strong>204e3073870fae3d05bcbc2f6a8e263d9b72e776</p>
-        </div>
-        <button onclick="testRecommendationsFull()">完整推荐测试</button>
-        <div id="recommendationsFullResult" class="result"></div>
-    </div>
-
-    <div class="test-section">
-        <h3>🔧 测试 4: 简化推荐测试</h3>
-        <p>使用最少字段的简化推荐请求测试。</p>
-        <button onclick="testRecommendationsSimple()">简化推荐测试</button>
-        <div id="recommendationsSimpleResult" class="result"></div>
     </div>
 
     <script>
@@ -186,21 +169,6 @@
                     status += `❌ 网络连接异常: ${response.status}\n`;
                 }
                 
-                // 检查 Vercel 可达性
-                status += '\n🚀 Vercel 服务检查:\n';
-                const vercelStartTime = Date.now();
-                const vercelResponse = await fetch('https://method-mate.vercel.app/', {
-                    method: 'GET',
-                    signal: AbortSignal.timeout(10000)
-                });
-                const vercelDuration = Date.now() - vercelStartTime;
-                
-                if (vercelResponse.ok) {
-                    status += `✅ Vercel 服务可达 (${vercelDuration}ms)\n`;
-                } else {
-                    status += `❌ Vercel 服务异常: ${vercelResponse.status}\n`;
-                }
-                
                 resultDiv.textContent = status;
                 resultDiv.className = 'result success';
                 
@@ -210,23 +178,22 @@
             }
         }
 
-        async function testDirectVercelAPI() {
-            const resultDiv = document.getElementById('vercelResult');
-            resultDiv.textContent = '正在测试 Vercel API...';
+        async function testScholarSearch() {
+            const resultDiv = document.getElementById('searchResult');
+            resultDiv.textContent = '正在测试文献搜索功能...';
             resultDiv.className = 'result';
             
             try {
                 const startTime = Date.now();
-                const response = await fetch('https://method-mate.vercel.app/api/paper-recommendations', {
+                const response = await fetch('/api/scholar-search', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        positivePaperIds: ['204e3073870fae3d05bcbc2f6a8e263d9b72e776'],
-                        negativePaperIds: [],
-                        limit: 3,
-                        fields: 'title,authors,year'
+                        query: '深度学习',
+                        num_results: 5,
+                        lang: 'zh-CN'
                     }),
                     signal: AbortSignal.timeout(30000)
                 });
@@ -244,28 +211,26 @@
                 resultDiv.className = response.ok ? 'result success' : 'result error';
 
             } catch (error) {
-                resultDiv.textContent = `❌ 直接访问 Vercel API 失败:\n${error.message}`;
+                resultDiv.textContent = `❌ 搜索功能测试失败:\n${error.message}`;
                 resultDiv.className = 'result error';
             }
         }
 
-        async function testProxyAPI() {
-            const resultDiv = document.getElementById('proxyResult');
-            resultDiv.textContent = '正在测试本地代理 API...';
+        async function testPaperDownload() {
+            const resultDiv = document.getElementById('downloadResult');
+            resultDiv.textContent = '正在测试下载功能...';
             resultDiv.className = 'result';
             
             try {
                 const startTime = Date.now();
-                const response = await fetch('/api/paper-recommendations', {
+                const response = await fetch('/api/paper-download', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        positivePaperIds: ['204e3073870fae3d05bcbc2f6a8e263d9b72e776'],
-                        negativePaperIds: [],
-                        limit: 3,
-                        fields: 'title,authors,year'
+                        title: '深度学习在自然语言处理中的应用研究',
+                        doi: '10.1234/example.2023.001'
                     }),
                     signal: AbortSignal.timeout(30000)
                 });
@@ -283,94 +248,7 @@
                 resultDiv.className = response.ok ? 'result success' : 'result error';
 
             } catch (error) {
-                resultDiv.textContent = `❌ 代理 API 访问失败:\n${error.message}`;
-                resultDiv.className = 'result error';
-            }
-        }
-
-        async function testRecommendationsFull() {
-            const resultDiv = document.getElementById('recommendationsFullResult');
-            resultDiv.textContent = '正在测试完整推荐功能...';
-            resultDiv.className = 'result';
-            
-            try {
-                const startTime = Date.now();
-                const response = await fetch('/api/paper-recommendations', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        positivePaperIds: ['204e3073870fae3d05bcbc2f6a8e263d9b72e776'],
-                        negativePaperIds: [],
-                        limit: 5,
-                        fields: 'title,authors,year,citationCount,abstract,openAccessPdf,url'
-                    }),
-                    signal: AbortSignal.timeout(30000)
-                });
-
-                const responseText = await response.text();
-                let data;
-                try {
-                    data = JSON.parse(responseText);
-                } catch {
-                    data = responseText;
-                }
-
-                let result = formatResponse(response, data, startTime);
-                
-                if (response.ok && data.success && data.recommendations) {
-                    result += `\n\n✅ 推荐成功! 获得 ${data.recommendations.length} 篇推荐论文:\n`;
-                    data.recommendations.slice(0, 3).forEach((paper, index) => {
-                        result += `\n${index + 1}. ${paper.title}\n`;
-                        result += `   作者: ${paper.authors?.map(a => a.name).join(', ') || '未知'}\n`;
-                        result += `   年份: ${paper.year || '未知'} | 引用: ${paper.citationCount || 0}\n`;
-                    });
-                }
-
-                resultDiv.textContent = result;
-                resultDiv.className = response.ok ? 'result success' : 'result error';
-
-            } catch (error) {
-                resultDiv.textContent = `❌ 完整推荐测试失败:\n${error.message}`;
-                resultDiv.className = 'result error';
-            }
-        }
-
-        async function testRecommendationsSimple() {
-            const resultDiv = document.getElementById('recommendationsSimpleResult');
-            resultDiv.textContent = '正在测试简化推荐功能...';
-            resultDiv.className = 'result';
-            
-            try {
-                const startTime = Date.now();
-                const response = await fetch('/api/paper-recommendations', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        positivePaperIds: ['204e3073870fae3d05bcbc2f6a8e263d9b72e776'],
-                        limit: 3
-                        // 使用默认字段
-                    }),
-                    signal: AbortSignal.timeout(30000)
-                });
-
-                const responseText = await response.text();
-                let data;
-                try {
-                    data = JSON.parse(responseText);
-                } catch {
-                    data = responseText;
-                }
-
-                const formattedResult = formatResponse(response, data, startTime);
-                resultDiv.textContent = formattedResult;
-                resultDiv.className = response.ok ? 'result success' : 'result error';
-
-            } catch (error) {
-                resultDiv.textContent = `❌ 简化推荐测试失败:\n${error.message}`;
+                resultDiv.textContent = `❌ 下载功能测试失败:\n${error.message}`;
                 resultDiv.className = 'result error';
             }
         }

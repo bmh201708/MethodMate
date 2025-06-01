@@ -12,17 +12,6 @@
               文献搜索
             </button>
             <button
-              @click="router.push('/recommendations')"
-              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-            >
-              智能推荐
-            </button>
-            <button
-              class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              新建方案
-            </button>
-            <button
               @click="router.push('/history-plans')"
               class="px-4 py-2 bg-white text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 transition-colors"
             >
@@ -33,10 +22,10 @@
       </div>
     </header>
 
-    <!-- 添加功能快捷入口 -->
+    <!-- 功能快捷入口 -->
     <div class="bg-white border-b">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 cursor-pointer transition-colors"
                @click="router.push('/scholar-search')">
             <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,17 +34,6 @@
             <div>
               <h3 class="font-semibold text-gray-900">文献搜索</h3>
               <p class="text-sm text-gray-600">在 Google Scholar 上搜索学术文献</p>
-            </div>
-          </div>
-          
-          <div class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 cursor-pointer transition-colors"
-               @click="router.push('/recommendations')">
-            <svg class="w-8 h-8 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-            </svg>
-            <div>
-              <h3 class="font-semibold text-gray-900">智能推荐</h3>
-              <p class="text-sm text-gray-600">基于种子论文获取相关文献推荐</p>
             </div>
           </div>
           

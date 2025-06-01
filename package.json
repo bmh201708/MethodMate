@@ -1,17 +1,15 @@
 {
-  "name": "methodmate",
-  "version": "0.1.0",
+  "name": "methodmate-frontend",
+  "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "api": "node server/local-api.js",
-    "dev:all": "concurrently \"npm run api\" \"npm run dev\"",
     "build": "vite build",
+    "dev": "vite",
     "preview": "vite preview",
-    "vercel-build": "vite build",
-    "start": "node api/paper-recommendations.js",
-    "serve": "vue-cli-service serve",
-    "lint": "vue-cli-service lint"
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
+    "format": "prettier --write src/",
+    "test": "echo \"Run tests here\""
   },
   "dependencies": {
     "@coze/api": "^1.2.0",
@@ -43,10 +41,10 @@
   "keywords": [
     "academic",
     "research",
-    "paper-recommendations",
-    "semantic-scholar",
+    "literature-search",
+    "google-scholar",
     "vue",
-    "ai"
+    "paper-search"
   ],
   "author": "bmh201708",
   "license": "MIT"

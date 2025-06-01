@@ -1,14 +1,14 @@
 openapi: 3.0.3
 info:
   title: Google Scholar 文献搜索插件
-  description: 一个功能强大的学术文献搜索插件，支持在Google Scholar上搜索文献、提供多种下载渠道、以及基于AI的智能推荐功能
-  version: 2.0.0
+  description: 一个功能强大的学术文献搜索插件，支持在Google Scholar上搜索文献并提供多种下载渠道
+  version: 1.0.0
   contact:
     name: Google Scholar Plugin
     email: support@example.com
 
 servers:
-  - url: https://method-mate.vercel.app/api
+  - url: https://your-domain.vercel.app/api
     description: 生产环境API服务器
 
 paths:
@@ -210,175 +210,6 @@ paths:
                   success:
                     type: boolean
 
-  /paper-recommendations:
-    post:
-      summary: 智能文献推荐
-      description: 基于种子论文使用Semantic Scholar的机器学习算法智能推荐相关文献
-      operationId: recommendPapers
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - positivePaperIds
-              properties:
-                positivePaperIds:
-                  type: array
-                  items:
-                    type: string
-                  description: 正面种子论文ID列表（感兴趣的论文）
-                  example: ["649def34f8be52c8b66281af98ae884c09aef38b", "204e3073870fae3d05bcbc2f6a8e263d9b72e776"]
-                  minItems: 1
-                  maxItems: 10
-                negativePaperIds:
-                  type: array
-                  items:
-                    type: string
-                  description: 负面种子论文ID列表（不感兴趣的论文，可选）
-                  example: ["abc123def456ghi789jkl012mno345pqr678stu"]
-                  maxItems: 5
-                limit:
-                  type: integer
-                  description: 推荐论文数量
-                  minimum: 1
-                  maximum: 500
-                  default: 10
-                  example: 10
-                fields:
-                  type: string
-                  description: 返回字段，逗号分隔
-                  default: "title,authors,year,journal,citationCount,abstract,openAccessPdf,url"
-                  example: "title,authors,year,citationCount,abstract"
-      responses:
-        '200':
-          description: 推荐成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    description: 是否成功
-                  totalRecommendations:
-                    type: integer
-                    description: 推荐论文总数
-                  seedPapers:
-                    type: object
-                    properties:
-                      positive:
-                        type: integer
-                        description: 正面种子论文数量
-                      negative:
-                        type: integer
-                        description: 负面种子论文数量
-                  recommendations:
-                    type: array
-                    description: 推荐论文列表
-                    items:
-                      type: object
-                      properties:
-                        paperId:
-                          type: string
-                          description: 论文ID
-                        title:
-                          type: string
-                          description: 论文标题
-                        authors:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              authorId:
-                                type: string
-                              name:
-                                type: string
-                          description: 作者列表
-                        year:
-                          type: integer
-                          description: 发表年份
-                        journal:
-                          type: string
-                          description: 期刊名称
-                        citationCount:
-                          type: integer
-                          description: 引用次数
-                        abstract:
-                          type: string
-                          description: 论文摘要
-                        url:
-                          type: string
-                          description: Semantic Scholar链接
-                        openAccessPdf:
-                          type: object
-                          properties:
-                            url:
-                              type: string
-                            status:
-                              type: string
-                          description: 开放获取PDF信息
-                        relevanceScore:
-                          type: number
-                          description: 相关性得分
-                        recommendationReason:
-                          type: string
-                          description: 推荐理由
-                        category:
-                          type: string
-                          description: 论文分类
-                        downloadSources:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              source:
-                                type: string
-                              url:
-                                type: string
-                              type:
-                                type: string
-                              free:
-                                type: boolean
-                              description:
-                                type: string
-                          description: 下载源列表
-                  metadata:
-                    type: object
-                    properties:
-                      searchTime:
-                        type: string
-                        description: 搜索时间
-                      algorithm:
-                        type: string
-                        description: 推荐算法
-                      confidence:
-                        type: string
-                        description: 置信度
-        '400':
-          description: 请求参数错误
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  success:
-                    type: boolean
-        '500':
-          description: 服务器内部错误
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  success:
-                    type: boolean
-
 components:
   schemas:
     ErrorResponse:
@@ -392,15 +223,15 @@ components:
           description: 是否成功
 
 x-plugin-manifest:
-  name_for_human: "Google Scholar 文献搜索与推荐"
-  name_for_model: "google_scholar_search_and_recommendations"
-  description_for_human: "在Google Scholar上搜索学术文献，支持下载和阅读全文，以及基于AI的智能推荐功能"
-  description_for_model: "这是一个强大的学术文献搜索和推荐插件，包含三个主要功能：1) 搜索Google Scholar数据库中的论文；2) 提供多种下载渠道包括Sci-Hub、arXiv、PubMed等；3) 基于Semantic Scholar的机器学习算法，根据种子论文智能推荐相关文献。用户可以通过关键词搜索相关文献，获取论文详细信息，找到免费的全文下载链接，以及根据感兴趣的论文获得个性化推荐。"
+  name_for_human: "Google Scholar 文献搜索"
+  name_for_model: "google_scholar_search"
+  description_for_human: "在Google Scholar上搜索学术文献，支持下载和阅读全文"
+  description_for_model: "这是一个学术文献搜索插件，可以搜索Google Scholar数据库中的论文，并提供多种下载渠道包括Sci-Hub、arXiv、PubMed等。用户可以通过关键词搜索相关文献，获取论文详细信息，并找到免费的全文下载链接。"
   auth:
     type: none
   api:
     type: openapi
-    url: https://method-mate.vercel.app/api/scholar-search
+    url: https://your-domain.vercel.app/api/scholar-search
   logo_url: https://scholar.google.com/favicon.ico
   contact_email: support@example.com
-  legal_info_url: https://method-mate.vercel.app/legal 
+  legal_info_url: https://your-domain.vercel.app/legal 

@@ -45,50 +45,128 @@
       <div class="grid grid-cols-12 gap-8">
         <!-- 左侧聊天框 -->
         <div class="col-span-3 h-[calc(100vh-8rem)]">
-          <ChatBox />
+          <ChatBox ref="chatBoxRef" />
         </div>
 
         <!-- 中间文献列表 -->
         <div class="col-span-3">
+          <!-- 获取相关文献按钮 -->
+          <div class="mb-4">
+            <button
+              @click="getRecommendedPapers"
+              :disabled="papersState.isLoadingRecommendations"
+              class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              <svg v-if="papersState.isLoadingRecommendations" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>{{ papersState.isLoadingRecommendations ? '获取中...' : (papersState.recommendedPapers.length > 0 ? '获取更多文献' : '获取相关文献') }}</span>
+            </button>
+          </div>
+
+          <!-- AI推荐文献列表 -->
           <div class="space-y-3">
-            <div v-for="paper in papers" :key="paper.id" 
+            <div v-if="papersState.recommendedPapers.length === 0 && !papersState.isLoadingRecommendations" 
+                 class="text-center text-gray-500 py-8">
+              <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <p>点击上方按钮获取AI推荐的相关文献</p>
+            </div>
+
+            <div v-for="(paper, index) in papersState.recommendedPapers" :key="paper.id || index" 
                  class="bg-white rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
-                 :class="{ 'border-2 border-purple-500': selectedPaper?.id === paper.id }"
-                 @click="selectPaper(paper)">
+                 :class="{ 'border-2 border-purple-500': papersState.selectedPaper === paper }"
+                 @click="selectRecommendedPaper(paper)">
               <div class="flex items-start">
                 <div class="flex-1">
-                  <h2 class="text-base font-semibold mb-2 line-clamp-2"
-                      :class="[
-                        isPaperSelected(paper.id) ? 'text-purple-600' : 'text-gray-900'
-                      ]">
-                    {{ paper.title }}
-                  </h2>
-                  <div class="text-xs text-gray-500 mb-2">
-                    <span>期刊信息xxxxxxxx</span>
-                    <span class="mx-2">年份</span>
-                  </div>
-                  <div class="flex flex-wrap gap-2 text-xs text-gray-500">
-                    <span>关键词1</span>
-                    <span>关键词2</span>
-                    <span>关键词3</span>
-                    <span>关键词4</span>
-                  </div>
-                  <div class="mt-3 flex justify-between items-center">
-                    <span class="text-xs text-gray-500">全文链接：xxxxxx</span>
+                  <div class="flex justify-between items-start mb-2">
+                    <h2 class="text-base font-semibold line-clamp-2 flex-1 mr-3"
+                        :class="[
+                          isReferenced(paper) ? 'text-purple-600' : 'text-gray-900'
+                        ]">
+                      {{ paper.title }}
+                    </h2>
                     <button 
-                      @click="togglePaperSelection(paper.id, $event)"
-                      class="px-3 py-1 rounded text-xs transition-colors"
-                      :class="[
-                        isPaperSelected(paper.id)
-                          ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                          : 'text-purple-600 hover:text-purple-700'
-                      ]"
+                      @click.stop="removePaper(index)"
+                      class="flex-shrink-0 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                      title="删除此文献"
                     >
-                      {{ isPaperSelected(paper.id) ? '取消选中' : '参考此文' }}
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
                     </button>
+                  </div>
+                  <div class="text-xs text-gray-500 mb-2">
+                    <span class="px-2 py-1 bg-blue-100 text-blue-600 rounded-full">AI推荐</span>
+                    <span class="ml-2 text-gray-400">第{{ paper.batchIndex || Math.floor(index / 3) + 1 }}次获取</span>
+                  </div>
+                  <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                    {{ paper.abstract }}
+                  </p>
+                  <div class="mt-3 flex justify-between items-center">
+                    <span class="text-xs text-gray-500">点击查看详情</span>
+                    <div class="flex space-x-2">
+                      <a 
+                        v-if="paper.downloadUrl"
+                        :href="paper.downloadUrl" 
+                        target="_blank"
+                        @click.stop
+                        class="px-3 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600 transition-colors"
+                        title="下载原文"
+                      >
+                        下载
+                      </a>
+                      <button 
+                        @click.stop="toggleReference(paper)"
+                        class="px-3 py-1 text-xs rounded transition-colors"
+                        :class="[
+                          isReferenced(paper)
+                            ? 'bg-purple-600 text-white hover:bg-purple-700'
+                            : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                        ]"
+                      >
+                        {{ isReferenced(paper) ? '已参考' : '参考此文' }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- 操作按钮区域 -->
+          <div v-if="papersState.recommendedPapers.length > 0" class="mt-4 space-y-2">
+            <div class="flex justify-between items-center text-sm text-gray-500">
+              <span>共 {{ papersState.recommendedPapers.length }} 篇文献</span>
+              <button 
+                @click="clearAllPapers"
+                class="px-3 py-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+              >
+                清空全部
+              </button>
+            </div>
+            <div v-if="papersState.referencedPapers.size > 0" class="flex justify-between items-center text-sm">
+              <span class="text-purple-600 font-medium">
+                已选择 {{ papersState.referencedPapers.size }} 篇作为参考文献
+              </span>
+              <button 
+                @click="clearReferences"
+                class="px-3 py-1 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded transition-colors"
+              >
+                清空参考
+              </button>
+            </div>
+          </div>
+
+          <!-- 错误提示 -->
+          <div v-if="papersState.recommendationError" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex">
+              <svg class="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <p class="text-red-700">{{ papersState.recommendationError }}</p>
             </div>
           </div>
         </div>
@@ -96,51 +174,90 @@
         <!-- 右侧文献详情 -->
         <div class="col-span-6">
           <div class="bg-white rounded-xl shadow-sm p-8">
-            <div v-if="selectedPaper">
-              <h2 class="text-2xl font-bold text-gray-900 mb-6">{{ selectedPaper.title }}</h2>
+            <div v-if="papersState.selectedPaper">
+              <div class="flex justify-between items-start mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 flex-1">{{ papersState.selectedPaper.title }}</h2>
+                <div class="ml-4 flex items-center space-x-2">
+                  <span v-if="isReferenced(papersState.selectedPaper)" 
+                        class="px-3 py-1 bg-purple-100 text-purple-600 text-sm rounded-full">
+                    已选为参考
+                  </span>
+                  <button 
+                    @click="toggleReference(papersState.selectedPaper)"
+                    class="px-4 py-2 text-sm rounded-lg transition-colors"
+                    :class="[
+                      isReferenced(papersState.selectedPaper)
+                        ? 'bg-purple-600 text-white hover:bg-purple-700'
+                        : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                    ]"
+                  >
+                    {{ isReferenced(papersState.selectedPaper) ? '取消参考' : '选为参考' }}
+                  </button>
+                </div>
+              </div>
               
               <div class="mb-8">
                 <h3 class="text-lg font-semibold text-gray-900 mb-3">摘要</h3>
-                <p class="text-gray-600 leading-relaxed">{{ selectedPaper.abstract }}</p>
+                <p class="text-gray-600 leading-relaxed">{{ papersState.selectedPaper.abstract }}</p>
               </div>
 
-              <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">AI规格定量研究</h3>
-                <div class="space-y-6">
-                  <div>
-                    <h4 class="font-medium text-gray-900 mb-2">1. 实验目的的阐述</h4>
-                    <p class="text-gray-600 leading-relaxed">{{ selectedPaper.purpose }}</p>
-                  </div>
-                  <div>
-                    <h4 class="font-medium text-gray-900 mb-2">2. 被试情况</h4>
-                    <ul class="list-disc list-inside text-gray-600 space-y-2 ml-4">
-                      <li>人数：{{ selectedPaper.participants }}</li>
-                      <li>来源：{{ selectedPaper.source }}</li>
-                      <li>性别比例：{{ selectedPaper.gender_ratio }}</li>
-                      <li>年龄分布：{{ selectedPaper.age_distribution }}</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 class="font-medium text-gray-900 mb-2">3. 实验材料与流程</h4>
-                    <p class="text-gray-600 leading-relaxed">{{ selectedPaper.materials }}</p>
-                  </div>
-                </div>
+              <div class="mb-6" v-if="papersState.selectedPaper.downloadUrl">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">文献链接</h3>
+                <a 
+                  :href="papersState.selectedPaper.downloadUrl" 
+                  target="_blank"
+                  class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  下载原文
+                </a>
               </div>
 
-              <!-- 研究方案详情 -->
+              <!-- 根据推荐文献的结构显示详情 -->
               <div class="space-y-6">
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-900 mb-3">研究问题</h3>
-                  <p class="text-gray-600 leading-relaxed">{{ selectedPaper?.researchQuestions }}</p>
+                <div class="bg-blue-50 p-6 rounded-lg">
+                  <h3 class="text-lg font-semibold text-blue-900 mb-3 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    AI推荐说明
+                  </h3>
+                  <p class="text-blue-700">
+                    这篇文献是基于您的对话内容，由AI智能推荐的相关学术论文。建议您仔细阅读摘要，判断是否符合您的研究需求。
+                  </p>
                 </div>
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-900 mb-3">研究方法</h3>
-                  <p class="text-gray-600 leading-relaxed">{{ selectedPaper?.methodology }}</p>
+                
+                <div class="border-t pt-6">
+                  <h3 class="text-lg font-semibold text-gray-900 mb-3">使用建议</h3>
+                  <ul class="text-gray-600 space-y-2">
+                    <li class="flex items-start">
+                      <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>仔细阅读摘要，了解研究的核心内容和方法</span>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>如果相关，点击"下载原文"获取完整论文</span>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>可以将重要观点和方法应用到您的研究中</span>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>注意文献的发表时间和引用情况</span>
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
             <div v-else class="text-center text-gray-500">
-              请选择一篇文献查看详情
+              <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <p class="text-lg">请先获取并选择一篇文献查看详情</p>
+              <p class="text-sm mt-2">点击左侧的"获取相关文献"按钮开始</p>
             </div>
           </div>
         </div>
@@ -153,57 +270,74 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import ChatBox from '../components/ChatBox.vue'
+import { chatState } from '../stores/chatStore'
+import { 
+  papersState, 
+  addRecommendedPapers,
+  selectPaper,
+  toggleReference,
+  isReferenced,
+  removePaper,
+  clearAllPapers,
+  clearReferences,
+  setLoadingRecommendations,
+  setRecommendationError
+} from '../stores/chatStore'
 
 const router = useRouter()
 const currentSection = ref('papers')
-const selectedPaper = ref(null)
-const selectedPapers = ref(new Set())
+const chatBoxRef = ref(null)
 
-const papers = ref([
-  {
-    id: 1,
-    title: 'Synthetic Human Memories: AI-Edited Images and Videos Can Implant False Memories and Distort Recollection',
-    abstract: 'AI is increasingly used to enhance images and videos, both intentionally and unintentionally. As AI becomes more integrated into smartphones, users can modify or animate photos into realistic videos. This study examines the impact of AI-altered visuals on false memories...',
-    researchQuestions: '探讨当前在探讨AI编辑的图像与视频是否会影响人类对过去事件的回忆，从而形成虚假记忆（false memory）。',
-    methodology: '采用混合研究方法，结合实验研究和问卷调查。实验组和对照组将分别接触AI编辑和传统编辑的媒体内容。',
-    purpose: '探讨当前在探讨AI编辑的图像与视频是否会影响人类对过去事件的回忆，从而形成虚假记忆（false memory）。',
-    participants: '200人',
-    source: '实验是在线上CloudResearch招募',
-    gender_ratio: '男女1:1',
-    age_distribution: '20至73岁，平均38岁（标准差12.25）',
-    materials: '基础图像集：24张版权自由图片（包括新闻照、日常生活照、纪录片照）'
-  },
-  {
-    id: 2,
-    title: 'The Impact of AI-Generated Content on Human Memory Formation',
-    abstract: 'This study investigates how exposure to AI-generated content affects memory formation and recall accuracy in human subjects...',
-    researchQuestions: '研究AI生成内容对人类记忆形成的影响机制。',
-    methodology: '使用最新的AI生成技术创建的图像和视频材料进行实验研究。',
-    purpose: '研究AI生成内容对人类记忆形成的影响机制。',
-    participants: '150人',
-    source: '大学生志愿者',
-    gender_ratio: '男女3:2',
-    age_distribution: '18至25岁，平均21岁',
-    materials: '使用最新的AI生成技术创建的图像和视频材料'
-  }
-])
+// 使用全局状态，直接引用papersState而不解构，保持响应式
+// const { 
+//   recommendedPapers, 
+//   selectedPaper, 
+//   referencedPapers, 
+//   isLoadingRecommendations, 
+//   recommendationError 
+// } = papersState
 
-const selectPaper = (paper) => {
-  selectedPaper.value = paper
+const selectRecommendedPaper = (paper) => {
+  selectPaper(paper)
 }
 
-const togglePaperSelection = (paperId, event) => {
-  event.stopPropagation()
-  
-  if (selectedPapers.value.has(paperId)) {
-    selectedPapers.value.delete(paperId)
-  } else {
-    selectedPapers.value.add(paperId)
-  }
-}
+const getRecommendedPapers = async () => {
+  setLoadingRecommendations(true)
+  setRecommendationError('')
 
-const isPaperSelected = (paperId) => {
-  return selectedPapers.value.has(paperId)
+  try {
+    // 获取聊天历史记录
+    const chatHistory = chatState.messages.filter(msg => msg.isComplete && !msg.isError)
+    
+    console.log('当前聊天历史:', chatHistory)
+
+    // 直接调用推荐API，不通过代理
+    const { getRecommendedPapers: getRecommendedPapersAPI } = await import('../services/cozeApi')
+    const result = await getRecommendedPapersAPI(chatHistory)
+    
+    if (!result.success) {
+      throw new Error(result.error || '获取推荐失败')
+    }
+
+    // 处理推荐结果 - 使用全局状态管理
+    if (result.papers && Array.isArray(result.papers)) {
+      addRecommendedPapers(result.papers)
+      
+      console.log('获取到推荐文献:', result.papers)
+      console.log('累加后的文献列表:', papersState.recommendedPapers)
+      console.log('总文献数量:', papersState.recommendedPapers.length)
+    } else {
+      // 如果没有解析到papers，显示原始回复
+      console.log('未能解析到papers，原始回复:', result.rawResponse)
+      setRecommendationError('智能体回复格式异常，请稍后重试')
+    }
+
+  } catch (error) {
+    console.error('获取推荐文献失败:', error)
+    setRecommendationError(`获取推荐文献失败: ${error.message}`)
+  } finally {
+    setLoadingRecommendations(false)
+  }
 }
 </script>
 
@@ -234,5 +368,31 @@ const isPaperSelected = (paperId) => {
 
 .hover-button:hover {
   transform: translateY(-1px);
+}
+
+/* 文本截断样式 */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 加载动画优化 */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 </style> 

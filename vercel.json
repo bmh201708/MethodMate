@@ -8,12 +8,12 @@
         "buildCommand": "npm run build",
         "outputDirectory": "dist"
       }
-    },
-    {
-      "src": "api/*.js",
-      "use": "@vercel/node"
     }
   ],
+  "functions": {
+    "api/chat.js": { "runtime": "edge" },
+    "api/recommend-papers.js": { "runtime": "edge" }
+  },
   "routes": [
     {
       "src": "/api/(.*)",

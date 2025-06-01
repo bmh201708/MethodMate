@@ -11,8 +11,26 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    // API代理配置：将API请求转发到本地Express服务器
+    // API代理配置
     proxy: {
+      '/api/chat': {
+        target: 'https://method-mate.vercel.app',
+        changeOrigin: true,
+        secure: true
+      },
+      '/api/recommend-papers': {
+        target: 'https://method-mate.vercel.app',
+        changeOrigin: true,
+        secure: true,
+        configure: (proxy, options) => {
+          proxy.on('error', (err, req, res) => {
+            console.log('推荐API代理错误:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            console.log('发送推荐API请求到:', options.target);
+          });
+        }
+      },
       '/api': {
         target: 'http://localhost:3002',
         changeOrigin: true,

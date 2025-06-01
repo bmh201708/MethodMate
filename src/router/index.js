@@ -4,7 +4,6 @@ import PaperDetail from '../views/PaperDetail.vue'
 import ResearchPlanDetail from '../views/ResearchPlanDetail.vue'
 import HistoryPlans from '../views/HistoryPlans.vue'
 import ScholarSearchView from '../views/ScholarSearchView.vue'
-import PaperRecommendationsView from '../views/PaperRecommendationsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -35,14 +34,6 @@ const router = createRouter({
       component: ScholarSearchView,
       meta: {
         title: 'Google Scholar 文献搜索'
-      }
-    },
-    {
-      path: '/recommendations',
-      name: 'recommendations',
-      component: PaperRecommendationsView,
-      meta: {
-        title: '智能文献推荐'
       }
     }
   ]

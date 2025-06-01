@@ -16,11 +16,6 @@
             </button>
             <h1 class="text-2xl font-bold text-gray-900">历史方案</h1>
           </div>
-          <div class="flex items-center space-x-4">
-            <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-              新建方案
-            </button>
-          </div>
         </div>
       </div>
     </nav>
@@ -34,27 +29,80 @@
 
         <!-- 右侧历史方案列表 -->
         <div class="col-span-8">
-          <div class="space-y-4">
-            <div v-for="plan in historyPlans" :key="plan.id" 
-                 class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer"
-                 @click="router.push(`/research-plan/${plan.id}`)">
-              <div class="flex justify-between items-start">
-                <div class="space-y-2">
-                  <h3 class="text-lg font-semibold text-gray-900">{{ plan.title }}</h3>
-                  <p class="text-gray-600">{{ plan.description }}</p>
-                  <div class="flex items-center space-x-4 text-sm text-gray-500">
-                    <span>创建时间：{{ plan.createdAt }}</span>
-                    <span>最后修改：{{ plan.updatedAt }}</span>
-                    <span>作者：{{ plan.author }}</span>
+          <!-- 顶部操作按钮 -->
+          <div v-if="historyState.historyPlans.length > 0" class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-900">
+              共 {{ historyState.historyPlans.length }} 个历史方案
+            </h2>
+            <button 
+              @click="confirmClearAll"
+              class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              清除所有方案
+            </button>
+          </div>
+          
+          <div v-if="historyState.historyPlans.length > 0" class="space-y-4">
+            <div v-for="plan in historyState.historyPlans" :key="plan.id" 
+                 class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+              <div class="p-6 cursor-pointer" @click="viewPlan(plan)">
+                <div class="flex justify-between items-start">
+                  <div class="space-y-2 flex-1">
+                    <h3 class="text-lg font-semibold text-gray-900">{{ plan.title }}</h3>
+                    <p class="text-gray-600 line-clamp-2">{{ plan.description }}</p>
+                    <div class="flex items-center space-x-4 text-sm text-gray-500">
+                      <span>创建时间：{{ plan.createdAt }}</span>
+                      <span>作者：{{ plan.author }}</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-2 ml-4">
+                    <span v-if="historyState.currentAppliedPlanId === plan.id" 
+                          class="px-3 py-1 bg-green-100 text-green-600 rounded-full text-sm font-medium">
+                      应用中
+                    </span>
+                    <span v-else 
+                          class="px-3 py-1 bg-purple-100 text-purple-600 rounded-full text-sm">
+                      {{ plan.status }}
+                    </span>
                   </div>
                 </div>
-                <div class="flex items-center space-x-2">
-                  <span class="px-3 py-1 bg-purple-100 text-purple-600 rounded-full text-sm">
-                    {{ plan.status }}
-                  </span>
-                </div>
+              </div>
+              
+              <!-- 操作按钮区域 -->
+              <div class="px-6 py-3 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+                <button 
+                  @click="viewPlan(plan)"
+                  class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                >
+                  查看详情
+                </button>
+                <button 
+                  @click.stop="confirmDelete(plan)"
+                  class="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                >
+                  删除
+                </button>
               </div>
             </div>
+          </div>
+          
+          <!-- 空状态 -->
+          <div v-else class="bg-white rounded-lg shadow-sm p-12 text-center">
+            <div class="mb-6">
+              <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">暂无历史方案</h3>
+            <p class="text-gray-500 mb-6">
+              您还没有生成过任何研究方案。请前往研究方案页面开始创建您的第一个方案。
+            </p>
+            <button 
+              @click="router.push('/research-plan')"
+              class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              开始创建方案
+            </button>
           </div>
         </div>
       </div>
@@ -66,39 +114,31 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import ChatBox from '../components/ChatBox.vue'
+import { historyState, removeHistoryPlan, clearHistoryPlans, setCurrentViewingPlan } from '../stores/chatStore'
 
 const router = useRouter()
 
-// 历史方案数据
-const historyPlans = ref([
-  {
-    id: 1,
-    title: 'AI-Edited Images and Videos Impact on Human Memory',
-    description: '研究AI编辑的图像与视频如何影响人类记忆形成和回忆的准确性，探讨AI技术对认知过程的影响。',
-    createdAt: '2024-02-20',
-    updatedAt: '2024-02-22',
-    author: 'Qi Liu',
-    status: '进行中'
-  },
-  {
-    id: 2,
-    title: 'The Effect of AI-Generated Content on Learning Outcomes',
-    description: '探究AI生成的教育内容对学习效果的影响，包括知识理解、记忆保持和技能迁移等方面。',
-    createdAt: '2024-02-15',
-    updatedAt: '2024-02-18',
-    author: 'Qi Liu',
-    status: '已完成'
-  },
-  {
-    id: 3,
-    title: 'Comparing Human and AI-Generated Research Methodologies',
-    description: '比较人类专家和AI系统在研究方法设计上的差异，评估AI辅助研究设计的可行性和效果。',
-    createdAt: '2024-02-10',
-    updatedAt: '2024-02-12',
-    author: 'Qi Liu',
-    status: '已完成'
+// 查看方案详情
+const viewPlan = (plan) => {
+  // 设置当前查看的方案
+  setCurrentViewingPlan(plan)
+  // 跳转到研究方案页面
+  router.push('/research-plan')
+}
+
+// 确认删除单个方案
+const confirmDelete = (plan) => {
+  if (confirm(`确定要删除方案"${plan.title}"吗？`)) {
+    removeHistoryPlan(plan.id)
   }
-])
+}
+
+// 确认清除所有方案
+const confirmClearAll = () => {
+  if (confirm(`确定要清除所有 ${historyState.historyPlans.length} 个历史方案吗？此操作不可撤销。`)) {
+    clearHistoryPlans()
+  }
+}
 </script>
 
 <style scoped>
@@ -118,5 +158,12 @@ const historyPlans = ref([
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 </style> 
