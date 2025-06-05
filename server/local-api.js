@@ -1,7 +1,7 @@
-const express = require('express');
-const cors = require('cors');
-const https = require('https');
-const fetch = require('node-fetch');
+import express from 'express';
+import cors from 'cors';
+import https from 'https';
+import fetch from 'node-fetch';
 
 const app = express();
 const PORT = 3002;
@@ -18,11 +18,11 @@ const parseSemanticResponse = (papers) => {
   return papers.map(paper => ({
     title: paper.title,
     abstract: paper.abstract || '暂无摘要',
-    downloadUrl: paper.openAccessPdf?.url || paper.url || null,
+    downloadUrl: (paper.openAccessPdf && paper.openAccessPdf.url) || paper.url || null,
     // 添加额外的语义学术特有信息
     year: paper.year,
     citationCount: paper.citationCount,
-    authors: paper.authors?.map(author => author.name).join(', ') || '未知作者'
+    authors: (paper.authors && paper.authors.map(author => author.name).join(', ')) || '未知作者'
   }));
 };
 
@@ -77,7 +77,11 @@ app.post('/api/semantic-recommend', async (req, res) => {
     }
 
     const result = await searchResponse.json();
-    console.log('语义学术API响应:', JSON.stringify(result));
+    console.log('语义学术API响应:', JSON.stringify(result, null, 2));
+
+    if (!result.data) {
+      throw new Error('Semantic Scholar API返回的数据格式不正确');
+    }
 
     // 解析返回的论文数据
     const papers = parseSemanticResponse(result.data || []);
@@ -86,7 +90,7 @@ app.post('/api/semantic-recommend', async (req, res) => {
       success: true,
       papers: papers,
       rawResponse: JSON.stringify(result.data),
-      session_id: req.body.session_id || 'default'
+      session_id: (req.body && req.body.session_id) || 'default'
     });
   } catch (error) {
     console.error('推荐API错误:', error);
@@ -97,7 +101,7 @@ app.post('/api/semantic-recommend', async (req, res) => {
       error: error.message,
       papers: [],
       rawResponse: `错误：${error.message}`,
-      session_id: req.body?.session_id || 'default'
+      session_id: (req.body && req.body.session_id) || 'default'
     });
   }
 });

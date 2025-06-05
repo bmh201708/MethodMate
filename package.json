@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
     "format": "prettier --write src/",
-    "test": "echo \"Run tests here\""
+    "test": "echo \"Run tests here\"",
+    "api": "node server/local-api.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run api\""
   },
   "dependencies": {
     "@coze/api": "^1.2.0",
@@ -17,6 +19,7 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "marked": "^12.0.1",
+    "node-fetch": "^3.3.2",
     "vue": "^3.2.13",
     "vue-router": "^4.0.3"
   },
