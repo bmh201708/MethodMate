@@ -197,6 +197,19 @@
               </div>
               
               <div class="mb-8">
+                <!-- 作者和年份信息 -->
+                <div class="mb-4 text-sm text-gray-500">
+                  <span v-if="papersState.selectedPaper.authors" class="mr-4">
+                    <span class="font-medium">作者：</span>{{ papersState.selectedPaper.authors }}
+                  </span>
+                  <span v-if="papersState.selectedPaper.year" class="mr-4">
+                    <span class="font-medium">发表年份：</span>{{ papersState.selectedPaper.year }}
+                  </span>
+                  <span v-if="papersState.selectedPaper.citationCount !== undefined" class="mr-4">
+                    <span class="font-medium">被引用次数：</span>{{ papersState.selectedPaper.citationCount }}
+                  </span>
+                </div>
+                
                 <h3 class="text-lg font-semibold text-gray-900 mb-3">摘要</h3>
                 <p class="text-gray-600 leading-relaxed">{{ papersState.selectedPaper.abstract }}</p>
               </div>
@@ -311,9 +324,23 @@ const getRecommendedPapers = async () => {
     
     console.log('当前聊天历史:', chatHistory)
 
-    // 直接调用推荐API，不通过代理
-    const { getRecommendedPapers: getRecommendedPapersAPI } = await import('../services/cozeApi')
-    const result = await getRecommendedPapersAPI(chatHistory)
+    // 调用Semantic Scholar推荐API
+    const response = await fetch('/api/semantic-recommend', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chatHistory,
+        session_id: Date.now().toString()
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`)
+    }
+
+    const result = await response.json()
     
     if (!result.success) {
       throw new Error(result.error || '获取推荐失败')
