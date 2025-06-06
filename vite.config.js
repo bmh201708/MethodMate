@@ -31,6 +31,19 @@ export default defineConfig({
           });
         }
       },
+      '/api/semantic-recommend': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy, options) => {
+          proxy.on('error', (err, req, res) => {
+            console.log('语义推荐API代理错误:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            console.log('发送语义推荐API请求到:', options.target);
+          });
+        }
+      },
       '/api': {
         target: 'http://localhost:3002',
         changeOrigin: true,
