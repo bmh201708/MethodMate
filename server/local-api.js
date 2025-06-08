@@ -41,6 +41,8 @@ app.get('/', (req, res) => {
 // 从CORE API获取论文全文
 const getFullTextFromCore = async (title) => {
   try {
+    console.log(`正在从CORE API获取论文全文，标题: "${title}"`);
+    
     // 使用标题搜索论文
     const searchResponse = await fetch(`${CORE_API_BASE}/search/works`, {
       method: 'POST',
@@ -51,23 +53,36 @@ const getFullTextFromCore = async (title) => {
       body: JSON.stringify({
         q: title,
         limit: 1,
-        fields: ['title', 'fullText']
+        fields: ['title', 'fullText', 'abstract']
       })
     });
 
     if (!searchResponse.ok) {
+      const errorText = await searchResponse.text();
+      console.error(`CORE API错误响应 (${searchResponse.status}):`, errorText);
       throw new Error(`CORE API responded with status: ${searchResponse.status}`);
     }
 
     const result = await searchResponse.json();
+    console.log('CORE API搜索结果:', JSON.stringify(result, null, 2));
     
     if (result.results && result.results.length > 0) {
-      return result.results[0].fullText || null;
+      // 如果有全文就返回全文，否则返回摘要
+      const paper = result.results[0];
+      if (paper.fullText) {
+        console.log('找到论文全文');
+        return paper.fullText;
+      } else if (paper.abstract) {
+        console.log('未找到全文，使用摘要代替');
+        return paper.abstract;
+      }
     }
     
+    console.log('未找到相关论文信息');
     return null;
   } catch (error) {
-    console.error('Error fetching full text from CORE:', error);
+    console.error('从CORE获取全文时出错:', error);
+    console.error('错误堆栈:', error.stack);
     return null;
   }
 };
@@ -154,7 +169,7 @@ app.post('/api/semantic-recommend', async (req, res) => {
     }
 
     // 解析返回的论文数据
-    const papers = parseSemanticResponse(result.data || []);
+    const papers = await parseSemanticResponse(result.data || []);
 
     res.json({
       success: true,
