@@ -6,12 +6,52 @@ import fetch from 'node-fetch';
 const app = express();
 const PORT = 3002;
 
-// Semantic Scholar API配置
+// API配置
 const SEMANTIC_API_BASE = 'https://api.semanticscholar.org/graph/v1';
+const CORE_API_BASE = 'https://api.core.ac.uk/v3';
+const CORE_API_KEY = process.env.CORE_API_KEY;
+
+if (!CORE_API_KEY) {
+  console.warn('CORE_API_KEY not found in environment variables');
+}
 
 // 中间件
 app.use(cors());
 app.use(express.json());
+
+// 从CORE API获取论文全文
+const getFullTextFromCore = async (title) => {
+  try {
+    // 使用标题搜索论文
+    const searchResponse = await fetch(`${CORE_API_BASE}/search/works`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${CORE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        q: title,
+        limit: 1,
+        fields: ['title', 'fullText']
+      })
+    });
+
+    if (!searchResponse.ok) {
+      throw new Error(`CORE API responded with status: ${searchResponse.status}`);
+    }
+
+    const result = await searchResponse.json();
+    
+    if (result.results && result.results.length > 0) {
+      return result.results[0].fullText || null;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching full text from CORE:', error);
+    return null;
+  }
+};
 
 // 解析语义学术API响应
 const parseSemanticResponse = (papers) => {
