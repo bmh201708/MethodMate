@@ -54,16 +54,27 @@ const getFullTextFromCore = async (title) => {
 };
 
 // 解析语义学术API响应
-const parseSemanticResponse = (papers) => {
-  return papers.map(paper => ({
-    title: paper.title,
-    abstract: paper.abstract || '暂无摘要',
-    downloadUrl: (paper.openAccessPdf && paper.openAccessPdf.url) || paper.url || null,
-    // 添加额外的语义学术特有信息
-    year: paper.year,
-    citationCount: paper.citationCount,
-    authors: (paper.authors && paper.authors.map(author => author.name).join(', ')) || '未知作者'
-  }));
+const parseSemanticResponse = async (papers) => {
+  const parsedPapers = [];
+  
+  for (const paper of papers) {
+    // 获取论文全文
+    const fullText = await getFullTextFromCore(paper.title);
+    
+    parsedPapers.push({
+      title: paper.title,
+      abstract: paper.abstract || '暂无摘要',
+      downloadUrl: (paper.openAccessPdf && paper.openAccessPdf.url) || paper.url || null,
+      // 添加额外的语义学术特有信息
+      year: paper.year,
+      citationCount: paper.citationCount,
+      authors: (paper.authors && paper.authors.map(author => author.name).join(', ')) || '未知作者',
+      // 添加全文字段
+      fullText: fullText || null
+    });
+  }
+  
+  return parsedPapers;
 };
 
 // 语义推荐API路由

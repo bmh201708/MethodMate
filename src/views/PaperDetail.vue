@@ -212,6 +212,33 @@
                 
                 <h3 class="text-lg font-semibold text-gray-900 mb-3">摘要</h3>
                 <p class="text-gray-600 leading-relaxed">{{ papersState.selectedPaper.abstract }}</p>
+
+                <!-- 全文部分 -->
+                <div v-if="papersState.selectedPaper.fullText" class="mt-6">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">全文预览</h3>
+                    <button 
+                      @click="toggleFullText"
+                      class="text-blue-600 hover:text-blue-700 text-sm flex items-center"
+                    >
+                      {{ showFullText ? '收起' : '展开' }}
+                      <svg 
+                        class="w-4 h-4 ml-1 transform transition-transform"
+                        :class="{ 'rotate-180': showFullText }"
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <div v-show="showFullText" class="mt-3">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                      <p class="text-gray-600 leading-relaxed whitespace-pre-wrap">{{ papersState.selectedPaper.fullText }}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div class="mb-6" v-if="papersState.selectedPaper.downloadUrl">
@@ -300,6 +327,12 @@ import {
 const router = useRouter()
 const currentSection = ref('papers')
 const chatBoxRef = ref(null)
+const showFullText = ref(false)
+
+// 切换全文显示状态
+const toggleFullText = () => {
+  showFullText.value = !showFullText.value
+}
 
 // 使用全局状态，直接引用papersState而不解构，保持响应式
 // const { 
@@ -312,6 +345,8 @@ const chatBoxRef = ref(null)
 
 const selectRecommendedPaper = (paper) => {
   selectPaper(paper)
+  // 重置全文显示状态
+  showFullText.value = false
 }
 
 const getRecommendedPapers = async () => {
