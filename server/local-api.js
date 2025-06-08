@@ -2,6 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import https from 'https';
 import fetch from 'node-fetch';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// 获取当前文件的目录
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// 加载.env文件
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const app = express();
 const PORT = 3002;
@@ -13,11 +23,20 @@ const CORE_API_KEY = process.env.CORE_API_KEY;
 
 if (!CORE_API_KEY) {
   console.warn('CORE_API_KEY not found in environment variables');
+  console.log('Available environment variables:', Object.keys(process.env).filter(key => !key.includes('SECRET')));
+} else {
+  console.log('CORE_API_KEY found:', CORE_API_KEY.substring(0, 4) + '...');
 }
 
 // 中间件
 app.use(cors());
 app.use(express.json());
+app.use(express.static(join(__dirname, '..', 'public')));
+
+// 添加根路由重定向到测试页面
+app.get('/', (req, res) => {
+  res.redirect('/test-core-api.html');
+});
 
 // 从CORE API获取论文全文
 const getFullTextFromCore = async (title) => {
@@ -153,6 +172,33 @@ app.post('/api/semantic-recommend', async (req, res) => {
       papers: [],
       rawResponse: `错误：${error.message}`,
       session_id: (req.body && req.body.session_id) || 'default'
+    });
+  }
+});
+
+// 测试CORE API路由
+app.post('/api/test-core', async (req, res) => {
+  try {
+    const { title } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ error: '需要提供论文标题' });
+    }
+
+    console.log('测试CORE API，搜索标题:', title);
+    const fullText = await getFullTextFromCore(title);
+    
+    res.json({
+      success: true,
+      title: title,
+      fullText: fullText,
+      hasContent: !!fullText
+    });
+  } catch (error) {
+    console.error('CORE API测试错误:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message
     });
   }
 });
