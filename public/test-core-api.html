@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORE API 测试</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2563eb;
+            margin-bottom: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        button:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9fafb;
+        }
+        .result pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f1f5f9;
+            border-radius: 4px;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status.success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status.error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .examples {
+            margin-top: 20px;
+        }
+        .example-btn {
+            background-color: #f3f4f6;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .example-btn:hover {
+            background-color: #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>CORE API 测试工具</h1>
+    <p>使用此工具测试CORE API获取论文全文的功能。输入论文标题，点击"获取全文"按钮。</p>
+    
+    <div class="container">
+        <div class="form-group">
+            <label for="paperTitle">论文标题:</label>
+            <input type="text" id="paperTitle" placeholder="输入完整的论文标题...">
+        </div>
+        
+        <button id="submitBtn" onclick="testCoreApi()">获取全文</button>
+        
+        <div class="examples">
+            <h3>示例论文标题:</h3>
+            <button class="example-btn" onclick="useExample('Quantitative Research Methods for Social Science')">示例 1: 社会科学定量研究方法</button>
+            <button class="example-btn" onclick="useExample('Machine Learning: A Review of Classification Techniques')">示例 2: 机器学习分类技术综述</button>
+            <button class="example-btn" onclick="useExample('Statistical Methods for Psychology')">示例 3: 心理学统计方法</button>
+        </div>
+        
+        <div id="resultContainer" class="result" style="display: none;">
+            <h3>API 响应结果:</h3>
+            <div id="statusContainer" class="status"></div>
+            <h4>论文全文:</h4>
+            <pre id="fullTextResult">等待结果...</pre>
+        </div>
+    </div>
+
+    <script>
+        function testCoreApi() {
+            const paperTitle = document.getElementById('paperTitle').value.trim();
+            if (!paperTitle) {
+                alert('请输入论文标题');
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const resultContainer = document.getElementById('resultContainer');
+            const statusContainer = document.getElementById('statusContainer');
+            const fullTextResult = document.getElementById('fullTextResult');
+            
+            // 显示加载状态
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span>获取中...';
+            resultContainer.style.display = 'block';
+            statusContainer.innerHTML = '正在查询CORE API...';
+            statusContainer.className = 'status';
+            fullTextResult.textContent = '加载中...';
+            
+            // 调用测试API
+            fetch('/api/test-core', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title: paperTitle })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                submitBtn.textContent = '获取全文';
+                
+                // 显示结果
+                if (data.success) {
+                    if (data.hasContent) {
+                        statusContainer.innerHTML = `<strong>成功!</strong> 找到论文全文。`;
+                        statusContainer.className = 'status success';
+                    } else {
+                        statusContainer.innerHTML = `<strong>部分成功:</strong> 找到论文但没有全文内容。`;
+                        statusContainer.className = 'status';
+                    }
+                    fullTextResult.textContent = data.fullText || '未找到全文内容';
+                } else {
+                    statusContainer.innerHTML = `<strong>错误:</strong> ${data.error || '未知错误'}`;
+                    statusContainer.className = 'status error';
+                    fullTextResult.textContent = '获取全文失败';
+                }
+            })
+            .catch(error => {
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                submitBtn.textContent = '获取全文';
+                
+                // 显示错误
+                statusContainer.innerHTML = `<strong>请求错误:</strong> ${error.message}`;
+                statusContainer.className = 'status error';
+                fullTextResult.textContent = '请求失败';
+                console.error('API请求错误:', error);
+            });
+        }
+        
+        function useExample(title) {
+            document.getElementById('paperTitle').value = title;
+        }
+    </script>
+</body>
+</html>

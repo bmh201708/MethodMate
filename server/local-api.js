@@ -2,28 +2,98 @@ import express from 'express';
 import cors from 'cors';
 import https from 'https';
 import fetch from 'node-fetch';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// 获取当前文件的目录
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// 加载.env文件
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const app = express();
 const PORT = 3002;
 
-// Semantic Scholar API配置
+// API配置
 const SEMANTIC_API_BASE = 'https://api.semanticscholar.org/graph/v1';
+const CORE_API_BASE = 'https://api.core.ac.uk/v3';
+const CORE_API_KEY = process.env.CORE_API_KEY;
+
+if (!CORE_API_KEY) {
+  console.warn('CORE_API_KEY not found in environment variables');
+  console.log('Available environment variables:', Object.keys(process.env).filter(key => !key.includes('SECRET')));
+} else {
+  console.log('CORE_API_KEY found:', CORE_API_KEY.substring(0, 4) + '...');
+}
 
 // 中间件
 app.use(cors());
 app.use(express.json());
+app.use(express.static(join(__dirname, '..', 'public')));
+
+// 添加根路由重定向到测试页面
+app.get('/', (req, res) => {
+  res.redirect('/test-core-api.html');
+});
+
+// 从CORE API获取论文全文
+const getFullTextFromCore = async (title) => {
+  try {
+    // 使用标题搜索论文
+    const searchResponse = await fetch(`${CORE_API_BASE}/search/works`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${CORE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        q: title,
+        limit: 1,
+        fields: ['title', 'fullText']
+      })
+    });
+
+    if (!searchResponse.ok) {
+      throw new Error(`CORE API responded with status: ${searchResponse.status}`);
+    }
+
+    const result = await searchResponse.json();
+    
+    if (result.results && result.results.length > 0) {
+      return result.results[0].fullText || null;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching full text from CORE:', error);
+    return null;
+  }
+};
 
 // 解析语义学术API响应
-const parseSemanticResponse = (papers) => {
-  return papers.map(paper => ({
-    title: paper.title,
-    abstract: paper.abstract || '暂无摘要',
-    downloadUrl: (paper.openAccessPdf && paper.openAccessPdf.url) || paper.url || null,
-    // 添加额外的语义学术特有信息
-    year: paper.year,
-    citationCount: paper.citationCount,
-    authors: (paper.authors && paper.authors.map(author => author.name).join(', ')) || '未知作者'
-  }));
+const parseSemanticResponse = async (papers) => {
+  const parsedPapers = [];
+  
+  for (const paper of papers) {
+    // 获取论文全文
+    const fullText = await getFullTextFromCore(paper.title);
+    
+    parsedPapers.push({
+      title: paper.title,
+      abstract: paper.abstract || '暂无摘要',
+      downloadUrl: (paper.openAccessPdf && paper.openAccessPdf.url) || paper.url || null,
+      // 添加额外的语义学术特有信息
+      year: paper.year,
+      citationCount: paper.citationCount,
+      authors: (paper.authors && paper.authors.map(author => author.name).join(', ')) || '未知作者',
+      // 添加全文字段
+      fullText: fullText || null
+    });
+  }
+  
+  return parsedPapers;
 };
 
 // 语义推荐API路由
@@ -102,6 +172,33 @@ app.post('/api/semantic-recommend', async (req, res) => {
       papers: [],
       rawResponse: `错误：${error.message}`,
       session_id: (req.body && req.body.session_id) || 'default'
+    });
+  }
+});
+
+// 测试CORE API路由
+app.post('/api/test-core', async (req, res) => {
+  try {
+    const { title } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ error: '需要提供论文标题' });
+    }
+
+    console.log('测试CORE API，搜索标题:', title);
+    const fullText = await getFullTextFromCore(title);
+    
+    res.json({
+      success: true,
+      title: title,
+      fullText: fullText,
+      hasContent: !!fullText
+    });
+  } catch (error) {
+    console.error('CORE API测试错误:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message
     });
   }
 });
