@@ -359,7 +359,7 @@ const getRecommendedPapers = async () => {
     
     console.log('当前聊天历史:', chatHistory)
 
-    // 调用Semantic Scholar推荐API
+    // 调用推荐API（通过Vue开发服务器代理）
     const response = await fetch('/api/semantic-recommend', {
       method: 'POST',
       headers: {
@@ -383,15 +383,34 @@ const getRecommendedPapers = async () => {
 
     // 处理推荐结果 - 使用全局状态管理
     if (result.papers && Array.isArray(result.papers)) {
-      addRecommendedPapers(result.papers)
+      // 确保每个paper对象包含所需的所有字段
+      const processedPapers = result.papers.map(paper => ({
+        ...paper,
+        title: paper.title || '无标题',
+        abstract: paper.abstract || '暂无摘要',
+        downloadUrl: paper.downloadUrl || null,
+        fullText: paper.fullText || null,
+        authors: paper.authors || '未知作者',
+        year: paper.year || null,
+        citationCount: paper.citationCount || 0,
+        batchIndex: Math.floor(papersState.recommendedPapers.length / 3) + 1
+      }));
+
+      addRecommendedPapers(processedPapers)
       
-      console.log('获取到推荐文献:', result.papers)
+      console.log('获取到推荐文献:', processedPapers)
       console.log('累加后的文献列表:', papersState.recommendedPapers)
       console.log('总文献数量:', papersState.recommendedPapers.length)
+
+      if (processedPapers.length === 0) {
+        setRecommendationError('未找到相关文献')
+      }
+    } else if (result.rawResponse) {
+      console.log('API返回原始响应:', result.rawResponse)
+      setRecommendationError('解析推荐文献失败，请稍后重试')
     } else {
-      // 如果没有解析到papers，显示原始回复
-      console.log('未能解析到papers，原始回复:', result.rawResponse)
-      setRecommendationError('智能体回复格式异常，请稍后重试')
+      console.log('未能解析到papers，API响应:', result)
+      setRecommendationError('获取推荐文献失败，请稍后重试')
     }
 
   } catch (error) {
