@@ -1,0 +1,601 @@
+<template>
+  <div class="min-h-screen bg-gray-50 flex flex-col">
+    <!-- 顶部导航栏 -->
+    <nav class="bg-white shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center space-x-8">
+            <button
+              @click="router.push('/')"
+              class="text-gray-600 hover:text-gray-900 flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+              </svg>
+              首页
+            </button>
+            <h1 class="text-2xl font-bold text-gray-900">MethodMate</h1>
+            <div class="flex space-x-4">
+              <button
+                @click="router.push('/papers')"
+                class="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
+                :class="{ 'text-purple-600 border-b-2 border-purple-600': currentSection === 'papers' }"
+              >
+                相关文献
+              </button>
+              <button
+                @click="router.push('/research-plan')"
+                class="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
+                :class="{ 'text-purple-600 border-b-2 border-purple-600': currentSection === 'research-plan' }"
+              >
+                定量研究方案
+              </button>
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+              新建方案
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="flex-1 max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="grid grid-cols-12 gap-8">
+        <!-- 左侧聊天框 -->
+        <div class="col-span-3 h-[calc(100vh-8rem)]">
+          <ChatBox ref="chatBoxRef" />
+        </div>
+
+        <!-- 中间文献列表 -->
+        <div class="col-span-3">
+          <!-- 获取相关文献按钮 -->
+          <div class="mb-4">
+            <button
+              @click="getRecommendedPapers"
+              :disabled="papersState.isLoadingRecommendations"
+              class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              <svg v-if="papersState.isLoadingRecommendations" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>{{ papersState.isLoadingRecommendations ? '获取中...' : (papersState.recommendedPapers.length > 0 ? '获取更多文献' : '获取相关文献') }}</span>
+            </button>
+          </div>
+
+          <!-- AI推荐文献列表 -->
+          <div class="space-y-3">
+            <div v-if="papersState.recommendedPapers.length === 0 && !papersState.isLoadingRecommendations" 
+                 class="text-center text-gray-500 py-8">
+              <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <p>点击上方按钮获取AI推荐的相关文献</p>
+            </div>
+
+            <div v-for="(paper, index) in papersState.recommendedPapers" :key="paper.id || index" 
+                 class="bg-white rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
+                 :class="{ 'border-2 border-purple-500': papersState.selectedPaper === paper }"
+                 @click="selectRecommendedPaper(paper)">
+              <div class="flex items-start">
+                <div class="flex-1">
+                  <div class="flex justify-between items-start mb-2">
+                    <h2 class="text-base font-semibold line-clamp-2 flex-1 mr-3"
+                        :class="[
+                          isReferenced(paper) ? 'text-purple-600' : 'text-gray-900'
+                        ]">
+                      {{ paper.title }}
+                    </h2>
+                    <button 
+                      @click.stop="removePaper(index)"
+                      class="flex-shrink-0 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                      title="删除此文献"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="text-xs text-gray-500 mb-2">
+                    <span class="px-2 py-1 bg-blue-100 text-blue-600 rounded-full">AI推荐</span>
+                    <span class="ml-2 text-gray-400">第{{ paper.batchIndex || Math.floor(index / 3) + 1 }}次获取</span>
+                  </div>
+                  <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                    {{ paper.abstract }}
+                  </p>
+                  <div class="mt-3 flex justify-between items-center">
+                    <span class="text-xs text-gray-500">点击查看详情</span>
+                    <div class="flex space-x-2">
+                      <a 
+                        v-if="paper.downloadUrl"
+                        :href="paper.downloadUrl" 
+                        target="_blank"
+                        @click.stop
+                        class="px-3 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600 transition-colors"
+                        title="下载原文"
+                      >
+                        下载
+                      </a>
+                      <button 
+                        @click.stop="toggleReference(paper)"
+                        class="px-3 py-1 text-xs rounded transition-colors"
+                        :class="[
+                          isReferenced(paper)
+                            ? 'bg-purple-600 text-white hover:bg-purple-700'
+                            : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                        ]"
+                      >
+                        {{ isReferenced(paper) ? '已参考' : '参考此文' }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 操作按钮区域 -->
+          <div v-if="papersState.recommendedPapers.length > 0" class="mt-4 space-y-2">
+            <div class="flex justify-between items-center text-sm text-gray-500">
+              <span>共 {{ papersState.recommendedPapers.length }} 篇文献</span>
+              <button 
+                @click="clearAllPapers"
+                class="px-3 py-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+              >
+                清空全部
+              </button>
+            </div>
+            <div v-if="papersState.referencedPapers.size > 0" class="flex justify-between items-center text-sm">
+              <span class="text-purple-600 font-medium">
+                已选择 {{ papersState.referencedPapers.size }} 篇作为参考文献
+              </span>
+              <button 
+                @click="clearReferences"
+                class="px-3 py-1 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded transition-colors"
+              >
+                清空参考
+              </button>
+            </div>
+          </div>
+
+          <!-- 错误提示 -->
+          <div v-if="papersState.recommendationError" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex">
+              <svg class="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <p class="text-red-700">{{ papersState.recommendationError }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧文献详情 -->
+        <div class="col-span-6">
+          <div class="bg-white rounded-xl shadow-sm p-8">
+            <div v-if="papersState.selectedPaper">
+              <div class="flex justify-between items-start mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 flex-1">{{ papersState.selectedPaper.title }}</h2>
+                <div class="ml-4 flex items-center space-x-2">
+                  <span v-if="isReferenced(papersState.selectedPaper)" 
+                        class="px-3 py-1 bg-purple-100 text-purple-600 text-sm rounded-full">
+                    已选为参考
+                  </span>
+                  <button 
+                    @click="toggleReference(papersState.selectedPaper)"
+                    class="px-4 py-2 text-sm rounded-lg transition-colors"
+                    :class="[
+                      isReferenced(papersState.selectedPaper)
+                        ? 'bg-purple-600 text-white hover:bg-purple-700'
+                        : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                    ]"
+                  >
+                    {{ isReferenced(papersState.selectedPaper) ? '取消参考' : '选为参考' }}
+                  </button>
+                </div>
+              </div>
+              
+              <div class="mb-8">
+                <!-- 作者和年份信息 -->
+                <div class="mb-4 text-sm text-gray-500">
+                  <span v-if="papersState.selectedPaper.authors" class="mr-4">
+                    <span class="font-medium">作者：</span>{{ papersState.selectedPaper.authors }}
+                  </span>
+                  <span v-if="papersState.selectedPaper.year" class="mr-4">
+                    <span class="font-medium">发表年份：</span>{{ papersState.selectedPaper.year }}
+                  </span>
+                  <span v-if="papersState.selectedPaper.citationCount !== undefined" class="mr-4">
+                    <span class="font-medium">被引用次数：</span>{{ papersState.selectedPaper.citationCount }}
+                  </span>
+                </div>
+                
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">摘要</h3>
+                <p class="text-gray-600 leading-relaxed">{{ papersState.selectedPaper.abstract }}</p>
+
+                <!-- 全文部分 -->
+                <div v-if="papersState.selectedPaper.fullText" class="mt-6">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">全文预览</h3>
+                    <button 
+                      @click="toggleFullText"
+                      class="text-blue-600 hover:text-blue-700 text-sm flex items-center"
+                    >
+                      {{ showFullText ? '收起' : '展开' }}
+                      <svg 
+                        class="w-4 h-4 ml-1 transform transition-transform"
+                        :class="{ 'rotate-180': showFullText }"
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <div v-show="showFullText" class="mt-3">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                      <p class="text-gray-600 leading-relaxed whitespace-pre-wrap">{{ papersState.selectedPaper.fullText }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-6" v-if="papersState.selectedPaper.downloadUrl">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">文献链接</h3>
+                <a 
+                  :href="papersState.selectedPaper.downloadUrl" 
+                  target="_blank"
+                  class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  下载原文
+                </a>
+              </div>
+
+              <!-- 根据推荐文献的结构显示详情 -->
+              <div class="space-y-6">
+                <!-- 显示AI分析结果 -->
+                <div v-if="papersState.selectedPaper.problem || papersState.selectedPaper.design || papersState.selectedPaper.data || papersState.selectedPaper.outcome || 
+                          papersState.selectedPaper.fullPlan || papersState.selectedPaper.hypothesis || papersState.selectedPaper.experimentDesign || 
+                          papersState.selectedPaper.dataAnalysis || papersState.selectedPaper.resultsPresentation" 
+                     class="space-y-4">
+                  <div v-if="papersState.selectedPaper.problem" class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">研究问题</h3>
+                    <div class="prose max-w-none text-gray-600" v-html="renderMarkdown(papersState.selectedPaper.problem)"></div>
+                  </div>
+                  <div v-if="papersState.selectedPaper.design" class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">研究方法</h3>
+                    <div class="prose max-w-none text-gray-600" v-html="renderMarkdown(papersState.selectedPaper.design)"></div>
+                  </div>
+                  <div v-if="papersState.selectedPaper.data" class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">研究数据</h3>
+                    <div class="prose max-w-none text-gray-600" v-html="renderMarkdown(papersState.selectedPaper.data)"></div>
+                  </div>
+                  <div v-if="papersState.selectedPaper.outcome" class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">研究成果</h3>
+                    <div class="prose max-w-none text-gray-600" v-html="renderMarkdown(papersState.selectedPaper.outcome)"></div>
+                  </div>
+                  <div v-if="papersState.selectedPaper.fullPlan" class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">完整方案</h3>
+                    <div class="prose max-w-none text-gray-600" v-html="renderMarkdown(papersState.selectedPaper.fullPlan)"></div>
+                  </div>
+                  <div v-if="papersState.selectedPaper.hypothesis" class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">研究假设</h3>
+                    <div class="prose max-w-none text-gray-600" v-html="renderMarkdown(papersState.selectedPaper.hypothesis)"></div>
+                  </div>
+                  <div v-if="papersState.selectedPaper.experimentDesign" class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">实验设计</h3>
+                    <div class="prose max-w-none text-gray-600" v-html="renderMarkdown(papersState.selectedPaper.experimentDesign)"></div>
+                  </div>
+                  <div v-if="papersState.selectedPaper.dataAnalysis" class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">数据分析</h3>
+                    <div class="prose max-w-none text-gray-600" v-html="renderMarkdown(papersState.selectedPaper.dataAnalysis)"></div>
+                  </div>
+                  <div v-if="papersState.selectedPaper.resultsPresentation" class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">结果呈现</h3>
+                    <div class="prose max-w-none text-gray-600" v-html="renderMarkdown(papersState.selectedPaper.resultsPresentation)"></div>
+                  </div>
+                </div>
+
+                <div class="bg-blue-50 p-6 rounded-lg">
+                  <h3 class="text-lg font-semibold text-blue-900 mb-3 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    AI推荐说明
+                  </h3>
+                  <p class="text-blue-700">
+                    这篇文献是基于您的对话内容，由AI智能推荐的相关学术论文。建议您仔细阅读摘要，判断是否符合您的研究需求。
+                  </p>
+                </div>
+                
+                <div class="border-t pt-6">
+                  <h3 class="text-lg font-semibold text-gray-900 mb-3">使用建议</h3>
+                  <ul class="text-gray-600 space-y-2">
+                    <li class="flex items-start">
+                      <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>仔细阅读摘要，了解研究的核心内容和方法</span>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>如果相关，点击"下载原文"获取完整论文</span>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>可以将重要观点和方法应用到您的研究中</span>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>注意文献的发表时间和引用情况</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-center text-gray-500">
+              <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <p class="text-lg">请先获取并选择一篇文献查看详情</p>
+              <p class="text-sm mt-2">点击左侧的"获取相关文献"按钮开始</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import ChatBox from '../components/ChatBox.vue'
+import { marked } from 'marked'
+import { chatState } from '../stores/chatStore'
+import { 
+  papersState, 
+  addRecommendedPapers,
+  selectPaper,
+  toggleReference,
+  isReferenced,
+  removePaper,
+  clearAllPapers,
+  clearReferences,
+  setLoadingRecommendations,
+  setRecommendationError
+} from '../stores/chatStore'
+
+// 配置marked安全选项
+marked.setOptions({
+  sanitize: true,
+  breaks: true,
+  gfm: true
+})
+
+const router = useRouter()
+const currentSection = ref('papers')
+const chatBoxRef = ref(null)
+const showFullText = ref(false)
+
+// 渲染markdown内容
+const renderMarkdown = (markdown) => {
+  if (!markdown) return ''
+  try {
+    return marked.parse(markdown)
+  } catch (error) {
+    console.error('Markdown解析错误:', error)
+    return markdown // 返回原始内容作为回退
+  }
+}
+
+// 切换全文显示状态
+const toggleFullText = () => {
+  showFullText.value = !showFullText.value
+}
+
+// 使用全局状态，直接引用papersState而不解构，保持响应式
+// const { 
+//   recommendedPapers, 
+//   selectedPaper, 
+//   referencedPapers, 
+//   isLoadingRecommendations, 
+//   recommendationError 
+// } = papersState
+
+const selectRecommendedPaper = (paper) => {
+  selectPaper(paper)
+  // 重置全文显示状态
+  showFullText.value = false
+}
+
+const getRecommendedPapers = async () => {
+  setLoadingRecommendations(true)
+  setRecommendationError('')
+
+  try {
+    // 获取聊天历史记录
+    const chatHistory = chatState.messages.filter(msg => msg.isComplete && !msg.isError)
+    
+    console.log('当前聊天历史:', chatHistory)
+
+    // 调用推荐API（通过Vue开发服务器代理）
+    const response = await fetch('/api/semantic-recommend', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chatHistory,
+        session_id: Date.now().toString()
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`)
+    }
+
+    const result = await response.json()
+    
+    if (!result.success) {
+      throw new Error(result.error || '获取推荐失败')
+    }
+
+    // 处理推荐结果 - 使用全局状态管理
+    if (result.papers && Array.isArray(result.papers)) {
+      // 确保每个paper对象包含所需的所有字段
+      const processedPapers = result.papers.map(paper => ({
+        ...paper,
+        title: paper.title || '无标题',
+        abstract: paper.abstract || '暂无摘要',
+        downloadUrl: paper.downloadUrl || null,
+        fullText: paper.fullText || null,
+        authors: paper.authors || '未知作者',
+        year: paper.year || null,
+        citationCount: paper.citationCount || 0,
+        batchIndex: Math.floor(papersState.recommendedPapers.length / 3) + 1
+      }));
+
+      addRecommendedPapers(processedPapers)
+      
+      console.log('获取到推荐文献:', processedPapers)
+      console.log('累加后的文献列表:', papersState.recommendedPapers)
+      console.log('总文献数量:', papersState.recommendedPapers.length)
+
+      if (processedPapers.length === 0) {
+        setRecommendationError('未找到相关文献')
+      }
+    } else if (result.rawResponse) {
+      console.log('API返回原始响应:', result.rawResponse)
+      setRecommendationError('解析推荐文献失败，请稍后重试')
+    } else {
+      console.log('未能解析到papers，API响应:', result)
+      setRecommendationError('获取推荐文献失败，请稍后重试')
+    }
+
+  } catch (error) {
+    console.error('获取推荐文献失败:', error)
+    setRecommendationError(`获取推荐文献失败: ${error.message}`)
+  } finally {
+    setLoadingRecommendations(false)
+  }
+}
+</script>
+
+<style>
+/* 自定义滚动条样式 */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #c5c5c5;
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 添加按钮悬停效果 */
+.hover-button {
+  transition: all 0.2s ease-in-out;
+}
+
+.hover-button:hover {
+  transform: translateY(-1px);
+}
+
+/* 文本截断样式 */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 加载动画优化 */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Markdown内容样式 */
+.prose {
+  max-width: 100%;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  margin-top: 1.25em;
+  margin-bottom: 0.75em;
+  font-weight: 600;
+}
+
+.prose p {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  line-height: 1.6;
+}
+
+.prose ul, .prose ol {
+  padding-left: 1.5em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.prose li {
+  margin-bottom: 0.5em;
+}
+
+.prose code {
+  background-color: #f3f4f6;
+  padding: 0.2em 0.4em;
+  border-radius: 0.25em;
+  font-family: monospace;
+}
+
+.prose pre {
+  background-color: #f3f4f6;
+  padding: 1em;
+  border-radius: 0.5em;
+  overflow-x: auto;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.prose blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1em;
+  margin-left: 0;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.prose a {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+.prose a:hover {
+  color: #2563eb;
+}
+</style>

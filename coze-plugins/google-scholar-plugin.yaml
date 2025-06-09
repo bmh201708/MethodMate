@@ -1,0 +1,237 @@
+openapi: 3.0.3
+info:
+  title: Google Scholar 文献搜索插件
+  description: 一个功能强大的学术文献搜索插件，支持在Google Scholar上搜索文献并提供多种下载渠道
+  version: 1.0.0
+  contact:
+    name: Google Scholar Plugin
+    email: support@example.com
+
+servers:
+  - url: https://your-domain.vercel.app/api
+    description: 生产环境API服务器
+
+paths:
+  /scholar-search:
+    post:
+      summary: 搜索学术文献
+      description: 在Google Scholar上搜索学术文献，返回相关论文列表
+      operationId: searchScholarPapers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                  description: 搜索关键词或论文标题
+                  example: "深度学习 自然语言处理"
+                num_results:
+                  type: integer
+                  description: 返回结果数量，默认10篇
+                  minimum: 1
+                  maximum: 50
+                  default: 10
+                  example: 10
+                lang:
+                  type: string
+                  description: 搜索语言，默认中文
+                  enum: ["zh-CN", "en", "ja", "ko"]
+                  default: "zh-CN"
+                  example: "zh-CN"
+      responses:
+        '200':
+          description: 搜索成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: 是否成功
+                  query:
+                    type: string
+                    description: 搜索关键词
+                  results:
+                    type: array
+                    description: 搜索结果列表
+                    items:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+                          description: 论文标题
+                        authors:
+                          type: array
+                          items:
+                            type: string
+                          description: 作者列表
+                        journal:
+                          type: string
+                          description: 期刊名称
+                        year:
+                          type: string
+                          description: 发表年份
+                        citations:
+                          type: integer
+                          description: 引用次数
+                        summary:
+                          type: string
+                          description: 论文摘要
+                        pdf_url:
+                          type: string
+                          description: PDF下载链接
+                        scholar_url:
+                          type: string
+                          description: Google Scholar链接
+                        doi:
+                          type: string
+                          description: DOI号
+                        relevance_score:
+                          type: number
+                          description: 相关性得分
+                  total_results:
+                    type: integer
+                    description: 结果总数
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  success:
+                    type: boolean
+        '500':
+          description: 服务器内部错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  success:
+                    type: boolean
+
+  /paper-download:
+    post:
+      summary: 获取文献下载链接
+      description: 获取学术论文的多种下载渠道和阅读方式
+      operationId: downloadPaper
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paper_url:
+                  type: string
+                  description: 论文原始URL
+                  example: "https://scholar.google.com/scholar?hl=zh-CN&as_sdt=0%2C5&q=example"
+                doi:
+                  type: string
+                  description: 论文DOI号
+                  example: "10.1234/example.2023.001"
+                title:
+                  type: string
+                  description: 论文标题
+                  example: "深度学习在自然语言处理中的应用研究"
+              anyOf:
+                - required: ["paper_url"]
+                - required: ["doi"]
+      responses:
+        '200':
+          description: 获取下载链接成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: 是否成功
+                  title:
+                    type: string
+                    description: 论文标题
+                  download_sources:
+                    type: array
+                    description: 下载源列表
+                    items:
+                      type: object
+                      properties:
+                        source:
+                          type: string
+                          description: 下载源名称
+                        url:
+                          type: string
+                          description: 下载链接
+                        type:
+                          type: string
+                          enum: ["pdf", "html", "search", "api"]
+                          description: 链接类型
+                        free:
+                          type: boolean
+                          description: 是否免费
+                        description:
+                          type: string
+                          description: 下载源描述
+                  message:
+                    type: string
+                    description: 状态消息
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  success:
+                    type: boolean
+        '500':
+          description: 服务器内部错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  success:
+                    type: boolean
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 错误信息
+        success:
+          type: boolean
+          description: 是否成功
+
+x-plugin-manifest:
+  name_for_human: "Google Scholar 文献搜索"
+  name_for_model: "google_scholar_search"
+  description_for_human: "在Google Scholar上搜索学术文献，支持下载和阅读全文"
+  description_for_model: "这是一个学术文献搜索插件，可以搜索Google Scholar数据库中的论文，并提供多种下载渠道包括Sci-Hub、arXiv、PubMed等。用户可以通过关键词搜索相关文献，获取论文详细信息，并找到免费的全文下载链接。"
+  auth:
+    type: none
+  api:
+    type: openapi
+    url: https://your-domain.vercel.app/api/scholar-search
+  logo_url: https://scholar.google.com/favicon.ico
+  contact_email: support@example.com
+  legal_info_url: https://your-domain.vercel.app/legal 
