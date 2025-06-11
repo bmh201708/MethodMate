@@ -20,6 +20,18 @@ const PORT = 3002;
 const SEMANTIC_API_BASE = 'https://api.semanticscholar.org/graph/v1';
 const CORE_API_BASE = 'https://api.core.ac.uk/v3';
 const CORE_API_KEY = process.env.CORE_API_KEY;
+const SEMANTIC_API_KEY = process.env.SEMANTIC_API_KEY || '';
+
+// 简单的重试函数
+const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+  try {
+    return await fetch(url, options);
+  } catch (err) {
+    if (retries <= 1) throw err;
+    await new Promise(resolve => setTimeout(resolve, delay));
+    return fetchWithRetry(url, options, retries - 1, delay * 2);
+  }
+};
 
 if (!CORE_API_KEY) {
   console.warn('CORE_API_KEY not found in environment variables');
@@ -92,6 +104,9 @@ const parseSemanticResponse = async (papers) => {
   const parsedPapers = [];
   
   for (const paper of papers) {
+    // 添加延迟，避免请求过于频繁
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
     // 获取论文全文
     const fullText = await getFullTextFromCore(paper.title);
     
@@ -110,6 +125,81 @@ const parseSemanticResponse = async (papers) => {
   
   return parsedPapers;
 };
+
+// Scholar Search API路由
+app.post('/api/scholar-search', async (req, res) => {
+  console.log('Scholar Search API被调用');
+  
+  try {
+    const { query, num_results = 10, lang = 'zh-CN' } = req.body;
+    
+    if (!query) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Query parameter is required' 
+      });
+    }
+
+    console.log(`执行学术搜索，查询: "${query}", 结果数: ${num_results}, 语言: ${lang}`);
+    
+    // 构建 Semantic Scholar API 请求
+    // 根据最新的API文档调整字段，移除不支持的doi字段
+    const fields = 'title,authors,abstract,year,citationCount,venue,url,openAccessPdf,externalIds';
+    const searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${encodeURIComponent(query)}&limit=${num_results}&fields=${fields}`;
+    
+    console.log('请求URL:', searchUrl);
+    
+    // 准备请求头
+    const headers = {
+      'Accept': 'application/json',
+    };
+    
+    
+    
+    // 使用重试机制发送请求
+    const response = await fetchWithRetry(searchUrl, {
+      headers: headers
+    }, 3, 1000); // 最多重试3次，初始延迟1秒
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Semantic Scholar API错误响应 (${response.status}):`, errorText);
+      throw new Error(`Semantic Scholar API responded with status: ${response.status}`);
+    }
+
+    const searchData = await response.json();
+    console.log('Semantic Scholar API响应:', JSON.stringify(searchData, null, 2));
+    
+    // 转换结果格式以匹配前端期望的结构
+    const results = searchData.data.map(paper => ({
+      title: paper.title || '',
+      authors: paper.authors?.map(author => author.name) || [],
+      journal: paper.venue || '',
+      year: paper.year?.toString() || '',
+      citations: paper.citationCount || 0,
+      summary: paper.abstract || '',
+      pdf_url: paper.openAccessPdf?.url || null,
+      scholar_url: paper.url || '',
+      doi: paper.externalIds?.DOI || '',
+      relevance_score: 0.9 // Semantic Scholar API 目前不返回相关性分数
+    }));
+
+    res.json({
+      success: true,
+      query: query,
+      results: results,
+      total_results: results.length
+    });
+  } catch (error) {
+    console.error('Scholar Search Error:', error);
+    console.error('Error stack:', error.stack);
+    
+    res.status(500).json({ 
+      success: false,
+      error: error.message
+    });
+  }
+});
 
 // 语义推荐API路由
 app.post('/api/semantic-recommend', async (req, res) => {

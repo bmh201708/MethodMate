@@ -15,9 +15,11 @@
   },
   "dependencies": {
     "@coze/api": "^1.2.0",
+    "@element-plus/icons-vue": "^2.3.1",
     "@react-pdf/renderer": "^4.3.0",
     "@tailwindcss/typography": "^0.5.16",
     "cors": "^2.8.5",
+    "element-plus": "^2.10.1",
     "express": "^5.1.0",
     "html2pdf.js": "^0.10.3",
     "jspdf-autotable": "^5.0.2",
