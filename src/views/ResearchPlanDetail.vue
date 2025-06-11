@@ -287,6 +287,30 @@
                 </div>
               </div>
 
+              <!-- 方案评估和迭代按钮 -->
+              <div v-if="hasGeneratedPlan" class="bg-white rounded-xl shadow-sm p-4 mb-4">
+                <div class="flex justify-end space-x-4">
+                  <button
+                    @click="evaluatePlan"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>评估方案</span>
+                  </button>
+                  <button
+                    @click="iteratePlan"
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span>方案迭代</span>
+                  </button>
+                </div>
+              </div>
+
               <!-- 来源和方法介绍卡片 -->
               <div class="bg-white rounded-xl shadow-sm p-8">
                 <!-- 来源和方法导航按钮 -->
@@ -346,6 +370,8 @@ const lastMessageIdBeforeGenerate = ref(null) // 记录开始生成前的最后�
 const isViewingHistoryPlan = ref(false) // 是否正在查看历史方案
 const originalPlan = ref(null) // 保存原始方案数据
 const lastProcessedMessageId = ref(null) // 记录最后处理的消息ID，防止重复解析
+const isEvaluating = ref(false) // 是否正在评估方案
+const isIterating = ref(false) // 是否正在迭代方案
 
 const sections = [
   { id: 'full', name: '完整方案' },
@@ -858,6 +884,97 @@ const exitHistoryView = () => {
     Object.assign(currentPlanState, originalData)
     originalPlan.value = null
     console.log('恢复原始方案数据，原本有生成内容:', _hasGeneratedPlan)
+  }
+}
+
+// 评估研究方案
+const evaluatePlan = async () => {
+  if (isEvaluating.value || !currentPlanState) return
+  
+  try {
+    isEvaluating.value = true
+    
+    // 构建评估提示
+    const evaluationPrompt = `请对以下研究方案进行系统评估，分别从以下三方面进行分析：
+1. 逻辑性：评估研究目的、研究假设、评估指标等的前后对应关系
+2. 合理性：评估各评估指标、评估工具、评估方法等是否有效且合适
+3. 可行性：评估用户实验的任务量、时间、成本等是否可行
+
+最后请总结指出方案的优点和可改进之处。
+
+研究方案内容：
+${JSON.stringify({
+  title: currentPlanState.title || '定量研究方案',
+  hypotheses: currentPlanState.hypotheses || [],
+  experimentalDesign: currentPlanState.experimentalDesign || '',
+  analysisMethod: currentPlanState.analysisMethod || '',
+  expectedResults: currentPlanState.expectedResults || ''
+}, null, 2)}`
+
+    // 发送消息到对话
+    await sendMessage(evaluationPrompt)
+
+  } catch (error) {
+    console.error('评估方案失败:', error)
+    alert('评估方案失败，请重试')
+  } finally {
+    isEvaluating.value = false
+  }
+}
+
+// 迭代研究方案
+const iteratePlan = async () => {
+  if (isIterating.value || !currentPlanState) return
+
+  try {
+    isIterating.value = true
+
+    // 获取最近的评估消息
+    const latestEvaluation = chatState.messages
+      .filter(msg => msg.type === 'assistant' && msg.isComplete && !msg.isError)
+      .reverse()
+      .find(msg => msg.content.includes('逻辑性') && msg.content.includes('合理性') && msg.content.includes('可行性'))
+
+    if (!latestEvaluation) {
+      alert('请先进行方案评估，再进行迭代优化')
+      return
+    }
+
+    // 构建迭代提示
+    const iterationPrompt = `基于上一次的评估结果，请对研究方案进行优化和迭代。重点关注评估中指出的问题和改进建议，提供具体的优化方案。
+
+评估结果：
+${latestEvaluation.content}
+
+当前研究方案：
+${JSON.stringify({
+  title: currentPlanState.title || '定量研究方案',
+  hypotheses: currentPlanState.hypotheses || [],
+  experimentalDesign: currentPlanState.experimentalDesign || '',
+  analysisMethod: currentPlanState.analysisMethod || '',
+  expectedResults: currentPlanState.expectedResults || ''
+}, null, 2)}
+
+请按照以下格式返回优化后的方案：
+#研究假设：<优化后的研究假设>
+#实验设计：<优化后的实验设计>
+#数据分析：<优化后的数据分析方法>
+#结果呈现：<优化后的结果呈现方式>
+
+注意：
+1. 重点优化评估中指出的问题部分
+2. 保持方案的整体一致性
+3. 确保优化后的方案更加科学严谨
+4. 必须按照上述格式返回完整的优化方案`
+
+    // 发送消息到对话
+    await sendMessage(iterationPrompt)
+
+  } catch (error) {
+    console.error('迭代方案失败:', error)
+    alert('迭代方案失败，请重试')
+  } finally {
+    isIterating.value = false
   }
 }
 
