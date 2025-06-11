@@ -104,6 +104,9 @@ const parseSemanticResponse = async (papers) => {
   const parsedPapers = [];
   
   for (const paper of papers) {
+    // 添加延迟，避免请求过于频繁
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
     // 获取论文全文
     const fullText = await getFullTextFromCore(paper.title);
     
