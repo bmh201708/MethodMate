@@ -2,7 +2,7 @@
   <div class="scholar-search-container max-w-6xl mx-auto p-6">
     <!-- 搜索表单 -->
     <div class="search-form bg-white rounded-lg shadow-md p-6 mb-6">
-      <h2 class="text-2xl font-bold text-gray-800 mb-4">Google Scholar 文献搜索</h2>
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">Semantic Scholar 文献搜索</h2>
       
       <form @submit.prevent="searchPapers" class="space-y-4">
         <div class="flex flex-col md:flex-row gap-4">
