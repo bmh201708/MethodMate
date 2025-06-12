@@ -210,8 +210,23 @@
                   </span>
                 </div>
                 
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">摘要</h3>
-                <p class="text-gray-600 leading-relaxed">{{ papersState.selectedPaper.abstract }}</p>
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-lg font-semibold text-gray-900">摘要</h3>
+                  <button 
+                    @click="toggleTranslation"
+                    :disabled="isTranslating"
+                    class="text-sm px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                    title="显示中文译文"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                    </svg>
+                    <span>{{ isTranslating ? '翻译中...' : (showTranslation ? '显示原文' : '显示译文') }}</span>
+                  </button>
+                </div>
+                <p class="text-gray-600 leading-relaxed">
+                  {{ showTranslation && translatedAbstract ? translatedAbstract : papersState.selectedPaper.abstract }}
+                </p>
 
                 <!-- 全文部分 -->
                 <div v-if="papersState.selectedPaper.fullText" class="mt-6">
@@ -355,6 +370,7 @@ import { useRouter } from 'vue-router'
 import ChatBox from '../components/ChatBox.vue'
 import { marked } from 'marked'
 import { chatState } from '../stores/chatStore'
+import { sendSilentMessageToCoze } from '../services/cozeApi'
 import { 
   papersState, 
   addRecommendedPapers,
@@ -379,6 +395,11 @@ const router = useRouter()
 const currentSection = ref('papers')
 const chatBoxRef = ref(null)
 const showFullText = ref(false)
+
+// 翻译相关状态
+const showTranslation = ref(false)
+const translatedAbstract = ref('')
+const isTranslating = ref(false)
 
 // 渲染markdown内容
 const renderMarkdown = (markdown) => {
@@ -409,6 +430,105 @@ const selectRecommendedPaper = (paper) => {
   selectPaper(paper)
   // 重置全文显示状态
   showFullText.value = false
+  // 重置翻译状态
+  showTranslation.value = false
+  translatedAbstract.value = ''
+}
+
+// 翻译摘要
+const translateAbstract = async (abstractText) => {
+  if (!abstractText || !abstractText.trim()) {
+    throw new Error('摘要内容为空')
+  }
+
+  isTranslating.value = true
+  
+  try {
+    console.log('开始翻译摘要:', abstractText)
+    
+    // 构建翻译消息
+    const translateMessage = `请将以下英文摘要翻译成中文，保持学术性和准确性：\n\n${abstractText}`
+    
+    // 静默发送到coze agent
+    const translatedResult = await sendSilentMessageToCoze(translateMessage, chatState.messages)
+    
+    console.log('翻译结果:', translatedResult)
+    
+    // 尝试提取翻译后的内容
+    let translatedText = translatedResult
+    
+    // 如果是JSON格式，尝试提取output字段
+    try {
+      const jsonMatch = translatedResult.match(/```json\s*([\s\S]*?)\s*```/i) || translatedResult.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        let jsonStr = jsonMatch[1] || jsonMatch[0]
+        jsonStr = jsonStr
+          .replace(/,\s*}/g, '}')
+          .replace(/,\s*]/g, ']')
+          .replace(/:\s*,/g, ': null,')
+          .replace(/"\s*:\s*,/g, '": null,')
+          .replace(/,\s*,/g, ',')
+          .replace(/}\s*}+$/g, '}')
+          .replace(/^{+/g, '{')
+          .trim()
+        
+        const jsonData = JSON.parse(jsonStr)
+        if (jsonData && typeof jsonData === 'object') {
+          translatedText = jsonData.output || jsonData.translation || jsonData.result || translatedResult
+        }
+      }
+    } catch (error) {
+      console.log('JSON解析失败，使用原始结果:', error.message)
+    }
+    
+    // 清理翻译结果，移除可能的提示词或额外说明
+    translatedText = translatedText
+      .replace(/^翻译结果?[：:]?\s*/i, '')
+      .replace(/^中文翻译[：:]?\s*/i, '')
+      .replace(/^以下是翻译[：:]?\s*/i, '')
+      .replace(/^翻译[：:]?\s*/i, '')
+      .trim()
+    
+    if (translatedText && translatedText.length > 10) {
+      return translatedText
+    } else {
+      throw new Error('翻译结果为空或过短')
+    }
+    
+  } catch (error) {
+    console.error('翻译摘要失败:', error)
+    throw error
+  } finally {
+    isTranslating.value = false
+  }
+}
+
+// 切换翻译显示
+const toggleTranslation = async () => {
+  if (!papersState.selectedPaper || !papersState.selectedPaper.abstract) {
+    return
+  }
+
+  // 如果已经显示翻译，切换回原文
+  if (showTranslation.value) {
+    showTranslation.value = false
+    return
+  }
+
+  // 如果还没有翻译，先进行翻译
+  if (!translatedAbstract.value) {
+    try {
+      const translated = await translateAbstract(papersState.selectedPaper.abstract)
+      translatedAbstract.value = translated
+      showTranslation.value = true
+    } catch (error) {
+      console.error('翻译失败:', error)
+      alert('翻译失败：' + error.message)
+    }
+  } else {
+    // 已有翻译，直接显示
+    showTranslation.value = true
+  }
 }
 
 const getRecommendedPapers = async () => {
