@@ -19,6 +19,7 @@
     "@react-pdf/renderer": "^4.3.0",
     "@tailwindcss/typography": "^0.5.16",
     "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
     "element-plus": "^2.10.1",
     "express": "^5.1.0",
     "html2pdf.js": "^0.10.3",

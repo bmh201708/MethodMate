@@ -460,4 +460,109 @@ export const sendStreamMessageToCoze = async (message, onChunk, chatHistory = []
     console.error('错误堆栈:', error.stack)
     throw error
   }
+}
+
+// 静默发送消息到Coze（不显示在聊天框中）
+export const sendSilentMessageToCoze = async (message, chatHistory = []) => {
+  try {
+    console.log('=== 静默发送消息到Coze ===')
+    console.log('消息内容:', message)
+    
+    // 构建完整的消息上下文
+    const messages = []
+    
+    // 添加历史消息（最近的10条对话）
+    const recentHistory = chatHistory
+      .filter(msg => (msg.type === 'user' || msg.type === 'assistant') && !msg.isError && msg.isComplete)
+      .slice(-10)
+    
+    // 转换历史消息格式
+    recentHistory.forEach(msg => {
+      if (msg.type === 'user') {
+        messages.push({
+          role: 'user',
+          content: msg.content,
+          content_type: 'text'
+        })
+      } else if (msg.type === 'assistant') {
+        messages.push({
+          role: 'assistant',
+          content: msg.content,
+          content_type: 'text'
+        })
+      }
+    })
+    
+    // 添加当前消息
+    messages.push({
+      role: 'user',
+      content: message,
+      content_type: 'text'
+    })
+    
+    const params = {
+      bot_id: '7513529977745915905', // 使用指定的润色bot_id
+      user_id: USER_ID,
+      additional_messages: messages,
+      stream: true, // 当auto_save_history=false时，必须设置stream=true
+      auto_save_history: false // 不保存历史记录
+    }
+    
+    console.log('静默请求参数:', params)
+    
+    const stream = await apiClient.chat.stream(params)
+    let fullResponse = ''
+    
+    for await (const data of stream) {
+      console.log('静默收到流数据:', data)
+      
+      // 处理聊天失败事件
+      if (data.event === 'conversation.chat.failed') {
+        const errorInfo = data.data?.last_error || {}
+        console.error('静默聊天失败详情:', errorInfo)
+        throw new Error(`聊天失败: ${errorInfo.msg || '未知错误'} (错误码: ${errorInfo.code || 'N/A'})`)
+      }
+      
+      // 处理消息内容 - 完整消息
+      if (data.event === 'conversation.message.completed') {
+        const msgData = data.data
+        console.log('静默收到消息:', msgData)
+        
+        // 只处理 type=answer 的消息（agent回复）
+        if (msgData?.type === 'answer') {
+          const content = msgData.content || ''
+          if (content) {
+            fullResponse = content
+          }
+        }
+      }
+      
+      // 处理流式消息片段
+      if (data.event === 'conversation.message.delta') {
+        const msgData = data.data
+        // 只处理 type=answer 的消息片段
+        if (msgData?.type === 'answer') {
+          const content = msgData.content || ''
+          if (content) {
+            fullResponse += content
+          }
+        }
+      }
+      
+      // 处理错误事件
+      if (data.event === 'error') {
+        const errorMsg = data.data?.msg || data.data?.message || '未知错误'
+        console.error('静默API错误:', data.data)
+        throw new Error(`Coze API 错误: ${errorMsg}`)
+      }
+    }
+    
+    return fullResponse || '抱歉，我没有收到有效的回复。'
+  } catch (error) {
+    console.error('=== 静默发送消息错误 ===')
+    console.error('错误类型:', error.name)
+    console.error('错误消息:', error.message)
+    console.error('错误堆栈:', error.stack)
+    throw error
+  }
 } 

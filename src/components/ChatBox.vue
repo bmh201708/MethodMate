@@ -47,21 +47,34 @@
       </div>
 
       <!-- 输入框 -->
-      <div class="flex items-center space-x-4">
-        <input
-          v-model="newMessage"
-          type="text"
-          placeholder="请输入您的问题..."
-          class="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          @keyup.enter="handleSendMessage"
-          :disabled="chatState.isLoading"
-        />
+      <div class="flex items-center space-x-2">
+        <div class="relative flex-1">
+          <input
+            v-model="newMessage"
+            type="text"
+            placeholder="请输入您的问题..."
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            @keyup.enter="handleSendMessage"
+            :disabled="chatState.isLoading || isPolishingPrompt"
+          />
+          <!-- 润色提示词按钮 -->
+          <button
+            @click="handlePolishPrompt"
+            :disabled="!newMessage.trim() || chatState.isLoading || isPolishingPrompt"
+            class="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="润色提示词"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l3.09 6.26L22 10.27l-5 4.87 1.18 6.88L12 18.77l-6.18 3.25L7 15.14 2 10.27l6.91-1.01L12 3z" />
+            </svg>
+          </button>
+        </div>
         <button
           @click="handleSendMessage"
           class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="chatState.isLoading"
+          :disabled="chatState.isLoading || isPolishingPrompt"
         >
-          发送
+          {{ isPolishingPrompt ? '润色中...' : '发送' }}
         </button>
       </div>
     </div>
@@ -71,6 +84,7 @@
 <script setup>
 import { ref, watch, nextTick } from 'vue'
 import { chatState, sendMessage } from '../stores/chatStore'
+import { sendSilentMessageToCoze } from '../services/cozeApi'
 import LoadingDots from './LoadingDots.vue'
 import html2pdf from 'html2pdf.js'
 
@@ -84,6 +98,7 @@ const props = defineProps({
 
 const newMessage = ref('')
 const chatContainer = ref(null)
+const isPolishingPrompt = ref(false)
 
 // 检测是否为研究方案
 const isResearchPlan = (content) => {
@@ -515,6 +530,68 @@ const handleDownloadPDF = (content) => {
   if (filename) {
     // 显示成功提示
     alert(`PDF文件"${filename}"已生成并下载`)
+  }
+}
+
+// 润色提示词
+const handlePolishPrompt = async () => {
+  if (!newMessage.value.trim() || isPolishingPrompt.value) return
+  
+  const originalPrompt = newMessage.value.trim()
+  isPolishingPrompt.value = true
+  
+  try {
+    console.log('开始润色提示词:', originalPrompt)
+    
+    // 构建润色消息
+    const polishMessage = `润色提示词：${originalPrompt}`
+    
+    // 静默发送到coze agent
+    const polishedResult = await sendSilentMessageToCoze(polishMessage, chatState.messages)
+    
+    console.log('润色结果:', polishedResult)
+    
+    // 尝试提取润色后的内容
+    let polishedPrompt = polishedResult
+    
+    // 如果是JSON格式，尝试提取output字段
+    try {
+      const jsonMatch = polishedResult.match(/```json\s*([\s\S]*?)\s*```/i) || polishedResult.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        let jsonStr = jsonMatch[1] || jsonMatch[0]
+        jsonStr = jsonStr
+          .replace(/,\s*}/g, '}')
+          .replace(/,\s*]/g, ']')
+          .replace(/:\s*,/g, ': null,')
+          .replace(/"\s*:\s*,/g, '": null,')
+          .replace(/,\s*,/g, ',')
+          .replace(/}\s*}+$/g, '}')
+          .replace(/^{+/g, '{')
+          .trim()
+        
+        const jsonData = JSON.parse(jsonStr)
+        if (jsonData && typeof jsonData === 'object') {
+          polishedPrompt = jsonData.output || jsonData.polishedPrompt || jsonData.result || polishedResult
+        }
+      }
+    } catch (error) {
+      console.log('JSON解析失败，使用原始结果:', error.message)
+    }
+    
+    // 如果润色结果不为空且与原始提示词不同，更新输入框
+    if (polishedPrompt && polishedPrompt.trim() && polishedPrompt.trim() !== originalPrompt) {
+      newMessage.value = polishedPrompt.trim()
+      console.log('提示词润色完成，已更新到输入框')
+    } else {
+      console.log('润色结果与原提示词相同或为空，保持原内容')
+    }
+    
+  } catch (error) {
+    console.error('润色提示词失败:', error)
+    // 可以添加用户提示
+    alert('润色提示词失败，请重试')
+  } finally {
+    isPolishingPrompt.value = false
   }
 }
 
