@@ -20,7 +20,8 @@ export const chatState = reactive({
 export const papersState = reactive({
   recommendedPapers: [], // 推荐文献列表
   selectedPaper: null, // 当前选中的文献
-  referencedPapers: new Set(), // 被选为参考的文献ID集合
+  referencedPapers: new Set(), // 被选为参考的文献ID集合（保持兼容性）
+  referencedPapersList: [], // 引用文献的完整信息列表
   isLoadingRecommendations: false, // 是否正在获取推荐
   recommendationError: '' // 推荐错误信息
 })
@@ -106,9 +107,21 @@ export const selectPaper = (paper) => {
 export const toggleReference = (paper) => {
   const paperId = paper.id
   if (papersState.referencedPapers.has(paperId)) {
+    // 移除引用
     papersState.referencedPapers.delete(paperId)
+    papersState.referencedPapersList = papersState.referencedPapersList.filter(p => p.id !== paperId)
+    console.log(`已移除引用文献: ${paper.title}`)
   } else {
+    // 添加引用
     papersState.referencedPapers.add(paperId)
+    // 保存完整的文献信息，添加引用时间和来源标记
+    const referencedPaper = {
+      ...paper,
+      referencedAt: new Date().toISOString(),
+      source: paper.batchIndex ? 'recommendation' : 'search' // 标记来源
+    }
+    papersState.referencedPapersList.push(referencedPaper)
+    console.log(`已添加引用文献: ${paper.title}`)
   }
 }
 
@@ -127,6 +140,7 @@ export const removePaper = (index) => {
   // 如果删除的文献被选为参考，也要从参考集合中移除
   if (paperToRemove && papersState.referencedPapers.has(paperToRemove.id)) {
     papersState.referencedPapers.delete(paperToRemove.id)
+    papersState.referencedPapersList = papersState.referencedPapersList.filter(p => p.id !== paperToRemove.id)
   }
   
   papersState.recommendedPapers.splice(index, 1)
@@ -136,10 +150,29 @@ export const clearAllPapers = () => {
   papersState.recommendedPapers = []
   papersState.selectedPaper = null
   papersState.referencedPapers.clear()
+  papersState.referencedPapersList = []
 }
 
 export const clearReferences = () => {
   papersState.referencedPapers.clear()
+  papersState.referencedPapersList = []
+  console.log('已清空所有引用文献')
+}
+
+export const removePaperFromReferences = (paper) => {
+  // 从Set中移除
+  papersState.referencedPapers.delete(paper.id || paper.title)
+  
+  // 从完整列表中移除
+  const index = papersState.referencedPapersList.findIndex(p => 
+    (p.id && p.id === paper.id) || 
+    (p.title === paper.title)
+  )
+  
+  if (index > -1) {
+    papersState.referencedPapersList.splice(index, 1)
+    console.log('移除参考文献:', paper.title)
+  }
 }
 
 export const setLoadingRecommendations = (loading) => {

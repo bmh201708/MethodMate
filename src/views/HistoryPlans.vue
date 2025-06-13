@@ -14,7 +14,39 @@
               </svg>
               首页
             </button>
-            <h1 class="text-2xl font-bold text-gray-900">历史方案</h1>
+            <h1 class="text-2xl font-bold text-gray-900">MethodMate</h1>
+            <div class="flex space-x-4">
+              <button
+                @click="router.push('/scholar-search')"
+                class="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
+              >
+                文献搜索
+              </button>
+              <button
+                @click="router.push('/papers')"
+                class="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
+              >
+                文献推荐
+              </button>
+              <button
+                @click="router.push('/references')"
+                class="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium flex items-center"
+              >
+                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                </svg>
+                引用文献 ({{ referencedCount }})
+              </button>
+              <button
+                @click="router.push('/research-plan')"
+                class="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
+              >
+                研究方案
+              </button>
+              <span class="px-4 py-2 text-purple-600 font-medium border-b-2 border-purple-600">
+                历史方案
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -111,12 +143,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import ChatBox from '../components/ChatBox.vue'
-import { historyState, removeHistoryPlan, clearHistoryPlans, setCurrentViewingPlan } from '../stores/chatStore'
+import { historyState, removeHistoryPlan, clearHistoryPlans, setCurrentViewingPlan, papersState } from '../stores/chatStore'
 
 const router = useRouter()
+
+// 引用文献计数
+const referencedCount = computed(() => papersState.referencedPapers.size)
 
 // 查看方案详情
 const viewPlan = (plan) => {

@@ -33,8 +33,20 @@
             </div>
           </div>
           <div class="flex items-center space-x-4">
-            <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-              新建方案
+            <button
+              @click="router.push('/references')"
+              class="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors flex items-center"
+            >
+              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+              </svg>
+              引用文献 ({{ papersState.referencedPapers.size }})
+            </button>
+            <button
+              @click="router.push('/scholar-search')"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              文献搜索
             </button>
           </div>
         </div>

@@ -1,8 +1,54 @@
 <template>
   <div class="scholar-search-container max-w-6xl mx-auto p-6">
+    <!-- 顶部导航栏 -->
+    <nav class="bg-white rounded-lg shadow-md p-4 mb-6">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-6">
+          <router-link 
+            to="/" 
+            class="text-gray-600 hover:text-gray-900 flex items-center transition-colors"
+          >
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+            </svg>
+            首页
+          </router-link>
+          <h1 class="text-xl font-bold text-gray-900">文献搜索</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+          <router-link 
+            to="/papers" 
+            class="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm"
+          >
+            文献推荐
+          </router-link>
+          <router-link 
+            to="/references" 
+            class="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm"
+          >
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+            </svg>
+            引用文献 ({{ referencedCount }})
+          </router-link>
+          <router-link 
+            to="/research-plan" 
+            class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
+          >
+            研究方案
+          </router-link>
+        </div>
+      </div>
+    </nav>
+
     <!-- 搜索表单 -->
     <div class="search-form bg-white rounded-lg shadow-md p-6 mb-6">
-      <h2 class="text-2xl font-bold text-gray-800 mb-4">Semantic Scholar 文献搜索</h2>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold text-gray-800">Semantic Scholar 文献搜索</h2>
+        <div class="text-sm text-gray-600">
+          已选择 {{ referencedCount }} 篇参考文献
+        </div>
+      </div>
       
       <form @submit.prevent="searchPapers" class="space-y-4">
         <div class="flex flex-col md:flex-row gap-4">
@@ -66,6 +112,49 @@
       </form>
     </div>
 
+    <!-- 引用文献列表 -->
+    <div v-if="referencedCount > 0" class="referenced-papers bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-purple-800 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+          </svg>
+          已参考文献 ({{ referencedCount }} 篇)
+        </h3>
+        <button
+          @click="clearAllReferences"
+          class="text-sm text-gray-500 hover:text-red-500 transition-colors"
+        >
+          清空全部
+        </button>
+      </div>
+      <div class="grid gap-3">
+        <div
+          v-for="(paper, index) in referencedPapersList"
+          :key="index"
+          class="flex items-start justify-between p-3 bg-purple-50 border border-purple-200 rounded-md"
+        >
+          <div class="flex-1">
+            <h4 class="font-medium text-gray-900 text-sm leading-tight mb-1">{{ paper.title }}</h4>
+            <p class="text-xs text-gray-600">
+              <span v-if="paper.authors && paper.authors.length">{{ Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors }}</span>
+              <span v-if="paper.year && paper.authors"> · </span>
+              <span v-if="paper.year">{{ paper.year }}</span>
+              <span v-if="paper.journal"> · {{ paper.journal }}</span>
+            </p>
+          </div>
+          <button
+            @click="removeFromReferences(paper)"
+            class="ml-2 text-purple-400 hover:text-red-500 transition-colors"
+          >
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 搜索结果 -->
     <div v-if="searchResults.length > 0" class="search-results">
               <div class="flex items-center justify-between mb-4">
@@ -92,7 +181,10 @@
           v-for="(paper, index) in filteredResults"
           :key="index"
           class="paper-card bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow"
-          :class="{'border-blue-300': paper.isTopVenue}"
+          :class="{
+            'border-blue-300': paper.isTopVenue,
+            'border-purple-300 bg-purple-50': isReferenced(paper)
+          }"
         >
           <!-- 论文标题和基本信息 -->
           <div class="paper-header mb-4">
@@ -158,7 +250,7 @@
             </a>
 
             <button
-              @click="findDownloadSources(paper)"
+              @click="findDownloadSources(paper, index)"
               :disabled="loadingDownload === index"
               class="inline-flex items-center px-3 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors text-sm disabled:opacity-50"
             >
@@ -170,6 +262,21 @@
                 <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
               </svg>
               获取全文
+            </button>
+
+            <button
+              @click="toggleReference(paper)"
+              class="inline-flex items-center px-3 py-2 rounded-md transition-colors text-sm"
+              :class="{
+                'bg-purple-100 text-purple-700 hover:bg-purple-200': isReferenced(paper),
+                'bg-gray-100 text-gray-700 hover:bg-gray-200': !isReferenced(paper)
+              }"
+            >
+              <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path v-if="isReferenced(paper)" fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                <path v-else fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+              </svg>
+              {{ isReferenced(paper) ? '已参考' : '参考此文' }}
             </button>
 
             <span
@@ -235,6 +342,13 @@
 </template>
 
 <script>
+import { 
+  papersState,
+  toggleReference, 
+  isReferenced,
+  clearReferences
+} from '@/stores/chatStore'
+
 export default {
   name: 'ScholarSearch',
   data() {
@@ -257,9 +371,31 @@ export default {
         return this.searchResults.filter(paper => paper.isTopVenue);
       }
       return this.searchResults;
+    },
+    
+    referencedPapersList() {
+      // 直接返回存储的完整引用列表
+      return papersState.referencedPapersList
+    },
+    
+    referencedCount() {
+      return papersState.referencedPapers.size
     }
   },
+  
   methods: {
+    // 引入状态管理函数
+    toggleReference,
+    isReferenced,
+    
+    removeFromReferences(paper) {
+      papersState.referencedPapers.delete(paper.id)
+    },
+    
+    clearAllReferences() {
+      clearReferences()
+    },
+
     async searchPapers() {
       this.loading = true
       this.error = null
@@ -283,9 +419,10 @@ export default {
         const data = await response.json()
 
         if (data.success) {
-          // 确保每个结果都有isTopVenue属性
-          this.searchResults = data.results.map(result => ({
+          // 确保每个结果都有isTopVenue属性和唯一ID
+          this.searchResults = data.results.map((result, index) => ({
             ...result,
+            id: result.title, // 使用标题作为唯一ID
             downloadSources: null,
             downloadMessage: '',
             isTopVenue: result.isTopVenue || false // 确保isTopVenue属性存在
@@ -377,5 +514,21 @@ export default {
 
 .loading-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 引用文献样式 */
+.paper-card.referenced {
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  border-color: #c084fc;
+}
+
+.referenced-papers {
+  border-left: 4px solid #8b5cf6;
+}
+
+/* 按钮悬浮效果 */
+.paper-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 </style> 

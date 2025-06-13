@@ -676,13 +676,13 @@ app.post('/api/semantic-recommend', async (req, res) => {
     }
 
     // 构建关键词提取消息
-    let messageContent = `Please analyze the following text and extract 5-10 key academic search terms. 
+    let messageContent = `Please analyze the following text and extract 2-3 key academic search terms. 
 Focus on specific technical terms, methodologies, and core concepts.
 
 Please respond in the following JSON format:
 \`\`\`json
 {
-  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
+  "keywords": ["keyword1", "keyword2", "keyword3"]
 }
 \`\`\`
 

@@ -12,6 +12,15 @@
               文献搜索
             </button>
             <button
+              @click="router.push('/references')"
+              class="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors flex items-center"
+            >
+              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+              </svg>
+              引用文献 ({{ referencedCount }})
+            </button>
+            <button
               @click="router.push('/history-plans')"
               class="px-4 py-2 bg-white text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 transition-colors"
             >
@@ -74,11 +83,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import ChatBox from '../components/ChatBox.vue'
+import { papersState } from '../stores/chatStore'
 
 const router = useRouter()
+
+// 引用文献计数
+const referencedCount = computed(() => papersState.referencedPapers.size)
 
 // 论文和研究计划数据
 const papers = ref([
