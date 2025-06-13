@@ -170,19 +170,52 @@ app.post('/api/scholar-search', async (req, res) => {
     const searchData = await response.json();
     console.log('Semantic Scholar API响应:', JSON.stringify(searchData, null, 2));
     
-    // 转换结果格式以匹配前端期望的结构
-    const results = searchData.data.map(paper => ({
-      title: paper.title || '',
-      authors: paper.authors?.map(author => author.name) || [],
-      journal: paper.venue || '',
-      year: paper.year?.toString() || '',
-      citations: paper.citationCount || 0,
-      summary: paper.abstract || '',
-      pdf_url: paper.openAccessPdf?.url || null,
-      scholar_url: paper.url || '',
-      doi: paper.externalIds?.DOI || '',
-      relevance_score: 0.9 // Semantic Scholar API 目前不返回相关性分数
-    }));
+    // 定义允许的期刊/会议列表
+    const allowedVenues = [
+      // 顶会
+      'Computer-Supported Cooperative Work', 'CSCW',
+      'Human Factors in Computing Systems', 'CHI',
+      'Pervasive and Ubiquitous Computing', 'UbiComp',
+      'User Interface Software and Technology', 'UIST',
+      
+      // 顶刊
+      'Computers in Human Behavior',
+      'CoDesign',
+      'Technovation',
+      'Design Studies',
+      'Journal of Mixed Methods Research',
+      'ACM Transactions on Computer-Human Interaction', 'TOCHI',
+      'International Journal of Human-Computer Studies',
+      'Design Issues',
+      'Human-Computer Interaction',
+      'Computer-Aided Design',
+      'Applied Ergonomics',
+      'International Journal of Design',
+      'Human Factors',
+      'Leonardo',
+      'The Design Journal'
+    ];
+
+    // 过滤并转换结果
+    const results = searchData.data
+      .filter(paper => {
+        const venue = paper.venue || '';
+        return allowedVenues.some(allowedVenue => 
+          venue.toLowerCase().includes(allowedVenue.toLowerCase())
+        );
+      })
+      .map(paper => ({
+        title: paper.title || '',
+        authors: paper.authors?.map(author => author.name) || [],
+        journal: paper.venue || '',
+        year: paper.year?.toString() || '',
+        citations: paper.citationCount || 0,
+        summary: paper.abstract || '',
+        pdf_url: paper.openAccessPdf?.url || null,
+        scholar_url: paper.url || '',
+        doi: paper.externalIds?.DOI || '',
+        relevance_score: 0.9 // Semantic Scholar API 目前不返回相关性分数
+      }));
 
     res.json({
       success: true,
@@ -258,8 +291,44 @@ app.post('/api/semantic-recommend', async (req, res) => {
       throw new Error('Semantic Scholar API返回的数据格式不正确');
     }
 
+    // 定义允许的期刊/会议列表
+    const allowedVenues = [
+      // 顶会
+      'Computer-Supported Cooperative Work', 'CSCW',
+      'Human Factors in Computing Systems', 'CHI',
+      'Pervasive and Ubiquitous Computing', 'UbiComp',
+      'User Interface Software and Technology', 'UIST',
+      
+      // 顶刊
+      'Computers in Human Behavior',
+      'CoDesign',
+      'Technovation',
+      'Design Studies',
+      'Journal of Mixed Methods Research',
+      'ACM Transactions on Computer-Human Interaction', 'TOCHI',
+      'International Journal of Human-Computer Studies',
+      'Design Issues',
+      'Human-Computer Interaction',
+      'Computer-Aided Design',
+      'Applied Ergonomics',
+      'International Journal of Design',
+      'Human Factors',
+      'Leonardo',
+      'The Design Journal'
+    ];
+
+    // 过滤结果，只保留来自允许的期刊/会议的论文
+    const filteredData = result.data.filter(paper => {
+      const venue = paper.venue || '';
+      return allowedVenues.some(allowedVenue => 
+        venue.toLowerCase().includes(allowedVenue.toLowerCase())
+      );
+    });
+
+    console.log(`过滤前论文数量: ${result.data.length}, 过滤后论文数量: ${filteredData.length}`);
+
     // 解析返回的论文数据
-    const papers = await parseSemanticResponse(result.data || []);
+    const papers = await parseSemanticResponse(filteredData || []);
 
     res.json({
       success: true,
