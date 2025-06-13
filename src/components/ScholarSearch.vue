@@ -15,6 +15,16 @@
               required
             />
           </div>
+          <div class="flex items-center space-x-2">
+            <label class="inline-flex items-center">
+              <input
+                type="checkbox"
+                v-model="filterTopVenues"
+                class="form-checkbox h-5 w-5 text-blue-600"
+              />
+              <span class="ml-2 text-gray-700">仅搜索顶会顶刊</span>
+            </label>
+          </div>
           
           <div class="flex gap-2">
             <select
@@ -58,26 +68,42 @@
 
     <!-- 搜索结果 -->
     <div v-if="searchResults.length > 0" class="search-results">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-xl font-semibold text-gray-800">
-          搜索结果 (共 {{ searchResults.length }} 篇)
-        </h3>
-        <div class="text-sm text-gray-600">
-          搜索关键词: "{{ lastSearchQuery }}"
-        </div>
-      </div>
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-4">
+                  <h3 class="text-xl font-semibold text-gray-800">
+                    搜索结果 (共 {{ searchResults.length }} 篇)
+                  </h3>
+                  <label class="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      v-model="showOnlyTopVenues"
+                      class="form-checkbox h-4 w-4 text-blue-600"
+                    />
+                    <span class="ml-2 text-sm text-gray-700">只显示顶会顶刊</span>
+                  </label>
+                </div>
+                <div class="text-sm text-gray-600">
+                  搜索关键词: "{{ lastSearchQuery }}"
+                </div>
+              </div>
 
       <div class="grid gap-6">
         <div
-          v-for="(paper, index) in searchResults"
+          v-for="(paper, index) in filteredResults"
           :key="index"
           class="paper-card bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow"
+          :class="{'border-blue-300': paper.isTopVenue}"
         >
           <!-- 论文标题和基本信息 -->
           <div class="paper-header mb-4">
-            <h4 class="text-lg font-semibold text-gray-900 mb-2 leading-tight">
-              {{ paper.title }}
-            </h4>
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-lg font-semibold text-gray-900 leading-tight">
+                {{ paper.title }}
+              </h4>
+              <span v-if="paper.isTopVenue" class="ml-2 px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
+                顶会顶刊
+              </span>
+            </div>
             
             <div class="paper-meta flex flex-wrap gap-4 text-sm text-gray-600">
               <span v-if="paper.authors && paper.authors.length" class="flex items-center">
@@ -220,7 +246,17 @@ export default {
       loading: false,
       loadingDownload: null,
       searchResults: [],
-      error: null
+      error: null,
+      filterTopVenues: false,
+      showOnlyTopVenues: false
+    }
+  },
+  computed: {
+    filteredResults() {
+      if (this.showOnlyTopVenues) {
+        return this.searchResults.filter(paper => paper.isTopVenue);
+      }
+      return this.searchResults;
     }
   },
   methods: {
@@ -239,18 +275,22 @@ export default {
           body: JSON.stringify({
             query: this.searchQuery,
             num_results: this.numResults,
-            lang: this.language
+            lang: this.language,
+            filter_venues: this.filterTopVenues
           })
         })
 
         const data = await response.json()
 
         if (data.success) {
+          // 确保每个结果都有isTopVenue属性
           this.searchResults = data.results.map(result => ({
             ...result,
             downloadSources: null,
-            downloadMessage: ''
+            downloadMessage: '',
+            isTopVenue: result.isTopVenue || false // 确保isTopVenue属性存在
           }))
+          console.log('搜索结果:', this.searchResults)
         } else {
           this.error = data.error || '搜索失败，请重试'
           this.searchResults = []

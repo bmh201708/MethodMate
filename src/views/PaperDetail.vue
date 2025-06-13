@@ -50,8 +50,8 @@
 
         <!-- 中间文献列表 -->
         <div class="col-span-3">
-          <!-- 获取相关文献按钮 -->
-          <div class="mb-4">
+          <!-- 获取相关文献按钮和选项 -->
+          <div class="mb-4 space-y-2">
             <button
               @click="getRecommendedPapers"
               :disabled="papersState.isLoadingRecommendations"
@@ -63,6 +63,19 @@
               </svg>
               <span>{{ papersState.isLoadingRecommendations ? '获取中...' : (papersState.recommendedPapers.length > 0 ? '获取更多文献' : '获取相关文献') }}</span>
             </button>
+            
+            <!-- 顶刊顶会过滤选项 -->
+            <div class="flex items-center justify-between px-1">
+              <label class="flex items-center text-sm text-gray-600 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  v-model="filterTopVenues" 
+                  class="form-checkbox h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
+                />
+                <span class="ml-2">只获取顶刊顶会文献</span>
+              </label>
+              <span class="text-xs text-gray-500">提高文献质量</span>
+            </div>
           </div>
 
           <!-- AI推荐文献列表 -->
@@ -401,6 +414,9 @@ const showTranslation = ref(false)
 const translatedAbstract = ref('')
 const isTranslating = ref(false)
 
+// 顶刊顶会过滤选项
+const filterTopVenues = ref(false)
+
 // 渲染markdown内容
 const renderMarkdown = (markdown) => {
   if (!markdown) return ''
@@ -549,9 +565,17 @@ const getRecommendedPapers = async () => {
       },
       body: JSON.stringify({
         chatHistory,
+        filter_venues: filterTopVenues.value, // 添加顶刊顶会过滤参数
         session_id: Date.now().toString()
       })
     })
+    
+    // 记录请求URL和参数（用于调试）
+    console.log('API请求参数:', {
+      chatHistory: chatHistory.map(msg => ({ type: msg.type, content: msg.content.substring(0, 50) + (msg.content.length > 50 ? '...' : '') })),
+      filter_venues: filterTopVenues.value,
+      session_id: Date.now().toString()
+    });
 
     if (!response.ok) {
       throw new Error(`API responded with status: ${response.status}`)
