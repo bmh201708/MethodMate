@@ -22,6 +22,171 @@ const CORE_API_BASE = 'https://api.core.ac.uk/v3';
 const CORE_API_KEY = process.env.CORE_API_KEY;
 const SEMANTIC_API_KEY = process.env.SEMANTIC_API_KEY || '';
 
+// Coze API配置 - 从cozeApi.js获取
+const COZE_API_KEY = process.env.COZE_API_KEY || 'pat_xdxRBDKN85QE746XMRQ0hGgKJsVQSrH8VCIvUzlRkW62OTBqZ88ti1eIkTvHbU18';
+const COZE_API_URL = process.env.COZE_API_URL || 'https://api.coze.com';
+const COZE_BOT_ID = process.env.COZE_BOT_ID || '7513529977745915905';
+const COZE_USER_ID = process.env.COZE_USER_ID || '7505301221562023954';
+  
+// 设置环境变量，确保其他模块可以访问
+process.env.COZE_API_KEY = COZE_API_KEY;
+process.env.COZE_API_URL = COZE_API_URL;
+process.env.COZE_BOT_ID = COZE_BOT_ID;
+process.env.COZE_USER_ID = COZE_USER_ID;
+
+// 导入翻译服务
+import translate, { translateWithGoogleUnofficial } from './translate-service.js';
+import { translateWithCoze, translateWithSilentCoze } from './coze-translate-service.js';
+
+// 翻译函数 - 使用多种翻译服务进行中文到英文的翻译
+const translateToEnglish = async (text, retries = 3) => {
+  try {
+    // 检测是否包含中文字符
+    if (!/[\u4e00-\u9fa5]/.test(text)) {
+      console.log('文本不包含中文，无需翻译:', text);
+      return text;
+    }
+
+    // 清理和预处理文本
+    const cleanedText = text
+      .replace(/[\r\n]+/g, ' ') // 将换行替换为空格
+      .replace(/\s+/g, ' ') // 合并多个空格
+      .trim();
+
+    console.log('准备翻译文本:', cleanedText);
+
+    // 定义可用的翻译服务及其优先级
+    const translationServices = [
+      // 首选：使用Coze API进行翻译
+      async () => {
+        try {
+          console.log('尝试使用Coze API翻译...');
+          const result = await translateWithCoze(cleanedText, 'zh-CN', 'en');
+          if (!result || result.length < 5) throw new Error('Coze返回的翻译结果为空或过短');
+          return result;
+        } catch (err) {
+          console.warn('Coze翻译失败:', err.message);
+          throw err;
+        }
+      },
+      
+      // 备选1：使用Google非官方API
+      async () => {
+        try {
+          console.log('尝试使用Google非官方API翻译...');
+          const result = await translateWithGoogleUnofficial(cleanedText, 'zh-CN', 'en');
+          if (!result || result.length < 5) throw new Error('Google返回的翻译结果为空或过短');
+          return result;
+        } catch (err) {
+          console.warn('Google翻译失败:', err.message);
+          throw err;
+        }
+      },
+      
+      // 备选2：使用Lingva翻译服务
+      async () => {
+        try {
+          console.log('尝试使用Lingva翻译服务...');
+          const result = await translate(cleanedText, {
+            from: 'zh',
+            to: 'en',
+            service: 'lingva',
+            retries: 1
+          });
+          if (!result || result.length < 5) throw new Error('Lingva返回的翻译结果为空或过短');
+          return result;
+        } catch (err) {
+          console.warn('Lingva翻译失败:', err.message);
+          throw err;
+        }
+      }
+    ];
+
+    // 尝试每个翻译服务，直到成功或全部失败
+    let lastError = null;
+    for (const translateFn of translationServices) {
+      try {
+        const translatedText = await translateFn();
+        
+        // 清理翻译结果，移除可能的提示词或额外说明
+        const cleanedTranslation = translatedText
+          .replace(/^translation[：:]?\s*/i, '')
+          .replace(/^translated text[：:]?\s*/i, '')
+          .replace(/^english translation[：:]?\s*/i, '')
+          .trim();
+        
+        console.log('翻译成功:', {
+          original: cleanedText.substring(0, 50) + (cleanedText.length > 50 ? '...' : ''),
+          translated: cleanedTranslation.substring(0, 50) + (cleanedTranslation.length > 50 ? '...' : '')
+        });
+        
+        return cleanedTranslation;
+      } catch (error) {
+        lastError = error;
+        // 继续尝试下一个服务
+      }
+    }
+
+    // 如果还有重试次数，等待后重试
+    if (retries > 0) {
+      console.log(`所有翻译服务都失败，剩余重试次数: ${retries - 1}`);
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 等待2秒后重试
+      return translateToEnglish(text, retries - 1);
+    }
+    
+    // 所有服务都失败且没有重试次数，返回原文
+    console.warn('所有翻译服务都失败，使用原文:', text);
+    return text;
+  } catch (error) {
+    console.error('翻译过程中发生未处理的错误:', error);
+    if (retries > 0) {
+      console.log(`发生错误，剩余重试次数: ${retries - 1}`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return translateToEnglish(text, retries - 1);
+    }
+    console.warn('翻译失败，使用原文:', text);
+    return text;
+  }
+};
+
+// 从对话历史中提取关键词
+const extractKeywords = (messages) => {
+  // 优先从用户最后一条消息中提取关键词
+  const userMessages = messages.filter(msg => msg.type === 'user');
+  if (userMessages.length > 0) {
+    const lastUserMessage = userMessages[userMessages.length - 1].content;
+    
+    // 移除常见的无意义词和应用名称
+    const cleanedMessage = lastUserMessage
+      .replace(/methodmate|ai|assistant|我想|请问|如何|什么是/gi, '')
+      .replace(/[^\w\s\u4e00-\u9fa5]/g, ' ') // 保留中文字符和英文单词
+      .trim();
+
+    if (cleanedMessage.length >= 5) {
+      return cleanedMessage;
+    }
+  }
+  
+  // 如果最后一条消息提取失败，从所有消息中提取
+  const recentMessages = messages.slice(-4); // 只取最近4条消息
+  const combinedContent = recentMessages
+    .map(msg => msg.content)
+    .join(' ')
+    .replace(/methodmate|ai|assistant|我想|请问|如何|什么是/gi, '')
+    .replace(/[^\w\s\u4e00-\u9fa5]/g, ' ');
+  
+  // 提取更有意义的关键词
+  const keywords = combinedContent
+    .split(/\s+/)
+    .filter(word => 
+      word.length > 2 && 
+      !/^(the|and|or|in|on|at|to|from|with|by|for|about|that|this|these|those|is|are|was|were|be|been|being|have|has|had|do|does|did|will|would|shall|should|may|might|must|can|could)$/i.test(word)
+    )
+    .slice(0, 15); // 取前15个关键词
+  
+  return keywords.join(' ');
+};
+
 // 简单的重试函数
 const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
   try {
@@ -209,6 +374,20 @@ app.post('/api/scholar-search', async (req, res) => {
 
     console.log(`执行学术搜索，查询: "${query}", 结果数: ${num_results}, 语言: ${lang}`);
     
+    // 检测是否包含中文，如果包含则翻译
+    let searchQuery = query;
+    if (/[\u4e00-\u9fa5]/.test(query)) {
+      try {
+        console.log('检测到中文查询，进行翻译');
+        searchQuery = await translateToEnglish(query);
+        console.log(`查询已翻译: "${query}" => "${searchQuery}"`);
+      } catch (error) {
+        console.error('翻译查询失败:', error);
+        // 翻译失败时继续使用原始查询
+        searchQuery = query;
+      }
+    }
+    
     // 定义允许的期刊/会议列表
     const allowedVenues = [
       // 顶会
@@ -239,8 +418,8 @@ app.post('/api/scholar-search', async (req, res) => {
     // 根据最新的API文档调整字段，移除不支持的doi字段
     const fields = 'title,authors,abstract,year,citationCount,venue,url,openAccessPdf,externalIds';
     
-    // 构建基本查询参数，不进行任何编码
-    let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${query}&limit=${num_results}&fields=${fields}`;
+    // 构建基本查询参数，使用翻译后的查询但不进行URL编码
+    let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${searchQuery}&limit=${num_results}&fields=${fields}`;
     
     // 如果需要过滤期刊/会议，使用venue参数
     if (filter_venues) {
@@ -372,23 +551,33 @@ app.post('/api/semantic-recommend', async (req, res) => {
       msg.type === 'user' || (msg.type === 'assistant' && !msg.isError)
     );
     
-    if (validHistory.length > 1) {
-      // 从最近的对话中提取关键词
-      const recentHistory = validHistory.slice(-4); // 只取最近4条消息
-      searchQuery = recentHistory
-        .map(msg => msg.content)
-        .join(' ')
-        .replace(/[^\w\s]/g, ' ') // 移除标点符号
-        .split(/\s+/)
-        .filter(word => word.length > 2) // 过滤掉太短的词
-        .slice(0, 10) // 只取前10个关键词
-        .join(' ');
-    } else {
-      // 默认搜索研究方法相关文献
+    if (validHistory.length > 0) {
+      // 使用提取关键词函数
+      searchQuery = extractKeywords(validHistory);
+      
+      // 检测是否包含中文
+      const containsChinese = /[\u4e00-\u9fa5]/.test(searchQuery);
+      
+      // 如果包含中文，尝试翻译
+      if (containsChinese) {
+        try {
+          console.log('检测到中文查询，进行翻译:', searchQuery);
+          searchQuery = await translateToEnglish(searchQuery);
+          console.log('翻译后的查询:', searchQuery);
+        } catch (error) {
+          console.error('翻译查询失败:', error);
+          // 翻译失败时继续使用原始查询
+        }
+      }
+    }
+    
+    // 如果仍然没有有效查询，使用默认查询
+    if (!searchQuery || searchQuery.trim().length < 5) {
       searchQuery = 'research methodology quantitative analysis experimental design';
+      console.log('使用默认查询:', searchQuery);
     }
 
-    console.log('构建的搜索查询:', searchQuery);
+    console.log('最终搜索查询:', searchQuery);
 
     // 定义允许的期刊/会议列表
     const allowedVenues = [
@@ -416,7 +605,7 @@ app.post('/api/semantic-recommend', async (req, res) => {
       'The Design Journal'
     ];
 
-    // 构建基本查询参数，不进行任何编码
+    // 构建基本查询参数，不进行URL编码
     let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${searchQuery}&limit=5&fields=title,abstract,url,openAccessPdf,year,citationCount,authors,venue`;
     
     // 如果需要过滤期刊/会议，使用venue参数
