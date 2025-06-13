@@ -215,50 +215,71 @@ app.get('/', (req, res) => {
   res.redirect('/test-core-api.html');
 });
 
-// 从CORE API获取论文全文
-const getFullTextFromCore = async (title) => {
+// 从CORE API获取论文全文，添加重试机制和请求间隔
+const getFullTextFromCore = async (title, retries = 3, delay = 1000) => {
   try {
-    console.log(`正在从CORE API获取论文全文，标题: "${title}"`);
+    console.log(`正在从CORE API获取论文全文，标题: "${title}"，剩余重试次数: ${retries}`);
+    
+    // 添加请求间隔，避免API限流
+    await new Promise(resolve => setTimeout(resolve, delay));
     
     // 使用标题搜索论文
-    const searchResponse = await fetch(`${CORE_API_BASE}/search/works`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${CORE_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        q: title,
-        limit: 1,
-        fields: ['title', 'fullText', 'abstract']
-      })
-    });
-
-    if (!searchResponse.ok) {
-      const errorText = await searchResponse.text();
-      console.error(`CORE API错误响应 (${searchResponse.status}):`, errorText);
-      throw new Error(`CORE API responded with status: ${searchResponse.status}`);
-    }
-
-    const result = await searchResponse.json();
-    console.log('CORE API搜索结果:', JSON.stringify(result, null, 2));
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10秒超时
     
-    if (result.results && result.results.length > 0) {
-      // 如果有全文就返回全文，否则返回摘要
-      const paper = result.results[0];
-      if (paper.fullText) {
-        console.log('找到论文全文');
-        return paper.fullText;
-      } else if (paper.abstract) {
-        console.log('未找到全文，使用摘要代替');
-        return paper.abstract;
+    try {
+      const searchResponse = await fetch(`${CORE_API_BASE}/search/works`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${CORE_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          q: title,
+          limit: 1,
+          fields: ['title', 'fullText', 'abstract']
+        }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeout);
+      
+      if (!searchResponse.ok) {
+        const errorText = await searchResponse.text();
+        console.error(`CORE API错误响应 (${searchResponse.status}):`, errorText);
+        throw new Error(`CORE API responded with status: ${searchResponse.status}`);
       }
+
+      const result = await searchResponse.json();
+      console.log('CORE API搜索结果:', JSON.stringify(result, null, 2));
+      
+      if (result.results && result.results.length > 0) {
+        // 如果有全文就返回全文，否则返回摘要
+        const paper = result.results[0];
+        if (paper.fullText) {
+          console.log('找到论文全文');
+          return paper.fullText;
+        } else if (paper.abstract) {
+          console.log('未找到全文，使用摘要代替');
+          return paper.abstract;
+        }
+      }
+      
+      console.log('未找到相关论文信息');
+      return null;
+    } catch (fetchError) {
+      clearTimeout(timeout);
+      throw fetchError;
     }
-    
-    console.log('未找到相关论文信息');
-    return null;
   } catch (error) {
     console.error('从CORE获取全文时出错:', error);
+    
+    // 如果是超时或网络错误，并且还有重试次数，则重试
+    if ((error.name === 'AbortError' || error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET') && retries > 0) {
+      console.log(`CORE API请求超时或网络错误，${delay/1000}秒后重试，剩余重试次数: ${retries - 1}`);
+      return getFullTextFromCore(title, retries - 1, delay * 2); // 指数退避策略
+    }
+    
     console.error('错误堆栈:', error.stack);
     return null;
   }
@@ -295,11 +316,8 @@ const parseSemanticResponse = async (papers) => {
   const parsedPapers = [];
   
   for (const paper of papers) {
-    // 添加延迟，避免请求过于频繁
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // 获取论文全文
-    const fullText = await getFullTextFromCore(paper.title);
+    // 获取论文全文，使用改进后的函数（3次重试，初始1秒延迟）
+    const fullText = await getFullTextFromCore(paper.title, 3, 1000);
     
     // 检查是否是顶会顶刊
     const venue = paper.venue || '';
@@ -535,49 +553,257 @@ app.post('/api/scholar-search', async (req, res) => {
   }
 });
 
+// 解析Coze API响应，提取关键词
+const parseKeywordsFromCozeResponse = (reply) => {
+  try {
+    console.log('开始解析关键词，原始回复:', reply);
+    
+    // 检查reply是否是对象或字符串
+    if (typeof reply === 'object' && reply !== null) {
+      // 如果reply是对象，尝试直接从中提取关键词
+      if (reply.content && typeof reply.content === 'string') {
+        // 如果是消息对象，使用content字段
+        reply = reply.content;
+      } else {
+        // 转换为字符串以便后续处理
+        reply = JSON.stringify(reply);
+      }
+    }
+    
+    // 尝试解析JSON格式
+    const jsonMatch = reply.match(/```json\s*([\s\S]*?)\s*```/i) || reply.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const jsonStr = jsonMatch[1] || jsonMatch[0];
+      console.log('找到JSON格式:', jsonStr);
+      try {
+        const jsonData = JSON.parse(jsonStr);
+        if (jsonData.keywords && Array.isArray(jsonData.keywords)) {
+          // 使用逗号分隔关键词，保留短语结构
+          const keywords = jsonData.keywords
+            .filter(kw => kw && typeof kw === 'string' && kw.trim().length > 0)
+            .join(','); // 使用逗号而不是空格
+          console.log('从JSON中提取的关键词(逗号分隔):', keywords);
+          return keywords;
+        }
+      } catch (jsonError) {
+        console.error('JSON解析错误:', jsonError);
+      }
+    }
+    
+    // 如果没有找到JSON格式的关键词，尝试从文本中提取
+    const keywordsMatch = reply.match(/关键词[:：]\s*([^\n]+)/i) || 
+                          reply.match(/keywords[:：]\s*([^\n]+)/i) ||
+                          reply.match(/key\s*words[:：]\s*([^\n]+)/i);
+    if (keywordsMatch && keywordsMatch[1]) {
+      const textKeywords = keywordsMatch[1].trim();
+      console.log('从文本中提取的关键词:', textKeywords);
+      return textKeywords;
+    }
+    
+    // 尝试查找列表格式的关键词
+    const listMatches = reply.match(/\d+\.\s*([^\n,]+)(?:,|\n|$)/g);
+    if (listMatches && listMatches.length > 0) {
+      const listKeywords = listMatches
+        .map(item => item.replace(/^\d+\.\s*/, '').trim())
+        .filter(kw => kw.length > 0)
+        .join(' ');
+      console.log('从列表中提取的关键词:', listKeywords);
+      return listKeywords;
+    }
+    
+    // 如果以上都失败，尝试提取英文单词作为关键词
+    const words = reply
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 3 && /^[a-zA-Z]+$/.test(word)) // 只保留纯英文且长度>3的词
+      .slice(0, 10)
+      .join(' ');
+    
+    if (words.length > 0) {
+      console.log('从文本中提取的英文单词作为关键词:', words);
+      return words;
+    }
+    
+    // 最后的备用方案
+    console.log('无法提取关键词，使用默认关键词');
+    return 'research methodology quantitative analysis experimental design';
+  } catch (err) {
+    console.error('解析关键词错误:', err);
+    return 'research methodology quantitative analysis experimental design';
+  }
+};
+
 // 语义推荐API路由
 app.post('/api/semantic-recommend', async (req, res) => {
   console.log('语义推荐API被调用');
   
   try {
-    const { chatHistory = [], filter_venues = false } = req.body;
+    const { chatHistory = [], filter_venues = false, session_id = Date.now().toString() } = req.body;
     console.log('接收到的数据:', JSON.stringify(req.body, null, 2));
     
-    // 从聊天历史中提取关键词
-    let searchQuery = '';
+    // 构建消息列表
+    const messages = [];
     
-    // 如果有有效的聊天历史，从中提取关键信息
+    // 添加聊天历史消息（如果有）
     const validHistory = chatHistory.filter(msg => 
       msg.type === 'user' || (msg.type === 'assistant' && !msg.isError)
     );
     
-    if (validHistory.length > 0) {
-      // 使用提取关键词函数
-      searchQuery = extractKeywords(validHistory);
-      
-      // 检测是否包含中文
-      const containsChinese = /[\u4e00-\u9fa5]/.test(searchQuery);
-      
-      // 如果包含中文，尝试翻译
-      if (containsChinese) {
+    // 首先检查是否需要翻译
+    let translatedQuery = '';
+    let needsTranslation = false;
+    
+    // 检查最后一条用户消息是否包含中文字符
+    const lastUserMessage = validHistory.length > 0 ? 
+      validHistory.find(msg => msg.type === 'user') : null;
+    
+    if (lastUserMessage) {
+      const hasChinese = /[\u4e00-\u9fa5]/.test(lastUserMessage.content);
+      if (hasChinese) {
+        needsTranslation = true;
+        console.log('检测到中文查询，进行翻译:', lastUserMessage.content);
+        
         try {
-          console.log('检测到中文查询，进行翻译:', searchQuery);
-          searchQuery = await translateToEnglish(searchQuery);
-          console.log('翻译后的查询:', searchQuery);
-        } catch (error) {
-          console.error('翻译查询失败:', error);
-          // 翻译失败时继续使用原始查询
+          translatedQuery = await translateToEnglish(lastUserMessage.content);
+          console.log('翻译成功:', {
+            original: lastUserMessage.content,
+            translated: translatedQuery
+          });
+        } catch (translationError) {
+          console.error('翻译失败:', translationError);
         }
       }
     }
+
+    // 构建关键词提取消息
+    let messageContent = `Please analyze the following text and extract 5-10 key academic search terms. 
+Focus on specific technical terms, methodologies, and core concepts.
+
+Please respond in the following JSON format:
+\`\`\`json
+{
+  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
+}
+\`\`\`
+
+Text to analyze: "${needsTranslation && translatedQuery ? translatedQuery : ''}"
+
+`;
     
-    // 如果仍然没有有效查询，使用默认查询
-    if (!searchQuery || searchQuery.trim().length < 5) {
-      searchQuery = 'research methodology quantitative analysis experimental design';
-      console.log('使用默认查询:', searchQuery);
+    // 如果有有效的聊天历史，将其添加到消息中
+    if (needsTranslation && translatedQuery) {
+      // 如果已经翻译了查询，直接使用翻译后的文本
+      console.log('使用翻译后的查询进行关键词提取:', translatedQuery);
+    } else if (validHistory.length > 1) { // 超过1条消息才算有效对话
+      messageContent += '\nConversation history:\n';
+      
+      // 只取最近的几条对话（避免消息过长）
+      const recentHistory = validHistory.slice(-8); // 取最近8条消息
+      
+      recentHistory.forEach((msg, index) => {
+        if (msg.type === 'user') {
+          messageContent += `User ${index + 1}: ${msg.content}\n`;
+        } else if (msg.type === 'assistant' && !msg.isError) {
+          messageContent += `Assistant ${index + 1}: ${msg.content}\n`;
+        }
+      });
+      
+      messageContent += '\nBased on the above conversation, extract the most relevant academic search keywords.';
+    } else {
+      messageContent += 'Please provide some general academic research method keywords, especially in quantitative research methods, experimental design, data analysis, and related fields.';
+    }
+    
+    console.log('发送给Coze API的消息:', messageContent);
+
+    // 调用 Coze API 获取关键词
+    let searchQuery = 'research methodology quantitative analysis experimental design'; // 默认关键词
+    
+    try {
+      const keywordResponse = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${COZE_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          bot_id: COZE_BOT_ID,
+          user: COZE_USER_ID,
+          query: messageContent,
+          stream: false,
+          conversation_id: `${session_id}_keywords`
+        })
+      });
+
+      console.log('Coze API关键词提取响应状态:', keywordResponse.status, keywordResponse.statusText);
+
+      if (keywordResponse.ok) {
+        const result = await keywordResponse.json();
+        console.log('Coze API关键词提取响应:', JSON.stringify(result));
+
+        // 提取机器人回复
+        let botReply = '';
+        
+        // v2 API 响应格式
+        if (result.messages && Array.isArray(result.messages)) {
+          // 过滤出type为answer的助手消息，这通常包含实际回复
+          const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
+          if (answerMessages.length > 0) {
+            botReply = answerMessages[0].content;
+          } else {
+            // 如果没有answer类型，则使用第一个助手消息
+            const assistantMessages = result.messages.filter(m => m.role === 'assistant');
+            if (assistantMessages.length > 0) {
+              botReply = assistantMessages[0].content;
+            }
+          }
+        }
+        // v3 API 响应格式
+        else if (result.data && result.data.messages) {
+          const assistantMessages = result.data.messages.filter(m => m.role === 'assistant');
+          if (assistantMessages.length > 0) {
+            botReply = assistantMessages[0].content;
+          }
+        }
+        // 直接响应格式
+        else if (result.answer) {
+          botReply = result.answer;
+        }
+        
+        console.log('提取的机器人回复:', botReply);
+        
+        if (botReply) {
+          // 从回复中提取关键词
+          const extractedKeywords = parseKeywordsFromCozeResponse(botReply);
+          if (extractedKeywords && extractedKeywords.length > 0) {
+            searchQuery = extractedKeywords;
+            console.log('从Coze API提取的关键词:', searchQuery);
+          } else {
+            console.log('未能从Coze API响应中提取到有效关键词，使用默认关键词');
+          }
+        }
+      } else {
+        console.error('Coze API关键词提取错误:', await keywordResponse.text());
+      }
+    } catch (cozeError) {
+      console.error('调用Coze API关键词提取错误:', cozeError);
+      // 如果Coze API调用失败，使用备用方法提取关键词
+      if (validHistory.length > 1) {
+        const recentHistory = validHistory.slice(-4); // 只取最近4条消息
+        const backupKeywords = recentHistory
+          .map(msg => msg.content)
+          .join(' ')
+          .replace(/[^\w\s]/g, ' ') // 移除标点符号
+          .split(/\s+/)
+          .filter(word => word.length > 2) // 过滤掉太短的词
+          .slice(0, 10) // 只取前10个关键词
+          .join(' ');
+        searchQuery = backupKeywords;
+        console.log('使用备用方法提取的关键词:', searchQuery);
+      }
     }
 
-    console.log('最终搜索查询:', searchQuery);
+    console.log('最终构建的搜索查询:', searchQuery);
 
     // 定义允许的期刊/会议列表
     const allowedVenues = [
@@ -605,35 +831,127 @@ app.post('/api/semantic-recommend', async (req, res) => {
       'The Design Journal'
     ];
 
-    // 构建基本查询参数，不进行URL编码
-    let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${searchQuery}&limit=5&fields=title,abstract,url,openAccessPdf,year,citationCount,authors,venue`;
+    // 修复关键词处理问题：保留短语结构，只在关键词之间添加逗号
+    let formattedSearchQuery = searchQuery;
+    
+    try {
+      // 首先检查searchQuery是否已经是逗号分隔的格式
+      if (searchQuery.includes(',')) {
+        console.log('检测到已经是逗号分隔的关键词，保持原样');
+        formattedSearchQuery = searchQuery; // 保持原样
+      }
+      // 检查是否是从JSON中提取的关键词列表（包含引号）
+      else if (searchQuery.includes('"') || searchQuery.includes("'")) {
+        console.log('检测到包含引号的关键词，尝试保留短语结构');
+        
+        // 尝试将字符串转回数组
+        const keywordArray = searchQuery.match(/"([^"]+)"|'([^']+)'|([^\s,]+)/g)
+          .map(kw => kw.replace(/^["']|["']$/g, '').trim())
+          .filter(kw => kw.length > 0);
+          
+        console.log('解析后的关键词数组:', keywordArray);
+        
+        // 使用逗号连接，但不替换短语内的空格
+        formattedSearchQuery = keywordArray.join(',');
+      } 
+      // 处理普通空格分隔的关键词
+      else {
+        console.log('处理空格分隔的关键词');
+        // 尝试识别短语（连续的多个单词）
+        const phrases = [];
+        const words = searchQuery.split(/\s+/);
+        let currentPhrase = [];
+        
+        for (const word of words) {
+          if (word.length <= 2 || /^(and|or|the|in|on|at|to|of|for|with)$/i.test(word)) {
+            // 如果是短词或常见连接词，将其添加到当前短语
+            if (currentPhrase.length > 0) {
+              currentPhrase.push(word);
+            }
+          } else if (currentPhrase.length === 0) {
+            // 开始新短语
+            currentPhrase.push(word);
+          } else if (currentPhrase[currentPhrase.length - 1].endsWith(',') || 
+                    currentPhrase[currentPhrase.length - 1].endsWith('.')) {
+            // 如果前一个词以逗号或句号结尾，开始新短语
+            phrases.push(currentPhrase.join(' '));
+            currentPhrase = [word];
+          } else {
+            // 继续当前短语
+            currentPhrase.push(word);
+          }
+        }
+        
+        // 添加最后一个短语
+        if (currentPhrase.length > 0) {
+          phrases.push(currentPhrase.join(' '));
+        }
+        
+        // 使用逗号连接短语
+        formattedSearchQuery = phrases.join(',');
+      }
+    } catch (parseError) {
+      console.error('解析关键词时出错:', parseError);
+      // 出错时保持原样
+      formattedSearchQuery = searchQuery;
+    }
+    
+    console.log('格式化后的搜索查询:', formattedSearchQuery);
+    
+    // 构建基本查询参数 - 不对查询进行编码，保持原始格式
+    let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${formattedSearchQuery}&limit=5&fields=title,abstract,url,openAccessPdf,year,citationCount,authors,venue`;
     
     // 如果需要过滤期刊/会议，使用venue参数
     if (filter_venues) {
-      // 直接使用原始venue名称，用逗号连接
+      // 使用原始venue名称，用逗号连接但不进行URL编码
       const venueParam = allowedVenues.join(',');
-      // 直接添加到URL中，不进行编码
       searchUrl += `&venue=${venueParam}`;
     }
+    
+    // 输出最终请求URL用于调试
+    console.log('最终Semantic Scholar API请求URL:', searchUrl);
 
-    // 调用Semantic Scholar API搜索相关论文
-    const searchResponse = await fetch(
-      searchUrl,
-      {
-        headers: {
-          'Accept': 'application/json',
-        }
+    // 准备请求头 - 只使用基本的Accept头，避免API密钥问题
+    const headers = {
+      'Accept': 'application/json'
+    };
+    
+    // 输出请求信息用于调试
+    console.log('请求头:', JSON.stringify(headers));
+    console.log('SEMANTIC_API_KEY是否存在:', !!SEMANTIC_API_KEY);
+
+    // 调用Semantic Scholar API搜索相关论文 - 不使用API密钥
+    console.log('开始调用Semantic Scholar API...');
+    let searchResponse;
+    try {
+      searchResponse = await fetchWithRetry(searchUrl, {
+        headers: headers
+      }, 3, 1000); // 最多重试3次，初始延迟1秒
+      
+      console.log('Semantic Scholar API响应状态:', searchResponse.status, searchResponse.statusText);
+      
+      if (!searchResponse.ok) {
+        const errorText = await searchResponse.text();
+        console.error('Semantic Scholar API错误响应:', errorText);
+        throw new Error(`Semantic Scholar API responded with status: ${searchResponse.status}`);
       }
-    );
-
-    if (!searchResponse.ok) {
-      const errorText = await searchResponse.text();
-      console.error('Semantic Scholar API错误响应:', errorText);
-      throw new Error(`Semantic Scholar API responded with status: ${searchResponse.status}`);
+    } catch (fetchError) {
+      console.error('Semantic Scholar API请求失败:', fetchError);
+      throw fetchError;
     }
 
-    const result = await searchResponse.json();
-    console.log('语义学术API响应:', JSON.stringify(result, null, 2));
+    // 解析响应
+    let result;
+    try {
+      result = await searchResponse.json();
+      console.log('Semantic Scholar API响应数据结构:', 
+        Object.keys(result), 
+        '数据项数量:', result.data ? result.data.length : 0
+      );
+    } catch (jsonError) {
+      console.error('解析Semantic Scholar API响应失败:', jsonError);
+      throw jsonError;
+    }
 
     // 检查是否有搜索结果
     if (!result.data || result.data.length === 0) {
@@ -642,18 +960,18 @@ app.post('/api/semantic-recommend', async (req, res) => {
         success: true,
         papers: [],
         rawResponse: JSON.stringify(result),
-        session_id: (req.body && req.body.session_id) || 'default'
+        session_id: session_id || 'default'
       });
     }
 
     // 解析返回的论文数据
-    const papers = await parseSemanticResponse(result.data);
+    const papers = await parseSemanticResponse(result.data || []);
 
     res.json({
       success: true,
       papers: papers,
       rawResponse: JSON.stringify(result.data),
-      session_id: (req.body && req.body.session_id) || 'default'
+      session_id: session_id || 'default'
     });
   } catch (error) {
     console.error('推荐API错误:', error);
