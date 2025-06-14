@@ -340,9 +340,6 @@ const parseSemanticResponse = async (papers) => {
   const parsedPapers = [];
   
   for (const paper of papers) {
-    // 获取论文全文，使用改进后的函数（3次重试，初始1秒延迟）
-    const fullText = await getFullTextFromCore(paper.title, 3, 1000);
-    
     // 检查是否是顶会顶刊
     const venue = paper.venue || '';
     const venueLower = venue.toLowerCase();
@@ -381,7 +378,11 @@ const parseSemanticResponse = async (papers) => {
     
     console.log(`Venue: "${venue}", isTopVenue: ${isTopVenue}`);
     
+    // 生成唯一ID，用于后续异步获取全文和研究方法
+    const paperId = `paper_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    
     parsedPapers.push({
+      id: paperId,
       title: paper.title,
       abstract: paper.abstract || '暂无摘要',
       downloadUrl: (paper.openAccessPdf && paper.openAccessPdf.url) || paper.url || null,
@@ -390,11 +391,47 @@ const parseSemanticResponse = async (papers) => {
       citationCount: paper.citationCount,
       authors: (paper.authors && paper.authors.map(author => author.name).join(', ')) || '未知作者',
       venue: venue,
-      // 添加全文字段
-      fullText: fullText || null,
+      // 不再同步获取全文，初始化为null
+      fullText: null,
+      researchMethod: null,
+      isLoadingFullText: false,
       // 添加是否是顶会顶刊的标记
       isTopVenue: isTopVenue
     });
+    
+    // 异步获取全文和研究方法，不阻塞主流程
+    (async () => {
+      try {
+        const paperIndex = parsedPapers.length - 1;
+        console.log(`开始异步获取论文全文: "${paper.title}"`);
+        
+        // 标记为正在加载
+        parsedPapers[paperIndex].isLoadingFullText = true;
+        
+        // 异步获取全文
+        const fullText = await getFullTextFromCore(paper.title, 3, 1000);
+        
+        if (fullText) {
+          console.log(`成功获取论文全文，开始提取研究方法: "${paper.title}"`);
+          parsedPapers[paperIndex].fullText = fullText;
+          
+          // 提取研究方法
+          const researchMethod = await extractResearchMethod(fullText);
+          if (researchMethod) {
+            console.log(`成功提取研究方法: "${paper.title}"`);
+            parsedPapers[paperIndex].researchMethod = researchMethod;
+          }
+        }
+      } catch (error) {
+        console.error(`异步获取论文全文或研究方法失败: "${paper.title}"`, error);
+      } finally {
+        // 无论成功失败，都标记为加载完成
+        const paperIndex = parsedPapers.findIndex(p => p.title === paper.title);
+        if (paperIndex !== -1) {
+          parsedPapers[paperIndex].isLoadingFullText = false;
+        }
+      }
+    })();
   }
   
   return parsedPapers;
@@ -1007,6 +1044,42 @@ Text to analyze: "${needsTranslation && translatedQuery ? translatedQuery : ''}"
       papers: [],
       rawResponse: `错误：${error.message}`,
       session_id: (req.body && req.body.session_id) || 'default'
+    });
+  }
+});
+
+// 获取论文全文和研究方法的API端点
+app.post('/api/paper/get-full-content', async (req, res) => {
+  try {
+    const { title } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ error: '需要提供论文标题' });
+    }
+
+    console.log('开始获取论文全文和研究方法，标题:', title);
+    
+    // 获取全文
+    const fullText = await getFullTextFromCore(title, 3, 1000);
+    let researchMethod = null;
+    
+    if (fullText) {
+      // 如果成功获取全文，尝试提取研究方法
+      researchMethod = await extractResearchMethod(fullText);
+    }
+    
+    res.json({
+      success: true,
+      title: title,
+      fullText: fullText,
+      researchMethod: researchMethod,
+      hasContent: !!fullText
+    });
+  } catch (error) {
+    console.error('获取论文内容错误:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message
     });
   }
 });

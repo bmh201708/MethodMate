@@ -253,29 +253,53 @@
                   {{ showTranslation && translatedAbstract ? translatedAbstract : papersState.selectedPaper.abstract }}
                 </p>
 
-                <!-- 全文部分 -->
-                <div v-if="papersState.selectedPaper.fullText" class="mt-6">
+                <!-- 研究方法部分 -->
+                <div class="mt-6">
                   <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-gray-900">全文预览</h3>
-                    <button 
-                      @click="toggleFullText"
-                      class="text-blue-600 hover:text-blue-700 text-sm flex items-center"
-                    >
-                      {{ showFullText ? '收起' : '展开' }}
-                      <svg 
-                        class="w-4 h-4 ml-1 transform transition-transform"
-                        :class="{ 'rotate-180': showFullText }"
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
+                    <h3 class="text-lg font-semibold text-gray-900">研究方法预览</h3>
+                    <div class="flex items-center">
+                      <span v-if="isLoadingPaperContent" 
+                            class="text-sm text-gray-500 mr-3 flex items-center">
+                        <svg class="animate-spin h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        正在分析...
+                      </span>
+                      <button 
+                        v-if="papersState.selectedPaper.researchMethod"
+                        @click="toggleFullText"
+                        class="text-blue-600 hover:text-blue-700 text-sm flex items-center"
                       >
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        {{ showFullText ? '收起' : '展开' }}
+                        <svg 
+                          class="w-4 h-4 ml-1 transform transition-transform"
+                          :class="{ 'rotate-180': showFullText }"
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div v-if="!isLoadingPaperContent && !papersState.selectedPaper.researchMethod" 
+                       class="mt-3 text-gray-500">
+                    <p class="text-sm mb-2">暂无研究方法信息</p>
+                    <button 
+                      @click="fetchPaperContent"
+                      class="px-3 py-1 bg-blue-100 text-blue-600 text-sm rounded hover:bg-blue-200 transition-colors flex items-center"
+                    >
+                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                       </svg>
+                      尝试获取研究方法
                     </button>
                   </div>
-                  <div v-show="showFullText" class="mt-3">
+                  <div v-else-if="papersState.selectedPaper.researchMethod && showFullText" class="mt-3">
                     <div class="bg-gray-50 p-4 rounded-lg">
-                      <p class="text-gray-600 leading-relaxed whitespace-pre-wrap">{{ papersState.selectedPaper.fullText }}</p>
+                      <p class="text-gray-600 leading-relaxed whitespace-pre-wrap">{{ papersState.selectedPaper.researchMethod }}</p>
                     </div>
                   </div>
                 </div>
@@ -426,8 +450,72 @@ const showTranslation = ref(false)
 const translatedAbstract = ref('')
 const isTranslating = ref(false)
 
+// 论文内容加载状态
+const isLoadingPaperContent = ref(false)
+
 // 顶刊顶会过滤选项
 const filterTopVenues = ref(false)
+
+// 手动获取论文全文和研究方法
+const fetchPaperContent = async () => {
+  if (!papersState.selectedPaper || !papersState.selectedPaper.title) {
+    return
+  }
+  
+  isLoadingPaperContent.value = true
+  
+  try {
+    console.log('手动获取论文内容:', papersState.selectedPaper.title)
+    
+    const response = await fetch('/api/paper/get-full-content', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: papersState.selectedPaper.title
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`)
+    }
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      // 更新选中论文的全文和研究方法
+      if (result.fullText) {
+        papersState.selectedPaper.fullText = result.fullText
+      }
+      
+      if (result.researchMethod) {
+        papersState.selectedPaper.researchMethod = result.researchMethod
+        showFullText.value = true // 自动展开研究方法
+      }
+      
+      // 同时更新推荐论文列表中的对应论文
+      const paperIndex = papersState.recommendedPapers.findIndex(
+        paper => paper.title === papersState.selectedPaper.title
+      )
+      
+      if (paperIndex !== -1) {
+        if (result.fullText) {
+          papersState.recommendedPapers[paperIndex].fullText = result.fullText
+        }
+        if (result.researchMethod) {
+          papersState.recommendedPapers[paperIndex].researchMethod = result.researchMethod
+        }
+      }
+    } else {
+      console.error('获取论文内容失败:', result.error)
+    }
+  } catch (error) {
+    console.error('获取论文内容出错:', error)
+  } finally {
+    isLoadingPaperContent.value = false
+  }
+}
 
 // 渲染markdown内容
 const renderMarkdown = (markdown) => {
