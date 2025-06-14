@@ -808,22 +808,63 @@ const generateResearchPlan = async () => {
     // 构建消息内容
     let message = "请帮我生成定量实验方案。"
     
-    // 获取参考文献信息
-    const referencedPapers = Array.from(papersState.referencedPapers).map(paperId => {
-      return papersState.recommendedPapers.find(paper => paper.id === paperId)
-    }).filter(paper => paper) // 过滤掉可能找不到的文献
+    // 获取所有参考文献信息（包括搜索和推荐的）
+    const referencedPapers = Array.from(papersState.referencedPapersList)
     
     if (referencedPapers.length > 0) {
-      message += "\n\n请参考以下文献进行生成：\n"
-      referencedPapers.forEach((paper, index) => {
-        message += `\n${index + 1}. 标题：${paper.title}`
-        if (paper.downloadUrl) {
-          message += `\n   链接：${paper.downloadUrl}`
-        }
-        message += "\n"
-      })
+      message += "\n\n我将为你提供以下参考文献的内容：\n"
       
-      message += `\n请先通过以上下载链接仔细阅读这${referencedPapers.length}篇参考文献的完整内容，然后基于文献内容生成一个详细的定量研究方案。`
+      // 为每篇论文获取全文或摘要
+      const paperContents = await Promise.all(referencedPapers.map(async (paper, index) => {
+        let paperInfo = `\n${index + 1}. 标题：${paper.title}`
+        paperInfo += `\n   作者：${Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors || '未知'}`
+        paperInfo += `\n   年份：${paper.year || '未知'}`
+        paperInfo += `\n   来源：${paper.source === 'search' ? '文献搜索' : 'AI推荐'}`
+        
+        // 如果已有摘要，直接使用
+        if (paper.abstract || paper.summary) {
+          paperInfo += `\n   摘要：${paper.abstract || paper.summary}`
+        }
+        
+        // 尝试从CORE API获取全文，设置超时
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+          
+          const response = await fetch('http://localhost:3002/api/test-core', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title: paper.title }),
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.fullText) {
+              // 限制全文长度，避免提示词过长
+              const maxLength = 2000;
+              const fullText = data.fullText.length > maxLength 
+                ? data.fullText.substring(0, maxLength) + "...(内容已截断)" 
+                : data.fullText;
+              
+              paperInfo += `\n   全文：${fullText}`;
+            }
+          }
+        } catch (error) {
+          console.error(`获取论文"${paper.title}"全文失败:`, error);
+        }
+        
+        return paperInfo + "\n";
+      }));
+      
+      // 添加所有论文信息到消息中
+      message += paperContents.join("");
+      
+      message += `\n请基于以上${referencedPapers.length}篇参考文献的内容（包括摘要和全文）生成一个详细的定量研究方案。`
     } else {
       message += "\n\n请生成一个详细的定量研究方案。"
     }
