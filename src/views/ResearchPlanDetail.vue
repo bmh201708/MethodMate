@@ -814,7 +814,7 @@ const generateResearchPlan = async () => {
     if (referencedPapers.length > 0) {
       message += "\n\n我将为你提供以下参考文献的内容：\n"
       
-      // 为每篇论文获取全文或摘要
+      // 为每篇论文获取研究方法和摘要
       const paperContents = await Promise.all(referencedPapers.map(async (paper, index) => {
         let paperInfo = `\n${index + 1}. 标题：${paper.title}`
         paperInfo += `\n   作者：${Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors || '未知'}`
@@ -826,36 +826,92 @@ const generateResearchPlan = async () => {
           paperInfo += `\n   摘要：${paper.abstract || paper.summary}`
         }
         
-        // 尝试从CORE API获取全文，设置超时
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
-          
-          const response = await fetch('http://localhost:3002/api/test-core', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ title: paper.title }),
-            signal: controller.signal
-          });
-          
-          clearTimeout(timeoutId);
-          
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.fullText) {
-              // 限制全文长度，避免提示词过长
-              const maxLength = 2000;
-              const fullText = data.fullText.length > maxLength 
-                ? data.fullText.substring(0, maxLength) + "...(内容已截断)" 
-                : data.fullText;
-              
-              paperInfo += `\n   全文：${fullText}`;
+        // 如果已有研究方法，直接使用
+        if (paper.researchMethod) {
+          paperInfo += `\n   研究方法：${paper.researchMethod}`
+        }
+        // 如果没有研究方法但有全文，尝试获取研究方法
+        else if (paper.fullText) {
+          try {
+            const response = await fetch('/api/paper/generate-method-summary', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: paper.title,
+                fullText: paper.fullText
+              })
+            });
+            
+            if (response.ok) {
+              const result = await response.json();
+              if (result.success && result.methodSummary) {
+                // 更新论文对象的研究方法
+                paper.researchMethod = result.methodSummary;
+                paperInfo += `\n   研究方法：${result.methodSummary}`;
+              }
             }
+          } catch (error) {
+            console.error(`获取论文"${paper.title}"研究方法失败:`, error);
           }
-        } catch (error) {
-          console.error(`获取论文"${paper.title}"全文失败:`, error);
+        }
+        // 如果既没有研究方法也没有全文，尝试获取全文和研究方法
+        else {
+          try {
+            const response = await fetch('/api/paper/get-full-content', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: paper.title
+              })
+            });
+            
+            if (response.ok) {
+              const result = await response.json();
+              if (result.success) {
+                // 更新论文对象的全文
+                if (result.fullText) {
+                  paper.fullText = result.fullText;
+                }
+                
+                // 更新研究方法
+                if (result.researchMethod) {
+                  paper.researchMethod = result.researchMethod;
+                  paperInfo += `\n   研究方法：${result.researchMethod}`;
+                }
+                // 如果没有获取到研究方法但有全文，尝试生成研究方法概要
+                else if (paper.fullText) {
+                  try {
+                    const methodResponse = await fetch('/api/paper/generate-method-summary', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        title: paper.title,
+                        fullText: paper.fullText
+                      })
+                    });
+                    
+                    if (methodResponse.ok) {
+                      const methodResult = await methodResponse.json();
+                      if (methodResult.success && methodResult.methodSummary) {
+                        paper.researchMethod = methodResult.methodSummary;
+                        paperInfo += `\n   研究方法：${methodResult.methodSummary}`;
+                      }
+                    }
+                  } catch (methodError) {
+                    console.error(`生成论文"${paper.title}"研究方法概要失败:`, methodError);
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error(`获取论文"${paper.title}"内容失败:`, error);
+          }
         }
         
         return paperInfo + "\n";
@@ -864,7 +920,7 @@ const generateResearchPlan = async () => {
       // 添加所有论文信息到消息中
       message += paperContents.join("");
       
-      message += `\n请基于以上${referencedPapers.length}篇参考文献的内容（包括摘要和全文）生成一个详细的定量研究方案。`
+      message += `\n请基于以上${referencedPapers.length}篇参考文献的内容（特别是研究方法部分）生成一个详细的定量研究方案。`
     } else {
       message += "\n\n请生成一个详细的定量研究方案。"
     }

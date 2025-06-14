@@ -104,7 +104,7 @@ export const selectPaper = (paper) => {
   papersState.selectedPaper = paper
 }
 
-export const toggleReference = (paper) => {
+export const toggleReference = async (paper) => {
   const paperId = paper.id
   if (papersState.referencedPapers.has(paperId)) {
     // 移除引用
@@ -114,14 +114,109 @@ export const toggleReference = (paper) => {
   } else {
     // 添加引用
     papersState.referencedPapers.add(paperId)
-    // 保存完整的文献信息，添加引用时间和来源标记
+    
+    // 创建引用论文对象
     const referencedPaper = {
       ...paper,
       referencedAt: new Date().toISOString(),
       source: paper.batchIndex ? 'recommendation' : 'search' // 标记来源
     }
+    
+    // 如果论文没有研究方法，尝试获取
+    if (!referencedPaper.researchMethod) {
+      try {
+        // 如果有全文，直接尝试提取研究方法
+        if (referencedPaper.fullText) {
+          const methodResponse = await fetch('/api/paper/generate-method-summary', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: referencedPaper.title,
+              fullText: referencedPaper.fullText
+            })
+          });
+
+          if (methodResponse.ok) {
+            const methodResult = await methodResponse.json();
+            if (methodResult.success && methodResult.methodSummary) {
+              referencedPaper.researchMethod = methodResult.methodSummary;
+              // 同时更新原始论文对象
+              paper.researchMethod = methodResult.methodSummary;
+            }
+          }
+        } 
+        // 如果没有全文，先获取全文再提取研究方法
+        else {
+          const response = await fetch('/api/paper/get-full-content', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: referencedPaper.title
+            })
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+              // 保存全文
+              if (result.fullText) {
+                referencedPaper.fullText = result.fullText;
+                paper.fullText = result.fullText;
+              }
+              
+              // 如果API直接返回了研究方法
+              if (result.researchMethod) {
+                referencedPaper.researchMethod = result.researchMethod;
+                paper.researchMethod = result.researchMethod;
+              }
+              // 如果没有研究方法但有全文，尝试生成研究方法概要
+              else if (referencedPaper.fullText) {
+                const methodResponse = await fetch('/api/paper/generate-method-summary', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    title: referencedPaper.title,
+                    fullText: referencedPaper.fullText
+                  })
+                });
+
+                if (methodResponse.ok) {
+                  const methodResult = await methodResponse.json();
+                  if (methodResult.success && methodResult.methodSummary) {
+                    referencedPaper.researchMethod = methodResult.methodSummary;
+                    paper.researchMethod = methodResult.methodSummary;
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('自动获取研究方法失败:', error);
+        // 不阻止添加引用，只记录错误
+      }
+    }
+    
+    // 添加到引用列表
     papersState.referencedPapersList.push(referencedPaper)
     console.log(`已添加引用文献: ${paper.title}`)
+    
+    // 更新推荐列表中对应的论文
+    const paperInRecommended = papersState.recommendedPapers.find(p => p.id === paperId);
+    if (paperInRecommended) {
+      if (referencedPaper.fullText) {
+        paperInRecommended.fullText = referencedPaper.fullText;
+      }
+      if (referencedPaper.researchMethod) {
+        paperInRecommended.researchMethod = referencedPaper.researchMethod;
+      }
+    }
   }
 }
 

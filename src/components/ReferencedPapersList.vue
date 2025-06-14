@@ -141,12 +141,114 @@
             </div>
 
             <!-- 摘要 -->
-            <div v-if="selectedPaper.abstract || selectedPaper.summary" class="mb-6">
-              <h3 class="text-lg font-semibold text-gray-900 mb-3">摘要</h3>
-              <p class="text-gray-600 leading-relaxed">
-                {{ selectedPaper.abstract || selectedPaper.summary }}
-              </p>
-            </div>
+                          <div v-if="selectedPaper.abstract || selectedPaper.summary" class="mb-6">
+                            <div class="flex items-center justify-between mb-3">
+                              <h3 class="text-lg font-semibold text-gray-900">摘要</h3>
+                              <button 
+                                @click="toggleTranslation"
+                                :disabled="isTranslating"
+                                class="text-sm px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                                title="显示中文译文"
+                              >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                                </svg>
+                                <span>{{ isTranslating ? '翻译中...' : (showTranslation ? '显示原文' : '显示译文') }}</span>
+                              </button>
+                            </div>
+                            <p class="text-gray-600 leading-relaxed">
+                              {{ showTranslation && translatedAbstract ? translatedAbstract : (selectedPaper.abstract || selectedPaper.summary) }}
+                            </p>
+                          </div>
+
+                          <!-- 研究方法部分 -->
+                          <div class="mt-6 mb-6">
+                            <div class="flex items-center justify-between">
+                              <h3 class="text-lg font-semibold text-gray-900">研究方法预览</h3>
+                              <div class="flex items-center space-x-2">
+                                <span v-if="isLoadingPaperContent" 
+                                      class="text-sm text-gray-500 mr-3 flex items-center">
+                                  <svg class="animate-spin h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  正在分析...
+                                </span>
+                                <button 
+                                  v-if="selectedPaper.researchMethod"
+                                  @click="retryExtractMethod"
+                                  class="text-orange-500 hover:text-orange-600 text-sm flex items-center"
+                                  :disabled="isLoadingPaperContent"
+                                  title="重新提取研究方法"
+                                >
+                                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                  </svg>
+                                  重试
+                                </button>
+                                <button 
+                                  v-if="selectedPaper.researchMethod"
+                                  @click="toggleFullText"
+                                  class="text-blue-600 hover:text-blue-700 text-sm flex items-center"
+                                >
+                                  {{ showFullText ? '收起' : '展开' }}
+                                  <svg 
+                                    class="w-4 h-4 ml-1 transform transition-transform"
+                                    :class="{ 'rotate-180': showFullText }"
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                            <div v-if="!isLoadingPaperContent && !selectedPaper.researchMethod" 
+                                 class="mt-3 text-gray-500">
+                              <p class="text-sm mb-2">暂无研究方法信息</p>
+                              <div class="flex space-x-2">
+                                <button 
+                                  @click="fetchPaperContent"
+                                  class="px-3 py-1 bg-blue-100 text-blue-600 text-sm rounded hover:bg-blue-200 transition-colors flex items-center"
+                                  :disabled="isLoadingPaperContent"
+                                >
+                                  <svg v-if="isLoadingPaperContent" class="animate-spin h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  <svg v-else class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                  </svg>
+                                  {{ isLoadingPaperContent ? '获取中...' : '尝试获取研究方法' }}
+                                </button>
+                              </div>
+                            </div>
+                            <div v-else-if="selectedPaper.researchMethod && showFullText" class="mt-3">
+                              <div class="flex items-center justify-between mb-2">
+                                <div></div>
+                                <button 
+                                  @click="toggleMethodTranslation"
+                                  :disabled="isTranslatingMethod"
+                                  class="text-sm px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                                  title="切换中英文"
+                                >
+                                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                                  </svg>
+                                  <span>{{ isTranslatingMethod ? '翻译中...' : (showMethodTranslation ? '显示原文' : '显示译文') }}</span>
+                                </button>
+                              </div>
+                              <div class="bg-gray-50 p-4 rounded-lg">
+                                <div v-if="showMethodTranslation && translatedMethod" 
+                                     class="prose max-w-none text-gray-600" 
+                                     v-html="renderMarkdown(translatedMethod)"></div>
+                                <div v-else 
+                                     class="prose max-w-none text-gray-600" 
+                                     v-html="renderMarkdown(selectedPaper.researchMethod)"></div>
+                              </div>
+                            </div>
+                          </div>
 
             <!-- 下载源 -->
             <div v-if="selectedPaper.downloadSources && selectedPaper.downloadSources.length > 0" class="mb-6">
@@ -278,10 +380,340 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { papersState, clearReferences, removePaperFromReferences } from '../stores/chatStore'
+import { marked } from 'marked'
+import { chatState } from '../stores/chatStore'
+import { sendSilentMessageToCoze } from '../services/cozeApi'
+
+// 配置marked安全选项
+marked.setOptions({
+  sanitize: true,
+  breaks: true,
+  gfm: true
+})
 
 // 响应式数据
 const selectedPaper = ref(null)
 const loadingDownload = ref(false)
+
+// 翻译相关状态
+const showTranslation = ref(false)
+const translatedAbstract = ref('')
+const isTranslating = ref(false)
+
+// 研究方法相关状态
+const showMethodTranslation = ref(false)
+const translatedMethod = ref('')
+const isTranslatingMethod = ref(false)
+const showFullText = ref(false)
+const isLoadingPaperContent = ref(false)
+
+// 渲染markdown内容
+const renderMarkdown = (markdown) => {
+  if (!markdown) return ''
+  try {
+    return marked.parse(markdown)
+  } catch (error) {
+    console.error('Markdown解析错误:', error)
+    return markdown // 返回原始内容作为回退
+  }
+}
+
+// 切换全文显示状态
+const toggleFullText = () => {
+  showFullText.value = !showFullText.value
+}
+
+// 获取论文内容和研究方法
+const fetchPaperContent = async () => {
+  if (!selectedPaper.value || !selectedPaper.value.title) {
+    return
+  }
+  
+  isLoadingPaperContent.value = true
+  
+  try {
+    console.log('手动获取论文内容:', selectedPaper.value.title)
+    
+    const response = await fetch('/api/paper/get-full-content', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: selectedPaper.value.title
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`)
+    }
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      // 更新选中论文的全文
+      if (result.fullText) {
+        selectedPaper.value.fullText = result.fullText
+      }
+      
+      // 更新研究方法
+      if (result.researchMethod) {
+        selectedPaper.value.researchMethod = result.researchMethod
+        showFullText.value = true // 自动展开研究方法
+        // 重置研究方法翻译状态
+        showMethodTranslation.value = false
+        translatedMethod.value = ''
+      } else if (selectedPaper.value.fullText) {
+        // 如果没有获取到研究方法但有全文，尝试使用备用方法
+        console.log('未获取到研究方法，尝试使用备用方法生成概要')
+        await tryGenerateMethodSummary()
+      }
+      
+      // 同时更新引用论文列表中的对应论文
+      const paperIndex = referencedPapersList.value.findIndex(
+        paper => paper.title === selectedPaper.value.title
+      )
+      
+      if (paperIndex !== -1) {
+        if (result.fullText) {
+          referencedPapersList.value[paperIndex].fullText = result.fullText
+        }
+        if (result.researchMethod) {
+          referencedPapersList.value[paperIndex].researchMethod = result.researchMethod
+        }
+      }
+    } else {
+      console.error('获取论文内容失败:', result.error)
+      alert('获取论文内容失败: ' + (result.error || '未知错误'))
+    }
+  } catch (error) {
+    console.error('获取论文内容出错:', error)
+    alert('获取论文内容出错: ' + error.message)
+  } finally {
+    isLoadingPaperContent.value = false
+  }
+}
+
+// 尝试使用备用方法生成研究方法概要
+const tryGenerateMethodSummary = async () => {
+  if (!selectedPaper.value || !selectedPaper.value.fullText) {
+    return false
+  }
+  
+  try {
+    console.log('使用备用方法生成研究方法概要:', selectedPaper.value.title)
+    
+    const response = await fetch('/api/paper/generate-method-summary', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: selectedPaper.value.title,
+        fullText: selectedPaper.value.fullText
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`)
+    }
+    
+    const result = await response.json()
+    
+    if (result.success && result.methodSummary) {
+      // 更新选中论文的研究方法
+      selectedPaper.value.researchMethod = result.methodSummary
+      showFullText.value = true // 自动展开研究方法
+      // 重置研究方法翻译状态
+      showMethodTranslation.value = false
+      translatedMethod.value = ''
+      
+      // 同时更新引用论文列表中的对应论文
+      const paperIndex = referencedPapersList.value.findIndex(
+        paper => paper.title === selectedPaper.value.title
+      )
+      
+      if (paperIndex !== -1) {
+        referencedPapersList.value[paperIndex].researchMethod = result.methodSummary
+      }
+      
+      return true
+    } else {
+      console.error('备用方法生成研究方法概要失败:', result.error)
+      return false
+    }
+  } catch (error) {
+    console.error('备用方法生成研究方法概要出错:', error)
+    return false
+  }
+}
+
+// 重新提取研究方法
+const retryExtractMethod = async () => {
+  if (!selectedPaper.value || !selectedPaper.value.fullText) {
+    alert('无法重新提取研究方法：论文全文不可用')
+    return
+  }
+  
+  isLoadingPaperContent.value = true
+  
+  try {
+    console.log('重新提取研究方法:', selectedPaper.value.title)
+    
+    // 重置研究方法翻译状态
+    showMethodTranslation.value = false
+    translatedMethod.value = ''
+    
+    // 直接使用备用方法生成研究方法概要
+    const success = await tryGenerateMethodSummary()
+    
+    if (!success) {
+      alert('重新提取研究方法失败，请稍后再试')
+    }
+  } catch (error) {
+    console.error('重新提取研究方法出错:', error)
+    alert('重新提取研究方法出错: ' + error.message)
+  } finally {
+    isLoadingPaperContent.value = false
+  }
+}
+
+// 翻译摘要
+const translateAbstract = async (abstractText) => {
+  if (!abstractText || !abstractText.trim()) {
+    throw new Error('摘要内容为空')
+  }
+
+  isTranslating.value = true
+  
+  try {
+    console.log('开始翻译摘要:', abstractText)
+    
+    // 构建翻译消息
+    const translateMessage = `请将以下英文摘要翻译成中文，保持学术性和准确性：\n\n${abstractText}`
+    
+    // 静默发送到coze agent
+    const translatedResult = await sendSilentMessageToCoze(translateMessage, chatState.messages)
+    
+    console.log('翻译结果:', translatedResult)
+    
+    // 清理翻译结果，移除可能的提示词或额外说明
+    let translatedText = translatedResult
+      .replace(/^翻译结果?[：:]?\s*/i, '')
+      .replace(/^中文翻译[：:]?\s*/i, '')
+      .replace(/^以下是翻译[：:]?\s*/i, '')
+      .replace(/^翻译[：:]?\s*/i, '')
+      .trim()
+    
+    if (translatedText && translatedText.length > 10) {
+      return translatedText
+    } else {
+      throw new Error('翻译结果为空或过短')
+    }
+    
+  } catch (error) {
+    console.error('翻译摘要失败:', error)
+    throw error
+  } finally {
+    isTranslating.value = false
+  }
+}
+
+// 切换摘要翻译显示
+const toggleTranslation = async () => {
+  if (!selectedPaper.value || !selectedPaper.value.abstract) {
+    return
+  }
+
+  // 如果已经显示翻译，切换回原文
+  if (showTranslation.value) {
+    showTranslation.value = false
+    return
+  }
+
+  // 如果还没有翻译，先进行翻译
+  if (!translatedAbstract.value) {
+    try {
+      const translated = await translateAbstract(selectedPaper.value.abstract)
+      translatedAbstract.value = translated
+      showTranslation.value = true
+    } catch (error) {
+      console.error('翻译失败:', error)
+      alert('翻译失败：' + error.message)
+    }
+  } else {
+    // 已有翻译，直接显示
+    showTranslation.value = true
+  }
+}
+
+// 翻译研究方法
+const translateMethod = async (methodText) => {
+  if (!methodText || !methodText.trim()) {
+    throw new Error('研究方法内容为空')
+  }
+  
+  try {
+    console.log('开始翻译研究方法')
+    
+    // 构建翻译消息
+    const translateMessage = `请将以下英文研究方法翻译成中文，保持学术性和准确性，保留原始的Markdown格式：\n\n${methodText}`
+    
+    // 静默发送到coze agent
+    const translatedResult = await sendSilentMessageToCoze(translateMessage, chatState.messages)
+    
+    console.log('研究方法翻译结果:', translatedResult)
+    
+    // 清理翻译结果，移除可能的提示词或额外说明
+    let translatedText = translatedResult
+      .replace(/^翻译结果?[：:]?\s*/i, '')
+      .replace(/^中文翻译[：:]?\s*/i, '')
+      .replace(/^以下是翻译[：:]?\s*/i, '')
+      .replace(/^翻译[：:]?\s*/i, '')
+      .trim()
+    
+    if (translatedText && translatedText.length > 10) {
+      return translatedText
+    } else {
+      throw new Error('翻译结果为空或过短')
+    }
+    
+  } catch (error) {
+    console.error('翻译研究方法失败:', error)
+    throw error
+  }
+}
+
+// 切换研究方法翻译显示
+const toggleMethodTranslation = async () => {
+  if (!selectedPaper.value || !selectedPaper.value.researchMethod) {
+    return
+  }
+
+  // 如果已经显示翻译，切换回原文
+  if (showMethodTranslation.value) {
+    showMethodTranslation.value = false
+    return
+  }
+
+  // 如果还没有翻译，先进行翻译
+  if (!translatedMethod.value) {
+    try {
+      isTranslatingMethod.value = true
+      const translated = await translateMethod(selectedPaper.value.researchMethod)
+      translatedMethod.value = translated
+      showMethodTranslation.value = true
+    } catch (error) {
+      console.error('研究方法翻译失败:', error)
+      alert('研究方法翻译失败：' + error.message)
+    } finally {
+      isTranslatingMethod.value = false
+    }
+  } else {
+    // 已有翻译，直接显示
+    showMethodTranslation.value = true
+  }
+}
 
 // 计算属性
 const referencedCount = computed(() => papersState.referencedPapers.size)
@@ -290,14 +722,47 @@ const referencedPapersList = computed(() => papersState.referencedPapersList)
 // 选择文献
 const selectPaper = (paper) => {
   selectedPaper.value = paper
+  // 重置翻译状态
+  showTranslation.value = false
+  translatedAbstract.value = ''
+  // 重置研究方法翻译状态
+  showMethodTranslation.value = false
+  translatedMethod.value = ''
+  showFullText.value = false
+  
+  // 如果论文没有研究方法但有全文，尝试提取研究方法
+  if (!paper.researchMethod && paper.fullText) {
+    tryGenerateMethodSummary()
+  }
 }
 
 // 移除单个文献的引用
 const removeFromReferences = (paper) => {
+  // 在移除引用之前，确保研究方法和翻译内容被保存
+  const paperToRemove = referencedPapersList.value.find(p => p.title === paper.title)
+  if (paperToRemove) {
+    // 保存研究方法和全文到原始论文对象
+    const originalPaper = papersState.recommendedPapers.find(p => p.title === paper.title)
+    if (originalPaper) {
+      if (paperToRemove.researchMethod) {
+        originalPaper.researchMethod = paperToRemove.researchMethod
+      }
+      if (paperToRemove.fullText) {
+        originalPaper.fullText = paperToRemove.fullText
+      }
+    }
+  }
+  
   removePaperFromReferences(paper)
-  // 如果移除的是当前选中的文献，清空选择
+  
+  // 如果移除的是当前选中的文献，清空选择和相关状态
   if (selectedPaper.value === paper) {
     selectedPaper.value = null
+    showTranslation.value = false
+    translatedAbstract.value = ''
+    showMethodTranslation.value = false
+    translatedMethod.value = ''
+    showFullText.value = false
   }
 }
 
@@ -379,6 +844,7 @@ const exportReferences = () => {
     年份: paper.year || '',
     引用次数: paper.citations || paper.citationCount || '',
     摘要: paper.abstract || paper.summary || '',
+    研究方法: paper.researchMethod || '',
     链接: paper.scholar_url || paper.downloadUrl || '',
     来源: paper.source === 'search' ? '文献搜索' : 'AI推荐',
     引用时间: paper.referencedAt ? new Date(paper.referencedAt).toLocaleString() : ''
