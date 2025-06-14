@@ -328,35 +328,55 @@
 
               <!-- 来源和方法介绍卡片 -->
               <div class="bg-white rounded-xl shadow-sm p-8">
-                <!-- 来源和方法导航按钮 -->
-                <div class="flex space-x-4 mb-8 border-b">
-                  <button
-                    v-for="tab in introTabs"
-                    :key="tab.id"
-                    @click="activeIntroTab = tab.id"
-                    class="px-4 py-2 font-medium transition-colors relative"
-                    :class="[
-                      activeIntroTab === tab.id
-                        ? 'text-purple-600 border-b-2 border-purple-600'
-                        : 'text-gray-600 hover:text-gray-900'
-                    ]"
-                  >
-                    {{ tab.name }}
-                  </button>
-                </div>
-
                 <!-- 来源介绍内容 -->
-                <div v-if="activeIntroTab === 'source'" class="space-y-4">
+                <div v-if="activeSection !== 'analysis'" class="space-y-4">
+                  <h3 class="text-lg font-semibold text-gray-900 mb-3">来源介绍</h3>
                   <p class="text-gray-600 leading-relaxed">
-                    {{ currentPlanState[activeSection].sourceIntro }}
+                    {{ currentPlanState[activeSection]?.sourceIntro || '本部分内容基于相关研究文献和方法论，结合研究目标进行设计。' }}
                   </p>
                 </div>
 
-                <!-- 方法介绍内容 -->
-                <div v-if="activeIntroTab === 'method'" class="space-y-4">
-                  <p class="text-gray-600 leading-relaxed">
-                    {{ currentPlanState[activeSection].methodIntro }}
-                  </p>
+                <!-- 数据分析部分的方法介绍和查询功能 -->
+                <div v-if="activeSection === 'analysis'" class="space-y-6">
+                  <!-- 方法介绍 -->
+                  <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">方法介绍</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                      {{ currentPlanState[activeSection]?.methodIntro || '本研究采用的统计方法包括描述性统计和推论统计。您可以使用下方的查询功能了解具体统计方法的详细信息。' }}
+                    </p>
+                  </div>
+
+                  <!-- 统计方法查询 -->
+                  <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">统计方法查询</h3>
+                    <div class="flex space-x-4">
+                      <input
+                        v-model="statisticalMethodQuery"
+                        type="text"
+                        placeholder="输入统计方法名称，如：t检验、方差分析、回归分析等"
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        @keyup.enter="queryStatisticalMethod"
+                      />
+                      <button
+                        @click="queryStatisticalMethod"
+                        :disabled="isQuerying"
+                        class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                      >
+                        <svg v-if="isQuerying" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>{{ isQuerying ? '查询中...' : '查询' }}</span>
+                      </button>
+                    </div>
+                    
+                    <!-- 查询结果 -->
+                    <div v-if="statisticalMethodResult" class="mt-4">
+                      <div class="bg-white p-4 rounded-lg shadow-sm">
+                        <div class="prose prose-sm max-w-none" v-html="renderedStatisticalMethodResult"></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -378,7 +398,6 @@ import { marked } from 'marked'
 const router = useRouter()
 const currentSection = ref('research-plan')
 const activeSection = ref('full')
-const activeIntroTab = ref('source')
 const chatBoxRef = ref(null)
 const isGenerating = ref(false)
 const lastMessageIdBeforeGenerate = ref(null) // 记录开始生成前的最后一条消息ID
@@ -387,6 +406,9 @@ const originalPlan = ref(null) // 保存原始方案数据
 const lastProcessedMessageId = ref(null) // 记录最后处理的消息ID，防止重复解析
 const isEvaluating = ref(false) // 是否正在评估方案
 const isIterating = ref(false) // 是否正在迭代方案
+const statisticalMethodQuery = ref('') // 统计方法查询输入
+const statisticalMethodResult = ref('') // 统计方法查询结果
+const isQuerying = ref(false) // 是否正在查询统计方法
 
 const sections = [
   { id: 'full', name: '完整方案' },
@@ -394,11 +416,6 @@ const sections = [
   { id: 'design', name: '实验设计' },
   { id: 'analysis', name: '数据分析' },
   { id: 'results', name: '结果呈现' }
-]
-
-const introTabs = [
-  { id: 'source', name: '来源介绍' },
-  { id: 'method', name: '方法介绍' }
 ]
 
 // 检测是否有AI生成的研究方案数据
@@ -450,6 +467,16 @@ const renderedAnalysisMethod = computed(() => {
 
 const renderedExpectedResults = computed(() => {
   return currentPlanState.expectedResults ? safeMarkdownRender(currentPlanState.expectedResults) : ''
+})
+
+// 统计方法查询结果的Markdown渲染
+const renderedStatisticalMethodResult = computed(() => {
+  return statisticalMethodResult.value ? safeMarkdownRender(statisticalMethodResult.value) : ''
+})
+
+// 监听活动部分变化，清空统计方法查询结果
+watch(() => activeSection.value, () => {
+  statisticalMethodResult.value = ''
 })
 
 // 监听聊天消息，解析研究方案
@@ -700,6 +727,10 @@ const parseResearchPlanResponse = (content) => {
       } else {
         currentPlanState.hypotheses = [hypothesis]
       }
+      // 初始化研究假设部分的来源介绍
+      currentPlanState.hypothesis = {
+        sourceIntro: '本研究假设基于现有文献和理论基础，结合研究目标和具体情境制定。'
+      }
       console.log('更新研究假设:', currentPlanState.hypotheses)
       updatedFields++
     }
@@ -707,6 +738,10 @@ const parseResearchPlanResponse = (content) => {
     // 更新实验设计
     if (design) {
       currentPlanState.experimentalDesign = design
+      // 初始化实验设计部分的来源介绍
+      currentPlanState.design = {
+        sourceIntro: '实验设计方案参考了相关领域的经典实验范式和最新研究方法。'
+      }
       console.log('更新实验设计:', design.substring(0, 100) + '...')
       updatedFields++
     }
@@ -714,6 +749,11 @@ const parseResearchPlanResponse = (content) => {
     // 更新数据分析
     if (analysis) {
       currentPlanState.analysisMethod = analysis
+      // 初始化数据分析部分的来源介绍和方法介绍
+      currentPlanState.analysis = {
+        sourceIntro: '数据分析方法基于研究目标和数据特征，采用适当的统计分析方法。',
+        methodIntro: '本研究采用的统计方法包括描述性统计和推论统计。您可以使用下方的查询功能了解具体统计方法的详细信息。'
+      }
       console.log('更新数据分析:', analysis.substring(0, 100) + '...')
       updatedFields++
     }
@@ -721,6 +761,10 @@ const parseResearchPlanResponse = (content) => {
     // 更新结果呈现
     if (results) {
       currentPlanState.expectedResults = results
+      // 初始化结果呈现部分的来源介绍
+      currentPlanState.results = {
+        sourceIntro: '结果呈现方式遵循学术论文的标准格式，确保研究发现清晰易懂。'
+      }
       console.log('更新结果呈现:', results.substring(0, 100) + '...')
       updatedFields++
     }
@@ -731,6 +775,11 @@ const parseResearchPlanResponse = (content) => {
     currentPlanState.researchQuestions = 'AI生成的研究方案'
     currentPlanState.methodology = `基于参考文献生成的研究方法 (生成时间: ${timestamp})`
     currentPlanState.dataCollection = '根据研究设计制定的数据收集方案'
+    
+    // 初始化完整方案部分的来源介绍
+    currentPlanState.full = {
+      sourceIntro: '本研究方案综合了多种研究方法和文献资源，旨在提供一个全面、科学的定量研究框架。'
+    }
     
     // 如果至少更新了一个字段，就认为成功
     if (updatedFields >= 1) {
@@ -1087,6 +1136,46 @@ ${JSON.stringify({
     alert('迭代方案失败，请重试')
   } finally {
     isIterating.value = false
+  }
+}
+
+// 查询统计方法
+const queryStatisticalMethod = async () => {
+  if (!statisticalMethodQuery.value.trim()) {
+    alert('请输入要查询的统计方法名称')
+    return
+  }
+
+  isQuerying.value = true
+  statisticalMethodResult.value = ''
+
+  try {
+    const response = await fetch('/api/query-statistical-method', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        method: statisticalMethodQuery.value.trim()
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('查询失败，请稍后重试')
+    }
+
+    const data = await response.json()
+    
+    if (data.success) {
+      statisticalMethodResult.value = data.explanation
+    } else {
+      throw new Error(data.error || '查询失败，请稍后重试')
+    }
+  } catch (error) {
+    console.error('查询统计方法失败:', error)
+    alert(error.message)
+  } finally {
+    isQuerying.value = false
   }
 }
 

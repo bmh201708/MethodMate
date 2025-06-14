@@ -1227,6 +1227,82 @@ app.post('/api/test-core', async (req, res) => {
   }
 });
 
+// 查询统计方法的API端点
+app.post('/api/query-statistical-method', async (req, res) => {
+  try {
+    const { method } = req.body;
+    
+    if (!method) {
+      return res.status(400).json({ 
+        success: false,
+        error: '需要提供统计方法名称' 
+      });
+    }
+
+    console.log('开始查询统计方法:', method);
+    
+    const prompt = `作为一个统计学专家，请详细解释以下统计方法：${method}
+    
+请包含以下内容：
+1. 方法定义和用途
+2. 适用场景
+3. 基本假设
+4. 计算步骤
+5. 结果解释
+6. 注意事项
+
+请用通俗易懂的语言解释，并尽可能提供具体的例子。`;
+
+    const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${COZE_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        bot_id: COZE_BOT_ID,
+        user: COZE_USER_ID,
+        query: prompt,
+        stream: false,
+        conversation_id: `query_method_${Date.now()}`
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Coze API responded with status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    let explanation = '';
+    
+    if (result.messages && Array.isArray(result.messages)) {
+      const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
+      if (answerMessages.length > 0) {
+        explanation = answerMessages[0].content;
+      }
+    } else if (result.answer) {
+      explanation = result.answer;
+    }
+
+    if (!explanation) {
+      throw new Error('未能获取统计方法解释');
+    }
+
+    res.json({
+      success: true,
+      method: method,
+      explanation: explanation
+    });
+  } catch (error) {
+    console.error('查询统计方法错误:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`🚀 本地API服务器运行在 http://localhost:${PORT}`);
