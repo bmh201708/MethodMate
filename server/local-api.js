@@ -38,7 +38,7 @@ process.env.COZE_USER_ID = COZE_USER_ID;
 import translate, { translateWithGoogleUnofficial } from './translate-service.js';
 import { translateWithCoze, translateWithSilentCoze } from './coze-translate-service.js';
 
-// 翻译函数 - 使用多种翻译服务进行中文到英文的翻译
+// 翻译函数 - 使用Coze API进行中文到英文的翻译
 const translateToEnglish = async (text, retries = 3) => {
   try {
     // 检测是否包含中文字符
@@ -55,97 +55,121 @@ const translateToEnglish = async (text, retries = 3) => {
 
     console.log('准备翻译文本:', cleanedText);
 
-    // 定义可用的翻译服务及其优先级
-    const translationServices = [
-      // 首选：使用Coze API进行翻译
-      async () => {
-        try {
-          console.log('尝试使用Coze API翻译...');
-          const result = await translateWithCoze(cleanedText, 'zh-CN', 'en');
-          if (!result || result.length < 5) throw new Error('Coze返回的翻译结果为空或过短');
-          return result;
-        } catch (err) {
-          console.warn('Coze翻译失败:', err.message);
-          throw err;
-        }
-      },
+    try {
+      console.log('使用Coze API翻译...');
+      const translatedText = await translateWithCoze(cleanedText, 'zh-CN', 'en');
       
-      // 备选1：使用Google非官方API
-      async () => {
-        try {
-          console.log('尝试使用Google非官方API翻译...');
-          const result = await translateWithGoogleUnofficial(cleanedText, 'zh-CN', 'en');
-          if (!result || result.length < 5) throw new Error('Google返回的翻译结果为空或过短');
-          return result;
-        } catch (err) {
-          console.warn('Google翻译失败:', err.message);
-          throw err;
-        }
-      },
+      if (!translatedText || translatedText.length < 5) {
+        throw new Error('Coze返回的翻译结果为空或过短');
+      }
       
-      // 备选2：使用Lingva翻译服务
-      async () => {
-        try {
-          console.log('尝试使用Lingva翻译服务...');
-          const result = await translate(cleanedText, {
-            from: 'zh',
-            to: 'en',
-            service: 'lingva',
-            retries: 1
-          });
-          if (!result || result.length < 5) throw new Error('Lingva返回的翻译结果为空或过短');
-          return result;
-        } catch (err) {
-          console.warn('Lingva翻译失败:', err.message);
-          throw err;
-        }
+      // 清理翻译结果，移除可能的提示词或额外说明
+      const cleanedTranslation = translatedText
+        .replace(/^translation[：:]?\s*/i, '')
+        .replace(/^translated text[：:]?\s*/i, '')
+        .replace(/^english translation[：:]?\s*/i, '')
+        .trim();
+      
+      console.log('翻译成功:', {
+        original: cleanedText.substring(0, 50) + (cleanedText.length > 50 ? '...' : ''),
+        translated: cleanedTranslation.substring(0, 50) + (cleanedTranslation.length > 50 ? '...' : '')
+      });
+      
+      return cleanedTranslation;
+    } catch (error) {
+      if (retries > 0) {
+        console.log(`翻译失败，${error.message}，剩余重试次数: ${retries - 1}`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return translateToEnglish(text, retries - 1);
       }
-    ];
-
-    // 尝试每个翻译服务，直到成功或全部失败
-    let lastError = null;
-    for (const translateFn of translationServices) {
-      try {
-        const translatedText = await translateFn();
-        
-        // 清理翻译结果，移除可能的提示词或额外说明
-        const cleanedTranslation = translatedText
-          .replace(/^translation[：:]?\s*/i, '')
-          .replace(/^translated text[：:]?\s*/i, '')
-          .replace(/^english translation[：:]?\s*/i, '')
-          .trim();
-        
-        console.log('翻译成功:', {
-          original: cleanedText.substring(0, 50) + (cleanedText.length > 50 ? '...' : ''),
-          translated: cleanedTranslation.substring(0, 50) + (cleanedTranslation.length > 50 ? '...' : '')
-        });
-        
-        return cleanedTranslation;
-      } catch (error) {
-        lastError = error;
-        // 继续尝试下一个服务
-      }
+      console.warn('翻译失败，使用原文:', text);
+      return text;
     }
-
-    // 如果还有重试次数，等待后重试
-    if (retries > 0) {
-      console.log(`所有翻译服务都失败，剩余重试次数: ${retries - 1}`);
-      await new Promise(resolve => setTimeout(resolve, 2000)); // 等待2秒后重试
-      return translateToEnglish(text, retries - 1);
-    }
-    
-    // 所有服务都失败且没有重试次数，返回原文
-    console.warn('所有翻译服务都失败，使用原文:', text);
-    return text;
   } catch (error) {
     console.error('翻译过程中发生未处理的错误:', error);
-    if (retries > 0) {
-      console.log(`发生错误，剩余重试次数: ${retries - 1}`);
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      return translateToEnglish(text, retries - 1);
-    }
-    console.warn('翻译失败，使用原文:', text);
     return text;
+  }
+};
+
+// 论文研究方法提取函数
+const extractResearchMethod = async (fullText, retries = 3) => {
+  try {
+    if (!fullText || typeof fullText !== 'string') {
+      console.log('无效的论文全文');
+      return null;
+    }
+
+    const prompt = `Please analyze the following academic paper and extract the research methodology section. 
+Focus on identifying and extracting the exact text that describes:
+- Research design
+- Data collection methods
+- Analysis procedures
+- Experimental setup (if applicable)
+
+Return ONLY the original text from the paper that describes these methods, maintaining the exact wording.
+Do not summarize or modify the text.
+
+Paper text:
+${fullText}`;
+
+    try {
+      console.log('使用Coze API提取研究方法...');
+      const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${COZE_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          bot_id: COZE_BOT_ID,
+          user: COZE_USER_ID,
+          query: prompt,
+          stream: false,
+          conversation_id: `extract_method_${Date.now()}`
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Coze API responded with status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      let methodText = '';
+      
+      // 提取机器人回复
+      if (result.messages && Array.isArray(result.messages)) {
+        const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
+        if (answerMessages.length > 0) {
+          methodText = answerMessages[0].content;
+        }
+      } else if (result.answer) {
+        methodText = result.answer;
+      }
+
+      if (!methodText) {
+        throw new Error('未能从Coze响应中提取研究方法');
+      }
+
+      // 清理提取的文本
+      methodText = methodText
+        .replace(/^(Here is the research methodology section:|I've extracted the research methodology section:|The research methodology section is as follows:)/i, '')
+        .trim();
+
+      console.log('成功提取研究方法部分');
+      return methodText;
+    } catch (error) {
+      if (retries > 0) {
+        console.log(`提取失败，${error.message}，剩余重试次数: ${retries - 1}`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return extractResearchMethod(fullText, retries - 1);
+      }
+      console.warn('提取研究方法失败');
+      return null;
+    }
+  } catch (error) {
+    console.error('提取研究方法过程中发生未处理的错误:', error);
+    return null;
   }
 };
 
