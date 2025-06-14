@@ -257,7 +257,7 @@
                 <div class="mt-6">
                   <div class="flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-gray-900">研究方法预览</h3>
-                    <div class="flex items-center">
+                    <div class="flex items-center space-x-2">
                       <span v-if="isLoadingPaperContent" 
                             class="text-sm text-gray-500 mr-3 flex items-center">
                         <svg class="animate-spin h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24">
@@ -266,6 +266,18 @@
                         </svg>
                         正在分析...
                       </span>
+                      <button 
+                        v-if="papersState.selectedPaper.researchMethod"
+                        @click="retryExtractMethod"
+                        class="text-orange-500 hover:text-orange-600 text-sm flex items-center"
+                        :disabled="isLoadingPaperContent"
+                        title="重新提取研究方法"
+                      >
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        重试
+                      </button>
                       <button 
                         v-if="papersState.selectedPaper.researchMethod"
                         @click="toggleFullText"
@@ -287,15 +299,22 @@
                   <div v-if="!isLoadingPaperContent && !papersState.selectedPaper.researchMethod" 
                        class="mt-3 text-gray-500">
                     <p class="text-sm mb-2">暂无研究方法信息</p>
-                    <button 
-                      @click="fetchPaperContent"
-                      class="px-3 py-1 bg-blue-100 text-blue-600 text-sm rounded hover:bg-blue-200 transition-colors flex items-center"
-                    >
-                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                      </svg>
-                      尝试获取研究方法
-                    </button>
+                    <div class="flex space-x-2">
+                      <button 
+                        @click="fetchPaperContent"
+                        class="px-3 py-1 bg-blue-100 text-blue-600 text-sm rounded hover:bg-blue-200 transition-colors flex items-center"
+                        :disabled="isLoadingPaperContent"
+                      >
+                        <svg v-if="isLoadingPaperContent" class="animate-spin h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <svg v-else class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        {{ isLoadingPaperContent ? '获取中...' : '尝试获取研究方法' }}
+                      </button>
+                    </div>
                   </div>
                   <div v-else-if="papersState.selectedPaper.researchMethod && showFullText" class="mt-3">
                     <div class="bg-gray-50 p-4 rounded-lg">
@@ -484,14 +503,19 @@ const fetchPaperContent = async () => {
     const result = await response.json()
     
     if (result.success) {
-      // 更新选中论文的全文和研究方法
+      // 更新选中论文的全文
       if (result.fullText) {
         papersState.selectedPaper.fullText = result.fullText
       }
       
+      // 更新研究方法
       if (result.researchMethod) {
         papersState.selectedPaper.researchMethod = result.researchMethod
         showFullText.value = true // 自动展开研究方法
+      } else if (papersState.selectedPaper.fullText) {
+        // 如果没有获取到研究方法但有全文，尝试使用备用方法
+        console.log('未获取到研究方法，尝试使用备用方法生成概要')
+        await tryGenerateMethodSummary()
       }
       
       // 同时更新推荐论文列表中的对应论文
@@ -509,13 +533,68 @@ const fetchPaperContent = async () => {
       }
     } else {
       console.error('获取论文内容失败:', result.error)
+      alert('获取论文内容失败: ' + (result.error || '未知错误'))
     }
   } catch (error) {
     console.error('获取论文内容出错:', error)
+    alert('获取论文内容出错: ' + error.message)
   } finally {
     isLoadingPaperContent.value = false
   }
 }
+
+// 尝试使用备用方法生成研究方法概要
+const tryGenerateMethodSummary = async () => {
+  if (!papersState.selectedPaper || !papersState.selectedPaper.fullText) {
+    return false
+  }
+  
+  try {
+    console.log('使用备用方法生成研究方法概要:', papersState.selectedPaper.title)
+    
+    const response = await fetch('/api/paper/generate-method-summary', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: papersState.selectedPaper.title,
+        fullText: papersState.selectedPaper.fullText
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`)
+    }
+    
+    const result = await response.json()
+    
+    if (result.success && result.methodSummary) {
+      // 更新选中论文的研究方法
+      papersState.selectedPaper.researchMethod = result.methodSummary
+      showFullText.value = true // 自动展开研究方法
+      
+      // 同时更新推荐论文列表中的对应论文
+      const paperIndex = papersState.recommendedPapers.findIndex(
+        paper => paper.title === papersState.selectedPaper.title
+      )
+      
+      if (paperIndex !== -1) {
+        papersState.recommendedPapers[paperIndex].researchMethod = result.methodSummary
+      }
+      
+      return true
+    } else {
+      console.error('备用方法生成研究方法概要失败:', result.error)
+      return false
+    }
+  } catch (error) {
+    console.error('备用方法生成研究方法概要出错:', error)
+    return false
+  }
+}
+
+// 这里删除了generateMethodSummary方法，因为其功能已经整合到tryGenerateMethodSummary中
 
 // 渲染markdown内容
 const renderMarkdown = (markdown) => {
@@ -531,6 +610,32 @@ const renderMarkdown = (markdown) => {
 // 切换全文显示状态
 const toggleFullText = () => {
   showFullText.value = !showFullText.value
+}
+
+// 重新提取研究方法
+const retryExtractMethod = async () => {
+  if (!papersState.selectedPaper || !papersState.selectedPaper.fullText) {
+    alert('无法重新提取研究方法：论文全文不可用')
+    return
+  }
+  
+  isLoadingPaperContent.value = true
+  
+  try {
+    console.log('重新提取研究方法:', papersState.selectedPaper.title)
+    
+    // 直接使用备用方法生成研究方法概要
+    const success = await tryGenerateMethodSummary()
+    
+    if (!success) {
+      alert('重新提取研究方法失败，请稍后再试')
+    }
+  } catch (error) {
+    console.error('重新提取研究方法出错:', error)
+    alert('重新提取研究方法出错: ' + error.message)
+  } finally {
+    isLoadingPaperContent.value = false
+  }
 }
 
 // 使用全局状态，直接引用papersState而不解构，保持响应式

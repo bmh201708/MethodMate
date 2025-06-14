@@ -99,18 +99,20 @@ const extractResearchMethod = async (fullText, retries = 3) => {
       return null;
     }
 
-    const prompt = `Please analyze the following academic paper and extract the research methodology section. 
-Focus on identifying and extracting the exact text that describes:
-- Research design
-- Data collection methods
-- Analysis procedures
-- Experimental setup (if applicable)
+    const prompt = `You are a research methodology expert. Your task is to identify and extract the methodology section from this academic paper.
 
-Return ONLY the original text from the paper that describes these methods, maintaining the exact wording.
-Do not summarize or modify the text.
+Look for sections that describe:
+1. Research design or methodology
+2. Data collection methods
+3. Analysis procedures
+4. Experimental setup
+
+Simply locate and extract these sections from the text. If you find them, return the relevant text passages. If you don't find explicit methodology sections, return null.
 
 Paper text:
-${fullText}`;
+${fullText}
+
+Remember: Just extract and return the relevant text. No need to analyze, summarize, or modify it.`;
 
     try {
       console.log('使用Coze API提取研究方法...');
@@ -147,6 +149,14 @@ ${fullText}`;
         methodText = result.answer;
       }
 
+      // 检查是否是拒绝响应
+      if (methodText.toLowerCase().includes("i'm sorry") || 
+          methodText.toLowerCase().includes("cannot assist") ||
+          methodText.toLowerCase().includes("can't assist")) {
+        console.log('Coze拒绝响应，尝试使用备用方法');
+        return await generateMethodSummary(fullText);
+      }
+
       if (!methodText) {
         throw new Error('未能从Coze响应中提取研究方法');
       }
@@ -164,11 +174,78 @@ ${fullText}`;
         await new Promise(resolve => setTimeout(resolve, 2000));
         return extractResearchMethod(fullText, retries - 1);
       }
-      console.warn('提取研究方法失败');
-      return null;
+      console.warn('提取研究方法失败，尝试使用备用方法');
+      return await generateMethodSummary(fullText);
     }
   } catch (error) {
     console.error('提取研究方法过程中发生未处理的错误:', error);
+    return null;
+  }
+};
+
+// 备用的研究方法生成函数
+const generateMethodSummary = async (fullText) => {
+  try {
+    if (!fullText || typeof fullText !== 'string') {
+      return null;
+    }
+
+    const prompt = `As a research assistant, help me understand the methodology used in this paper. 
+Please read the text and create a brief summary of the research methods used.
+Focus on identifying:
+- The type of research (e.g., experimental, survey, case study)
+- Data collection methods
+- Analysis approaches
+- Key methodological steps
+
+Text:
+${fullText}
+
+Please provide a concise summary of the methodology.`;
+
+    console.log('使用备用方法生成研究方法概要...');
+    const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${COZE_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        bot_id: COZE_BOT_ID,
+        user: COZE_USER_ID,
+        query: prompt,
+        stream: false,
+        conversation_id: `generate_summary_${Date.now()}`
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Coze API responded with status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    let summaryText = '';
+    
+    if (result.messages && Array.isArray(result.messages)) {
+      const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
+      if (answerMessages.length > 0) {
+        summaryText = answerMessages[0].content;
+      }
+    } else if (result.answer) {
+      summaryText = result.answer;
+    }
+
+    if (!summaryText || 
+        summaryText.toLowerCase().includes("i'm sorry") || 
+        summaryText.toLowerCase().includes("cannot assist") ||
+        summaryText.toLowerCase().includes("can't assist")) {
+      return null;
+    }
+
+    return summaryText.trim();
+  } catch (error) {
+    console.error('生成研究方法概要失败:', error);
     return null;
   }
 };
@@ -1077,6 +1154,45 @@ app.post('/api/paper/get-full-content', async (req, res) => {
     });
   } catch (error) {
     console.error('获取论文内容错误:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// 生成研究方法概要的API端点（备用方法）
+app.post('/api/paper/generate-method-summary', async (req, res) => {
+  try {
+    const { title, fullText } = req.body;
+    
+    if (!title || !fullText) {
+      return res.status(400).json({ 
+        success: false,
+        error: '需要提供论文标题和全文' 
+      });
+    }
+
+    console.log('开始生成研究方法概要，标题:', title);
+    
+    // 使用备用方法生成研究方法概要
+    const methodSummary = await generateMethodSummary(fullText);
+    
+    if (!methodSummary) {
+      return res.json({
+        success: false,
+        error: '无法生成研究方法概要',
+        title: title
+      });
+    }
+    
+    res.json({
+      success: true,
+      title: title,
+      methodSummary: methodSummary
+    });
+  } catch (error) {
+    console.error('生成研究方法概要错误:', error);
     res.status(500).json({ 
       success: false,
       error: error.message
