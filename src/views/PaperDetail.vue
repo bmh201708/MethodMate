@@ -317,8 +317,27 @@
                     </div>
                   </div>
                   <div v-else-if="papersState.selectedPaper.researchMethod && showFullText" class="mt-3">
+                    <div class="flex items-center justify-between mb-2">
+                      <div></div>
+                      <button 
+                        @click="toggleMethodTranslation"
+                        :disabled="isTranslatingMethod"
+                        class="text-sm px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                        title="切换中英文"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                        </svg>
+                        <span>{{ isTranslatingMethod ? '翻译中...' : (showMethodTranslation ? '显示原文' : '显示译文') }}</span>
+                      </button>
+                    </div>
                     <div class="bg-gray-50 p-4 rounded-lg">
-                      <p class="text-gray-600 leading-relaxed whitespace-pre-wrap">{{ papersState.selectedPaper.researchMethod }}</p>
+                      <div v-if="showMethodTranslation && translatedMethod" 
+                           class="prose max-w-none text-gray-600" 
+                           v-html="renderMarkdown(translatedMethod)"></div>
+                      <div v-else 
+                           class="prose max-w-none text-gray-600" 
+                           v-html="renderMarkdown(papersState.selectedPaper.researchMethod)"></div>
                     </div>
                   </div>
                 </div>
@@ -469,6 +488,11 @@ const showTranslation = ref(false)
 const translatedAbstract = ref('')
 const isTranslating = ref(false)
 
+// 研究方法翻译相关状态
+const showMethodTranslation = ref(false)
+const translatedMethod = ref('')
+const isTranslatingMethod = ref(false)
+
 // 论文内容加载状态
 const isLoadingPaperContent = ref(false)
 
@@ -512,6 +536,9 @@ const fetchPaperContent = async () => {
       if (result.researchMethod) {
         papersState.selectedPaper.researchMethod = result.researchMethod
         showFullText.value = true // 自动展开研究方法
+        // 重置研究方法翻译状态
+        showMethodTranslation.value = false
+        translatedMethod.value = ''
       } else if (papersState.selectedPaper.fullText) {
         // 如果没有获取到研究方法但有全文，尝试使用备用方法
         console.log('未获取到研究方法，尝试使用备用方法生成概要')
@@ -573,6 +600,9 @@ const tryGenerateMethodSummary = async () => {
       // 更新选中论文的研究方法
       papersState.selectedPaper.researchMethod = result.methodSummary
       showFullText.value = true // 自动展开研究方法
+      // 重置研究方法翻译状态
+      showMethodTranslation.value = false
+      translatedMethod.value = ''
       
       // 同时更新推荐论文列表中的对应论文
       const paperIndex = papersState.recommendedPapers.findIndex(
@@ -624,6 +654,10 @@ const retryExtractMethod = async () => {
   try {
     console.log('重新提取研究方法:', papersState.selectedPaper.title)
     
+    // 重置研究方法翻译状态
+    showMethodTranslation.value = false
+    translatedMethod.value = ''
+    
     // 直接使用备用方法生成研究方法概要
     const success = await tryGenerateMethodSummary()
     
@@ -654,6 +688,9 @@ const selectRecommendedPaper = (paper) => {
   // 重置翻译状态
   showTranslation.value = false
   translatedAbstract.value = ''
+  // 重置研究方法翻译状态
+  showMethodTranslation.value = false
+  translatedMethod.value = ''
 }
 
 // 翻译摘要
@@ -749,6 +786,74 @@ const toggleTranslation = async () => {
   } else {
     // 已有翻译，直接显示
     showTranslation.value = true
+  }
+}
+
+// 切换研究方法翻译显示
+const toggleMethodTranslation = async () => {
+  if (!papersState.selectedPaper || !papersState.selectedPaper.researchMethod) {
+    return
+  }
+
+  // 如果已经显示翻译，切换回原文
+  if (showMethodTranslation.value) {
+    showMethodTranslation.value = false
+    return
+  }
+
+  // 如果还没有翻译，先进行翻译
+  if (!translatedMethod.value) {
+    try {
+      isTranslatingMethod.value = true
+      const translated = await translateMethod(papersState.selectedPaper.researchMethod)
+      translatedMethod.value = translated
+      showMethodTranslation.value = true
+    } catch (error) {
+      console.error('研究方法翻译失败:', error)
+      alert('研究方法翻译失败：' + error.message)
+    } finally {
+      isTranslatingMethod.value = false
+    }
+  } else {
+    // 已有翻译，直接显示
+    showMethodTranslation.value = true
+  }
+}
+
+// 翻译研究方法
+const translateMethod = async (methodText) => {
+  if (!methodText || !methodText.trim()) {
+    throw new Error('研究方法内容为空')
+  }
+  
+  try {
+    console.log('开始翻译研究方法')
+    
+    // 构建翻译消息
+    const translateMessage = `请将以下英文研究方法翻译成中文，保持学术性和准确性，保留原始的Markdown格式：\n\n${methodText}`
+    
+    // 静默发送到coze agent
+    const translatedResult = await sendSilentMessageToCoze(translateMessage, chatState.messages)
+    
+    console.log('研究方法翻译结果:', translatedResult)
+    
+    // 清理翻译结果，移除可能的提示词或额外说明
+    let translatedText = translatedResult
+      .replace(/^翻译结果?[：:]?\s*/i, '')
+      .replace(/^中文翻译[：:]?\s*/i, '')
+      .replace(/^以下是翻译[：:]?\s*/i, '')
+      .replace(/^翻译[：:]?\s*/i, '')
+      .trim()
+    
+    if (translatedText && translatedText.length > 10) {
+      return translatedText
+    } else {
+      throw new Error('翻译结果为空或过短')
+    }
+    
+  } catch (error) {
+    console.error('翻译研究方法失败:', error)
+    throw error
   }
 }
 
