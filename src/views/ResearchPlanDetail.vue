@@ -502,8 +502,26 @@ watch(() => chatState.messages, (newMessages) => {
                                    content.includes('结果呈现') ||
                                    (content.includes('#') && (content.includes('假设') || content.includes('设计') || content.includes('分析')))
     
-    // 如果正在生成状态，按原有逻辑处理
-    if (isGenerating.value) {
+    // 检查是否是评估消息或者正在评估状态
+    const isEvaluationMessage = content.includes('逻辑性') && 
+                               content.includes('合理性') && 
+                               content.includes('可行性')
+    
+    // 如果是评估消息，重置评估状态并跳过方案解析
+    if (isEvaluationMessage) {
+      console.log('检测到评估消息，重置评估状态')
+      isEvaluating.value = false
+      return
+    }
+    
+    // 如果正在评估状态，跳过方案解析
+    if (isEvaluating.value) {
+      console.log('处于评估状态，跳过方案解析')
+      return
+    }
+    
+    // 如果正在生成状态或迭代状态，按原有逻辑处理
+    if (isGenerating.value || isIterating.value) {
       // 检查消息ID，只处理在生成开始之后的新消息
       if (lastMessageIdBeforeGenerate.value && latestAssistantMessage.id <= lastMessageIdBeforeGenerate.value) {
         console.log('跳过生成开始前的旧消息，消息ID:', latestAssistantMessage.id, '生成前最后消息ID:', lastMessageIdBeforeGenerate.value)
@@ -811,18 +829,30 @@ const parseResearchPlanResponse = (content) => {
       
       // 使用Vue的nextTick确保DOM更新完成后再显示提示
       setTimeout(() => {
-        if (updatedFields >= 3) {
-          alert('研究方案生成成功！已包含研究假设、实验设计、数据分析和结果呈现四个完整部分。PDF文件可在聊天框中下载。')
-        } else if (updatedFields >= 2) {
-          alert(`研究方案生成成功！已包含 ${updatedFields} 个部分，请查看各个板块的内容。PDF文件可在聊天框中下载。`)
-        } else {
-          alert('研究方案已生成，请查看右侧内容。PDF文件可在聊天框中下载。')
+        if (isIterating.value) {
+          // 迭代状态下的提示
+          if (updatedFields >= 3) {
+            alert('方案迭代成功！已优化研究假设、实验设计、数据分析和结果呈现四个完整部分。')
+          } else if (updatedFields >= 2) {
+            alert(`方案迭代成功！已优化 ${updatedFields} 个部分，请查看各个板块的内容。`)
+          } else {
+            alert('方案迭代成功！请查看右侧内容。')
+          }
+        } else if (isGenerating.value) {
+          // 生成状态下的提示
+          if (updatedFields >= 3) {
+            alert('研究方案生成成功！已包含研究假设、实验设计、数据分析和结果呈现四个完整部分。PDF文件可在聊天框中下载。')
+          } else if (updatedFields >= 2) {
+            alert(`研究方案生成成功！已包含 ${updatedFields} 个部分，请查看各个板块的内容。PDF文件可在聊天框中下载。`)
+          } else {
+            alert('研究方案已生成，请查看右侧内容。PDF文件可在聊天框中下载。')
+          }
         }
       }, 500)
       
-      // 记录历史方案
-      if (updatedFields >= 1) {
-        console.log('准备添加到历史方案')
+      // 只有在迭代状态下才添加到历史方案
+      if (updatedFields >= 1 && isIterating.value) {
+        console.log('迭代状态下，准备添加到历史方案')
         addHistoryPlan(currentPlanState)
       }
       
@@ -1049,15 +1079,15 @@ const exitHistoryView = () => {
   }
 }
 
-// 评估研究方案
-const evaluatePlan = async () => {
-  if (isEvaluating.value || !currentPlanState) return
-  
-  try {
-    isEvaluating.value = true
+  // 评估研究方案
+  const evaluatePlan = async () => {
+    if (isEvaluating.value || !currentPlanState) return
     
-    // 构建评估提示
-    const evaluationPrompt = `请对以下研究方案进行系统评估，分别从以下三方面进行分析：
+    try {
+      isEvaluating.value = true
+      
+      // 构建评估提示
+      const evaluationPrompt = `请对以下研究方案进行系统评估，分别从以下三方面进行分析：
 1. 逻辑性：评估研究目的、研究假设、评估指标等的前后对应关系
 2. 合理性：评估各评估指标、评估工具、评估方法等是否有效且合适
 3. 可行性：评估用户实验的任务量、时间、成本等是否可行
@@ -1073,16 +1103,29 @@ ${JSON.stringify({
   expectedResults: currentPlanState.expectedResults || ''
 }, null, 2)}`
 
-    // 发送消息到对话
-    await sendMessage(evaluationPrompt)
+      // 发送消息到对话
+      await sendMessage(evaluationPrompt)
+      
+      // 显示提示消息
+      setTimeout(() => {
+        alert('评估请求已发送，请等待AI助手的评估结果。')
+      }, 500)
 
-  } catch (error) {
-    console.error('评估方案失败:', error)
-    alert('评估方案失败，请重试')
-  } finally {
-    isEvaluating.value = false
+      // 设置一个定时器，在10秒后重置评估状态
+      // 这是为了防止评估状态长时间保持，即使没有收到响应也会重置
+      setTimeout(() => {
+        if (isEvaluating.value) {
+          console.log('评估状态超时，自动重置')
+          isEvaluating.value = false
+        }
+      }, 10000)
+
+    } catch (error) {
+      console.error('评估方案失败:', error)
+      alert('评估方案失败，请重试')
+      isEvaluating.value = false
+    }
   }
-}
 
 // 迭代研究方案
 const iteratePlan = async () => {
@@ -1090,6 +1133,10 @@ const iteratePlan = async () => {
 
   try {
     isIterating.value = true
+    
+    // 在迭代开始时不保存到历史记录，而是在成功生成新方案后再保存
+    // 这样可以避免重复添加到历史记录
+    console.log('开始迭代方案，将在成功生成新方案后保存到历史记录')
 
     // 获取最近的评估消息
     const latestEvaluation = chatState.messages
@@ -1099,6 +1146,7 @@ const iteratePlan = async () => {
 
     if (!latestEvaluation) {
       alert('请先进行方案评估，再进行迭代优化')
+      isIterating.value = false
       return
     }
 
@@ -1136,7 +1184,11 @@ ${JSON.stringify({
     console.error('迭代方案失败:', error)
     alert('迭代方案失败，请重试')
   } finally {
-    isIterating.value = false
+    // 不要在这里重置isIterating，让它保持true直到新方案生成完成
+    // 新方案生成完成后会在watch函数中重置isIterating
+    if (!isIterating.value) {
+      isIterating.value = false
+    }
   }
 }
 

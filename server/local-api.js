@@ -91,7 +91,7 @@ const translateToEnglish = async (text, retries = 3) => {
   }
 };
 
-// 论文研究方法提取函数
+// 论文研究方法提取函数 - 改进版，处理长文本
 const extractResearchMethod = async (fullText, retries = 3) => {
   try {
     if (!fullText || typeof fullText !== 'string') {
@@ -99,6 +99,51 @@ const extractResearchMethod = async (fullText, retries = 3) => {
       return null;
     }
 
+    // 计算文本长度，用于判断是否需要分段处理
+    const textLength = fullText.length;
+    console.log(`论文全文长度: ${textLength} 字符`);
+
+    // 定义最大段落长度（约8000个字符，大约是GPT模型处理能力的1/3）
+    const MAX_CHUNK_LENGTH = 8000;
+    
+    // 如果文本较短，直接处理
+    if (textLength <= MAX_CHUNK_LENGTH) {
+      console.log('论文长度适中，直接处理全文');
+      return await processFullText(fullText, retries);
+    }
+    
+    // 如果文本较长，先尝试定位方法部分
+    console.log('论文较长，尝试定位研究方法部分');
+    
+    // 1. 首先尝试定位可能包含研究方法的部分
+    const methodSection = locateMethodSection(fullText);
+    
+    if (methodSection) {
+      console.log('找到可能的方法部分，长度:', methodSection.length);
+      // 如果找到的方法部分仍然太长，进行分段处理
+      if (methodSection.length > MAX_CHUNK_LENGTH) {
+        console.log('找到的方法部分仍然较长，进行分段处理');
+        return await processTextInChunks(methodSection, retries);
+      } else {
+        // 如果方法部分长度适中，直接处理
+        console.log('找到的方法部分长度适中，直接处理');
+        return await processFullText(methodSection, retries);
+      }
+    }
+    
+    // 2. 如果没有找到明确的方法部分，将全文分段处理
+    console.log('未找到明确的方法部分，对全文进行分段处理');
+    return await processTextInChunks(fullText, retries);
+    
+  } catch (error) {
+    console.error('提取研究方法过程中发生未处理的错误:', error);
+    return null;
+  }
+};
+
+// 处理完整文本块
+const processFullText = async (text, retries = 3) => {
+  try {
     const prompt = `You are a research methodology expert. Your task is to identify and extract the methodology section from this academic paper.
 
 Look for sections that describe:
@@ -110,75 +155,232 @@ Look for sections that describe:
 Simply locate and extract these sections from the text. If you find them, return the relevant text passages. If you don't find explicit methodology sections, return null.
 
 Paper text:
-${fullText}
+${text}
 
 Remember: Just extract and return the relevant text. No need to analyze, summarize, or modify it.`;
 
-    try {
-      console.log('使用Coze API提取研究方法...');
-      const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${COZE_API_KEY}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          bot_id: COZE_BOT_ID,
-          user: COZE_USER_ID,
-          query: prompt,
-          stream: false,
-          conversation_id: `extract_method_${Date.now()}`
-        })
-      });
+    console.log('使用Coze API提取研究方法...');
+    const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${COZE_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        bot_id: COZE_BOT_ID,
+        user: COZE_USER_ID,
+        query: prompt,
+        stream: false,
+        conversation_id: `extract_method_${Date.now()}`
+      })
+    });
 
-      if (!response.ok) {
-        throw new Error(`Coze API responded with status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      let methodText = '';
-      
-      // 提取机器人回复
-      if (result.messages && Array.isArray(result.messages)) {
-        const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
-        if (answerMessages.length > 0) {
-          methodText = answerMessages[0].content;
-        }
-      } else if (result.answer) {
-        methodText = result.answer;
-      }
-
-      // 检查是否是拒绝响应
-      if (methodText.toLowerCase().includes("i'm sorry") || 
-          methodText.toLowerCase().includes("cannot assist") ||
-          methodText.toLowerCase().includes("can't assist")) {
-        console.log('Coze拒绝响应，尝试使用备用方法');
-        return await generateMethodSummary(fullText);
-      }
-
-      if (!methodText) {
-        throw new Error('未能从Coze响应中提取研究方法');
-      }
-
-      // 清理提取的文本
-      methodText = methodText
-        .replace(/^(Here is the research methodology section:|I've extracted the research methodology section:|The research methodology section is as follows:)/i, '')
-        .trim();
-
-      console.log('成功提取研究方法部分');
-      return methodText;
-    } catch (error) {
-      if (retries > 0) {
-        console.log(`提取失败，${error.message}，剩余重试次数: ${retries - 1}`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        return extractResearchMethod(fullText, retries - 1);
-      }
-      console.warn('提取研究方法失败，尝试使用备用方法');
-      return await generateMethodSummary(fullText);
+    if (!response.ok) {
+      throw new Error(`Coze API responded with status: ${response.status}`);
     }
+
+    const result = await response.json();
+    let methodText = '';
+    
+    if (result.messages && Array.isArray(result.messages)) {
+      const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
+      if (answerMessages.length > 0) {
+        methodText = answerMessages[0].content;
+      }
+    } else if (result.answer) {
+      methodText = result.answer;
+    }
+
+    if (methodText.toLowerCase().includes("i'm sorry") || 
+        methodText.toLowerCase().includes("cannot assist") ||
+        methodText.toLowerCase().includes("can't assist")) {
+      console.log('Coze拒绝响应，尝试使用备用方法');
+      return await generateMethodSummary(text);
+    }
+
+    if (!methodText) {
+      throw new Error('未能从Coze响应中提取研究方法');
+    }
+
+    methodText = methodText
+      .replace(/^(Here is the research methodology section:|I've extracted the research methodology section:|The research methodology section is as follows:)/i, '')
+      .trim();
+
+    return methodText;
   } catch (error) {
-    console.error('提取研究方法过程中发生未处理的错误:', error);
+    if (retries > 0) {
+      console.log(`处理文本块失败，${error.message}，剩余重试次数: ${retries - 1}`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return processFullText(text, retries - 1);
+    }
+    console.warn('处理文本块失败，尝试使用备用方法');
+    return await generateMethodSummary(text);
+  }
+};
+
+// 分段处理长文本
+const processTextInChunks = async (text, retries = 3) => {
+  try {
+    // 将文本分成较小的块
+    const MAX_CHUNK_LENGTH = 8000;
+    const chunks = [];
+    let currentChunk = '';
+    
+    // 按段落分割文本
+    const paragraphs = text.split(/\n\s*\n/);
+    
+    for (const paragraph of paragraphs) {
+      if (currentChunk.length + paragraph.length + 2 <= MAX_CHUNK_LENGTH) {
+        currentChunk += (currentChunk ? '\n\n' : '') + paragraph;
+      } else {
+        if (currentChunk) {
+          chunks.push(currentChunk);
+        }
+        currentChunk = paragraph;
+      }
+    }
+    
+    if (currentChunk) {
+      chunks.push(currentChunk);
+    }
+    
+    console.log(`将文本分成 ${chunks.length} 个块进行处理`);
+    
+    // 处理每个块并收集结果
+    const results = [];
+    for (let i = 0; i < chunks.length; i++) {
+      console.log(`处理第 ${i + 1}/${chunks.length} 个文本块`);
+      const result = await processFullText(chunks[i], retries);
+      if (result) {
+        results.push(result);
+      }
+      
+      // 在处理块之间添加延迟，避免API限制
+      if (i < chunks.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    
+    // 如果没有找到任何方法相关内容，返回null
+    if (results.length === 0) {
+      console.log('未从任何文本块中找到研究方法');
+      return null;
+    }
+    
+    // 合并所有结果
+    const combinedResult = results.join('\n\n');
+    console.log(`成功从 ${results.length} 个文本块中提取研究方法`);
+    
+    // 如果合并后的结果过长，可能需要进行总结
+    if (combinedResult.length > MAX_CHUNK_LENGTH) {
+      console.log('合并结果过长，尝试生成摘要');
+      return await generateMethodSummary(combinedResult);
+    }
+    
+    return combinedResult;
+  } catch (error) {
+    console.error('分段处理文本时出错:', error);
+    return null;
+  }
+};
+
+// 定位可能包含研究方法的部分
+const locateMethodSection = (fullText) => {
+  try {
+    // 转换为小写以进行不区分大小写的搜索
+    const lowerText = fullText.toLowerCase();
+    
+    // 定义可能表示方法部分的标题关键词
+    const methodTitles = [
+      'method', 'methodology', 'research design', 'experimental design',
+      'research methodology', 'data collection', 'procedure', 'experimental setup',
+      'research approach', 'study design', 'research procedure', 'materials and methods',
+      '方法', '研究方法', '实验方法', '实验设计', '研究设计', '数据收集', '实验程序'
+    ];
+    
+    // 查找可能的方法部分标题
+    let bestMatch = null;
+    let bestPosition = -1;
+    
+    for (const title of methodTitles) {
+      // 查找可能的标题格式（如 "3. Method" 或 "Method" 或 "III. Method"）
+      const patterns = [
+        new RegExp(`\\b\\d+\\.?\\s+${title}\\b`, 'i'),  // 数字编号格式
+        new RegExp(`\\b${title}\\b`, 'i'),              // 普通单词格式
+        new RegExp(`\\b[ivxlcdm]+\\.?\\s+${title}\\b`, 'i'), // 罗马数字格式
+      ];
+      
+      for (const pattern of patterns) {
+        const match = lowerText.match(pattern);
+        if (match && (bestPosition === -1 || match.index < bestPosition)) {
+          bestMatch = match[0];
+          bestPosition = match.index;
+        }
+      }
+    }
+    
+    // 如果找到方法部分标题
+    if (bestPosition !== -1) {
+      console.log(`找到可能的方法部分标题: "${bestMatch}" 在位置 ${bestPosition}`);
+      
+      // 查找下一个可能的章节标题，作为方法部分的结束
+      const nextSectionPattern = /\b(\d+\.\s+|\b[IVX]+\.\s+|Chapter\s+\d+\s*[:\.]\s*|\d+\s*[:\.]\s*)[A-Z]/;
+      const nextSection = lowerText.substring(bestPosition + bestMatch.length).match(nextSectionPattern);
+      
+      let endPosition;
+      if (nextSection) {
+        endPosition = bestPosition + bestMatch.length + nextSection.index;
+        console.log(`找到下一个章节标题，方法部分结束于位置 ${endPosition}`);
+      } else {
+        // 如果找不到下一个章节标题，取后续的一部分文本（最多10000字符）
+        endPosition = Math.min(bestPosition + bestMatch.length + 10000, fullText.length);
+        console.log(`未找到下一个章节标题，取后续 10000 字符作为方法部分`);
+      }
+      
+      // 提取方法部分文本
+      return fullText.substring(bestPosition, endPosition);
+    }
+    
+    // 如果没有找到明确的方法部分标题，尝试查找包含方法关键词的段落
+    console.log('未找到明确的方法部分标题，尝试查找包含方法关键词的段落');
+    
+    // 将文本分割成段落
+    const paragraphs = fullText.split(/\n\s*\n/);
+    
+    // 定义方法相关的关键词
+    const methodKeywords = [
+      'participant', 'procedure', 'measure', 'analysis', 'collect data', 'sample',
+      'experiment', 'survey', 'interview', 'questionnaire', 'observation',
+      'statistical analysis', 'research design', 'study design', 'method',
+      '参与者', '程序', '测量', '分析', '收集数据', '样本', '实验', '调查', '访谈',
+      '问卷', '观察', '统计分析', '研究设计', '研究方法'
+    ];
+    
+    // 查找包含多个方法关键词的段落
+    const methodParagraphs = paragraphs.filter(para => {
+      const lowerPara = para.toLowerCase();
+      // 计算段落中包含的方法关键词数量
+      const keywordCount = methodKeywords.filter(keyword => 
+        lowerPara.includes(keyword.toLowerCase())
+      ).length;
+      
+      // 如果包含至少3个关键词，认为是方法相关段落
+      return keywordCount >= 3;
+    });
+    
+    if (methodParagraphs.length > 0) {
+      console.log(`找到 ${methodParagraphs.length} 个可能包含方法的段落`);
+      // 合并这些段落
+      return methodParagraphs.join('\n\n');
+    }
+    
+    // 如果仍然找不到，返回null
+    console.log('未能定位到明确的方法部分');
+    return null;
+    
+  } catch (error) {
+    console.error('定位方法部分时出错:', error);
     return null;
   }
 };
