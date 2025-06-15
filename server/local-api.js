@@ -26,6 +26,7 @@ const SEMANTIC_API_KEY = process.env.SEMANTIC_API_KEY || '';
 const COZE_API_KEY = process.env.COZE_API_KEY || 'pat_xdxRBDKN85QE746XMRQ0hGgKJsVQSrH8VCIvUzlRkW62OTBqZ88ti1eIkTvHbU18';
 const COZE_API_URL = process.env.COZE_API_URL || 'https://api.coze.com';
 const COZE_BOT_ID = process.env.COZE_BOT_ID || '7513529977745915905';
+const COZE_BOT_ID_Reference = process.env.COZE_BOT_ID_Reference || '7511024998740754448';  
 const COZE_USER_ID = process.env.COZE_USER_ID || '7505301221562023954';
   
 // 设置环境变量，确保其他模块可以访问
@@ -1574,6 +1575,113 @@ app.post('/api/query-statistical-method', async (req, res) => {
   } catch (error) {
     console.error('查询统计方法错误:', error);
     res.status(500).json({ 
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Coze聊天API端点 - 用于生成来源介绍等
+app.post('/api/coze-chat', async (req, res) => {
+  try {
+    const { message, conversation_id } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ 
+        success: false,
+        error: '需要提供消息内容' 
+      });
+    }
+
+    console.log('Coze聊天API被调用，消息长度:', message.length);
+    console.log('对话ID:', conversation_id);
+    
+    const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${COZE_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        bot_id: COZE_BOT_ID_Reference,
+        user: COZE_USER_ID,
+        query: message,
+        stream: false,
+        conversation_id: conversation_id || `chat_${Date.now()}`
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Coze API错误响应 (${response.status}):`, errorText);
+      throw new Error(`Coze API responded with status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log('Coze API响应结构:', Object.keys(result));
+    
+    let reply = '';
+    
+    if (result.messages && Array.isArray(result.messages)) {
+      const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
+      if (answerMessages.length > 0) {
+        reply = answerMessages[0].content;
+      }
+    } else if (result.answer) {
+      reply = result.answer;
+    }
+
+    if (!reply) {
+      throw new Error('未能从Coze API获取有效回复');
+    }
+
+    console.log('成功获取Coze回复，长度:', reply.length);
+
+    res.json({
+      success: true,
+      reply: reply,
+      conversation_id: conversation_id
+    });
+  } catch (error) {
+    console.error('Coze聊天API错误:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// 获取缓存的研究方法API端点
+app.post('/api/paper/get-cached-method', async (req, res) => {
+  try {
+    const { title, doi } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ 
+        success: false,
+        error: '需要提供论文标题' 
+      });
+    }
+
+    console.log('获取缓存的研究方法，标题:', title);
+    
+    // 这里可以实现缓存逻辑，目前直接尝试获取
+    const fullText = await getFullTextFromCore(title, doi, 1, 500); // 减少重试次数和延迟
+    let methodSummary = null;
+    
+    if (fullText) {
+      methodSummary = await extractResearchMethod(fullText);
+    }
+    
+    res.json({
+      success: !!methodSummary,
+      title: title,
+      methodSummary: methodSummary
+    });
+  } catch (error) {
+    console.error('获取缓存研究方法错误:', error);
+    res.json({ 
       success: false,
       error: error.message
     });

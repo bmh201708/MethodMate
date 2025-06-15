@@ -328,12 +328,29 @@
 
               <!-- 来源和方法介绍卡片 -->
               <div class="bg-white rounded-xl shadow-sm p-8">
-                <!-- 来源介绍内容 -->
-                <div v-if="activeSection !== 'analysis'" class="space-y-4">
-                  <h3 class="text-lg font-semibold text-gray-900 mb-3">来源介绍</h3>
-                  <p class="text-gray-600 leading-relaxed">
-                    {{ currentPlanState[activeSection]?.sourceIntro || '本部分内容基于相关研究文献和方法论，结合研究目标进行设计。' }}
-                  </p>
+                <!-- 来源介绍内容（只显示研究假设、实验设计、结果呈现） -->
+                <div v-if="['hypothesis', 'design', 'results'].includes(activeSection)" class="space-y-4">
+                  <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-lg font-semibold text-gray-900">来源介绍</h3>
+                    <button
+                      @click="generateSourceIntroduction"
+                      :disabled="isGeneratingSource"
+                      class="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                    >
+                      <svg v-if="isGeneratingSource" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                      </svg>
+                      <span>{{ isGeneratingSource ? '生成中...' : '生成来源介绍' }}</span>
+                    </button>
+                  </div>
+                  <div v-if="currentSourceIntroduction" class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedSourceIntroduction"></div>
+                  <div v-else class="text-gray-500 italic">
+                    点击"生成来源介绍"按钮，基于参考文献生成当前部分的来源说明
+                  </div>
                 </div>
 
                 <!-- 数据分析部分的方法介绍和查询功能 -->
@@ -392,7 +409,7 @@ import { ref, watch, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ChatBox from '../components/ChatBox.vue'
 import { sendMessage, chatState } from '../stores/chatStore'
-import { papersState, addHistoryPlan, historyState, clearCurrentViewingPlan, currentPlanState, updateCurrentPlan, applyPlanAsCurrentPlan } from '../stores/chatStore'
+import { papersState, addHistoryPlan, historyState, clearCurrentViewingPlan, currentPlanState, updateCurrentPlan, applyPlanAsCurrentPlan, updateSourceIntroduction, getSourceIntroduction, clearSourceIntroductions } from '../stores/chatStore'
 import { marked } from 'marked'
 
 const router = useRouter()
@@ -409,6 +426,7 @@ const isIterating = ref(false) // 是否正在迭代方案
 const statisticalMethodQuery = ref('') // 统计方法查询输入
 const statisticalMethodResult = ref('') // 统计方法查询结果
 const isQuerying = ref(false) // 是否正在查询统计方法
+const isGeneratingSource = ref(false) // 是否正在生成来源介绍
 
 const sections = [
   { id: 'full', name: '完整方案' },
@@ -474,9 +492,69 @@ const renderedStatisticalMethodResult = computed(() => {
   return statisticalMethodResult.value ? safeMarkdownRender(statisticalMethodResult.value) : ''
 })
 
+// 当前部分的来源介绍
+const currentSourceIntroduction = computed(() => {
+  return getSourceIntroduction(activeSection.value)
+})
+
+// 来源介绍的Markdown渲染
+const renderedSourceIntroduction = computed(() => {
+  return currentSourceIntroduction.value ? safeMarkdownRender(currentSourceIntroduction.value) : ''
+})
+
 // 监听活动部分变化，清空统计方法查询结果
 watch(() => activeSection.value, () => {
   statisticalMethodResult.value = ''
+})
+
+// 监听方案生成完成，自动为支持的部分生成来源介绍
+watch(() => currentPlanState.isGenerated, async (newValue, oldValue) => {
+  if (newValue && !oldValue && papersState.referencedPapersList.size > 0) {
+    console.log('检测到方案生成完成，准备自动生成来源介绍')
+    
+    // 延迟一下确保方案数据已经完全更新
+    setTimeout(async () => {
+      const sectionsToGenerate = ['hypothesis', 'design', 'results']
+      
+      for (const section of sectionsToGenerate) {
+        // 检查该部分是否有内容
+        let hasContent = false
+        switch (section) {
+          case 'hypothesis':
+            hasContent = currentPlanState.hypotheses && currentPlanState.hypotheses.length > 0
+            break
+          case 'design':
+            hasContent = !!currentPlanState.experimentalDesign
+            break
+          case 'results':
+            hasContent = !!currentPlanState.expectedResults
+            break
+        }
+        
+        if (hasContent) {
+          console.log(`自动为${section}部分生成来源介绍`)
+          // 临时切换到该部分
+          const originalSection = activeSection.value
+          activeSection.value = section
+          
+          try {
+            await generateSourceIntroduction()
+            console.log(`${section}部分来源介绍生成完成`)
+          } catch (error) {
+            console.error(`${section}部分来源介绍生成失败:`, error)
+          }
+          
+          // 恢复原来的部分
+          activeSection.value = originalSection
+          
+          // 在生成之间添加延迟，避免API限制
+          await new Promise(resolve => setTimeout(resolve, 2000))
+        }
+      }
+      
+      console.log('所有支持部分的来源介绍生成完成')
+    }, 1000)
+  }
 })
 
 // 监听聊天消息，解析研究方案
@@ -850,10 +928,23 @@ const parseResearchPlanResponse = (content) => {
         }
       }, 500)
       
-      // 只有在迭代状态下才添加到历史方案
-      if (updatedFields >= 1 && isIterating.value) {
-        console.log('迭代状态下，准备添加到历史方案')
-        addHistoryPlan(currentPlanState)
+      // 添加到历史方案（生成新方案或迭代方案时都添加）
+      if (updatedFields >= 1 && (isIterating.value || isGenerating.value)) {
+        console.log('准备添加到历史方案，状态:', isIterating.value ? '迭代' : '生成')
+        
+        // 构建生成上下文
+        const generationContext = {
+          referencedPapers: Array.from(papersState.referencedPapersList).map(paper => ({
+            title: paper.title,
+            authors: paper.authors,
+            year: paper.year,
+            source: paper.source
+          })),
+          generationType: isIterating.value ? 'iteration' : 'generation',
+          timestamp: new Date().toISOString()
+        }
+        
+        addHistoryPlan(currentPlanState, generationContext)
       }
       
       return true // 成功解析并更新了研究方案
@@ -1232,12 +1323,156 @@ const queryStatisticalMethod = async () => {
   }
 }
 
+// 生成来源介绍
+const generateSourceIntroduction = async () => {
+  if (isGeneratingSource.value) return
+  
+  // 检查是否有生成的方案
+  if (!hasGeneratedPlan.value) {
+    alert('请先生成研究方案，再生成来源介绍')
+    return
+  }
+  
+  // 检查是否有参考文献
+  const referencedPapers = Array.from(papersState.referencedPapersList)
+  if (referencedPapers.length === 0) {
+    alert('请先选择参考文献，再生成来源介绍')
+    return
+  }
+  
+  isGeneratingSource.value = true
+  
+  try {
+    // 获取当前部分的内容
+    let currentSectionContent = ''
+    let sectionName = ''
+    
+    switch (activeSection.value) {
+      case 'hypothesis':
+        currentSectionContent = currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : ''
+        sectionName = '研究假设'
+        break
+      case 'design':
+        currentSectionContent = currentPlanState.experimentalDesign || ''
+        sectionName = '实验设计'
+        break
+      case 'results':
+        currentSectionContent = currentPlanState.expectedResults || ''
+        sectionName = '结果呈现'
+        break
+      default:
+        alert('当前部分不支持生成来源介绍')
+        return
+    }
+    
+    if (!currentSectionContent.trim()) {
+      alert(`当前${sectionName}部分内容为空，无法生成来源介绍`)
+      return
+    }
+    
+    // 构建参考文献信息
+    let referencesInfo = ''
+    for (let i = 0; i < referencedPapers.length; i++) {
+      const paper = referencedPapers[i]
+      referencesInfo += `\n参考文献${i + 1}：`
+      referencesInfo += `\n标题：${paper.title}`
+      referencesInfo += `\n摘要：${paper.abstract || paper.summary || '无摘要'}`
+      
+      // 获取研究方法总结
+      if (paper.researchMethod) {
+        referencesInfo += `\n研究方法总结：${paper.researchMethod}`
+      } else {
+        // 如果没有研究方法总结，尝试从缓存中获取
+        try {
+          const response = await fetch('/api/paper/get-cached-method', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: paper.title,
+              doi: paper.doi || null
+            })
+          })
+          
+          if (response.ok) {
+            const result = await response.json()
+            if (result.success && result.methodSummary) {
+              referencesInfo += `\n研究方法总结：${result.methodSummary}`
+              // 更新论文对象
+              paper.researchMethod = result.methodSummary
+            } else {
+              referencesInfo += `\n研究方法总结：暂无`
+            }
+          } else {
+            referencesInfo += `\n研究方法总结：暂无`
+          }
+        } catch (error) {
+          console.error('获取研究方法总结失败:', error)
+          referencesInfo += `\n研究方法总结：暂无`
+        }
+      }
+      referencesInfo += '\n'
+    }
+    
+    // 构建发送给Coze的提示
+    const prompt = `我将为你提供一个研究方案，以及研究方案参考的一些参考文献。请分析以下研究方案的"${sectionName}"部分参考了哪些参考文献的研究方法内容，并生成一个简洁的来源介绍。
+
+研究方案的${sectionName}部分：
+${currentSectionContent}
+
+参考文献信息：${referencesInfo}
+
+请分析${sectionName}部分具体参考了哪些文献的哪些研究方法要素，并生成一个200-300字的来源介绍，说明：
+1. 该部分主要参考了哪些文献
+2. 具体借鉴了这些文献的哪些研究方法要素
+3. 如何结合这些方法要素形成当前的方案设计
+
+请用学术性的语言，简洁明了地说明来源和参考依据。`
+
+    console.log('发送来源介绍生成请求:', prompt.substring(0, 200) + '...')
+    
+    // 调用Coze API
+    const response = await fetch('/api/coze-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: prompt,
+        conversation_id: `source_intro_${activeSection.value}_${Date.now()}`
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error('生成来源介绍失败，请稍后重试')
+    }
+    
+    const data = await response.json()
+    
+    if (data.success && data.reply) {
+      // 保存来源介绍到全局状态
+      updateSourceIntroduction(activeSection.value, data.reply)
+      console.log(`成功生成${sectionName}部分的来源介绍`)
+    } else {
+      throw new Error(data.error || '生成来源介绍失败')
+    }
+    
+  } catch (error) {
+    console.error('生成来源介绍失败:', error)
+    alert(error.message || '生成来源介绍失败，请稍后重试')
+  } finally {
+    isGeneratingSource.value = false
+  }
+}
+
 // 应用当前历史方案为当前方案
 const applyHistoryPlan = () => {
   if (historyState.currentViewingPlan) {
     // 将当前历史方案数据保存为新的当前方案
     const currentPlan = { ...currentPlanState }
     const planId = historyState.currentViewingPlan.id
+    const sourceIntroductions = historyState.currentViewingPlan.sourceIntroductions
     
     // 退出历史查看模式
     isViewingHistoryPlan.value = false
@@ -1246,8 +1481,8 @@ const applyHistoryPlan = () => {
     // 清空原始数据记录，因为现在这就是新的当前方案
     originalPlan.value = null
     
-    // 使用全局方法应用方案，传递方案ID
-    applyPlanAsCurrentPlan(currentPlan, planId)
+    // 使用全局方法应用方案，传递方案ID和来源介绍
+    applyPlanAsCurrentPlan(currentPlan, planId, sourceIntroductions)
     
     // 不再添加到历史记录，因为这个方案已经在历史记录中了
     

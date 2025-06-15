@@ -93,7 +93,15 @@ export const currentPlanState = reactive({
     sourceIntro: '研究结果的呈现方式参考了领域内顶级期刊的标准，确保数据可视化的清晰性和科学性。',
     methodIntro: '结果呈现采用多种可视化方法，包括交互效应图、热图和箱线图。所有图表都遵循APA格式规范。'
   },
-  isGenerated: false // 标记是否为AI生成的方案
+  isGenerated: false, // 标记是否为AI生成的方案
+  // 来源介绍存储
+  sourceIntroductions: {
+    full: '',
+    hypothesis: '',
+    design: '',
+    analysis: '',
+    results: ''
+  }
 })
 
 // 推荐文献相关方法
@@ -133,100 +141,119 @@ export const toggleReference = async (paper) => {
       source: paper.batchIndex ? 'recommendation' : 'search' // 标记来源
     }
     
-    // 如果论文没有研究方法，尝试获取
+    // 立即添加到引用列表，不等待研究方法获取
+    papersState.referencedPapersList.push(referencedPaper)
+    console.log(`已添加引用文献: ${paper.title}`)
+    
+    // 如果论文没有研究方法，在后台异步获取
     if (!referencedPaper.researchMethod) {
-      try {
-        // 如果有全文，直接尝试提取研究方法
-        if (referencedPaper.fullText) {
-          const methodResponse = await fetch('/api/paper/generate-method-summary', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              title: referencedPaper.title,
-              fullText: referencedPaper.fullText
-            })
-          });
+      // 异步获取研究方法，不阻塞UI
+      (async () => {
+        try {
+          console.log(`开始后台获取研究方法: ${paper.title}`)
+          
+          // 如果有全文，直接尝试提取研究方法
+          if (referencedPaper.fullText) {
+            const methodResponse = await fetch('/api/paper/generate-method-summary', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: referencedPaper.title,
+                fullText: referencedPaper.fullText
+              })
+            });
 
-          if (methodResponse.ok) {
-            const methodResult = await methodResponse.json();
-            if (methodResult.success && methodResult.methodSummary) {
-              referencedPaper.researchMethod = methodResult.methodSummary;
-              // 同时更新原始论文对象
-              paper.researchMethod = methodResult.methodSummary;
+            if (methodResponse.ok) {
+              const methodResult = await methodResponse.json();
+              if (methodResult.success && methodResult.methodSummary) {
+                // 更新引用列表中的论文
+                const refPaper = papersState.referencedPapersList.find(p => p.id === paperId);
+                if (refPaper) {
+                  refPaper.researchMethod = methodResult.methodSummary;
+                }
+                // 同时更新原始论文对象
+                paper.researchMethod = methodResult.methodSummary;
+                console.log(`成功获取研究方法: ${paper.title}`)
+              }
             }
-          }
-        } 
-        // 如果没有全文，先获取全文再提取研究方法
-        else {
-          const response = await fetch('/api/paper/get-full-content', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              title: referencedPaper.title
-            })
-          });
+          } 
+          // 如果没有全文，先获取全文再提取研究方法
+          else {
+            const response = await fetch('/api/paper/get-full-content', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: referencedPaper.title,
+                doi: referencedPaper.doi || null
+              })
+            });
 
-          if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-              // 保存全文
-              if (result.fullText) {
-                referencedPaper.fullText = result.fullText;
-                paper.fullText = result.fullText;
-              }
-              
-              // 如果API直接返回了研究方法
-              if (result.researchMethod) {
-                referencedPaper.researchMethod = result.researchMethod;
-                paper.researchMethod = result.researchMethod;
-              }
-              // 如果没有研究方法但有全文，尝试生成研究方法概要
-              else if (referencedPaper.fullText) {
-                const methodResponse = await fetch('/api/paper/generate-method-summary', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    title: referencedPaper.title,
-                    fullText: referencedPaper.fullText
-                  })
-                });
+            if (response.ok) {
+              const result = await response.json();
+              if (result.success) {
+                // 找到引用列表中的论文对象
+                const refPaper = papersState.referencedPapersList.find(p => p.id === paperId);
+                
+                // 保存全文
+                if (result.fullText && refPaper) {
+                  refPaper.fullText = result.fullText;
+                  paper.fullText = result.fullText;
+                }
+                
+                // 如果API直接返回了研究方法
+                if (result.researchMethod && refPaper) {
+                  refPaper.researchMethod = result.researchMethod;
+                  paper.researchMethod = result.researchMethod;
+                  console.log(`成功获取研究方法: ${paper.title}`)
+                }
+                // 如果没有研究方法但有全文，尝试生成研究方法概要
+                else if (result.fullText && refPaper) {
+                  const methodResponse = await fetch('/api/paper/generate-method-summary', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      title: referencedPaper.title,
+                      fullText: result.fullText
+                    })
+                  });
 
-                if (methodResponse.ok) {
-                  const methodResult = await methodResponse.json();
-                  if (methodResult.success && methodResult.methodSummary) {
-                    referencedPaper.researchMethod = methodResult.methodSummary;
-                    paper.researchMethod = methodResult.methodSummary;
+                  if (methodResponse.ok) {
+                    const methodResult = await methodResponse.json();
+                    if (methodResult.success && methodResult.methodSummary) {
+                      refPaper.researchMethod = methodResult.methodSummary;
+                      paper.researchMethod = methodResult.methodSummary;
+                      console.log(`成功获取研究方法: ${paper.title}`)
+                    }
                   }
                 }
               }
             }
           }
+        } catch (error) {
+          console.error(`后台获取研究方法失败: ${paper.title}`, error);
+          // 不阻止添加引用，只记录错误
         }
-      } catch (error) {
-        console.error('自动获取研究方法失败:', error);
-        // 不阻止添加引用，只记录错误
-      }
-    }
-    
-    // 添加到引用列表
-    papersState.referencedPapersList.push(referencedPaper)
-    console.log(`已添加引用文献: ${paper.title}`)
-    
-    // 更新推荐列表中对应的论文
-    const paperInRecommended = papersState.recommendedPapers.find(p => p.id === paperId);
-    if (paperInRecommended) {
-      if (referencedPaper.fullText) {
-        paperInRecommended.fullText = referencedPaper.fullText;
-      }
-      if (referencedPaper.researchMethod) {
-        paperInRecommended.researchMethod = referencedPaper.researchMethod;
-      }
+        
+        // 更新推荐列表中对应的论文
+        const paperInRecommended = papersState.recommendedPapers.find(p => p.id === paperId);
+        if (paperInRecommended) {
+          const refPaper = papersState.referencedPapersList.find(p => p.id === paperId);
+          if (refPaper) {
+            if (refPaper.fullText) {
+              paperInRecommended.fullText = refPaper.fullText;
+            }
+            if (refPaper.researchMethod) {
+              paperInRecommended.researchMethod = refPaper.researchMethod;
+            }
+          }
+        }
+      })();
     }
   }
 }
@@ -589,7 +616,9 @@ export const addHistoryPlan = (planData, generationContext = null) => {
     author: 'AI智能体',
     status: '已生成',
     fullPlan: JSON.parse(JSON.stringify(planData)), // 保存完整方案数据的深拷贝
-    generationContext: generationContext // 保存生成时的上下文
+    generationContext: generationContext, // 保存生成时的上下文
+    sourceIntroductions: currentPlanState.sourceIntroductions ? 
+      JSON.parse(JSON.stringify(currentPlanState.sourceIntroductions)) : {} // 保存来源介绍
   }
   
   historyState.historyPlans.unshift(newPlan) // 添加到数组开头，最新的在前面
@@ -657,13 +686,22 @@ export const resetCurrentPlan = () => {
   currentPlanState.experimentalDesign = '采用2x2混合实验设计，操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）。'
   currentPlanState.expectedResults = '预期AI编辑的媒体内容会导致更高的虚假记忆形成率，且这种效应会被参与者的媒体素养水平调节。'
   currentPlanState.isGenerated = false
+  
+  // 清空来源介绍
+  clearSourceIntroductions()
+  
   console.log('重置当前方案为默认状态')
 }
 
-export const applyPlanAsCurrentPlan = (planData, planId = null) => {
+export const applyPlanAsCurrentPlan = (planData, planId = null, sourceIntroductions = null) => {
   // 应用某个方案为当前方案
   Object.assign(currentPlanState, planData)
   currentPlanState.isGenerated = true
+  
+  // 恢复来源介绍
+  if (sourceIntroductions) {
+    currentPlanState.sourceIntroductions = JSON.parse(JSON.stringify(sourceIntroductions))
+  }
   
   // 重新生成时间戳，标记为新的当前方案
   currentPlanState.title = '基于AI智能体生成的定量研究方案'
@@ -676,4 +714,25 @@ export const applyPlanAsCurrentPlan = (planData, planId = null) => {
   }
   
   console.log('应用方案为当前方案:', planData.title || '未命名方案')
+}
+
+// 来源介绍相关方法
+export const updateSourceIntroduction = (section, introduction) => {
+  if (currentPlanState.sourceIntroductions) {
+    currentPlanState.sourceIntroductions[section] = introduction
+    console.log(`更新${section}部分的来源介绍`)
+  }
+}
+
+export const getSourceIntroduction = (section) => {
+  return currentPlanState.sourceIntroductions?.[section] || ''
+}
+
+export const clearSourceIntroductions = () => {
+  if (currentPlanState.sourceIntroductions) {
+    Object.keys(currentPlanState.sourceIntroductions).forEach(key => {
+      currentPlanState.sourceIntroductions[key] = ''
+    })
+    console.log('清空所有来源介绍')
+  }
 } 
