@@ -50,7 +50,7 @@ export const currentPlanState = reactive({
   researchQuestions: 'AI编辑的图像与视频如何影响人类记忆形成和回忆的准确性？这种影响与传统媒体的影响有何不同？',
   methodology: '采用混合研究方法，结合实验研究和问卷调查。实验组和对照组将分别接触AI编辑和传统编辑的媒体内容。',
   dataCollection: '通过在线实验平台收集数据，参与者将完成记忆测试和问卷调查。使用眼动追踪技术记录参与者观看内容时的注意力分配。',
-  analysisMethod: '使用SPSS进行定量分析，包括方差分析(ANOVA)和多元回归分析。质性数据将通过主题分析方法进行编码和分析。',
+  analysisMethod: '根据研究设计和数据特征选择适当的统计分析方法。可通过搜索功能了解具体方法的详细信息。',
   hypotheses: [
     'H1: 接触AI编辑的媒体内容会导致更高的虚假记忆形成率。',
     'H2: AI编辑内容的不确定性特征会增加记忆失真的程度。',
@@ -58,7 +58,7 @@ export const currentPlanState = reactive({
   ],
   experimentalDesign: '采用2x2混合实验设计，操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）。',
   variables: '自变量：媒体类型、呈现方式；因变量：记忆准确度、虚假记忆比率；控制变量：媒体素养、年龄、教育背景。',
-  statisticalTools: 'SPSS 26.0, R Studio, Python数据分析包（pandas, numpy, scipy）',
+  statisticalTools: '根据研究需要选择合适的统计分析工具和软件包。',
   expectedResults: '预期AI编辑的媒体内容会导致更高的虚假记忆形成率，且这种效应会被参与者的媒体素养水平调节。',
   visualization: '使用ggplot2创建交互效应图，使用Python的seaborn库绘制相关性热图和箱线图。',
   references: [
@@ -74,7 +74,7 @@ export const currentPlanState = reactive({
     }
   ],
   full: {
-    sourceIntro: 'This paper examines the role that enchantment plays in the design of AI things by constructing a taxonomy of design approaches that increase or decrease the perception of magic and enchantment. We start from the design discourse surrounding recent developments in AI technologies, highlighting specific interaction qualities such as algorithmic uncertainties and errors and articulating relations to the rhetoric of magic and supernatural thinking.',
+    sourceIntro: '',
     methodIntro: 'The research methodology follows a mixed-methods approach, combining experimental research with survey methods. The experimental group and control group will be exposed to AI-edited and traditionally edited media content respectively.'
   },
   hypothesis: {
@@ -87,7 +87,7 @@ export const currentPlanState = reactive({
   },
   analysis: {
     sourceIntro: '数据分析方法的选择基于近期发表的类似研究，并考虑了数据的特点和研究目标。分析框架经过方法专家的审查和验证。',
-    methodIntro: '使用SPSS 26.0进行定量分析，包括描述性统计、方差分析和回归分析。质性数据采用主题编码方法，使用NVivo软件辅助分析。'
+    methodIntro: '通过以下搜索框检索具体方法的详细信息和使用指南。'
   },
   results: {
     sourceIntro: '研究结果的呈现方式参考了领域内顶级期刊的标准，确保数据可视化的清晰性和科学性。',
@@ -493,117 +493,109 @@ export const addHistoryPlan = (planData, generationContext = null) => {
   if (!hasSubstantialContent) {
     console.log('新方案内容不足，直接添加（可能是默认数据）')
   } else {
-    // 检查是否已经存在相同的方案（基于完整方案内容和创建时间范围）
-    const now = new Date()
-    const threeMinutesAgo = new Date(now.getTime() - 3 * 60 * 1000) // 3分钟前
-    
-    console.log('当前时间:', now.toLocaleString())
-    console.log('3分钟前时间:', threeMinutesAgo.toLocaleString())
-    console.log('当前历史方案数量:', historyState.historyPlans.length)
-    
-    const isDuplicate = historyState.historyPlans.some((existingPlan, index) => {
-      const existingTime = new Date(existingPlan.createdAt)
-      const isRecentlyCreated = existingTime > threeMinutesAgo
+    // 检查是否有重复的方案（在10分钟内生成的相似方案）
+    if (historyState.historyPlans.length > 0) {
+      const currentTime = new Date()
+      const tenMinutesAgo = new Date(currentTime.getTime() - 10 * 60 * 1000) // 10分钟前
       
-      console.log(`检查历史方案 ${index + 1}:`)
-      console.log('- 创建时间:', existingPlan.createdAt)
-      console.log('- 是否在3分钟内:', isRecentlyCreated)
+      console.log('当前时间:', currentTime.toLocaleString('zh-CN'))
+      console.log('10分钟前时间:', tenMinutesAgo.toLocaleString('zh-CN'))
+      console.log('当前历史方案数量:', historyState.historyPlans.length)
       
-      if (!isRecentlyCreated) {
-        console.log('- 跳过：不在时间范围内')
-        return false
-      }
-      
-      // 比较完整方案的核心内容
-      const existingFullPlan = existingPlan.fullPlan
-      if (!existingFullPlan) {
-        console.log('- 跳过：历史方案无完整数据')
-        return false
-      }
-      
-      // 检查历史方案是否也有实质内容
-      const existingHasSubstantialContent = (
-        (existingFullPlan.hypotheses && existingFullPlan.hypotheses.length > 0 && existingFullPlan.hypotheses.some(h => h && h.trim().length > 10)) ||
-        (existingFullPlan.experimentalDesign && existingFullPlan.experimentalDesign.trim().length > 10) ||
-        (existingFullPlan.analysisMethod && existingFullPlan.analysisMethod.trim().length > 10) ||
-        (existingFullPlan.expectedResults && existingFullPlan.expectedResults.trim().length > 10)
-      )
-      
-      if (!existingHasSubstantialContent) {
-        console.log('- 跳过：历史方案内容不足')
-        return false
-      }
-      
-      console.log('- 历史方案内容:', {
-        hypotheses: existingFullPlan.hypotheses,
-        experimentalDesign: existingFullPlan.experimentalDesign,
-        analysisMethod: existingFullPlan.analysisMethod,
-        expectedResults: existingFullPlan.expectedResults,
-        researchQuestions: existingFullPlan.researchQuestions
+      const isDuplicate = historyState.historyPlans.some((existingPlan, index) => {
+        const existingTime = new Date(existingPlan.createdAt)
+        const isRecentlyCreated = existingTime > tenMinutesAgo
+        
+        console.log(`检查历史方案 ${index + 1}:`)
+        console.log('- 创建时间:', existingPlan.createdAt)
+        console.log('- 是否在10分钟内:', isRecentlyCreated)
+        
+        if (!isRecentlyCreated) {
+          console.log('- 跳过：不在时间范围内')
+          return false
+        }
+        
+        // 比较完整方案的核心内容
+        const existingFullPlan = existingPlan.fullPlan
+        if (!existingFullPlan) {
+          console.log('- 跳过：历史方案无完整数据')
+          return false
+        }
+        
+        // 检查历史方案是否也有实质内容
+        const existingHasSubstantialContent = (
+          (existingFullPlan.hypotheses && existingFullPlan.hypotheses.length > 0 && existingFullPlan.hypotheses.some(h => h && h.trim().length > 10)) ||
+          (existingFullPlan.experimentalDesign && existingFullPlan.experimentalDesign.trim().length > 10) ||
+          (existingFullPlan.analysisMethod && existingFullPlan.analysisMethod.trim().length > 10) ||
+          (existingFullPlan.expectedResults && existingFullPlan.expectedResults.trim().length > 10)
+        )
+        
+        if (!existingHasSubstantialContent) {
+          console.log('- 跳过：历史方案内容不足')
+          return false
+        }
+        
+        console.log('- 历史方案内容:', {
+          hypotheses: existingFullPlan.hypotheses,
+          experimentalDesign: existingFullPlan.experimentalDesign,
+          analysisMethod: existingFullPlan.analysisMethod,
+          expectedResults: existingFullPlan.expectedResults,
+          researchQuestions: existingFullPlan.researchQuestions
+        })
+        
+        // 比较核心字段是否完全相同
+        const isSameHypotheses = JSON.stringify(existingFullPlan.hypotheses || []) === JSON.stringify(planData.hypotheses || [])
+        const isSameDesign = (existingFullPlan.experimentalDesign || '') === (planData.experimentalDesign || '')
+        const isSameAnalysis = (existingFullPlan.analysisMethod || '') === (planData.analysisMethod || '')
+        const isSameResults = (existingFullPlan.expectedResults || '') === (planData.expectedResults || '')
+        const isSameQuestions = (existingFullPlan.researchQuestions || '') === (planData.researchQuestions || '')
+        
+        console.log('- 字段比较结果:')
+        console.log('  * 研究假设相同:', isSameHypotheses)
+        if (!isSameHypotheses) {
+          console.log('    历史:', JSON.stringify(existingFullPlan.hypotheses || []))
+          console.log('    新建:', JSON.stringify(planData.hypotheses || []))
+        }
+        console.log('  * 实验设计相同:', isSameDesign)
+        if (!isSameDesign) {
+          console.log('    历史:', existingFullPlan.experimentalDesign || '')
+          console.log('    新建:', planData.experimentalDesign || '')
+        }
+        console.log('  * 数据分析相同:', isSameAnalysis)
+        if (!isSameAnalysis) {
+          console.log('    历史:', existingFullPlan.analysisMethod || '')
+          console.log('    新建:', planData.analysisMethod || '')
+        }
+        console.log('  * 结果呈现相同:', isSameResults)
+        if (!isSameResults) {
+          console.log('    历史:', existingFullPlan.expectedResults || '')
+          console.log('    新建:', planData.expectedResults || '')
+        }
+        console.log('  * 研究问题相同:', isSameQuestions)
+        if (!isSameQuestions) {
+          console.log('    历史:', existingFullPlan.researchQuestions || '')
+          console.log('    新建:', planData.researchQuestions || '')
+        }
+        
+        // 如果内容完全相同，不管上下文是否不同，都认为是重复方案
+        const isContentSame = isSameHypotheses && isSameDesign && isSameAnalysis && isSameResults && isSameQuestions
+        const isDuplicateEntry = isContentSame // 只要内容相同就认为是重复
+        
+        console.log('- 内容完全相同:', isContentSame)
+        console.log('- 是否认为是重复方案:', isDuplicateEntry)
+        
+        if (isDuplicateEntry) {
+          console.log('*** 检测到相同内容的方案，将跳过添加 ***')
+          console.log('*** 即使上下文不同，内容相同的方案也不重复添加 ***')
+        }
+        
+        return isDuplicateEntry
       })
       
-      // 比较核心字段是否完全相同
-      const isSameHypotheses = JSON.stringify(existingFullPlan.hypotheses || []) === JSON.stringify(planData.hypotheses || [])
-      const isSameDesign = (existingFullPlan.experimentalDesign || '') === (planData.experimentalDesign || '')
-      const isSameAnalysis = (existingFullPlan.analysisMethod || '') === (planData.analysisMethod || '')
-      const isSameResults = (existingFullPlan.expectedResults || '') === (planData.expectedResults || '')
-      const isSameQuestions = (existingFullPlan.researchQuestions || '') === (planData.researchQuestions || '')
-      
-      console.log('- 字段比较结果:')
-      console.log('  * 研究假设相同:', isSameHypotheses)
-      if (!isSameHypotheses) {
-        console.log('    历史:', JSON.stringify(existingFullPlan.hypotheses || []))
-        console.log('    新建:', JSON.stringify(planData.hypotheses || []))
+      if (isDuplicate) {
+        console.log('=== 跳过添加重复方案 ===')
+        return
       }
-      console.log('  * 实验设计相同:', isSameDesign)
-      if (!isSameDesign) {
-        console.log('    历史:', existingFullPlan.experimentalDesign || '')
-        console.log('    新建:', planData.experimentalDesign || '')
-      }
-      console.log('  * 数据分析相同:', isSameAnalysis)
-      if (!isSameAnalysis) {
-        console.log('    历史:', existingFullPlan.analysisMethod || '')
-        console.log('    新建:', planData.analysisMethod || '')
-      }
-      console.log('  * 结果呈现相同:', isSameResults)
-      if (!isSameResults) {
-        console.log('    历史:', existingFullPlan.expectedResults || '')
-        console.log('    新建:', planData.expectedResults || '')
-      }
-      console.log('  * 研究问题相同:', isSameQuestions)
-      if (!isSameQuestions) {
-        console.log('    历史:', existingFullPlan.researchQuestions || '')
-        console.log('    新建:', planData.researchQuestions || '')
-      }
-      
-      // 检查生成上下文是否相同（比如参考文献）
-      const existingContext = existingPlan.generationContext
-      const isSameContext = JSON.stringify(existingContext || {}) === JSON.stringify(generationContext || {})
-      
-      console.log('- 生成上下文比较:')
-      console.log('  * 历史方案上下文:', existingContext)
-      console.log('  * 新方案上下文:', generationContext)
-      console.log('  * 上下文相同:', isSameContext)
-      
-      // 如果内容相同但上下文不同（如参考文献不同），则不认为是重复
-      const isContentSame = isSameHypotheses && isSameDesign && isSameAnalysis && isSameResults && isSameQuestions
-      const isDuplicateEntry = isContentSame && isSameContext
-      
-      console.log('- 内容完全相同:', isContentSame)
-      console.log('- 是否认为是重复方案:', isDuplicateEntry)
-      
-      if (isDuplicateEntry) {
-        console.log('*** 检测到相同内容且相同上下文的方案，将跳过添加 ***')
-      } else if (isContentSame && !isSameContext) {
-        console.log('*** 内容相同但上下文不同，将保留此方案 ***')
-      }
-      
-      return isDuplicateEntry
-    })
-    
-    if (isDuplicate) {
-      console.log('=== 跳过添加重复方案 ===')
-      return
     }
   }
   
@@ -620,6 +612,8 @@ export const addHistoryPlan = (planData, generationContext = null) => {
     sourceIntroductions: currentPlanState.sourceIntroductions ? 
       JSON.parse(JSON.stringify(currentPlanState.sourceIntroductions)) : {} // 保存来源介绍
   }
+  
+  console.log('保存历史方案时的来源介绍键:', Object.keys(newPlan.sourceIntroductions || {}))
   
   historyState.historyPlans.unshift(newPlan) // 添加到数组开头，最新的在前面
   
@@ -668,6 +662,12 @@ export const clearCurrentViewingPlan = () => {
 export const updateCurrentPlan = (planData) => {
   Object.assign(currentPlanState, planData)
   currentPlanState.isGenerated = true
+  
+  // 如果planData包含来源介绍，也要更新
+  if (planData.sourceIntroductions) {
+    currentPlanState.sourceIntroductions = JSON.parse(JSON.stringify(planData.sourceIntroductions))
+  }
+  
   console.log('更新当前方案:', planData)
 }
 
@@ -677,7 +677,7 @@ export const resetCurrentPlan = () => {
   currentPlanState.researchQuestions = 'AI编辑的图像与视频如何影响人类记忆形成和回忆的准确性？这种影响与传统媒体的影响有何不同？'
   currentPlanState.methodology = '采用混合研究方法，结合实验研究和问卷调查。实验组和对照组将分别接触AI编辑和传统编辑的媒体内容。'
   currentPlanState.dataCollection = '通过在线实验平台收集数据，参与者将完成记忆测试和问卷调查。使用眼动追踪技术记录参与者观看内容时的注意力分配。'
-  currentPlanState.analysisMethod = '使用SPSS进行定量分析，包括方差分析(ANOVA)和多元回归分析。质性数据将通过主题分析方法进行编码和分析。'
+  currentPlanState.analysisMethod = '根据研究设计和数据特征选择适当的统计分析方法。可通过搜索功能了解具体方法的详细信息。'
   currentPlanState.hypotheses = [
     'H1: 接触AI编辑的媒体内容会导致更高的虚假记忆形成率。',
     'H2: AI编辑内容的不确定性特征会增加记忆失真的程度。',
@@ -718,10 +718,11 @@ export const applyPlanAsCurrentPlan = (planData, planId = null, sourceIntroducti
 
 // 来源介绍相关方法
 export const updateSourceIntroduction = (section, introduction) => {
-  if (currentPlanState.sourceIntroductions) {
-    currentPlanState.sourceIntroductions[section] = introduction
-    console.log(`更新${section}部分的来源介绍`)
+  if (!currentPlanState.sourceIntroductions) {
+    currentPlanState.sourceIntroductions = {}
   }
+  currentPlanState.sourceIntroductions[section] = introduction
+  console.log(`更新${section}部分的来源介绍`)
 }
 
 export const getSourceIntroduction = (section) => {
@@ -729,10 +730,11 @@ export const getSourceIntroduction = (section) => {
 }
 
 export const clearSourceIntroductions = () => {
-  if (currentPlanState.sourceIntroductions) {
-    Object.keys(currentPlanState.sourceIntroductions).forEach(key => {
-      currentPlanState.sourceIntroductions[key] = ''
-    })
-    console.log('清空所有来源介绍')
+  if (!currentPlanState.sourceIntroductions) {
+    currentPlanState.sourceIntroductions = {}
   }
+  Object.keys(currentPlanState.sourceIntroductions).forEach(key => {
+    currentPlanState.sourceIntroductions[key] = ''
+  })
+  console.log('清空所有来源介绍')
 } 
