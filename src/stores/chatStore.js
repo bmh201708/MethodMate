@@ -23,7 +23,18 @@ export const papersState = reactive({
   referencedPapers: new Set(), // 被选为参考的文献ID集合（保持兼容性）
   referencedPapersList: [], // 引用文献的完整信息列表
   isLoadingRecommendations: false, // 是否正在获取推荐
-  recommendationError: '' // 推荐错误信息
+  recommendationError: '', // 推荐错误信息
+  // 搜索相关状态
+  searchResults: [], // 搜索结果
+  lastSearchQuery: '', // 最后一次搜索的关键词
+  searchLoading: false, // 搜索加载状态
+  searchError: null, // 搜索错误信息
+  searchFilters: { // 搜索过滤器状态
+    filterTopVenues: false,
+    showOnlyTopVenues: false,
+    numResults: 10,
+    language: 'zh-CN'
+  }
 })
 
 // 历史方案状态
@@ -276,6 +287,36 @@ export const setLoadingRecommendations = (loading) => {
 
 export const setRecommendationError = (error) => {
   papersState.recommendationError = error
+}
+
+// 搜索相关方法
+export const setSearchResults = (results, query) => {
+  papersState.searchResults = results.map((paper, index) => ({
+    ...paper,
+    id: paper.id || `search_${Date.now()}_${index}`, // 确保每个搜索结果都有唯一ID
+    source: 'search' // 标记为搜索来源
+  }))
+  papersState.lastSearchQuery = query
+  console.log(`保存搜索结果: ${results.length} 篇文献，关键词: "${query}"`)
+}
+
+export const setSearchLoading = (loading) => {
+  papersState.searchLoading = loading
+}
+
+export const setSearchError = (error) => {
+  papersState.searchError = error
+}
+
+export const updateSearchFilters = (filters) => {
+  Object.assign(papersState.searchFilters, filters)
+}
+
+export const clearSearchResults = () => {
+  papersState.searchResults = []
+  papersState.lastSearchQuery = ''
+  papersState.searchError = null
+  console.log('清空搜索结果')
 }
 
 // 发送消息的方法

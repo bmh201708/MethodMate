@@ -317,71 +317,143 @@ app.get('/', (req, res) => {
 });
 
 // 从CORE API获取论文全文，添加重试机制和请求间隔
-const getFullTextFromCore = async (title, retries = 3, delay = 1000) => {
+const getFullTextFromCore = async (title, doi = null, retries = 3, delay = 1000) => {
   try {
-    console.log(`正在从CORE API获取论文全文，标题: "${title}"，剩余重试次数: ${retries}`);
+    console.log(`正在从CORE API获取论文全文，标题: "${title}"${doi ? `，DOI: "${doi}"` : ''}，剩余重试次数: ${retries}`);
     
     // 添加请求间隔，避免API限流
     await new Promise(resolve => setTimeout(resolve, delay));
     
-    // 使用标题搜索论文
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000); // 10秒超时
-    
-    try {
-      const searchResponse = await fetch(`${CORE_API_BASE}/search/works`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${CORE_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          q: title,
-          limit: 1,
-          fields: ['title', 'fullText', 'abstract']
-        }),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeout);
-      
-      if (!searchResponse.ok) {
-        const errorText = await searchResponse.text();
-        console.error(`CORE API错误响应 (${searchResponse.status}):`, errorText);
-        throw new Error(`CORE API responded with status: ${searchResponse.status}`);
-      }
-
-      const result = await searchResponse.json();
-      console.log('CORE API搜索结果:', JSON.stringify(result, null, 2));
-      
-      if (result.results && result.results.length > 0) {
-        // 如果有全文就返回全文，否则返回摘要
-        const paper = result.results[0];
-        if (paper.fullText) {
-          console.log('找到论文全文');
-          return paper.fullText;
-        } else if (paper.abstract) {
-          console.log('未找到全文，使用摘要代替');
-          return paper.abstract;
-        }
-      }
-      
-      console.log('未找到相关论文信息');
-      return null;
-    } catch (fetchError) {
-      clearTimeout(timeout);
-      throw fetchError;
+    // 首先使用标题搜索论文
+    const titleResult = await searchCoreByTitle(title);
+    if (titleResult) {
+      console.log('通过标题找到论文全文');
+      return titleResult;
     }
+    
+    // 如果标题搜索失败且有DOI，尝试使用DOI搜索
+    if (doi) {
+      console.log(`标题搜索未找到结果，尝试使用DOI搜索: "${doi}"`);
+      const doiResult = await searchCoreByDOI(doi);
+      if (doiResult) {
+        console.log('通过DOI找到论文全文');
+        return doiResult;
+      }
+    }
+    
+    console.log('未找到相关论文信息');
+    return null;
   } catch (error) {
     console.error('从CORE获取全文时出错:', error);
     
     // 如果是超时或网络错误，并且还有重试次数，则重试
     if ((error.name === 'AbortError' || error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET') && retries > 0) {
       console.log(`CORE API请求超时或网络错误，${delay/1000}秒后重试，剩余重试次数: ${retries - 1}`);
-      return getFullTextFromCore(title, retries - 1, delay * 2); // 指数退避策略
+      return getFullTextFromCore(title, doi, retries - 1, delay * 2); // 指数退避策略
     }
     
     console.error('错误堆栈:', error.stack);
+    return null;
+  }
+};
+
+// 使用标题搜索CORE API的辅助函数
+const searchCoreByTitle = async (title) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000); // 10秒超时
+  
+  try {
+    const searchResponse = await fetch(`${CORE_API_BASE}/search/works`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${CORE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        q: title,
+        limit: 1,
+        fields: ['title', 'fullText', 'abstract']
+      }),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeout);
+    
+    if (!searchResponse.ok) {
+      const errorText = await searchResponse.text();
+      console.error(`CORE API标题搜索错误响应 (${searchResponse.status}):`, errorText);
+      return null;
+    }
+
+    const result = await searchResponse.json();
+    console.log('CORE API标题搜索结果:', JSON.stringify(result, null, 2));
+    
+    if (result.results && result.results.length > 0) {
+      const paper = result.results[0];
+      if (paper.fullText) {
+        return paper.fullText;
+      } else if (paper.abstract) {
+        console.log('标题搜索未找到全文，使用摘要代替');
+        return paper.abstract;
+      }
+    }
+    
+    return null;
+  } catch (fetchError) {
+    clearTimeout(timeout);
+    console.error('标题搜索出错:', fetchError);
+    return null;
+  }
+};
+
+// 使用DOI搜索CORE API的辅助函数
+const searchCoreByDOI = async (doi) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000); // 10秒超时
+  
+  try {
+    // 清理DOI格式，移除可能的前缀
+    const cleanDOI = doi.replace(/^(doi:|DOI:)/i, '').trim();
+    
+    const searchResponse = await fetch(`${CORE_API_BASE}/search/works`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${CORE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        q: `doi:"${cleanDOI}"`,
+        limit: 1,
+        fields: ['title', 'fullText', 'abstract', 'doi']
+      }),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeout);
+    
+    if (!searchResponse.ok) {
+      const errorText = await searchResponse.text();
+      console.error(`CORE API DOI搜索错误响应 (${searchResponse.status}):`, errorText);
+      return null;
+    }
+
+    const result = await searchResponse.json();
+    console.log('CORE API DOI搜索结果:', JSON.stringify(result, null, 2));
+    
+    if (result.results && result.results.length > 0) {
+      const paper = result.results[0];
+      if (paper.fullText) {
+        return paper.fullText;
+      } else if (paper.abstract) {
+        console.log('DOI搜索未找到全文，使用摘要代替');
+        return paper.abstract;
+      }
+    }
+    
+    return null;
+  } catch (fetchError) {
+    clearTimeout(timeout);
+    console.error('DOI搜索出错:', fetchError);
     return null;
   }
 };
@@ -485,8 +557,9 @@ const parseSemanticResponse = async (papers) => {
         // 标记为正在加载
         parsedPapers[paperIndex].isLoadingFullText = true;
         
-        // 异步获取全文
-        const fullText = await getFullTextFromCore(paper.title, 3, 1000);
+        // 异步获取全文，传递DOI信息
+        const doi = paper.externalIds?.DOI || null;
+        const fullText = await getFullTextFromCore(paper.title, doi, 3, 1000);
         
         if (fullText) {
           console.log(`成功获取论文全文，开始提取研究方法: "${paper.title}"`);
@@ -1128,16 +1201,16 @@ Text to analyze: "${needsTranslation && translatedQuery ? translatedQuery : ''}"
 // 获取论文全文和研究方法的API端点
 app.post('/api/paper/get-full-content', async (req, res) => {
   try {
-    const { title } = req.body;
+    const { title, doi } = req.body;
     
     if (!title) {
       return res.status(400).json({ error: '需要提供论文标题' });
     }
 
-    console.log('开始获取论文全文和研究方法，标题:', title);
+    console.log('开始获取论文全文和研究方法，标题:', title, doi ? `，DOI: ${doi}` : '');
     
-    // 获取全文
-    const fullText = await getFullTextFromCore(title, 3, 1000);
+    // 获取全文，传递DOI参数
+    const fullText = await getFullTextFromCore(title, doi, 3, 1000);
     let researchMethod = null;
     
     if (fullText) {
@@ -1148,6 +1221,7 @@ app.post('/api/paper/get-full-content', async (req, res) => {
     res.json({
       success: true,
       title: title,
+      doi: doi,
       fullText: fullText,
       researchMethod: researchMethod,
       hasContent: !!fullText
@@ -1203,18 +1277,19 @@ app.post('/api/paper/generate-method-summary', async (req, res) => {
 // 测试CORE API路由
 app.post('/api/test-core', async (req, res) => {
   try {
-    const { title } = req.body;
+    const { title, doi } = req.body;
     
     if (!title) {
       return res.status(400).json({ error: '需要提供论文标题' });
     }
 
-    console.log('测试CORE API，搜索标题:', title);
-    const fullText = await getFullTextFromCore(title);
+    console.log('测试CORE API，搜索标题:', title, doi ? `，DOI: ${doi}` : '');
+    const fullText = await getFullTextFromCore(title, doi);
     
     res.json({
       success: true,
       title: title,
+      doi: doi,
       fullText: fullText,
       hasContent: !!fullText
     });

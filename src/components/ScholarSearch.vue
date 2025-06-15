@@ -107,6 +107,20 @@
               </span>
               <span v-else>搜索</span>
             </button>
+            
+            <!-- 新搜索按钮 -->
+            <button
+              v-if="searchResults.length > 0"
+              type="button"
+              @click="startNewSearch"
+              class="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-2"
+              title="清空当前搜索结果，开始新搜索"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              <span>新搜索</span>
+            </button>
           </div>
         </div>
       </form>
@@ -346,7 +360,12 @@ import {
   papersState,
   toggleReference, 
   isReferenced,
-  clearReferences
+  clearReferences,
+  setSearchResults,
+  setSearchLoading,
+  setSearchError,
+  updateSearchFilters,
+  clearSearchResults
 } from '@/stores/chatStore'
 
 export default {
@@ -354,18 +373,70 @@ export default {
   data() {
     return {
       searchQuery: '',
-      lastSearchQuery: '',
-      numResults: 10,
-      language: 'zh-CN',
-      loading: false,
-      loadingDownload: null,
-      searchResults: [],
-      error: null,
-      filterTopVenues: false,
-      showOnlyTopVenues: false
+      loadingDownload: null
+    }
+  },
+  
+  mounted() {
+    // 组件挂载时，如果有之前的搜索查询，恢复到搜索框
+    if (this.lastSearchQuery) {
+      this.searchQuery = this.lastSearchQuery
     }
   },
   computed: {
+    // 使用全局状态
+    searchResults() {
+      return papersState.searchResults
+    },
+    
+    lastSearchQuery() {
+      return papersState.lastSearchQuery
+    },
+    
+    loading() {
+      return papersState.searchLoading
+    },
+    
+    error() {
+      return papersState.searchError
+    },
+    
+    numResults: {
+      get() {
+        return papersState.searchFilters.numResults
+      },
+      set(value) {
+        updateSearchFilters({ numResults: value })
+      }
+    },
+    
+    language: {
+      get() {
+        return papersState.searchFilters.language
+      },
+      set(value) {
+        updateSearchFilters({ language: value })
+      }
+    },
+    
+    filterTopVenues: {
+      get() {
+        return papersState.searchFilters.filterTopVenues
+      },
+      set(value) {
+        updateSearchFilters({ filterTopVenues: value })
+      }
+    },
+    
+    showOnlyTopVenues: {
+      get() {
+        return papersState.searchFilters.showOnlyTopVenues
+      },
+      set(value) {
+        updateSearchFilters({ showOnlyTopVenues: value })
+      }
+    },
+    
     filteredResults() {
       if (this.showOnlyTopVenues) {
         return this.searchResults.filter(paper => paper.isTopVenue);
@@ -395,11 +466,16 @@ export default {
     clearAllReferences() {
       clearReferences()
     },
+    
+    startNewSearch() {
+      // 清空搜索结果和搜索框
+      clearSearchResults()
+      this.searchQuery = ''
+    },
 
     async searchPapers() {
-      this.loading = true
-      this.error = null
-      this.lastSearchQuery = this.searchQuery
+      setSearchLoading(true)
+      setSearchError(null)
 
       try {
         // 使用相对路径，代理会自动转发到Vercel
@@ -420,24 +496,27 @@ export default {
 
         if (data.success) {
           // 确保每个结果都有isTopVenue属性和唯一ID
-          this.searchResults = data.results.map((result, index) => ({
+          const processedResults = data.results.map((result, index) => ({
             ...result,
             id: result.title, // 使用标题作为唯一ID
             downloadSources: null,
             downloadMessage: '',
             isTopVenue: result.isTopVenue || false // 确保isTopVenue属性存在
           }))
-          console.log('搜索结果:', this.searchResults)
+          
+          // 保存到全局状态
+          setSearchResults(processedResults, this.searchQuery)
+          console.log('搜索结果已保存到全局状态:', processedResults)
         } else {
-          this.error = data.error || '搜索失败，请重试'
-          this.searchResults = []
+          setSearchError(data.error || '搜索失败，请重试')
+          setSearchResults([], this.searchQuery)
         }
       } catch (err) {
         console.error('Search error:', err)
-        this.error = '网络错误，请检查网络连接'
-        this.searchResults = []
+        setSearchError('网络错误，请检查网络连接')
+        setSearchResults([], this.searchQuery)
       } finally {
-        this.loading = false
+        setSearchLoading(false)
       }
     },
 

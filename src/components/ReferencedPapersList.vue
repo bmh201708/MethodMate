@@ -440,7 +440,8 @@ const fetchPaperContent = async () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        title: selectedPaper.value.title
+        title: selectedPaper.value.title,
+        doi: selectedPaper.value.doi || null
       })
     })
     

@@ -516,7 +516,8 @@ const fetchPaperContent = async () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        title: papersState.selectedPaper.title
+        title: papersState.selectedPaper.title,
+        doi: papersState.selectedPaper.doi || null
       })
     })
     

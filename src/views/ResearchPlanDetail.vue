@@ -914,7 +914,8 @@ const generateResearchPlan = async () => {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                title: paper.title
+                title: paper.title,
+                doi: paper.doi || null
               })
             });
             
