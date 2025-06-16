@@ -11,15 +11,9 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    // 本地开发时的API代理配置
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3002',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path
-      }
-    }
+    // 本地开发时不使用代理，直接访问/api路径
+    // 这样可以让Vite的开发服务器直接处理API请求
+    // 配合Vercel Dev或部署环境使用
   },
   // 构建配置
   build: {

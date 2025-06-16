@@ -458,6 +458,7 @@ import ChatBox from '../components/ChatBox.vue'
 import { marked } from 'marked'
 import { chatState } from '../stores/chatStore'
 import { sendSilentMessageToCoze } from '../services/cozeApi'
+import { apiPost } from '../utils/api'
 import { 
   papersState, 
   addRecommendedPapers,
@@ -510,15 +511,9 @@ const fetchPaperContent = async () => {
   try {
     console.log('手动获取论文内容:', papersState.selectedPaper.title)
     
-    const response = await fetch('/api/paper/get-full-content', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: papersState.selectedPaper.title,
-        doi: papersState.selectedPaper.doi || null
-      })
+    const response = await apiPost('/api/paper/get-full-content', {
+      title: papersState.selectedPaper.title,
+      doi: papersState.selectedPaper.doi || null
     })
     
     if (!response.ok) {
@@ -580,15 +575,9 @@ const tryGenerateMethodSummary = async () => {
   try {
     console.log('使用备用方法生成研究方法概要:', papersState.selectedPaper.title)
     
-    const response = await fetch('/api/paper/generate-method-summary', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: papersState.selectedPaper.title,
-        fullText: papersState.selectedPaper.fullText
-      })
+    const response = await apiPost('/api/paper/generate-method-summary', {
+      title: papersState.selectedPaper.title,
+      fullText: papersState.selectedPaper.fullText
     })
     
     if (!response.ok) {
@@ -868,17 +857,11 @@ const getRecommendedPapers = async () => {
     
     console.log('当前聊天历史:', chatHistory)
 
-    // 调用推荐API（通过Vue开发服务器代理）
-    const response = await fetch('/api/semantic-recommend', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        chatHistory,
-        filter_venues: filterTopVenues.value, // 添加顶刊顶会过滤参数
-        session_id: Date.now().toString()
-      })
+    // 调用推荐API（使用新的API工具）
+    const response = await apiPost('/api/semantic-recommend', {
+      chatHistory,
+      filter_venues: filterTopVenues.value, // 添加顶刊顶会过滤参数
+      session_id: Date.now().toString()
     })
     
     // 记录请求URL和参数（用于调试）
