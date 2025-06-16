@@ -2,11 +2,11 @@ export const config = {
   runtime: 'edge',
 }
 
-// Coze API 配置
-const COZE_API_TOKEN = 'pat_efc1W6UAmfQSrvLkSqxbtF2VInxpcgAzE0YY3OfYyI9PNvoBdz0LXpB2zPHb9g5c'
+// Coze API 配置 - 从环境变量获取
+const COZE_API_TOKEN = process.env.COZE_API_KEY
 const COZE_API_BASE = 'https://api.coze.com'
-const BOT_ID = '7507577087193710608'
-const USER_ID = '7505301221562023954'
+const BOT_ID = process.env.COZE_BOT_ID
+const USER_ID = process.env.COZE_USER_ID || '7505301221562023954'
 
 // 解析机器人回复
 const parseBotReply = (reply) => {
