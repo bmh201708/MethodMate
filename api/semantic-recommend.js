@@ -6,9 +6,9 @@ export const config = {
 const SEMANTIC_API_BASE = 'https://api.semanticscholar.org/graph/v1'
 
 // Coze API 配置
-const COZE_API_TOKEN = 'pat_efc1W6UAmfQSrvLkSqxbtF2VInxpcgAzE0YY3OfYyI9PNvoBdz0LXpB2zPHb9g5c'
+const COZE_API_TOKEN = process.env.COZE_API_KEY
 const COZE_API_BASE = 'https://api.coze.com'
-const BOT_ID = '7510957134268940304'
+const BOT_ID = process.env.COZE_BOT_ID_SEMANTIC || '7510957134268940304'
 const USER_ID = '7505301221562023954'
 
 // 解析Coze API响应，提取关键词
