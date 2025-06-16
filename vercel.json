@@ -1,21 +1,26 @@
 {
-  "version": 2,
-  "builds": [
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
-  "routes": [
+      "source": "/api/paper/(.*)",
+      "destination": "https://fmenujeiejbj.sealoshzh.site/api/paper/$1"
+    },
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/api/query-statistical-method",
+      "destination": "https://fmenujeiejbj.sealoshzh.site/api/query-statistical-method"
+    },
+    {
+      "source": "/api/coze-chat",
+      "destination": "https://fmenujeiejbj.sealoshzh.site/api/coze-chat"
+    },
+    {
+      "source": "/api/health",
+      "destination": "https://fmenujeiejbj.sealoshzh.site/api/health"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-  ],
-  "env": {
-    "VITE_API_BASE_URL": "@api_base_url"
-  }
+  ]
 }
