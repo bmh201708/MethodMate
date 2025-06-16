@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: methodmate-frontend
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: COZE_API_KEY
+        sync: false
+      - key: COZE_BOT_ID
+        sync: false
+    
+  - type: web
+    name: methodmate-api
+    env: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: COZE_API_KEY
+        sync: false
+      - key: COZE_BOT_ID
+        sync: false 
