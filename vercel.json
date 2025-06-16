@@ -3,8 +3,20 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://fmenujeiejbj.sealoshzh.site/api/$1"
+      "source": "/api/paper/(.*)",
+      "destination": "https://fmenujeiejbj.sealoshzh.site/api/paper/$1"
+    },
+    {
+      "source": "/api/query-statistical-method",
+      "destination": "https://fmenujeiejbj.sealoshzh.site/api/query-statistical-method"
+    },
+    {
+      "source": "/api/coze-chat",
+      "destination": "https://fmenujeiejbj.sealoshzh.site/api/coze-chat"
+    },
+    {
+      "source": "/api/health",
+      "destination": "https://fmenujeiejbj.sealoshzh.site/api/health"
     },
     {
       "source": "/(.*)",

@@ -34,18 +34,9 @@
 
 ## ✅ 解决方案
 
-### 统一 API 架构（推荐）
+### 方案一：修改 vercel.json（推荐）
 
-经过测试发现，远程服务器上已经包含了所有需要的 API 接口，包括：
-- `/api/scholar-search` ✅
-- `/api/semantic-recommend` ✅
-- `/api/paper/get-full-content` ✅
-- `/api/paper/generate-method-summary` ✅
-- `/api/query-statistical-method` ✅
-- `/api/coze-chat` ✅
-- `/api/paper/get-cached-method` ✅
-
-因此最简单的解决方案是将所有 API 请求重定向到远程服务器：
+已经修改了 `vercel.json`，将所有 API 请求重定向到远程服务器：
 
 ```json
 {
@@ -63,11 +54,6 @@
   ]
 }
 ```
-
-这样可以：
-- ✅ 避免维护两套重复的 API 代码
-- ✅ 确保所有功能都能正常工作
-- ✅ 简化部署和维护流程
 
 ### 方案二：更新远程服务器 CORS 配置
 
