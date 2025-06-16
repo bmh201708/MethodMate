@@ -5,8 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:local": "cross-env USE_REMOTE_BACKEND=false vite",
-    "dev:remote": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -26,8 +24,6 @@
     "@tailwindcss/typography": "^0.5.16",
     "@vitejs/plugin-vue": "^4.5.0",
     "autoprefixer": "^10.4.16",
-    "cross-env": "^7.0.3",
-    "node-fetch": "^3.3.2",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6",
     "vite": "^5.0.0"
