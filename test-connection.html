@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MethodMate 后端连接测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007cba;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .loading {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a8b;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 MethodMate 后端连接测试</h1>
+    
+    <div class="test-section">
+        <h2>远程服务器信息</h2>
+        <p><strong>后端地址：</strong> <code>https://fmenujeiejbj.sealoshzh.site</code></p>
+        <p><strong>健康检查：</strong> <code>/api/health</code></p>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 连接测试</h2>
+        <button onclick="testHealth()">测试健康检查</button>
+        <button onclick="testScholarSearch()">测试学者搜索</button>
+        <button onclick="testSemanticRecommend()">测试语义推荐</button>
+        <button onclick="clearResults()">清除结果</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 配置检查清单</h2>
+        <ul>
+            <li>✅ vite.config.js 代理配置已更新</li>
+            <li>❓ 远程服务器 CORS 配置需要更新（见下方说明）</li>
+            <li>❓ 远程服务器运行状态需要确认</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 CORS 配置说明</h2>
+        <p>如果测试失败，可能需要在远程服务器的 <code>server/local-api.js</code> 中更新 CORS 配置：</p>
+        <pre>const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? [
+        'https://method-mate.vercel.app', 
+        'https://methodmate.vercel.app',
+        'https://你的vercel域名.vercel.app',  // 替换为实际域名
+        'https://fmenujeiejbj.sealoshzh.site',
+        'http://localhost:3000',
+        'http://localhost:5173'
+      ]
+    : ['http://localhost:5173', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};</pre>
+    </div>
+
+    <script>
+        const serverUrl = 'https://fmenujeiejbj.sealoshzh.site';
+        
+        function addResult(title, status, content, details = '') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-section ${status}`;
+            resultDiv.innerHTML = `
+                <h3>${title} - ${timestamp}</h3>
+                <p><strong>状态:</strong> ${status === 'success' ? '✅ 成功' : status === 'error' ? '❌ 失败' : '⏳ 进行中'}</p>
+                <pre>${content}</pre>
+                ${details ? `<details><summary>详细信息</summary><pre>${details}</pre></details>` : ''}
+            `;
+            
+            results.appendChild(resultDiv);
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        async function testHealth() {
+            addResult('健康检查测试', 'loading', '正在测试 /api/health ...');
+            
+            try {
+                const response = await fetch(`${serverUrl}/api/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult('健康检查测试', 'success', 
+                        `服务器正常运行\n状态: ${data.status}\n运行时间: ${data.uptime}秒\n环境: ${data.environment}`,
+                        JSON.stringify(data, null, 2)
+                    );
+                } else {
+                    addResult('健康检查测试', 'error', 
+                        `HTTP ${response.status}: ${response.statusText}`,
+                        JSON.stringify(data, null, 2)
+                    );
+                }
+            } catch (error) {
+                addResult('健康检查测试', 'error', 
+                    `连接失败: ${error.message}`,
+                    `可能的原因：
+1. 远程服务器未运行
+2. 网络连接问题  
+3. CORS 配置问题
+4. 防火墙阻止访问
+
+解决建议：
+1. 检查服务器状态
+2. 更新 CORS 配置
+3. 验证网络连通性`
+                );
+            }
+        }
+        
+        async function testScholarSearch() {
+            addResult('学者搜索测试', 'loading', '正在测试 /api/scholar-search ...');
+            
+            try {
+                const response = await fetch(`${serverUrl}/api/scholar-search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: 'machine learning',
+                        num_results: 3,
+                        lang: 'zh-CN'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addResult('学者搜索测试', 'success', 
+                        `搜索成功\n找到 ${data.results?.length || 0} 篇文献`,
+                        JSON.stringify(data, null, 2)
+                    );
+                } else {
+                    addResult('学者搜索测试', 'error', 
+                        `搜索失败: ${data.error || 'Unknown error'}`,
+                        JSON.stringify(data, null, 2)
+                    );
+                }
+            } catch (error) {
+                addResult('学者搜索测试', 'error', 
+                    `API调用失败: ${error.message}`
+                );
+            }
+        }
+        
+        async function testSemanticRecommend() {
+            addResult('语义推荐测试', 'loading', '正在测试 /api/semantic-recommend ...');
+            
+            try {
+                const response = await fetch(`${serverUrl}/api/semantic-recommend`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chatHistory: [
+                            { type: 'user', content: '我想了解机器学习的研究方法' }
+                        ],
+                        filter_venues: false,
+                        session_id: Date.now().toString()
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addResult('语义推荐测试', 'success', 
+                        `推荐成功\n获得 ${data.papers?.length || 0} 篇推荐文献`,
+                        JSON.stringify(data, null, 2)
+                    );
+                } else {
+                    addResult('语义推荐测试', 'error', 
+                        `推荐失败: ${data.error || 'Unknown error'}`,
+                        JSON.stringify(data, null, 2)
+                    );
+                }
+            } catch (error) {
+                addResult('语义推荐测试', 'error', 
+                    `API调用失败: ${error.message}`
+                );
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // 页面加载时自动运行健康检查
+        window.onload = function() {
+            setTimeout(testHealth, 1000);
+        };
+    </script>
+</body>
+</html> 

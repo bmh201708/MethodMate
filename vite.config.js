@@ -14,9 +14,9 @@ export default defineConfig({
     // 本地开发时的API代理配置
     proxy: {
       '/api': {
-        target: 'http://localhost:3002',
+        target: 'https://fmenujeiejbj.sealoshzh.site',
         changeOrigin: true,
-        secure: false,
+        secure: true,
         rewrite: (path) => path
       }
     }
