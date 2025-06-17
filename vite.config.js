@@ -15,9 +15,7 @@ export default defineConfig({
     // 使用环境变量来控制后端地址：USE_REMOTE_BACKEND=false 使用本地，否则默认使用远程
     proxy: {
       '/api': {
-        target: process.env.USE_REMOTE_BACKEND === 'false' 
-          ? 'http://localhost:3002'
-          : 'https://ftrmjlrpxxgi.sealoshzh.site',
+        target: 'https://ftrmjlrpxxgi.sealoshzh.site',
         changeOrigin: true,
         secure: process.env.USE_REMOTE_BACKEND !== 'false',
         rewrite: (path) => path
