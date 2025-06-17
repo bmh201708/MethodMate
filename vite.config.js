@@ -17,7 +17,7 @@ export default defineConfig({
       '/api': {
         target: process.env.USE_REMOTE_BACKEND === 'false' 
           ? 'http://localhost:3002'
-          : 'https://fmenujeiejbj.sealoshzh.site',
+          : 'https://ftrmjlrpxxgi.sealoshzh.site',
         changeOrigin: true,
         secure: process.env.USE_REMOTE_BACKEND !== 'false',
         rewrite: (path) => path

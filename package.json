@@ -7,6 +7,7 @@
     "dev": "vite",
     "dev:local": "cross-env USE_REMOTE_BACKEND=false vite",
     "dev:remote": "vite",
+    "dev:all": "concurrently \"cd server && npm start\" \"npm run dev:local\"",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -22,6 +23,7 @@
     "@tailwindcss/typography": "^0.5.16",
     "@vitejs/plugin-vue": "^4.5.0",
     "autoprefixer": "^10.4.16",
+    "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
     "node-fetch": "^3.3.2",
     "postcss": "^8.4.32",
