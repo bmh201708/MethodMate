@@ -19,6 +19,10 @@
       "destination": "https://ftrmjlrpxxgi.sealoshzh.site/api/health"
     },
     {
+      "source": "/api/semantic-recommend",
+      "destination": "https://ftrmjlrpxxgi.sealoshzh.site/api/semantic-recommend"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
