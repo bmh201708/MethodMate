@@ -4,27 +4,27 @@
   "rewrites": [
     {
       "source": "/api/paper/(.*)",
-      "destination": "https://stdwlaxnfohl.sealoshzh.site/api/paper/$1"
+      "destination": "hhttp://118.195.129.161:3002/api/paper/$1"
     },
     {
       "source": "/api/query-statistical-method",
-      "destination": "https://stdwlaxnfohl.sealoshzh.site/api/query-statistical-method"
+      "destination": "http://118.195.129.161:3002/api/query-statistical-method"
     },
     {
       "source": "/api/coze-chat",
-      "destination": "https://stdwlaxnfohl.sealoshzh.site/api/coze-chat"
+      "destination": "http://118.195.129.161:3002/api/coze-chat"
     },
     {
       "source": "/api/health",
-      "destination": "https://stdwlaxnfohl.sealoshzh.site/api/health"
+      "destination": "http://118.195.129.161:3002/api/health"
     },
     {
       "source": "/api/semantic-recommend",
-      "destination": "https://stdwlaxnfohl.sealoshzh.site/api/semantic-recommend"
+      "destination": "http://118.195.129.161:3002/api/semantic-recommend"
     },
     {
       "source": "/api/scholar-search",
-      "destination": "https://stdwlaxnfohl.sealoshzh.site/api/scholar-search"
+      "destination": "http://118.195.129.161:3002/api/scholar-search"
     },
     {
       "source": "/(.*)",

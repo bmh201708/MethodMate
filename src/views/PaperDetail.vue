@@ -510,7 +510,7 @@ const fetchPaperContent = async () => {
   try {
     console.log('手动获取论文内容:', papersState.selectedPaper.title)
     
-    const response = await fetch('/api/paper/get-full-content', {
+    const response = await fetch('http://118.195.129.161:3002/api/paper/get-full-content', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -580,7 +580,7 @@ const tryGenerateMethodSummary = async () => {
   try {
     console.log('使用备用方法生成研究方法概要:', papersState.selectedPaper.title)
     
-    const response = await fetch('/api/paper/generate-method-summary', {
+    const response = await fetch('http://118.195.129.161:3002/api/paper/generate-method-summary', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -869,7 +869,7 @@ const getRecommendedPapers = async () => {
     console.log('当前聊天历史:', chatHistory)
 
     // 调用推荐API（通过Vue开发服务器代理）
-    const response = await fetch('/api/semantic-recommend', {
+    const response = await fetch('http://118.195.129.161:3002/api/semantic-recommend', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
