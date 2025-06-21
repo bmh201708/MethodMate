@@ -1057,7 +1057,7 @@ const generateResearchPlan = async () => {
         // 如果没有研究方法但有全文，尝试获取研究方法
         else if (paper.fullText) {
           try {
-            const response = await fetch('http://118.195.129.161:3002/api/paper/generate-method-summary', {
+            const response = await fetch('/api/paper/generate-method-summary', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -1083,7 +1083,7 @@ const generateResearchPlan = async () => {
         // 如果既没有研究方法也没有全文，尝试获取全文和研究方法
         else {
           try {
-            const response = await fetch('http://118.195.129.161:3002/api/paper/get-full-content', {
+            const response = await fetch('/api/paper/get-full-content', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -1110,7 +1110,7 @@ const generateResearchPlan = async () => {
                 // 如果没有获取到研究方法但有全文，尝试生成研究方法概要
                 else if (paper.fullText) {
                   try {
-                    const methodResponse = await fetch('http://118.195.129.161:3002/api/paper/generate-method-summary', {
+                    const methodResponse = await fetch('/api/paper/generate-method-summary', {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
@@ -1381,7 +1381,7 @@ const queryStatisticalMethod = async () => {
   statisticalMethodResult.value = ''
 
   try {
-    const response = await fetch('http://118.195.129.161:3002/api/query-statistical-method', {
+    const response = await fetch('/api/query-statistical-method', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

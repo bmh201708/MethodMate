@@ -478,8 +478,8 @@ export default {
       setSearchError(null)
 
       try {
-        // 使用相对路径，代理会自动转发到Vercel
-        const response = await fetch('http://118.195.129.161:3002/api/scholar-search', {
+        // 使用相对路径，代理会自动转发到后端服务器
+        const response = await fetch('/api/scholar-search', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
