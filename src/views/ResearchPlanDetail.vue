@@ -269,7 +269,7 @@
 
               <!-- 来源和方法介绍卡片 -->
               <div class="bg-white rounded-xl shadow-sm p-8">
-                <!-- 来源介绍内容（只显示研究假设、实验设计、结果呈现） -->
+                <!-- 来源介绍内容（只显示研究假设、实验设计、结果呈现，数据分析通过子导航控制） -->
                 <div v-if="['hypothesis', 'design', 'results'].includes(activeSection)" class="space-y-4">
                   <div class="flex items-center justify-between mb-3">
                     <h3 class="text-lg font-semibold text-gray-900">来源介绍</h3>
@@ -294,44 +294,107 @@
                   </div>
                 </div>
 
-                <!-- 数据分析部分的方法介绍和查询功能 -->
+                <!-- 数据分析部分的子导航和内容 -->
                 <div v-if="activeSection === 'analysis'" class="space-y-6">
-                  <!-- 方法介绍 -->
-                  <div class="space-y-4">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-3">方法介绍</h3>
-                    <p class="text-gray-600 leading-relaxed">
-                      {{ currentPlanState[activeSection]?.methodIntro || '本研究采用的统计方法包括描述性统计和推论统计。您可以使用下方的查询功能了解具体统计方法的详细信息。' }}
-                    </p>
+                  <!-- 数据分析子导航 -->
+                  <div class="flex space-x-4 border-b border-gray-200 pb-4">
+                    <button
+                      v-for="subSection in analysisSubSections"
+                      :key="subSection.id"
+                      @click="analysisSubSection = subSection.id"
+                      class="px-4 py-2 rounded-lg font-medium transition-colors"
+                      :class="[
+                        analysisSubSection === subSection.id
+                          ? 'bg-purple-100 text-purple-700'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      ]"
+                    >
+                      {{ subSection.name }}
+                    </button>
                   </div>
 
-                  <!-- 统计方法查询 -->
-                  <div class="bg-gray-50 p-6 rounded-lg">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">统计方法查询</h3>
-                    <div class="flex space-x-4">
-                      <input
-                        v-model="statisticalMethodQuery"
-                        type="text"
-                        placeholder="输入统计方法名称，如：t检验、方差分析、回归分析等"
-                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        @keyup.enter="queryStatisticalMethod"
-                      />
+                  <!-- 来源介绍内容 -->
+                  <div v-if="analysisSubSection === 'source'" class="space-y-4">
+                    <div class="flex items-center justify-between mb-3">
+                      <h3 class="text-lg font-semibold text-gray-900">来源介绍</h3>
                       <button
-                        @click="queryStatisticalMethod"
-                        :disabled="isQuerying"
-                        class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                        @click="generateSourceIntroduction"
+                        :disabled="isGeneratingSource"
+                        class="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
                       >
-                        <svg v-if="isQuerying" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <svg v-if="isGeneratingSource" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <span>{{ isQuerying ? '查询中...' : '查询' }}</span>
+                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        <span>{{ isGeneratingSource ? '生成中...' : '生成来源介绍' }}</span>
+                      </button>
+                    </div>
+                    <div v-if="currentSourceIntroduction" class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedSourceIntroduction"></div>
+                    <div v-else class="text-gray-500 italic">
+                      点击"生成来源介绍"按钮，基于参考文献生成当前部分的来源说明
+                    </div>
+                  </div>
+
+                  <!-- 方法介绍内容 -->
+                  <div v-if="analysisSubSection === 'method'" class="space-y-4">
+                    <div class="flex items-center justify-between mb-3">
+                      <h3 class="text-lg font-semibold text-gray-900">方法介绍</h3>
+                      <button
+                        @click="generateMethodIntroduction"
+                        :disabled="isGeneratingMethod"
+                        class="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                      >
+                        <svg v-if="isGeneratingMethod" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                        <span>{{ isGeneratingMethod ? '生成中...' : '生成方法介绍' }}</span>
                       </button>
                     </div>
                     
-                    <!-- 查询结果 -->
-                    <div v-if="statisticalMethodResult" class="mt-4">
-                      <div class="bg-white p-4 rounded-lg shadow-sm">
-                        <div class="prose prose-sm max-w-none" v-html="renderedStatisticalMethodResult"></div>
+                    <!-- 显示生成的方法介绍或默认提示 -->
+                    <div v-if="generatedMethodIntro" class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedGeneratedMethodIntro"></div>
+                    <div v-else class="text-gray-500 italic">
+                      点击"生成方法介绍"按钮，基于研究方案的数据分析部分内容，智能生成详细的研究方法介绍和统计分析方法说明
+                    </div>
+                  </div>
+
+                  <!-- 统计方法查询内容 -->
+                  <div v-if="analysisSubSection === 'query'" class="space-y-6">
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                      <h3 class="text-lg font-semibold text-gray-900 mb-4">统计方法查询</h3>
+                      <div class="flex space-x-4">
+                        <input
+                          v-model="statisticalMethodQuery"
+                          type="text"
+                          placeholder="输入统计方法名称，如：t检验、方差分析、回归分析等"
+                          class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          @keyup.enter="queryStatisticalMethod"
+                        />
+                        <button
+                          @click="queryStatisticalMethod"
+                          :disabled="isQuerying"
+                          class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                        >
+                          <svg v-if="isQuerying" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>{{ isQuerying ? '查询中...' : '查询' }}</span>
+                        </button>
+                      </div>
+                      
+                      <!-- 查询结果 -->
+                      <div v-if="statisticalMethodResult" class="mt-4">
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                          <div class="prose prose-sm max-w-none" v-html="renderedStatisticalMethodResult"></div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -366,8 +429,11 @@ const isEvaluating = ref(false) // 是否正在评估方案
 const isIterating = ref(false) // 是否正在迭代方案
 const statisticalMethodQuery = ref('') // 统计方法查询输入
 const statisticalMethodResult = ref('') // 统计方法查询结果
+const generatedMethodIntro = ref('') // 生成的方法介绍
 const isQuerying = ref(false) // 是否正在查询统计方法
 const isGeneratingSource = ref(false) // 是否正在生成来源介绍
+const isGeneratingMethod = ref(false) // 是否正在生成方法介绍
+const analysisSubSection = ref('source') // 数据分析页面的子部分：source(来源介绍)、method(方法介绍)、query(统计方法查询)
 
 const sections = [
   { id: 'full', name: '完整方案' },
@@ -375,6 +441,12 @@ const sections = [
   { id: 'design', name: '实验设计' },
   { id: 'analysis', name: '数据分析' },
   { id: 'results', name: '结果呈现' }
+]
+
+const analysisSubSections = [
+  { id: 'source', name: '来源介绍' },
+  { id: 'method', name: '方法介绍' },
+  { id: 'query', name: '统计方法查询' }
 ]
 
 // 检测是否有AI生成的研究方案数据
@@ -433,6 +505,11 @@ const renderedStatisticalMethodResult = computed(() => {
   return statisticalMethodResult.value ? safeMarkdownRender(statisticalMethodResult.value) : ''
 })
 
+// 生成的方法介绍的Markdown渲染
+const renderedGeneratedMethodIntro = computed(() => {
+  return generatedMethodIntro.value ? safeMarkdownRender(generatedMethodIntro.value) : ''
+})
+
 // 当前部分的来源介绍
 const currentSourceIntroduction = computed(() => {
   return getSourceIntroduction(activeSection.value)
@@ -443,60 +520,25 @@ const renderedSourceIntroduction = computed(() => {
   return currentSourceIntroduction.value ? safeMarkdownRender(currentSourceIntroduction.value) : ''
 })
 
-// 监听活动部分变化，清空统计方法查询结果
-watch(() => activeSection.value, () => {
+// 监听活动部分变化，清空统计方法查询结果和重置数据分析子部分
+watch(() => activeSection.value, (newSection, oldSection) => {
   statisticalMethodResult.value = ''
-})
-
-// 监听方案生成完成，自动为支持的部分生成来源介绍
-watch(() => currentPlanState.isGenerated, async (newValue, oldValue) => {
-  if (newValue && !oldValue && papersState.referencedPapersList.size > 0) {
-    console.log('检测到方案生成完成，准备自动生成来源介绍')
-    
-    // 延迟一下确保方案数据已经完全更新
-    setTimeout(async () => {
-      const sectionsToGenerate = ['hypothesis', 'design', 'results']
-      
-      for (const section of sectionsToGenerate) {
-        // 检查该部分是否有内容
-        let hasContent = false
-        switch (section) {
-          case 'hypothesis':
-            hasContent = currentPlanState.hypotheses && currentPlanState.hypotheses.length > 0
-            break
-          case 'design':
-            hasContent = !!currentPlanState.experimentalDesign
-            break
-          case 'results':
-            hasContent = !!currentPlanState.expectedResults
-            break
-        }
-        
-        if (hasContent) {
-          console.log(`自动为${section}部分生成来源介绍`)
-          // 临时切换到该部分
-          const originalSection = activeSection.value
-          activeSection.value = section
-          
-          try {
-            await generateSourceIntroduction()
-            console.log(`${section}部分来源介绍生成完成`)
-          } catch (error) {
-            console.error(`${section}部分来源介绍生成失败:`, error)
-          }
-          
-          // 恢复原来的部分
-          activeSection.value = originalSection
-          
-          // 在生成之间添加延迟，避免API限制
-          await new Promise(resolve => setTimeout(resolve, 2000))
-        }
-      }
-      
-      console.log('所有支持部分的来源介绍生成完成')
-    }, 1000)
+  
+  // 当切换到数据分析页面时，默认显示来源介绍
+  if (newSection === 'analysis') {
+    analysisSubSection.value = 'source'
   }
 })
+
+// 监听数据分析子部分变化，清空相关状态
+watch(() => analysisSubSection.value, (newSubSection) => {
+  // 当切换子部分时，清空统计方法查询结果
+  if (newSubSection !== 'query') {
+    statisticalMethodResult.value = ''
+  }
+})
+
+// 注释：移除自动生成来源介绍功能，改为手动生成
 
 // 监听聊天消息，解析研究方案
 watch(() => chatState.messages, (newMessages) => {
@@ -1297,6 +1339,10 @@ const generateSourceIntroduction = async () => {
         currentSectionContent = currentPlanState.experimentalDesign || ''
         sectionName = '实验设计'
         break
+      case 'analysis':
+        currentSectionContent = currentPlanState.analysisMethod || ''
+        sectionName = '数据分析'
+        break
       case 'results':
         currentSectionContent = currentPlanState.expectedResults || ''
         sectionName = '结果呈现'
@@ -1404,6 +1450,77 @@ ${currentSectionContent}
     alert(error.message || '生成来源介绍失败，请稍后重试')
   } finally {
     isGeneratingSource.value = false
+  }
+}
+
+// 生成方法介绍
+const generateMethodIntroduction = async () => {
+  if (isGeneratingMethod.value) return
+  
+  // 检查是否有生成的方案
+  if (!hasGeneratedPlan.value) {
+    alert('请先生成研究方案，再生成方法介绍')
+    return
+  }
+  
+  // 检查数据分析部分是否有内容
+  const analysisContent = currentPlanState.analysisMethod || ''
+  if (!analysisContent.trim()) {
+    alert('数据分析部分内容为空，无法生成方法介绍')
+    return
+  }
+  
+  isGeneratingMethod.value = true
+  
+  try {
+    // 构建发送给Coze的提示
+    const prompt = `我将为你提供一个研究方案的数据分析部分内容。请分析其中使用的研究方法和统计分析方法，并生成一个详细的方法介绍。
+
+研究方案的数据分析部分：
+${analysisContent}
+
+请基于上述数据分析内容，生成一个300-500字的方法介绍，包括：
+1. 数据分析的总体策略和思路
+2. 具体使用的统计方法及其适用场景
+3. 数据处理和分析的步骤流程
+4. 各种统计方法的作用和意义
+5. 分析方法的优势和局限性
+
+请用学术性的语言，清晰详细地介绍这些分析方法的原理、适用性和实施步骤。`
+
+    console.log('发送方法介绍生成请求:', prompt.substring(0, 200) + '...')
+    
+    // 调用Coze API
+    const response = await fetch('/api/coze-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: prompt,
+        conversation_id: `method_intro_${Date.now()}`
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error('生成方法介绍失败，请稍后重试')
+    }
+    
+    const data = await response.json()
+    
+    if (data.success && data.reply) {
+      // 保存生成的方法介绍
+      generatedMethodIntro.value = data.reply
+      console.log('成功生成方法介绍')
+    } else {
+      throw new Error(data.error || '生成方法介绍失败')
+    }
+    
+  } catch (error) {
+    console.error('生成方法介绍失败:', error)
+    alert(error.message || '生成方法介绍失败，请稍后重试')
+  } finally {
+    isGeneratingMethod.value = false
   }
 }
 
