@@ -35,12 +35,54 @@ const CORE_API_KEY = process.env.CORE_API_KEY;
 const SEMANTIC_API_KEY = process.env.SEMANTIC_API_KEY || '';
 
 // Coze API配置 - 从cozeApi.js获取
-const COZE_API_KEY = process.env.COZE_API_KEY || 'pat_xdxRBDKN85QE746XMRQ0hGgKJsVQSrH8VCIvUzlRkW62OTBqZ88ti1eIkTvHbU18';
+const COZE_API_KEY = process.env.COZE_API_KEY || 'pat_Q06cU8OsiWefqJHG2ed8GlV1al9WRGRVNAfkNmpG567hDXVbcHeyLHWtMLciNj37';
 const COZE_API_URL = process.env.COZE_API_URL || 'https://api.coze.com';
 const COZE_BOT_ID = process.env.COZE_BOT_ID || '7513529977745915905';
 const COZE_BOT_ID_Reference = process.env.COZE_BOT_ID_Reference || '7511024998740754448';  
 const COZE_USER_ID = process.env.COZE_USER_ID || '7505301221562023954';
-  
+
+// 检查Coze API是否可用
+let COZE_API_AVAILABLE = true;
+
+// 测试Coze API连接
+const testCozeAPI = async () => {
+  try {
+    const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${COZE_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        bot_id: COZE_BOT_ID,
+        user: COZE_USER_ID,
+        query: 'test',
+        stream: false,
+        conversation_id: `test_${Date.now()}`
+      })
+    });
+
+    const result = await response.json();
+    if (result.code && result.code !== 0) {
+      console.warn('Coze API不可用，将使用备用方法:', result.msg);
+      COZE_API_AVAILABLE = false;
+      return false;
+    }
+    
+    console.log('Coze API连接正常');
+    COZE_API_AVAILABLE = true;
+    return true;
+  } catch (error) {
+    console.warn('Coze API连接失败，将使用备用方法:', error.message);
+    COZE_API_AVAILABLE = false;
+    return false;
+  }
+};
+
+// 启动时测试API
+testCozeAPI();
+
 // 设置环境变量，确保其他模块可以访问
 process.env.COZE_API_KEY = COZE_API_KEY;
 process.env.COZE_API_URL = COZE_API_URL;
@@ -67,6 +109,12 @@ const translateToEnglish = async (text, retries = 3) => {
       .trim();
 
     console.log('准备翻译文本:', cleanedText);
+
+    // 如果Coze API不可用，使用备用方法
+    if (!COZE_API_AVAILABLE) {
+      console.log('Coze API不可用，使用备用翻译方法');
+      return cleanedText; // 暂时返回原文，或者可以使用其他翻译服务
+    }
 
     try {
       console.log('使用Coze API翻译...');
@@ -1058,48 +1106,48 @@ const parseKeywordsFromCozeResponse = (reply) => {
   }
 };
 
-// 语义推荐API路由
-app.post('/api/semantic-recommend', async (req, res) => {
-  console.log('语义推荐API被调用');
-  
+// 获取缓存的研究方法API端点
+app.post('/api/paper/get-cached-method', async (req, res) => {
   try {
-    const { chatHistory = [], filter_venues = false, session_id = Date.now().toString() } = req.body;
-    console.log('接收到的数据:', JSON.stringify(req.body, null, 2));
+    const { title, doi } = req.body;
     
-    // 构建消息列表
-    const messages = [];
-    
-    // 添加聊天历史消息（如果有）
-    const validHistory = chatHistory.filter(msg => 
-      msg.type === 'user' || (msg.type === 'assistant' && !msg.isError)
-    );
-    
-    // 首先检查是否需要翻译
-    let translatedQuery = '';
-    let needsTranslation = false;
-    
-    // 检查最后一条用户消息是否包含中文字符
-    const lastUserMessage = validHistory.length > 0 ? 
-      validHistory.find(msg => msg.type === 'user') : null;
-    
-    if (lastUserMessage) {
-      const hasChinese = /[\u4e00-\u9fa5]/.test(lastUserMessage.content);
-      if (hasChinese) {
-        needsTranslation = true;
-        console.log('检测到中文查询，进行翻译:', lastUserMessage.content);
-        
-        try {
-          translatedQuery = await translateToEnglish(lastUserMessage.content);
-          console.log('翻译成功:', {
-            original: lastUserMessage.content,
-            translated: translatedQuery
-          });
-        } catch (translationError) {
-          console.error('翻译失败:', translationError);
-        }
-      }
+    if (!title) {
+      return res.status(400).json({ 
+        success: false,
+        error: '需要提供论文标题' 
+      });
     }
 
+    console.log('获取缓存的研究方法，标题:', title);
+    
+    // 这里可以实现缓存逻辑，目前直接尝试获取
+    const fullText = await getFullTextFromCore(title, doi, 1, 500); // 减少重试次数和延迟
+    let methodSummary = null;
+    
+    if (fullText) {
+      methodSummary = await extractResearchMethod(fullText);
+    }
+    
+    res.json({
+      success: !!methodSummary,
+      title: title,
+      methodSummary: methodSummary
+    });
+  } catch (error) {
+    console.error('获取缓存研究方法错误:', error);
+    res.json({ 
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// 独立的关键词提取API端点
+app.post('/api/extract-keywords', async (req, res) => {
+  try {
+    const { chatHistory = [], session_id = Date.now().toString() } = req.body;
+    console.log('关键词提取API被调用');
+    
     // 构建关键词提取消息
     let messageContent = `Please analyze the following text and extract 2-3 key academic search terms. 
 Focus on specific technical terms, methodologies, and core concepts.
@@ -1111,19 +1159,14 @@ Please respond in the following JSON format:
 }
 \`\`\`
 
-Text to analyze: "${needsTranslation && translatedQuery ? translatedQuery : ''}"
-
 `;
-    
+
     // 如果有有效的聊天历史，将其添加到消息中
-    if (needsTranslation && translatedQuery) {
-      // 如果已经翻译了查询，直接使用翻译后的文本
-      console.log('使用翻译后的查询进行关键词提取:', translatedQuery);
-    } else if (validHistory.length > 1) { // 超过1条消息才算有效对话
-      messageContent += '\nConversation history:\n';
+    if (chatHistory && chatHistory.length > 1) {
+      messageContent += 'Conversation history:\n';
       
       // 只取最近的几条对话（避免消息过长）
-      const recentHistory = validHistory.slice(-8); // 取最近8条消息
+      const recentHistory = chatHistory.slice(-8); // 取最近8条消息
       
       recentHistory.forEach((msg, index) => {
         if (msg.type === 'user') {
@@ -1138,93 +1181,219 @@ Text to analyze: "${needsTranslation && translatedQuery ? translatedQuery : ''}"
       messageContent += 'Please provide some general academic research method keywords, especially in quantitative research methods, experimental design, data analysis, and related fields.';
     }
     
-    console.log('发送给Coze API的消息:', messageContent);
+    console.log('发送给Coze API的关键词提取消息:', messageContent);
 
     // 调用 Coze API 获取关键词
+    const keywordResponse = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${COZE_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        bot_id: COZE_BOT_ID,
+        user: COZE_USER_ID,
+        query: messageContent,
+        stream: false,
+        conversation_id: `${session_id}_keywords`
+      })
+    });
+
+    console.log('Coze API关键词提取响应状态:', keywordResponse.status, keywordResponse.statusText);
+
+    if (!keywordResponse.ok) {
+      throw new Error(`Coze API responded with status: ${keywordResponse.status}`);
+    }
+
+    const result = await keywordResponse.json();
+    console.log('Coze API关键词提取响应:', JSON.stringify(result));
+
+    // 提取机器人回复
+    let botReply = '';
+    
+    // v2 API 响应格式
+    if (result.messages && Array.isArray(result.messages)) {
+      const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
+      if (answerMessages.length > 0) {
+        botReply = answerMessages[0].content;
+      }
+    }
+    // 直接响应格式
+    else if (result.answer) {
+      botReply = result.answer;
+    }
+    
+    console.log('提取的机器人回复:', botReply);
+    
+    if (!botReply) {
+      throw new Error('未能从Coze API获取有效回复');
+    }
+
+    // 从回复中提取关键词
+    const extractedKeywords = parseKeywordsFromCozeResponse(botReply);
+    
+    if (!extractedKeywords || extractedKeywords.length === 0) {
+      throw new Error('未能提取到有效关键词');
+    }
+
+    res.json({
+      success: true,
+      keywords: extractedKeywords,
+      session_id: session_id
+    });
+
+  } catch (error) {
+    console.error('关键词提取API错误:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message,
+      keywords: '',
+      session_id: (req.body && req.body.session_id) || 'default'
+    });
+  }
+});
+
+// 修改语义推荐API，支持直接使用关键词搜索
+app.post('/api/semantic-recommend', async (req, res) => {
+  console.log('语义推荐API被调用');
+  
+  try {
+    const { chatHistory = [], filter_venues = false, session_id = Date.now().toString(), keywords = null } = req.body;
+    console.log('接收到的数据:', JSON.stringify(req.body, null, 2));
+    
     let searchQuery = 'research methodology quantitative analysis experimental design'; // 默认关键词
     
-    try {
-      const keywordResponse = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${COZE_API_KEY}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          bot_id: COZE_BOT_ID,
-          user: COZE_USER_ID,
-          query: messageContent,
-          stream: false,
-          conversation_id: `${session_id}_keywords`
-        })
-      });
+    // 如果提供了直接的关键词，优先使用
+    if (keywords && keywords.trim()) {
+      console.log('使用直接提供的关键词:', keywords);
+      searchQuery = keywords.trim();
+      
+      // 检测是否包含中文，如果包含则翻译
+      if (/[\u4e00-\u9fa5]/.test(searchQuery)) {
+        try {
+          console.log('检测到中文关键词，进行翻译');
+          const translatedKeywords = await translateToEnglish(searchQuery);
+          searchQuery = translatedKeywords;
+          console.log(`关键词已翻译: "${keywords}" => "${searchQuery}"`);
+        } catch (error) {
+          console.error('翻译关键词失败:', error);
+          // 翻译失败时继续使用原始关键词
+        }
+      }
+    } else {
+      // 否则从聊天历史中提取关键词
+      console.log('从聊天历史中提取关键词');
+      
+      // 构建关键词提取消息
+      let messageContent = `Please analyze the following text and extract 2-3 key academic search terms. 
+Focus on specific technical terms, methodologies, and core concepts.
 
-      console.log('Coze API关键词提取响应状态:', keywordResponse.status, keywordResponse.statusText);
+Please respond in the following JSON format:
+\`\`\`json
+{
+  "keywords": ["keyword1", "keyword2", "keyword3"]
+}
+\`\`\`
 
-      if (keywordResponse.ok) {
-        const result = await keywordResponse.json();
-        console.log('Coze API关键词提取响应:', JSON.stringify(result));
+`;
 
-        // 提取机器人回复
-        let botReply = '';
+      // 如果有有效的聊天历史，将其添加到消息中
+      const validHistory = chatHistory.filter(msg => 
+        msg.type === 'user' || (msg.type === 'assistant' && !msg.isError)
+      );
+      
+      if (validHistory.length > 1) {
+        messageContent += 'Conversation history:\n';
         
-        // v2 API 响应格式
-        if (result.messages && Array.isArray(result.messages)) {
-          // 过滤出type为answer的助手消息，这通常包含实际回复
-          const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
-          if (answerMessages.length > 0) {
-            botReply = answerMessages[0].content;
-          } else {
-            // 如果没有answer类型，则使用第一个助手消息
-            const assistantMessages = result.messages.filter(m => m.role === 'assistant');
-            if (assistantMessages.length > 0) {
-              botReply = assistantMessages[0].content;
+        // 只取最近的几条对话（避免消息过长）
+        const recentHistory = validHistory.slice(-8); // 取最近8条消息
+        
+        recentHistory.forEach((msg, index) => {
+          if (msg.type === 'user') {
+            messageContent += `User ${index + 1}: ${msg.content}\n`;
+          } else if (msg.type === 'assistant' && !msg.isError) {
+            messageContent += `Assistant ${index + 1}: ${msg.content}\n`;
+          }
+        });
+        
+        messageContent += '\nBased on the above conversation, extract the most relevant academic search keywords.';
+      } else {
+        messageContent += 'Please provide some general academic research method keywords, especially in quantitative research methods, experimental design, data analysis, and related fields.';
+      }
+      
+      console.log('发送给Coze API的消息:', messageContent);
+
+      // 调用 Coze API 获取关键词
+      try {
+        const keywordResponse = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${COZE_API_KEY}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            bot_id: COZE_BOT_ID,
+            user: COZE_USER_ID,
+            query: messageContent,
+            stream: false,
+            conversation_id: `${session_id}_keywords`
+          })
+        });
+
+        console.log('Coze API关键词提取响应状态:', keywordResponse.status, keywordResponse.statusText);
+
+        if (keywordResponse.ok) {
+          const result = await keywordResponse.json();
+          console.log('Coze API关键词提取响应:', JSON.stringify(result));
+
+          // 提取机器人回复
+          let botReply = '';
+          
+          // v2 API 响应格式
+          if (result.messages && Array.isArray(result.messages)) {
+            const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
+            if (answerMessages.length > 0) {
+              botReply = answerMessages[0].content;
             }
           }
-        }
-        // v3 API 响应格式
-        else if (result.data && result.data.messages) {
-          const assistantMessages = result.data.messages.filter(m => m.role === 'assistant');
-          if (assistantMessages.length > 0) {
-            botReply = assistantMessages[0].content;
+          // 直接响应格式
+          else if (result.answer) {
+            botReply = result.answer;
           }
-        }
-        // 直接响应格式
-        else if (result.answer) {
-          botReply = result.answer;
-        }
-        
-        console.log('提取的机器人回复:', botReply);
-        
-        if (botReply) {
-          // 从回复中提取关键词
-          const extractedKeywords = parseKeywordsFromCozeResponse(botReply);
-          if (extractedKeywords && extractedKeywords.length > 0) {
-            searchQuery = extractedKeywords;
-            console.log('从Coze API提取的关键词:', searchQuery);
-          } else {
-            console.log('未能从Coze API响应中提取到有效关键词，使用默认关键词');
+          
+          console.log('提取的机器人回复:', botReply);
+          
+          if (botReply) {
+            // 从回复中提取关键词
+            const extractedKeywords = parseKeywordsFromCozeResponse(botReply);
+            if (extractedKeywords && extractedKeywords.length > 0) {
+              searchQuery = extractedKeywords;
+              console.log('从Coze API提取的关键词:', searchQuery);
+            } else {
+              console.log('未能从Coze API响应中提取到有效关键词，使用默认关键词');
+            }
           }
+        } else {
+          console.error('Coze API关键词提取错误:', await keywordResponse.text());
         }
-      } else {
-        console.error('Coze API关键词提取错误:', await keywordResponse.text());
-      }
-    } catch (cozeError) {
-      console.error('调用Coze API关键词提取错误:', cozeError);
-      // 如果Coze API调用失败，使用备用方法提取关键词
-      if (validHistory.length > 1) {
-        const recentHistory = validHistory.slice(-4); // 只取最近4条消息
-        const backupKeywords = recentHistory
-          .map(msg => msg.content)
-          .join(' ')
-          .replace(/[^\w\s]/g, ' ') // 移除标点符号
-          .split(/\s+/)
-          .filter(word => word.length > 2) // 过滤掉太短的词
-          .slice(0, 10) // 只取前10个关键词
-          .join(' ');
-        searchQuery = backupKeywords;
-        console.log('使用备用方法提取的关键词:', searchQuery);
+      } catch (cozeError) {
+        console.error('调用Coze API关键词提取错误:', cozeError);
+        // 如果Coze API调用失败，使用备用方法提取关键词
+        if (validHistory.length > 1) {
+          const recentHistory = validHistory.slice(-4); // 只取最近4条消息
+          const backupKeywords = recentHistory
+            .map(msg => msg.content)
+            .join(' ')
+            .replace(/[^\w\s]/g, ' ') // 移除标点符号
+            .split(/\s+/)
+            .filter(word => word.length > 2) // 过滤掉太短的词
+            .slice(0, 10) // 只取前10个关键词
+            .join(' ');
+          searchQuery = backupKeywords;
+          console.log('使用备用方法提取的关键词:', searchQuery);
+        }
       }
     }
 
@@ -1662,44 +1831,6 @@ app.post('/api/coze-chat', async (req, res) => {
     });
   }
 });
-
-// 获取缓存的研究方法API端点
-app.post('/api/paper/get-cached-method', async (req, res) => {
-  try {
-    const { title, doi } = req.body;
-    
-    if (!title) {
-      return res.status(400).json({ 
-        success: false,
-        error: '需要提供论文标题' 
-      });
-    }
-
-    console.log('获取缓存的研究方法，标题:', title);
-    
-    // 这里可以实现缓存逻辑，目前直接尝试获取
-    const fullText = await getFullTextFromCore(title, doi, 1, 500); // 减少重试次数和延迟
-    let methodSummary = null;
-    
-    if (fullText) {
-      methodSummary = await extractResearchMethod(fullText);
-    }
-    
-    res.json({
-      success: !!methodSummary,
-      title: title,
-      methodSummary: methodSummary
-    });
-  } catch (error) {
-    console.error('获取缓存研究方法错误:', error);
-    res.json({ 
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-
 
 // 启动服务器
 app.listen(PORT, () => {

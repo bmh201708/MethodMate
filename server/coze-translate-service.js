@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 
 // Coze API 配置
 const COZE_API_URL = process.env.COZE_API_URL || 'https://api.coze.com/open_api/v2/chat';
-const COZE_API_KEY = process.env.COZE_API_KEY || 'pat_xdxRBDKN85QE746XMRQ0hGgKJsVQSrH8VCIvUzlRkW62OTBqZ88ti1eIkTvHbU18';
+const COZE_API_KEY = process.env.COZE_API_KEY || 'pat_Q06cU8OsiWefqJHG2ed8GlV1al9WRGRVNAfkNmpG567hDXVbcHeyLHWtMLciNj37';
 const COZE_BOT_ID = process.env.COZE_BOT_ID || '7513529977745915905';
 const COZE_USER_ID = process.env.COZE_USER_ID || '7505301221562023954';
 
