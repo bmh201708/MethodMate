@@ -3,7 +3,7 @@
     <main class="flex-1 max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="grid grid-cols-12 gap-8">
         <!-- 左侧聊天框 -->
-        <div class="col-span-3 h-[calc(100vh-8rem)]">
+        <div class="col-span-4 h-[calc(100vh-8rem)]">
           <ChatBox ref="chatBoxRef" />
         </div>
 
@@ -179,7 +179,7 @@
         </div>
 
         <!-- 右侧文献详情 -->
-        <div class="col-span-6">
+        <div class="col-span-5">
           <div class="bg-white rounded-xl shadow-sm p-8">
             <div v-if="papersState.selectedPaper">
               <div class="flex justify-between items-start mb-6">

@@ -63,7 +63,7 @@
             v-model="newMessage"
             type="text"
             placeholder="请输入您的问题..."
-            class="w-full rounded-lg border border-gray-300 px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 pr-16 focus:outline-none focus:ring-2 focus:ring-purple-500"
             @keyup.enter="handleSendMessage"
             :disabled="chatState.isLoading"
           />
@@ -71,12 +71,14 @@
           <button
             @click="handleShowOptimizeDialog"
             :disabled="!newMessage.trim() || chatState.isLoading"
-            class="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="absolute right-2 top-1/2 transform -translate-y-1/2 px-2 py-1 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
             title="润色提示词"
           >
+            <!-- 魔法棒图标 -->
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l3.09 6.26L22 10.27l-5 4.87 1.18 6.88L12 18.77l-6.18 3.25L7 15.14 2 10.27l6.91-1.01L12 3z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
+            <span class="text-xs font-medium">润色</span>
           </button>
         </div>
         <button
