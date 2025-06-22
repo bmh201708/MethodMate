@@ -9,31 +9,66 @@
 
         <!-- 中间文献列表 -->
         <div class="col-span-3">
-          <!-- 获取相关文献按钮和选项 -->
-          <div class="mb-4 space-y-2">
-            <button
-              @click="getRecommendedPapers"
-              :disabled="papersState.isLoadingRecommendations"
-              class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-            >
-              <svg v-if="papersState.isLoadingRecommendations" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span>{{ papersState.isLoadingRecommendations ? '获取中...' : (papersState.recommendedPapers.length > 0 ? '获取更多文献' : '获取相关文献') }}</span>
-            </button>
-            
-            <!-- 顶刊顶会过滤选项 -->
-            <div class="flex items-center justify-between px-1">
-              <label class="flex items-center text-sm text-gray-600 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  v-model="filterTopVenues" 
-                  class="form-checkbox h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
+          <!-- 关键词输入和提取区域 -->
+          <div class="mb-4 space-y-3">
+            <!-- 关键词输入框 -->
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">搜索关键词</label>
+              <div class="flex space-x-2">
+                <input
+                  v-model="searchKeywords"
+                  type="text"
+                  placeholder="输入关键词，用逗号分隔"
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  @keyup.enter="getRecommendedPapers"
                 />
-                <span class="ml-2">只获取顶刊顶会文献</span>
-              </label>
-              <span class="text-xs text-gray-500">提高文献质量</span>
+                <button
+                  @click="extractKeywordsFromChat"
+                  :disabled="isExtractingKeywords"
+                  class="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                  title="从对话历史中提取关键词"
+                >
+                  <svg v-if="isExtractingKeywords" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                  </svg>
+                  <span>{{ isExtractingKeywords ? '提取中...' : '提取关键词' }}</span>
+                </button>
+              </div>
+              <p class="text-xs text-gray-500">
+                支持中英文关键词，多个关键词用逗号分隔。点击"提取关键词"可从对话历史中智能提取相关关键词。
+              </p>
+            </div>
+
+            <!-- 获取相关文献按钮和选项 -->
+            <div class="space-y-2">
+              <button
+                @click="getRecommendedPapers"
+                :disabled="papersState.isLoadingRecommendations"
+                class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              >
+                <svg v-if="papersState.isLoadingRecommendations" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>{{ papersState.isLoadingRecommendations ? '获取中...' : (papersState.recommendedPapers.length > 0 ? '获取更多文献' : '获取相关文献') }}</span>
+              </button>
+              
+              <!-- 顶刊顶会过滤选项 -->
+              <div class="flex items-center justify-between px-1">
+                <label class="flex items-center text-sm text-gray-600 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    v-model="filterTopVenues" 
+                    class="form-checkbox h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
+                  />
+                  <span class="ml-2">只获取顶刊顶会文献</span>
+                </label>
+                <span class="text-xs text-gray-500">提高文献质量</span>
+              </div>
             </div>
           </div>
 
@@ -446,6 +481,10 @@ const isLoadingPaperContent = ref(false)
 // 顶刊顶会过滤选项
 const filterTopVenues = ref(false)
 
+// 关键词输入
+const searchKeywords = ref('')
+const isExtractingKeywords = ref(false)
+
 // 手动获取论文全文和研究方法
 const fetchPaperContent = async () => {
   if (!papersState.selectedPaper || !papersState.selectedPaper.title) {
@@ -572,8 +611,6 @@ const tryGenerateMethodSummary = async () => {
   }
 }
 
-// 这里删除了generateMethodSummary方法，因为其功能已经整合到tryGenerateMethodSummary中
-
 // 渲染markdown内容
 const renderMarkdown = (markdown) => {
   if (!markdown) return ''
@@ -619,15 +656,6 @@ const retryExtractMethod = async () => {
     isLoadingPaperContent.value = false
   }
 }
-
-// 使用全局状态，直接引用papersState而不解构，保持响应式
-// const { 
-//   recommendedPapers, 
-//   selectedPaper, 
-//   referencedPapers, 
-//   isLoadingRecommendations, 
-//   recommendationError 
-// } = papersState
 
 const selectRecommendedPaper = (paper) => {
   selectPaper(paper)
@@ -805,6 +833,54 @@ const translateMethod = async (methodText) => {
   }
 }
 
+// 提取关键词
+const extractKeywordsFromChat = async () => {
+  isExtractingKeywords.value = true
+  
+  try {
+    console.log('开始从对话历史中提取关键词')
+    
+    // 获取聊天历史记录
+    const chatHistory = chatState.messages.filter(msg => msg.isComplete && !msg.isError)
+    
+    if (chatHistory.length === 0) {
+      alert('没有找到有效的对话历史，无法提取关键词')
+      return
+    }
+    
+    const response = await fetch('/api/extract-keywords', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chatHistory,
+        session_id: Date.now().toString()
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`)
+    }
+    
+    const result = await response.json()
+    
+    if (result.success && result.keywords) {
+      console.log('提取到关键词:', result.keywords)
+      searchKeywords.value = result.keywords
+      alert('关键词提取成功！')
+    } else {
+      console.error('提取关键词失败:', result.error)
+      alert('提取关键词失败: ' + (result.error || '未知错误'))
+    }
+  } catch (error) {
+    console.error('提取关键词出错:', error)
+    alert('提取关键词出错: ' + error.message)
+  } finally {
+    isExtractingKeywords.value = false
+  }
+}
+
 const getRecommendedPapers = async () => {
   setLoadingRecommendations(true)
   setRecommendationError('')
@@ -814,6 +890,23 @@ const getRecommendedPapers = async () => {
     const chatHistory = chatState.messages.filter(msg => msg.isComplete && !msg.isError)
     
     console.log('当前聊天历史:', chatHistory)
+    console.log('用户输入的关键词:', searchKeywords.value)
+
+    // 构建请求参数
+    const requestBody = {
+      filter_venues: filterTopVenues.value,
+      session_id: Date.now().toString()
+    }
+    
+    // 如果用户输入了关键词，优先使用用户输入的关键词
+    if (searchKeywords.value && searchKeywords.value.trim()) {
+      requestBody.keywords = searchKeywords.value.trim()
+      console.log('使用用户输入的关键词进行搜索:', requestBody.keywords)
+    } else {
+      // 否则使用聊天历史
+      requestBody.chatHistory = chatHistory
+      console.log('使用聊天历史进行搜索')
+    }
 
     // 调用推荐API（通过Vue开发服务器代理）
     const response = await fetch('/api/semantic-recommend', {
@@ -821,19 +914,11 @@ const getRecommendedPapers = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        chatHistory,
-        filter_venues: filterTopVenues.value, // 添加顶刊顶会过滤参数
-        session_id: Date.now().toString()
-      })
+      body: JSON.stringify(requestBody)
     })
     
     // 记录请求URL和参数（用于调试）
-    console.log('API请求参数:', {
-      chatHistory: chatHistory.map(msg => ({ type: msg.type, content: msg.content.substring(0, 50) + (msg.content.length > 50 ? '...' : '') })),
-      filter_venues: filterTopVenues.value,
-      session_id: Date.now().toString()
-    });
+    console.log('API请求参数:', requestBody);
 
     if (!response.ok) {
       throw new Error(`API responded with status: ${response.status}`)

@@ -300,7 +300,7 @@
                   <div class="space-y-4">
                     <h3 class="text-lg font-semibold text-gray-900 mb-3">方法介绍</h3>
                     <p class="text-gray-600 leading-relaxed">
-                      {{ currentPlanState[activeSection]?.methodIntro || '您可以使用下方的查询功能了解具体统计方法的详细信息。' }}
+                      {{ currentPlanState[activeSection]?.methodIntro || '本研究采用的统计方法包括描述性统计和推论统计。您可以使用下方的查询功能了解具体统计方法的详细信息。' }}
                     </p>
                   </div>
 
@@ -448,21 +448,6 @@ watch(() => activeSection.value, () => {
   statisticalMethodResult.value = ''
 })
 
-// 监听sourceIntroductions的变化
-watch(() => currentPlanState.sourceIntroductions, (newValue, oldValue) => {
-  console.log('sourceIntroductions已更新')
-}, { deep: true })
-
-// 监听isViewingHistoryPlan的变化
-watch(() => isViewingHistoryPlan.value, (newValue, oldValue) => {
-  console.log('isViewingHistoryPlan状态变化:', oldValue, '->', newValue)
-  if (newValue) {
-    console.log('开始查看历史方案，当前sourceIntroductions:', currentPlanState.sourceIntroductions)
-  } else {
-    console.log('退出历史方案查看，当前sourceIntroductions:', currentPlanState.sourceIntroductions)
-  }
-})
-
 // 监听方案生成完成，自动为支持的部分生成来源介绍
 watch(() => currentPlanState.isGenerated, async (newValue, oldValue) => {
   if (newValue && !oldValue && papersState.referencedPapersList.size > 0) {
@@ -571,7 +556,7 @@ watch(() => chatState.messages, (newMessages) => {
       if (wasSuccessfullyParsed) {
         lastProcessedMessageId.value = latestAssistantMessage.id
         console.log('成功解析方案，标记消息为已处理，ID:', latestAssistantMessage.id)
-        // 状态重置在parseResearchPlanResponse函数中处理
+        isGenerating.value = false // 成功解析后立即停止生成状态
       }
       
       // 检查消息是否包含研究方案相关内容
@@ -759,39 +744,13 @@ const parseResearchPlanResponse = (content) => {
     // 先保存当前状态，然后清空字段
     const wasGenerated = currentPlanState.isGenerated
     
-    // 对于新生成的方案，应该清空来源介绍，让用户重新生成
-    // 只有在迭代现有方案时才保留来源介绍
-    let shouldPreserveSourceIntroductions = false
-    
-    // 如果是迭代状态，保留现有的来源介绍
-    if (isIterating.value) {
-      shouldPreserveSourceIntroductions = true
-      console.log('迭代模式：保留现有来源介绍')
-    } else {
-      console.log('生成新方案：清空来源介绍')
-    }
-    
-    const existingSourceIntroductions = shouldPreserveSourceIntroductions && currentPlanState.sourceIntroductions ? 
-      JSON.parse(JSON.stringify(currentPlanState.sourceIntroductions)) : {}
-    
     // 清空字段并重置状态
     currentPlanState.hypotheses = []
     currentPlanState.experimentalDesign = ''
     currentPlanState.analysisMethod = ''
     currentPlanState.expectedResults = ''
     
-    // 根据情况恢复或清空来源介绍
-    if (shouldPreserveSourceIntroductions) {
-      currentPlanState.sourceIntroductions = existingSourceIntroductions
-      console.log('恢复来源介绍:', Object.keys(existingSourceIntroductions))
-    } else {
-      // 清空来源介绍，为新方案做准备
-      clearSourceIntroductions()
-      console.log('已清空来源介绍，新方案将重新生成')
-    }
-    
     console.log('已清空旧数据，开始更新新方案...')
-    console.log('保留的来源介绍:', Object.keys(existingSourceIntroductions))
     
     // 计数实际更新的字段
     let updatedFields = 0
@@ -830,7 +789,7 @@ const parseResearchPlanResponse = (content) => {
       // 初始化数据分析部分的来源介绍和方法介绍
       currentPlanState.analysis = {
         sourceIntro: '数据分析方法基于研究目标和数据特征，采用适当的统计分析方法。',
-        methodIntro: '通过以下搜索框检索具体方法的详细信息和使用指南。'
+        methodIntro: '本研究采用的统计方法包括描述性统计和推论统计。您可以使用下方的查询功能了解具体统计方法的详细信息。'
       }
       console.log('更新数据分析:', analysis.substring(0, 100) + '...')
       updatedFields++
@@ -910,9 +869,9 @@ const parseResearchPlanResponse = (content) => {
         }
       }, 500)
       
-      // 添加到历史方案（所有成功解析的方案都添加）
-      if (updatedFields >= 1) {
-        console.log('准备添加到历史方案，状态:', isIterating.value ? '迭代' : isGenerating.value ? '生成' : '普通聊天')
+      // 添加到历史方案（生成新方案或迭代方案时都添加）
+      if (updatedFields >= 1 && (isIterating.value || isGenerating.value)) {
+        console.log('准备添加到历史方案，状态:', isIterating.value ? '迭代' : '生成')
         
         // 构建生成上下文
         const generationContext = {
@@ -922,24 +881,11 @@ const parseResearchPlanResponse = (content) => {
             year: paper.year,
             source: paper.source
           })),
-          generationType: isIterating.value ? 'iteration' : isGenerating.value ? 'generation' : 'chat',
+          generationType: isIterating.value ? 'iteration' : 'generation',
           timestamp: new Date().toISOString()
         }
         
         addHistoryPlan(currentPlanState, generationContext)
-        console.log('已添加到历史方案')
-      }
-      
-      // 如果是生成状态，重置生成状态
-      if (isGenerating.value) {
-        console.log('方案解析完成，重置生成状态')
-        isGenerating.value = false
-      }
-      
-      // 如果是迭代状态，重置迭代状态
-      if (isIterating.value) {
-        console.log('方案迭代完成，重置迭代状态')
-        isIterating.value = false
       }
       
       return true // 成功解析并更新了研究方案
@@ -1111,20 +1057,9 @@ const generateResearchPlan = async () => {
     // 发送消息到chatbox
     await sendMessage(message)
     
-    // 不在这里重置isGenerating，让它在方案解析完成后重置
-    console.log('消息已发送，等待方案解析完成后重置生成状态')
-    
-    // 设置超时重置，防止状态一直保持为true
-    setTimeout(() => {
-      if (isGenerating.value) {
-        console.log('生成状态超时，自动重置')
-        isGenerating.value = false
-      }
-    }, 30000) // 30秒超时
-    
   } catch (error) {
     console.error('生成研究方案失败:', error)
-    // 只有在发生错误时才立即重置状态
+  } finally {
     isGenerating.value = false
   }
 }
@@ -1148,9 +1083,7 @@ const loadHistoryPlan = (historyPlan) => {
     
     originalPlan.value = { 
       ...currentPlanState,
-      _hasGeneratedPlan: currentHasGenerated, // 标记原始状态是否有生成的方案
-      _originalSourceIntroductions: currentPlanState.sourceIntroductions ? 
-        JSON.parse(JSON.stringify(currentPlanState.sourceIntroductions)) : {} // 保存原始来源介绍
+      _hasGeneratedPlan: currentHasGenerated // 标记原始状态是否有生成的方案
     }
     console.log('保存原始方案数据，有生成内容:', currentHasGenerated)
   }
@@ -1160,16 +1093,6 @@ const loadHistoryPlan = (historyPlan) => {
   
   // 加载历史方案数据到当前plan
   Object.assign(currentPlanState, fullPlan)
-  
-  // 加载历史方案的来源介绍
-  if (historyPlan.sourceIntroductions) {
-    currentPlanState.sourceIntroductions = JSON.parse(JSON.stringify(historyPlan.sourceIntroductions))
-    console.log('加载历史方案的来源介绍:', Object.keys(historyPlan.sourceIntroductions))
-  } else {
-    // 如果历史方案没有来源介绍，清空当前的来源介绍
-    clearSourceIntroductions()
-    console.log('历史方案没有来源介绍，已清空当前来源介绍')
-  }
   
   console.log('加载历史方案:', historyPlan.title)
 }
@@ -1181,18 +1104,8 @@ const exitHistoryView = () => {
   
   // 恢复原始方案数据
   if (originalPlan.value) {
-    const { _hasGeneratedPlan, _originalSourceIntroductions, ...originalData } = originalPlan.value
+    const { _hasGeneratedPlan, ...originalData } = originalPlan.value
     Object.assign(currentPlanState, originalData)
-    
-    // 恢复原始的来源介绍
-    if (_originalSourceIntroductions) {
-      currentPlanState.sourceIntroductions = JSON.parse(JSON.stringify(_originalSourceIntroductions))
-      console.log('恢复原始来源介绍:', Object.keys(_originalSourceIntroductions))
-    } else {
-      clearSourceIntroductions()
-      console.log('原始方案没有来源介绍，已清空')
-    }
-    
     originalPlan.value = null
     console.log('恢复原始方案数据，原本有生成内容:', _hasGeneratedPlan)
   }
