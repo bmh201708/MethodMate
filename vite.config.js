@@ -16,11 +16,22 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: process.env.USE_REMOTE_BACKEND === 'false' 
-          ? 'http://localhost:3002'
-          : 'https://fmenujeiejbj.sealoshzh.site',
+          ? 'http://localhost:3002'  // 本地后端服务器
+          : 'http://118.195.129.161:3002',  // 远程后端服务器
         changeOrigin: true,
-        secure: process.env.USE_REMOTE_BACKEND !== 'false',
-        rewrite: (path) => path
+        secure: false,  // 本地开发时不需要secure
+        rewrite: (path) => path,
+        configure: (proxy, options) => {
+          proxy.on('error', (err, req, res) => {
+            console.error('代理错误:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            console.log('代理请求:', req.method, req.url, '-> ', options.target + req.url);
+          });
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            console.log('服务器响应:', proxyRes.statusCode, req.url);
+          });
+        }
       }
     }
   },

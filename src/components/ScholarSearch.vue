@@ -1,46 +1,5 @@
 <template>
   <div class="scholar-search-container max-w-6xl mx-auto p-6">
-    <!-- 顶部导航栏 -->
-    <nav class="bg-white rounded-lg shadow-md p-4 mb-6">
-      <div class="flex justify-between items-center">
-        <div class="flex items-center space-x-6">
-          <router-link 
-            to="/" 
-            class="text-gray-600 hover:text-gray-900 flex items-center transition-colors"
-          >
-            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-            </svg>
-            首页
-          </router-link>
-          <h1 class="text-xl font-bold text-gray-900">文献搜索</h1>
-        </div>
-        <div class="flex items-center space-x-4">
-          <router-link 
-            to="/papers" 
-            class="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm"
-          >
-            文献推荐
-          </router-link>
-          <router-link 
-            to="/references" 
-            class="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm"
-          >
-            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
-            </svg>
-            引用文献 ({{ referencedCount }})
-          </router-link>
-          <router-link 
-            to="/research-plan" 
-            class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
-          >
-            研究方案
-          </router-link>
-        </div>
-      </div>
-    </nav>
-
     <!-- 搜索表单 -->
     <div class="search-form bg-white rounded-lg shadow-md p-6 mb-6">
       <div class="flex items-center justify-between mb-4">
@@ -478,7 +437,7 @@ export default {
       setSearchError(null)
 
       try {
-        // 使用相对路径，代理会自动转发到Vercel
+        // 使用相对路径，代理会自动转发到后端服务器
         const response = await fetch('/api/scholar-search', {
           method: 'POST',
           headers: {

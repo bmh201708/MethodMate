@@ -10,8 +10,8 @@ import { dirname, join } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// 加载.env文件
-dotenv.config({ path: join(__dirname, '..', '.env') });
+// 加载.env文件 - 修复：从当前目录加载
+dotenv.config({ path: join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 3002;
 // CORS配置 - 支持生产环境
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://method-mate.vercel.app', 'https://methodmate.vercel.app'] 
+    ? ['https://method-mate.vercel.app', 'https://methodmate.vercel.app','http://118.195.129.161','http://118.195.129.161:3002'] 
     : ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -1699,19 +1699,10 @@ app.post('/api/paper/get-cached-method', async (req, res) => {
   }
 });
 
-// 健康检查端点
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
+
 
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`🚀 MethodMate API服务器运行在端口 ${PORT}`);
   console.log(`环境: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`健康检查: http://localhost:${PORT}/api/health`);
 }); 

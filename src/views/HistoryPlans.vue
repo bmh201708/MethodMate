@@ -1,57 +1,5 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col">
-    <!-- 顶部导航栏 -->
-    <nav class="bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <div class="flex items-center space-x-8">
-            <button
-              @click="router.push('/')"
-              class="text-gray-600 hover:text-gray-900 flex items-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-              </svg>
-              首页
-            </button>
-            <h1 class="text-2xl font-bold text-gray-900">MethodMate</h1>
-            <div class="flex space-x-4">
-              <button
-                @click="router.push('/scholar-search')"
-                class="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
-              >
-                文献搜索
-              </button>
-              <button
-                @click="router.push('/papers')"
-                class="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
-              >
-                文献推荐
-              </button>
-              <button
-                @click="router.push('/references')"
-                class="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium flex items-center"
-              >
-                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
-                </svg>
-                引用文献 ({{ referencedCount }})
-              </button>
-              <button
-                @click="router.push('/research-plan')"
-                class="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
-              >
-                研究方案
-              </button>
-              <span class="px-4 py-2 text-purple-600 font-medium border-b-2 border-purple-600">
-                历史方案
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </nav>
-
     <main class="flex-1 max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="grid grid-cols-12 gap-8">
         <!-- 左侧聊天框 -->
