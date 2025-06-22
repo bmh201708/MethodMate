@@ -8,7 +8,14 @@
           <div :class="['max-w-[70%] rounded-lg p-4', 
                        message.type === 'user' ? 'bg-purple-100' : 
                        message.isError ? 'bg-red-50 border border-red-200' : 'bg-gray-100']">
-            <p :class="['whitespace-pre-wrap', message.isError ? 'text-red-700' : 'text-gray-800']">{{ getDisplayContent(message) }}</p>
+            <!-- 用户消息：纯文本显示 -->
+            <p v-if="message.type === 'user'" class="whitespace-pre-wrap text-gray-800">{{ getDisplayContent(message) }}</p>
+            
+            <!-- 助手消息：markdown渲染 -->
+            <div v-else-if="message.type === 'assistant'" 
+                 :class="['markdown-content', message.isError ? 'text-red-700' : 'text-gray-800']"
+                 v-html="renderMarkdown(getDisplayContent(message))">
+            </div>
             
             <!-- 研究方案PDF下载按钮 -->
             <div v-if="message.type === 'assistant' && message.fullContent && isResearchPlan(message.fullContent)" 
@@ -100,6 +107,7 @@ import LoadingDots from './LoadingDots.vue'
 import ConversationGuide from './ConversationGuide.vue'
 import PromptOptimizeDialog from './PromptOptimizeDialog.vue'
 import html2pdf from 'html2pdf.js'
+import { marked } from 'marked'
 
 // 接收页面上下文的props
 const props = defineProps({
@@ -112,6 +120,29 @@ const props = defineProps({
 const newMessage = ref('')
 const chatContainer = ref(null)
 const showOptimizeDialog = ref(false)
+
+// 配置markdown渲染器
+marked.setOptions({
+  gfm: true, // GitHub风格的markdown
+  breaks: true, // 支持换行符转换为<br>
+  headerIds: false, // 禁用标题ID以避免重复
+  mangle: false // 禁用标题锚点混淆
+})
+
+// markdown渲染函数
+const renderMarkdown = (content) => {
+  if (!content) return ''
+  try {
+    // 使用marked渲染markdown
+    const html = marked.parse(content)
+    // 简单的XSS防护 - 移除script标签
+    return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+  } catch (error) {
+    console.error('Markdown渲染错误:', error)
+    // 如果渲染失败，返回原始文本并转义HTML
+    return content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  }
+}
 
 // 检测是否为研究方案
 const isResearchPlan = (content) => {
@@ -612,5 +643,126 @@ watch(() => chatState.messages.length, () => {
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* Markdown内容样式 */
+.markdown-content {
+  line-height: 1.6;
+}
+
+.markdown-content :deep(h1),
+.markdown-content :deep(h2),
+.markdown-content :deep(h3),
+.markdown-content :deep(h4),
+.markdown-content :deep(h5),
+.markdown-content :deep(h6) {
+  margin: 0.8em 0 0.4em 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.markdown-content :deep(h1) {
+  font-size: 1.5em;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.3em;
+}
+
+.markdown-content :deep(h2) {
+  font-size: 1.3em;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.2em;
+}
+
+.markdown-content :deep(h3) {
+  font-size: 1.2em;
+}
+
+.markdown-content :deep(h4) {
+  font-size: 1.1em;
+}
+
+.markdown-content :deep(p) {
+  margin: 0.5em 0;
+}
+
+.markdown-content :deep(ul),
+.markdown-content :deep(ol) {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.markdown-content :deep(li) {
+  margin: 0.2em 0;
+}
+
+.markdown-content :deep(code) {
+  background-color: #f3f4f6;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9em;
+}
+
+.markdown-content :deep(pre) {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 1em;
+  overflow-x: auto;
+  margin: 0.8em 0;
+}
+
+.markdown-content :deep(pre code) {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+.markdown-content :deep(blockquote) {
+  border-left: 4px solid #d1d5db;
+  margin: 0.8em 0;
+  padding: 0.5em 1em;
+  background-color: #f9fafb;
+}
+
+.markdown-content :deep(table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.8em 0;
+}
+
+.markdown-content :deep(th),
+.markdown-content :deep(td) {
+  border: 1px solid #d1d5db;
+  padding: 0.5em;
+  text-align: left;
+}
+
+.markdown-content :deep(th) {
+  background-color: #f3f4f6;
+  font-weight: 600;
+}
+
+.markdown-content :deep(a) {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+.markdown-content :deep(a:hover) {
+  color: #1d4ed8;
+}
+
+.markdown-content :deep(strong) {
+  font-weight: 600;
+}
+
+.markdown-content :deep(em) {
+  font-style: italic;
+}
+
+.markdown-content :deep(hr) {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 1.5em 0;
 }
 </style> 
