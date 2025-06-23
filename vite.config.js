@@ -16,7 +16,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: process.env.USE_REMOTE_BACKEND === 'false' 
-          ? 'http://localhost:3002'  // 本地后端服务器
+          ? 'http://localhost:3004'  // 本地后端服务器
           : 'http://118.195.129.161:3002',  // 远程后端服务器
         changeOrigin: true,
         secure: false,  // 本地开发时不需要secure

@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 // Coze API 配置
-const COZE_API_URL = process.env.COZE_API_URL || 'https://api.coze.com/open_api/v2/chat';
+const COZE_API_URL = process.env.COZE_API_URL || 'https://api.coze.com';
 const COZE_API_KEY = process.env.COZE_API_KEY || 'pat_Q06cU8OsiWefqJHG2ed8GlV1al9WRGRVNAfkNmpG567hDXVbcHeyLHWtMLciNj37';
 const COZE_BOT_ID = process.env.COZE_BOT_ID || '7513529977745915905';
 const COZE_USER_ID = process.env.COZE_USER_ID || '7505301221562023954';
@@ -31,7 +31,7 @@ export async function translateWithCoze(text, from = 'zh-CN', to = 'en') {
     const prompt = `请将以下${from === 'zh-CN' ? '中文' : '英文'}文本翻译成${to === 'en' ? '英文' : '中文'}，保持学术性和准确性，只返回翻译结果，不要添加任何其他内容：\n\n${text}`;
 
     // 发送请求到Coze API
-    const response = await fetch(COZE_API_URL, {
+    const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${COZE_API_KEY}`,
