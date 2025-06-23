@@ -592,15 +592,6 @@ watch(() => chatState.messages, (newMessages) => {
       console.log('收到新的助手消息（生成状态），尝试解析:', content.substring(0, 200))
       console.log('消息ID:', latestAssistantMessage.id, '生成前最后消息ID:', lastMessageIdBeforeGenerate.value)
       
-      const wasSuccessfullyParsed = parseResearchPlanResponse(content)
-      
-      // 如果成功解析了方案，标记消息为已处理
-      if (wasSuccessfullyParsed) {
-        lastProcessedMessageId.value = latestAssistantMessage.id
-        console.log('成功解析方案，标记消息为已处理，ID:', latestAssistantMessage.id)
-        isGenerating.value = false // 成功解析后立即停止生成状态
-      }
-      
       // 检查消息是否包含研究方案相关内容
       const hasResearchContent = hasResearchPlanMarkdown || 
                                 (content.includes('研究') || content.includes('方案') || content.includes('实验'))
@@ -610,18 +601,29 @@ watch(() => chatState.messages, (newMessages) => {
         console.log('收到问候语，继续等待研究方案消息...')
         // 设置一个较长的超时，如果30秒内没有收到方案消息则重置状态
         setTimeout(() => {
-          if (isGenerating.value) {
+          if (isGenerating.value || isIterating.value) {
             console.log('等待研究方案消息超时，重置生成状态')
             isGenerating.value = false
+            isIterating.value = false
           }
         }, 30000)
         return
       }
       
-      // 如果包含研究方案内容但解析失败，也要重置生成状态（避免卡住）
-      if (hasResearchContent && !wasSuccessfullyParsed) {
+      // 尝试解析研究方案
+      const wasSuccessfullyParsed = parseResearchPlanResponse(content)
+      
+      // 根据解析结果处理状态
+      if (wasSuccessfullyParsed) {
+        lastProcessedMessageId.value = latestAssistantMessage.id
+        console.log('成功解析方案，标记消息为已处理，ID:', latestAssistantMessage.id)
+        // 成功解析后重置状态
+        isGenerating.value = false
+        isIterating.value = false
+      } else if (hasResearchContent) {
         console.log('包含研究内容但解析失败，重置生成状态')
         isGenerating.value = false
+        isIterating.value = false
       }
     }
     // 如果不是生成状态，但检测到研究方案Markdown格式，也要解析
@@ -1122,9 +1124,9 @@ const generateResearchPlan = async () => {
     
   } catch (error) {
     console.error('生成研究方案失败:', error)
-  } finally {
     isGenerating.value = false
   }
+  // 注意：不在这里重置isGenerating，让解析成功时再重置，避免过早重置导致解析逻辑失效
 }
 
 // 提取对话历史中的用户需求和上下文
@@ -1425,13 +1427,9 @@ ${conversationContext.researchContext}
   } catch (error) {
     console.error('迭代方案失败:', error)
     alert('迭代方案失败，请重试')
-  } finally {
-    // 不要在这里重置isIterating，让它保持true直到新方案生成完成
-    // 新方案生成完成后会在watch函数中重置isIterating
-    if (!isIterating.value) {
-      isIterating.value = false
-    }
+    isIterating.value = false
   }
+  // 注意：不在这里重置isIterating，让解析成功时再重置，避免过早重置导致解析逻辑失效
 }
 
 // 查询统计方法

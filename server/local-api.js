@@ -2550,7 +2550,9 @@ app.get('/api/research-plans', authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
     const [plans] = await pool.execute(
-      `SELECT id, title, description, methodology, timeline, resources, status, created_at, updated_at 
+      `SELECT id, title, description, hypotheses, experimental_design, analysis_method, 
+              expected_results, methodology, timeline, resources, source_introductions, 
+              status, created_at, updated_at 
        FROM research_plans 
        WHERE user_id = ? 
        ORDER BY updated_at DESC`,
@@ -2570,10 +2572,24 @@ app.get('/api/research-plans', authenticateToken, async (req, res) => {
   }
 });
 
-// 创建研究方案
+    // 创建研究方案
 app.post('/api/research-plans', authenticateToken, async (req, res) => {
   try {
-    const { title, description, methodology, timeline, resources, status, conversation_id, reference_ids } = req.body;
+    const { 
+      title, 
+      description, 
+      hypotheses, 
+      experimental_design, 
+      analysis_method, 
+      expected_results,
+      methodology, 
+      timeline, 
+      resources, 
+      source_introductions,
+      status, 
+      conversation_id, 
+      reference_ids 
+    } = req.body;
     
     if (!title) {
       return res.status(400).json({ 
@@ -2599,17 +2615,21 @@ app.post('/api/research-plans', authenticateToken, async (req, res) => {
       }
     }
 
-    // 开始事务
-    await pool.execute('START TRANSACTION');
-
+    // 获取连接并开始事务
+    const connection = await pool.getConnection();
+    
     try {
+      await connection.beginTransaction();
+
       // 创建研究方案
-      const [result] = await pool.execute(
+      const [result] = await connection.execute(
         `INSERT INTO research_plans 
-         (user_id, conversation_id, title, description, methodology, timeline, resources, status) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+         (user_id, conversation_id, title, description, hypotheses, experimental_design, 
+          analysis_method, expected_results, methodology, timeline, resources, source_introductions, status) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [req.user.id, conversation_id || null, title, description || '', 
-         methodology || '', timeline || '', resources || '', status || 'draft']
+         hypotheses || '', experimental_design || '', analysis_method || '', expected_results || '',
+         methodology || '', timeline || '', resources || '', source_introductions || '', status || 'draft']
       );
 
       const planId = result.insertId;
@@ -2618,7 +2638,7 @@ app.post('/api/research-plans', authenticateToken, async (req, res) => {
       if (reference_ids && Array.isArray(reference_ids) && reference_ids.length > 0) {
         // 验证所有引用文献都属于当前用户
         const placeholders = reference_ids.map(() => '?').join(',');
-        const [userPapers] = await pool.execute(
+        const [userPapers] = await connection.execute(
           `SELECT id FROM reference_papers WHERE id IN (${placeholders}) AND user_id = ?`,
           [...reference_ids, req.user.id]
         );
@@ -2629,7 +2649,7 @@ app.post('/api/research-plans', authenticateToken, async (req, res) => {
 
         // 建立关联关系
         for (const refId of reference_ids) {
-          await pool.execute(
+          await connection.execute(
             'INSERT INTO plan_references (plan_id, reference_id) VALUES (?, ?)',
             [planId, refId]
           );
@@ -2637,7 +2657,7 @@ app.post('/api/research-plans', authenticateToken, async (req, res) => {
       }
 
       // 提交事务
-      await pool.execute('COMMIT');
+      await connection.commit();
 
       res.status(201).json({
         success: true,
@@ -2655,14 +2675,21 @@ app.post('/api/research-plans', authenticateToken, async (req, res) => {
       });
     } catch (error) {
       // 回滚事务
-      await pool.execute('ROLLBACK');
+      await connection.rollback();
       throw error;
+    } finally {
+      // 释放连接
+      connection.release();
     }
   } catch (error) {
     console.error('创建研究方案错误:', error);
+    console.error('错误堆栈:', error.stack);
+    console.error('错误代码:', error.code);
+    console.error('错误信息:', error.message);
     res.status(500).json({ 
       success: false, 
-      error: error.message === '部分引用文献不属于当前用户' ? error.message : '服务器内部错误' 
+      error: error.message === '部分引用文献不属于当前用户' ? error.message : '服务器内部错误',
+      debug: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
@@ -2675,7 +2702,10 @@ app.get('/api/research-plans/:id', authenticateToken, async (req, res) => {
 
     // 验证方案是否属于当前用户
     const [plans] = await pool.execute(
-      'SELECT * FROM research_plans WHERE id = ? AND user_id = ?',
+      `SELECT id, title, description, hypotheses, experimental_design, analysis_method, 
+              expected_results, methodology, timeline, resources, source_introductions, 
+              status, created_at, updated_at, user_id, conversation_id
+       FROM research_plans WHERE id = ? AND user_id = ?`,
       [planId, req.user.id]
     );
 

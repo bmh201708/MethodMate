@@ -245,14 +245,14 @@ export const loadUserData = async () => {
     // 加载历史方案
     if (plansResult.success && plansResult.plans) {
       historyState.historyPlans = plansResult.plans.map(plan => {
-        // 尝试解析methodology字段中的JSON数据
-        let parsedMethodology = {}
+        // 解析hypotheses字段中的JSON数据
+        let parsedHypotheses = []
         try {
-          if (plan.methodology) {
-            parsedMethodology = JSON.parse(plan.methodology)
+          if (plan.hypotheses) {
+            parsedHypotheses = JSON.parse(plan.hypotheses)
           }
         } catch (error) {
-          console.warn(`解析方案 ${plan.title} 的methodology字段失败:`, error)
+          console.warn(`解析方案 ${plan.title} 的hypotheses字段失败:`, error)
         }
         
         // 尝试解析resources字段中的JSON数据（生成上下文）
@@ -263,6 +263,16 @@ export const loadUserData = async () => {
           }
         } catch (error) {
           console.warn(`解析方案 ${plan.title} 的resources字段失败:`, error)
+        }
+        
+        // 尝试解析source_introductions字段中的JSON数据
+        let parsedSourceIntroductions = {}
+        try {
+          if (plan.source_introductions) {
+            parsedSourceIntroductions = JSON.parse(plan.source_introductions)
+          }
+        } catch (error) {
+          console.warn(`解析方案 ${plan.title} 的source_introductions字段失败:`, error)
         }
         
         return {
@@ -279,15 +289,16 @@ export const loadUserData = async () => {
             methodology: plan.methodology,
             timeline: plan.timeline,
             resources: plan.resources,
-            // 从解析的JSON中提取具体字段
-            hypotheses: parsedMethodology.hypotheses || [],
-            experimentalDesign: parsedMethodology.experimentalDesign || '',
-            analysisMethod: parsedMethodology.analysisMethod || '',
-            expectedResults: parsedMethodology.expectedResults || '',
-            isGenerated: true
+            // 从数据库字段直接提取
+            hypotheses: parsedHypotheses,
+            experimentalDesign: plan.experimental_design || '',
+            analysisMethod: plan.analysis_method || '',
+            expectedResults: plan.expected_results || '',
+            isGenerated: true,
+            lastUpdated: plan.updated_at
           },
           generationContext: parsedContext,
-          sourceIntroductions: {},
+          sourceIntroductions: parsedSourceIntroductions,
           databaseId: plan.id // 保存数据库ID
         }
       })
@@ -962,14 +973,14 @@ export const addHistoryPlan = async (planData, generationContext = null) => {
       const planDataForDB = {
         title: newPlan.title,
         description: newPlan.description,
-        methodology: JSON.stringify({
-          hypotheses: planData.hypotheses || [],
-          experimentalDesign: planData.experimentalDesign || '',
-          analysisMethod: planData.analysisMethod || '',
-          expectedResults: planData.expectedResults || ''
-        }),
-        timeline: '',
+        hypotheses: JSON.stringify(planData.hypotheses || []),
+        experimental_design: planData.experimentalDesign || '',
+        analysis_method: planData.analysisMethod || '',
+        expected_results: planData.expectedResults || '',
+        methodology: planData.methodology || '',
+        timeline: planData.timeline || '',
         resources: JSON.stringify(generationContext || {}),
+        source_introductions: JSON.stringify(currentPlanState.sourceIntroductions || {}),
         status: 'draft',
         conversation_id: chatState.conversationId || null,
         reference_ids: referenceIds

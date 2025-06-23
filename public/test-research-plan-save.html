@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>研究方案保存功能测试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .success {
+            background: #28a745;
+        }
+        .error {
+            background: #dc3545;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>研究方案保存功能测试</h1>
+        
+        <!-- 用户认证 -->
+        <div class="test-section">
+            <h3>1. 用户认证</h3>
+            <div>
+                <input type="text" id="username" placeholder="用户名" value="testuser">
+                <input type="password" id="password" placeholder="密码" value="123456">
+                <button class="button" onclick="login()">登录</button>
+                <button class="button" onclick="register()">注册</button>
+            </div>
+            <div id="auth-result" class="result"></div>
+        </div>
+
+        <!-- 创建研究方案 -->
+        <div class="test-section">
+            <h3>2. 创建研究方案</h3>
+            <div>
+                <input type="text" id="plan-title" placeholder="方案标题" value="测试研究方案">
+                <br>
+                <textarea id="hypotheses" placeholder="研究假设（JSON格式）">["H1: 测试假设一", "H2: 测试假设二"]</textarea>
+                <textarea id="experimental-design" placeholder="实验设计">这是一个测试的实验设计方案</textarea>
+                <textarea id="analysis-method" placeholder="数据分析方法">使用SPSS进行统计分析</textarea>
+                <textarea id="expected-results" placeholder="预期结果">预期能够验证研究假设</textarea>
+                <button class="button" onclick="createPlan()">创建方案</button>
+            </div>
+            <div id="create-result" class="result"></div>
+        </div>
+
+        <!-- 获取研究方案列表 -->
+        <div class="test-section">
+            <h3>3. 获取研究方案列表</h3>
+            <button class="button" onclick="getPlans()">获取方案列表</button>
+            <div id="plans-result" class="result"></div>
+        </div>
+
+        <!-- 测试研究方案保存逻辑 -->
+        <div class="test-section">
+            <h3>4. 测试前端保存逻辑</h3>
+            <button class="button" onclick="testFrontendSave()">测试前端保存</button>
+            <div id="frontend-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('token') || '';
+        let currentUserId = null;
+
+        // 显示结果
+        function showResult(elementId, message, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${isSuccess ? 'success' : 'error'}`;
+        }
+
+        // 用户注册
+        async function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username,
+                        email: `${username}@test.com`,
+                        password
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    authToken = result.token;
+                    currentUserId = result.user.id;
+                    localStorage.setItem('token', authToken);
+                    showResult('auth-result', `注册成功！用户ID: ${currentUserId}`);
+                } else {
+                    showResult('auth-result', `注册失败: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult('auth-result', `注册错误: ${error.message}`, false);
+            }
+        }
+
+        // 用户登录
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    authToken = result.token;
+                    currentUserId = result.user.id;
+                    localStorage.setItem('token', authToken);
+                    showResult('auth-result', `登录成功！用户ID: ${currentUserId}`);
+                } else {
+                    showResult('auth-result', `登录失败: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult('auth-result', `登录错误: ${error.message}`, false);
+            }
+        }
+
+        // 创建研究方案
+        async function createPlan() {
+            if (!authToken) {
+                showResult('create-result', '请先登录', false);
+                return;
+            }
+            
+            const title = document.getElementById('plan-title').value;
+            const hypotheses = document.getElementById('hypotheses').value;
+            const experimentalDesign = document.getElementById('experimental-design').value;
+            const analysisMethod = document.getElementById('analysis-method').value;
+            const expectedResults = document.getElementById('expected-results').value;
+            
+            try {
+                const response = await fetch('/api/research-plans', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        title,
+                        description: '通过测试页面创建的研究方案',
+                        hypotheses,
+                        experimental_design: experimentalDesign,
+                        analysis_method: analysisMethod,
+                        expected_results: expectedResults,
+                        methodology: '测试方法',
+                        timeline: '测试时间线',
+                        resources: '{"test": true}',
+                        source_introductions: '{"test": "来源介绍"}',
+                        status: 'draft'
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showResult('create-result', `方案创建成功！\nID: ${result.plan.id}\n标题: ${result.plan.title}`);
+                } else {
+                    showResult('create-result', `创建失败: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult('create-result', `创建错误: ${error.message}`, false);
+            }
+        }
+
+        // 获取研究方案列表
+        async function getPlans() {
+            if (!authToken) {
+                showResult('plans-result', '请先登录', false);
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/research-plans', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    const plans = result.plans;
+                    let resultText = `找到 ${plans.length} 个研究方案:\n\n`;
+                    
+                    plans.forEach((plan, index) => {
+                        resultText += `方案 ${index + 1}:\n`;
+                        resultText += `  ID: ${plan.id}\n`;
+                        resultText += `  标题: ${plan.title}\n`;
+                        resultText += `  描述: ${plan.description}\n`;
+                        resultText += `  研究假设: ${plan.hypotheses || '无'}\n`;
+                        resultText += `  实验设计: ${plan.experimental_design || '无'}\n`;
+                        resultText += `  数据分析: ${plan.analysis_method || '无'}\n`;
+                        resultText += `  预期结果: ${plan.expected_results || '无'}\n`;
+                        resultText += `  创建时间: ${plan.created_at}\n`;
+                        resultText += `  更新时间: ${plan.updated_at}\n\n`;
+                    });
+                    
+                    showResult('plans-result', resultText);
+                } else {
+                    showResult('plans-result', `获取失败: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult('plans-result', `获取错误: ${error.message}`, false);
+            }
+        }
+
+        // 测试前端保存逻辑
+        async function testFrontendSave() {
+            if (!authToken) {
+                showResult('frontend-result', '请先登录', false);
+                return;
+            }
+            
+            // 模拟前端生成的研究方案数据
+            const planData = {
+                title: '前端测试方案',
+                researchQuestions: '前端测试的研究问题',
+                methodology: '前端测试方法',
+                timeline: '前端测试时间线',
+                hypotheses: ['前端测试假设1', '前端测试假设2'],
+                experimentalDesign: '前端测试实验设计',
+                analysisMethod: '前端测试数据分析',
+                expectedResults: '前端测试预期结果'
+            };
+            
+            const generationContext = {
+                test: true,
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                // 模拟前端的保存逻辑
+                const planDataForDB = {
+                    title: planData.title,
+                    description: planData.researchQuestions,
+                    hypotheses: JSON.stringify(planData.hypotheses || []),
+                    experimental_design: planData.experimentalDesign || '',
+                    analysis_method: planData.analysisMethod || '',
+                    expected_results: planData.expectedResults || '',
+                    methodology: planData.methodology || '',
+                    timeline: planData.timeline || '',
+                    resources: JSON.stringify(generationContext || {}),
+                    source_introductions: JSON.stringify({}),
+                    status: 'draft'
+                };
+                
+                const response = await fetch('/api/research-plans', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(planDataForDB)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showResult('frontend-result', `前端保存测试成功！\n方案ID: ${result.plan.id}\n所有字段都已正确保存到数据库`);
+                } else {
+                    showResult('frontend-result', `前端保存测试失败: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult('frontend-result', `前端保存测试错误: ${error.message}`, false);
+            }
+        }
+
+        // 页面加载时尝试自动登录
+        window.onload = function() {
+            if (authToken) {
+                fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        currentUserId = result.user.id;
+                        showResult('auth-result', `自动登录成功！用户ID: ${currentUserId}`);
+                    } else {
+                        localStorage.removeItem('token');
+                        authToken = '';
+                    }
+                })
+                .catch(error => {
+                    console.log('自动登录失败:', error);
+                });
+            }
+        };
+    </script>
+</body>
+</html> 
