@@ -2185,6 +2185,646 @@ app.post('/api/coze-chat', async (req, res) => {
   }
 });
 
+// ==================== 对话历史管理API ====================
+
+// 获取用户的对话列表
+app.get('/api/conversations', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const [conversations] = await pool.execute(
+      `SELECT id, title, description, created_at, updated_at 
+       FROM conversations 
+       WHERE user_id = ? 
+       ORDER BY updated_at DESC`,
+      [req.user.id]
+    );
+
+    res.json({
+      success: true,
+      conversations: conversations
+    });
+  } catch (error) {
+    console.error('获取对话列表错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 创建新对话
+app.post('/api/conversations', authenticateToken, async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '对话标题是必需的' 
+      });
+    }
+
+    const pool = getPool();
+    const [result] = await pool.execute(
+      'INSERT INTO conversations (user_id, title, description) VALUES (?, ?, ?)',
+      [req.user.id, title, description || '']
+    );
+
+    const conversationId = result.insertId;
+
+    res.status(201).json({
+      success: true,
+      conversation: {
+        id: conversationId,
+        title,
+        description: description || '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('创建对话错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 获取对话详情和消息
+app.get('/api/conversations/:id', authenticateToken, async (req, res) => {
+  try {
+    const conversationId = req.params.id;
+    const pool = getPool();
+
+    // 验证对话是否属于当前用户
+    const [conversations] = await pool.execute(
+      'SELECT * FROM conversations WHERE id = ? AND user_id = ?',
+      [conversationId, req.user.id]
+    );
+
+    if (conversations.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: '对话不存在或无权访问' 
+      });
+    }
+
+    // 获取对话消息
+    const [messages] = await pool.execute(
+      `SELECT id, role, content, created_at 
+       FROM messages 
+       WHERE conversation_id = ? 
+       ORDER BY created_at ASC`,
+      [conversationId]
+    );
+
+    res.json({
+      success: true,
+      conversation: conversations[0],
+      messages: messages
+    });
+  } catch (error) {
+    console.error('获取对话详情错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 向对话添加消息
+app.post('/api/conversations/:id/messages', authenticateToken, async (req, res) => {
+  try {
+    const conversationId = req.params.id;
+    const { role, content } = req.body;
+    
+    if (!role || !content) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '角色和内容都是必需的' 
+      });
+    }
+
+    if (!['user', 'assistant'].includes(role)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '角色必须是user或assistant' 
+      });
+    }
+
+    const pool = getPool();
+
+    // 验证对话是否属于当前用户
+    const [conversations] = await pool.execute(
+      'SELECT id FROM conversations WHERE id = ? AND user_id = ?',
+      [conversationId, req.user.id]
+    );
+
+    if (conversations.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: '对话不存在或无权访问' 
+      });
+    }
+
+    // 添加消息
+    const [result] = await pool.execute(
+      'INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)',
+      [conversationId, role, content]
+    );
+
+    // 更新对话的最后更新时间
+    await pool.execute(
+      'UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [conversationId]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: {
+        id: result.insertId,
+        conversation_id: parseInt(conversationId),
+        role,
+        content,
+        created_at: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('添加消息错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 删除对话
+app.delete('/api/conversations/:id', authenticateToken, async (req, res) => {
+  try {
+    const conversationId = req.params.id;
+    const pool = getPool();
+
+    // 验证对话是否属于当前用户
+    const [conversations] = await pool.execute(
+      'SELECT id FROM conversations WHERE id = ? AND user_id = ?',
+      [conversationId, req.user.id]
+    );
+
+    if (conversations.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: '对话不存在或无权访问' 
+      });
+    }
+
+    // 删除对话（会自动删除相关消息，因为有外键约束）
+    await pool.execute(
+      'DELETE FROM conversations WHERE id = ? AND user_id = ?',
+      [conversationId, req.user.id]
+    );
+
+    res.json({
+      success: true,
+      message: '对话删除成功'
+    });
+  } catch (error) {
+    console.error('删除对话错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// ==================== 引用文献管理API ====================
+
+// 获取用户的引用文献
+app.get('/api/reference-papers', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const [papers] = await pool.execute(
+      `SELECT id, title, authors, abstract, doi, url, year, journal, paper_id, created_at 
+       FROM reference_papers 
+       WHERE user_id = ? 
+       ORDER BY created_at DESC`,
+      [req.user.id]
+    );
+
+    res.json({
+      success: true,
+      papers: papers
+    });
+  } catch (error) {
+    console.error('获取引用文献错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 添加引用文献
+app.post('/api/reference-papers', authenticateToken, async (req, res) => {
+  try {
+    const { title, authors, abstract, doi, url, year, journal, paper_id, conversation_id } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '论文标题是必需的' 
+      });
+    }
+
+    const pool = getPool();
+
+    // 如果指定了conversation_id，验证是否属于当前用户
+    if (conversation_id) {
+      const [conversations] = await pool.execute(
+        'SELECT id FROM conversations WHERE id = ? AND user_id = ?',
+        [conversation_id, req.user.id]
+      );
+
+      if (conversations.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: '指定的对话不存在或无权访问' 
+        });
+      }
+    }
+
+    // 检查是否已存在相同的文献（基于标题或DOI）
+    let existingCheck = 'SELECT id FROM reference_papers WHERE user_id = ? AND (title = ?';
+    let checkParams = [req.user.id, title];
+    
+    if (doi) {
+      existingCheck += ' OR doi = ?';
+      checkParams.push(doi);
+    }
+    existingCheck += ')';
+
+    const [existing] = await pool.execute(existingCheck, checkParams);
+    
+    if (existing.length > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '该文献已存在于您的引用列表中' 
+      });
+    }
+
+    // 添加引用文献
+    const [result] = await pool.execute(
+      `INSERT INTO reference_papers 
+       (user_id, conversation_id, title, authors, abstract, doi, url, year, journal, paper_id) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [req.user.id, conversation_id || null, title, authors || '', abstract || '', 
+       doi || null, url || '', year || null, journal || '', paper_id || null]
+    );
+
+    res.status(201).json({
+      success: true,
+      paper: {
+        id: result.insertId,
+        title,
+        authors: authors || '',
+        abstract: abstract || '',
+        doi: doi || null,
+        url: url || '',
+        year: year || null,
+        journal: journal || '',
+        paper_id: paper_id || null,
+        created_at: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('添加引用文献错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 删除引用文献
+app.delete('/api/reference-papers/:id', authenticateToken, async (req, res) => {
+  try {
+    const paperId = req.params.id;
+    const pool = getPool();
+
+    // 验证文献是否属于当前用户
+    const [papers] = await pool.execute(
+      'SELECT id FROM reference_papers WHERE id = ? AND user_id = ?',
+      [paperId, req.user.id]
+    );
+
+    if (papers.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: '文献不存在或无权访问' 
+      });
+    }
+
+    // 删除引用文献
+    await pool.execute(
+      'DELETE FROM reference_papers WHERE id = ? AND user_id = ?',
+      [paperId, req.user.id]
+    );
+
+    res.json({
+      success: true,
+      message: '文献删除成功'
+    });
+  } catch (error) {
+    console.error('删除引用文献错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// ==================== 研究方案管理API ====================
+
+// 获取用户的研究方案
+app.get('/api/research-plans', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const [plans] = await pool.execute(
+      `SELECT id, title, description, methodology, timeline, resources, status, created_at, updated_at 
+       FROM research_plans 
+       WHERE user_id = ? 
+       ORDER BY updated_at DESC`,
+      [req.user.id]
+    );
+
+    res.json({
+      success: true,
+      plans: plans
+    });
+  } catch (error) {
+    console.error('获取研究方案错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 创建研究方案
+app.post('/api/research-plans', authenticateToken, async (req, res) => {
+  try {
+    const { title, description, methodology, timeline, resources, status, conversation_id, reference_ids } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '方案标题是必需的' 
+      });
+    }
+
+    const pool = getPool();
+
+    // 如果指定了conversation_id，验证是否属于当前用户
+    if (conversation_id) {
+      const [conversations] = await pool.execute(
+        'SELECT id FROM conversations WHERE id = ? AND user_id = ?',
+        [conversation_id, req.user.id]
+      );
+
+      if (conversations.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: '指定的对话不存在或无权访问' 
+        });
+      }
+    }
+
+    // 开始事务
+    await pool.execute('START TRANSACTION');
+
+    try {
+      // 创建研究方案
+      const [result] = await pool.execute(
+        `INSERT INTO research_plans 
+         (user_id, conversation_id, title, description, methodology, timeline, resources, status) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [req.user.id, conversation_id || null, title, description || '', 
+         methodology || '', timeline || '', resources || '', status || 'draft']
+      );
+
+      const planId = result.insertId;
+
+      // 如果指定了reference_ids，建立关联关系
+      if (reference_ids && Array.isArray(reference_ids) && reference_ids.length > 0) {
+        // 验证所有引用文献都属于当前用户
+        const placeholders = reference_ids.map(() => '?').join(',');
+        const [userPapers] = await pool.execute(
+          `SELECT id FROM reference_papers WHERE id IN (${placeholders}) AND user_id = ?`,
+          [...reference_ids, req.user.id]
+        );
+
+        if (userPapers.length !== reference_ids.length) {
+          throw new Error('部分引用文献不属于当前用户');
+        }
+
+        // 建立关联关系
+        for (const refId of reference_ids) {
+          await pool.execute(
+            'INSERT INTO plan_references (plan_id, reference_id) VALUES (?, ?)',
+            [planId, refId]
+          );
+        }
+      }
+
+      // 提交事务
+      await pool.execute('COMMIT');
+
+      res.status(201).json({
+        success: true,
+        plan: {
+          id: planId,
+          title,
+          description: description || '',
+          methodology: methodology || '',
+          timeline: timeline || '',
+          resources: resources || '',
+          status: status || 'draft',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      // 回滚事务
+      await pool.execute('ROLLBACK');
+      throw error;
+    }
+  } catch (error) {
+    console.error('创建研究方案错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message === '部分引用文献不属于当前用户' ? error.message : '服务器内部错误' 
+    });
+  }
+});
+
+// 获取研究方案详情和关联的引用文献
+app.get('/api/research-plans/:id', authenticateToken, async (req, res) => {
+  try {
+    const planId = req.params.id;
+    const pool = getPool();
+
+    // 验证方案是否属于当前用户
+    const [plans] = await pool.execute(
+      'SELECT * FROM research_plans WHERE id = ? AND user_id = ?',
+      [planId, req.user.id]
+    );
+
+    if (plans.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: '研究方案不存在或无权访问' 
+      });
+    }
+
+    // 获取关联的引用文献
+    const [references] = await pool.execute(
+      `SELECT rp.id, rp.title, rp.authors, rp.abstract, rp.doi, rp.url, rp.year, rp.journal, rp.paper_id
+       FROM reference_papers rp
+       INNER JOIN plan_references pr ON rp.id = pr.reference_id
+       WHERE pr.plan_id = ?`,
+      [planId]
+    );
+
+    res.json({
+      success: true,
+      plan: plans[0],
+      references: references
+    });
+  } catch (error) {
+    console.error('获取研究方案详情错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 更新研究方案
+app.put('/api/research-plans/:id', authenticateToken, async (req, res) => {
+  try {
+    const planId = req.params.id;
+    const { title, description, methodology, timeline, resources, status } = req.body;
+    
+    const pool = getPool();
+
+    // 验证方案是否属于当前用户
+    const [plans] = await pool.execute(
+      'SELECT id FROM research_plans WHERE id = ? AND user_id = ?',
+      [planId, req.user.id]
+    );
+
+    if (plans.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: '研究方案不存在或无权访问' 
+      });
+    }
+
+    // 构建更新SQL
+    const updates = [];
+    const values = [];
+
+    if (title !== undefined) {
+      updates.push('title = ?');
+      values.push(title);
+    }
+    if (description !== undefined) {
+      updates.push('description = ?');
+      values.push(description);
+    }
+    if (methodology !== undefined) {
+      updates.push('methodology = ?');
+      values.push(methodology);
+    }
+    if (timeline !== undefined) {
+      updates.push('timeline = ?');
+      values.push(timeline);
+    }
+    if (resources !== undefined) {
+      updates.push('resources = ?');
+      values.push(resources);
+    }
+    if (status !== undefined) {
+      updates.push('status = ?');
+      values.push(status);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '至少需要提供一个要更新的字段' 
+      });
+    }
+
+    updates.push('updated_at = CURRENT_TIMESTAMP');
+    values.push(planId, req.user.id);
+
+    await pool.execute(
+      `UPDATE research_plans SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
+      values
+    );
+
+    res.json({
+      success: true,
+      message: '研究方案更新成功'
+    });
+  } catch (error) {
+    console.error('更新研究方案错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 删除研究方案
+app.delete('/api/research-plans/:id', authenticateToken, async (req, res) => {
+  try {
+    const planId = req.params.id;
+    const pool = getPool();
+
+    // 验证方案是否属于当前用户
+    const [plans] = await pool.execute(
+      'SELECT id FROM research_plans WHERE id = ? AND user_id = ?',
+      [planId, req.user.id]
+    );
+
+    if (plans.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: '研究方案不存在或无权访问' 
+      });
+    }
+
+    // 删除研究方案（会自动删除关联的引用关系，因为有外键约束）
+    await pool.execute(
+      'DELETE FROM research_plans WHERE id = ? AND user_id = ?',
+      [planId, req.user.id]
+    );
+
+    res.json({
+      success: true,
+      message: '研究方案删除成功'
+    });
+  } catch (error) {
+    console.error('删除研究方案错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`🚀 MethodMate API服务器运行在端口 ${PORT}`);

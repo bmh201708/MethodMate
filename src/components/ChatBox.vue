@@ -1,6 +1,103 @@
 <template>
   <div class="bg-white rounded-xl shadow-sm p-6 h-full">
     <div class="flex flex-col h-full">
+      <!-- 对话管理头部 -->
+      <div class="mb-4 border-b border-gray-200 pb-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-lg font-semibold text-gray-900">对话管理</h3>
+          <div class="flex items-center space-x-2">
+            <button
+              @click="showConversationsList = !showConversationsList"
+              class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-1"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.013 8.013 0 01-7-4c0-4.418 3.582-8 8-8s8 3.582 8 8z"/>
+              </svg>
+              <span>{{ showConversationsList ? '隐藏' : '查看' }}历史对话</span>
+            </button>
+            <button
+              @click="createNewConversation"
+              :disabled="isCreatingConversation"
+              class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+              </svg>
+              <span>{{ isCreatingConversation ? '创建中...' : '新对话' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 当前对话信息 -->
+        <div class="flex items-center justify-between">
+          <div v-if="currentConversation" class="flex items-center space-x-2">
+            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span class="text-sm font-medium text-gray-900">{{ currentConversation.title }}</span>
+            <span class="text-xs text-gray-500">{{ currentConversation.updated_at ? new Date(currentConversation.updated_at).toLocaleString('zh-CN') : '' }}</span>
+          </div>
+          <div v-else-if="isAuthenticated" class="flex items-center space-x-2">
+            <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+            <span class="text-sm text-gray-500">临时对话（发送消息后自动保存）</span>
+          </div>
+          <div v-else class="flex items-center space-x-2">
+            <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+            <span class="text-sm text-gray-500">临时对话（请先登录以保存对话）</span>
+          </div>
+          
+          <div class="text-xs text-gray-400 flex items-center space-x-2">
+            <span>{{ Math.max(0, chatState.messages.length - 1) }} 条消息</span>
+            <span v-if="isAuthenticated && (chatState.conversationId || currentConversation)" class="text-green-600">已保存</span>
+            <span v-else-if="isAuthenticated" class="text-orange-500">未保存</span>
+            <span v-else class="text-gray-400">未登录</span>
+          </div>
+        </div>
+
+        <!-- 历史对话列表 -->
+        <div v-if="showConversationsList" class="mt-4 max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
+          <div v-if="conversationsLoading" class="p-4 text-center text-gray-500">
+            <div class="inline-flex items-center space-x-2">
+              <svg class="animate-spin w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              <span>加载中...</span>
+            </div>
+          </div>
+          
+          <div v-else-if="conversations.length === 0" class="p-4 text-center text-gray-500">
+            暂无历史对话
+          </div>
+          
+          <div v-else class="divide-y divide-gray-200">
+            <div 
+              v-for="conversation in conversations" 
+              :key="conversation.id"
+              @click="switchToConversation(conversation)"
+              :class="[
+                'p-3 cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-between',
+                currentConversation?.id === conversation.id ? 'bg-blue-50 border-l-4 border-blue-600' : ''
+              ]"
+            >
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 truncate">{{ conversation.title }}</p>
+                <p class="text-xs text-gray-500 truncate">{{ conversation.description || '暂无描述' }}</p>
+                <p class="text-xs text-gray-400">{{ new Date(conversation.updated_at).toLocaleString('zh-CN') }}</p>
+              </div>
+              <div class="flex items-center space-x-1">
+                <button
+                  @click.stop="deleteConversation(conversation)"
+                  class="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                  title="删除对话"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 聊天记录 -->
       <div class="flex-1 overflow-y-auto mb-4 space-y-4" ref="chatContainer">
         <div v-for="message in chatState.messages" :key="message.id" 
@@ -102,8 +199,9 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
-import { chatState, sendMessage } from '../stores/chatStore'
+import { ref, watch, nextTick, onMounted, computed } from 'vue'
+import { chatState, sendMessage, conversationAPI, clearMessages } from '../stores/chatStore'
+import { useUserStore } from '../stores/userStore.js'
 import { sendSilentMessageToCoze } from '../services/cozeApi'
 import LoadingDots from './LoadingDots.vue'
 import ConversationGuide from './ConversationGuide.vue'
@@ -122,6 +220,205 @@ const props = defineProps({
 const newMessage = ref('')
 const chatContainer = ref(null)
 const showOptimizeDialog = ref(false)
+
+// 用户状态
+const userStore = useUserStore()
+
+// 对话管理相关状态
+const conversations = ref([])
+const currentConversation = ref(null)
+const showConversationsList = ref(false)
+const conversationsLoading = ref(false)
+const isCreatingConversation = ref(false)
+
+// 计算属性：用户是否已登录
+const isAuthenticated = computed(() => userStore.isAuthenticated)
+
+// 初始化时加载对话列表
+onMounted(async () => {
+  if (isAuthenticated.value) {
+    await loadConversations()
+  }
+})
+
+// 监听用户登录状态变化
+watch(isAuthenticated, async (newVal) => {
+  if (newVal) {
+    await loadConversations()
+  } else {
+    // 用户登出时清空对话数据
+    conversations.value = []
+    currentConversation.value = null
+    showConversationsList.value = false
+  }
+})
+
+// 加载对话列表
+const loadConversations = async () => {
+  if (!isAuthenticated.value) return
+  
+  conversationsLoading.value = true
+  try {
+    const result = await conversationAPI.getAll()
+    if (result.success) {
+      conversations.value = result.conversations || []
+      console.log(`已加载 ${conversations.value.length} 个对话`)
+    }
+  } catch (error) {
+    console.error('加载对话列表失败:', error)
+  } finally {
+    conversationsLoading.value = false
+  }
+}
+
+// 创建新对话
+const createNewConversation = async () => {
+  if (!isAuthenticated.value) {
+    alert('请先登录后再创建对话')
+    return
+  }
+
+  isCreatingConversation.value = true
+  try {
+    // 生成对话标题（基于当前时间或消息内容）
+    const title = `新对话 ${new Date().toLocaleString('zh-CN')}`
+    const description = '用户创建的新对话'
+    
+    console.log('正在创建新对话:', { title, description })
+    
+    const result = await conversationAPI.create(title, description)
+    if (result.success) {
+      const newConversation = result.conversation
+      
+      console.log('对话创建成功:', newConversation)
+      
+      // 添加到对话列表开头
+      conversations.value.unshift(newConversation)
+      
+      // 设置当前对话
+      currentConversation.value = newConversation
+      chatState.conversationId = newConversation.id
+      
+      // 清空当前消息（保留欢迎消息）
+      clearMessages()
+      
+      // 强制刷新UI
+      await nextTick()
+      
+      console.log('新对话创建成功:', newConversation.title, 'ID:', newConversation.id)
+      alert('新对话创建成功！')
+    } else {
+      throw new Error(result.error || '创建对话失败')
+    }
+  } catch (error) {
+    console.error('创建新对话失败:', error)
+    alert('创建对话失败：' + error.message)
+  } finally {
+    isCreatingConversation.value = false
+  }
+}
+
+// 切换到指定对话
+const switchToConversation = async (conversation) => {
+  if (!isAuthenticated.value) return
+  
+  try {
+    console.log('切换到对话:', conversation.title, 'ID:', conversation.id)
+    
+    // 获取对话详情和消息
+    const result = await conversationAPI.getById(conversation.id)
+    if (result.success) {
+      // 设置当前对话
+      currentConversation.value = result.conversation
+      chatState.conversationId = conversation.id
+      
+      console.log('chatState.conversationId 已设置为:', chatState.conversationId)
+      
+      // 清空当前消息并加载历史消息
+      clearMessages()
+      
+      // 添加历史消息到chatState
+      if (result.messages && result.messages.length > 0) {
+        // 过滤掉第一条默认的欢迎消息，然后添加历史消息
+        chatState.messages = [
+          chatState.messages[0], // 保留欢迎消息
+          ...result.messages.map(msg => ({
+            id: msg.id,
+            type: msg.role,
+            content: msg.content,
+            isComplete: true,
+            isError: false,
+            saved: true, // 从数据库加载的消息标记为已保存
+            databaseId: msg.id
+          }))
+        ]
+      }
+      
+      console.log(`已加载对话 "${conversation.title}" 的 ${result.messages?.length || 0} 条消息`)
+      
+      // 强制刷新UI
+      await nextTick()
+      
+      // 滚动到底部
+      nextTick(() => {
+        if (chatContainer.value) {
+          chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+        }
+      })
+    }
+  } catch (error) {
+    console.error('切换对话失败:', error)
+    alert('切换对话失败：' + error.message)
+  }
+}
+
+// 删除对话
+const deleteConversation = async (conversation) => {
+  if (!isAuthenticated.value) return
+  
+  if (!confirm(`确定要删除对话"${conversation.title}"吗？此操作不可撤销。`)) {
+    return
+  }
+  
+  try {
+    const result = await conversationAPI.delete(conversation.id)
+    if (result.success) {
+      // 从列表中移除
+      const index = conversations.value.findIndex(c => c.id === conversation.id)
+      if (index > -1) {
+        conversations.value.splice(index, 1)
+      }
+      
+      // 如果删除的是当前对话，切换到新对话或清空
+      if (currentConversation.value?.id === conversation.id) {
+        if (conversations.value.length > 0) {
+          // 切换到第一个对话
+          await switchToConversation(conversations.value[0])
+        } else {
+          // 没有其他对话，重置为临时对话状态
+          currentConversation.value = null
+          chatState.conversationId = null
+          clearMessages()
+          
+          console.log('已重置为临时对话状态')
+        }
+      }
+      
+      console.log('对话删除成功:', conversation.title)
+    }
+  } catch (error) {
+    console.error('删除对话失败:', error)
+    alert('删除对话失败：' + error.message)
+  }
+}
+
+// 监听用户登录状态变化，如果用户登出后重新登录，重新加载对话
+watch(isAuthenticated, async (newVal, oldVal) => {
+  if (newVal && !oldVal) {
+    // 用户刚刚登录
+    await loadConversations()
+  }
+})
 
 // 配置markdown渲染器
 marked.setOptions({
@@ -605,6 +902,31 @@ const handleSendMessage = async () => {
   
   const message = newMessage.value
   newMessage.value = ''
+  
+  // 如果用户已登录但没有当前对话，先创建一个对话
+  if (isAuthenticated.value && !currentConversation.value && !chatState.conversationId) {
+    // 生成基于第一条消息的对话标题
+    const title = message.length > 20 ? message.substring(0, 20) + '...' : message
+    const description = '基于用户消息自动创建的对话'
+    
+    try {
+      const result = await conversationAPI.create(title, description)
+      if (result.success) {
+        const newConversation = result.conversation
+        conversations.value.unshift(newConversation)
+        currentConversation.value = newConversation
+        chatState.conversationId = newConversation.id
+        console.log('自动创建新对话:', newConversation.title, 'ID:', newConversation.id)
+        
+        // 强制刷新UI
+        await nextTick()
+      }
+    } catch (error) {
+      console.error('自动创建对话失败:', error)
+      alert('创建对话失败：' + error.message)
+      // 继续发送消息，即使对话创建失败
+    }
+  }
   
   // 传递页面上下文给sendMessage方法
   await sendMessage(message, props.pageContext)

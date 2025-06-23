@@ -73,6 +73,14 @@ export const useUserStore = defineStore('user', () => {
         localStorage.setItem('token', data.token)
         localStorage.setItem('user', JSON.stringify(data.user))
         
+        // 注册成功后加载用户数据（对于新用户应该是空的）
+        try {
+          const { loadUserData } = await import('./chatStore.js')
+          await loadUserData()
+        } catch (loadError) {
+          console.error('注册后加载用户数据失败:', loadError)
+        }
+        
         return data
       } else {
         throw new Error(data.error || '注册失败')
@@ -116,6 +124,14 @@ export const useUserStore = defineStore('user', () => {
         token.value = data.token
         localStorage.setItem('token', data.token)
         localStorage.setItem('user', JSON.stringify(data.user))
+        
+        // 登录成功后加载用户数据
+        try {
+          const { loadUserData } = await import('./chatStore.js')
+          await loadUserData()
+        } catch (loadError) {
+          console.error('加载用户数据失败:', loadError)
+        }
         
         return data
       } else {
@@ -171,7 +187,35 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // 用户登出
-  const logout = () => {
+  const logout = async () => {
+    // 清理用户数据
+    try {
+      const { 
+        clearMessages, 
+        papersState, 
+        historyState,
+        currentPlanState 
+      } = await import('./chatStore.js')
+      
+      // 只清理前端状态，不清理数据库
+      papersState.referencedPapers.clear()
+      papersState.referencedPapersList = []
+      papersState.recommendedPapers = []
+      papersState.selectedPaper = null
+      
+      historyState.historyPlans = []
+      historyState.currentViewingPlan = null
+      historyState.currentAppliedPlanId = null
+      
+      // 重置当前方案为默认状态
+      currentPlanState.isGenerated = false
+      
+      clearMessages()
+      console.log('已清理用户数据')
+    } catch (clearError) {
+      console.error('清理用户数据失败:', clearError)
+    }
+    
     user.value = null
     token.value = null
     localStorage.removeItem('token')
@@ -190,10 +234,18 @@ export const useUserStore = defineStore('user', () => {
         
         // 验证token是否仍然有效
         await fetchUserInfo()
+        
+        // token有效，加载用户数据
+        try {
+          const { loadUserData } = await import('./chatStore.js')
+          await loadUserData()
+        } catch (loadError) {
+          console.error('初始化时加载用户数据失败:', loadError)
+        }
       } catch (error) {
         console.error('初始化用户状态失败:', error)
         // 如果token无效，清除本地存储
-        logout()
+        await logout()
       }
     }
   }
