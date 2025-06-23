@@ -961,11 +961,18 @@ const generateResearchPlan = async () => {
     // 构建消息内容
     let message = "请帮我生成定量实验方案。"
     
-    // 获取所有参考文献信息（包括搜索和推荐的）
+    // 1. 首先分析对话历史，提取用户需求和上下文
+    const conversationContext = extractConversationContext()
+    if (conversationContext.hasUserRequirements) {
+      message += `\n\n根据我们的对话历史，我了解到以下研究需求：\n${conversationContext.userRequirements}`
+      message += `\n\n研究背景和上下文：\n${conversationContext.researchContext}`
+    }
+    
+    // 2. 获取所有参考文献信息（包括搜索和推荐的）
     const referencedPapers = Array.from(papersState.referencedPapersList)
     
     if (referencedPapers.length > 0) {
-      message += "\n\n我将为你提供以下参考文献的内容：\n"
+      message += `\n\n我将为你提供以下${referencedPapers.length}篇参考文献的内容：\n`
       
       // 为每篇论文获取研究方法和摘要
       const paperContents = await Promise.all(referencedPapers.map(async (paper, index) => {
@@ -1074,9 +1081,20 @@ const generateResearchPlan = async () => {
       // 添加所有论文信息到消息中
       message += paperContents.join("");
       
-      message += `\n请基于以上${referencedPapers.length}篇参考文献的内容（特别是研究方法部分）生成一个详细的定量研究方案。`
+      message += `\n请基于以上${referencedPapers.length}篇参考文献的内容（特别是研究方法部分）`
     } else {
-      message += "\n\n请生成一个详细的定量研究方案。"
+      message += `\n\n`
+    }
+    
+    // 3. 根据是否有用户需求和参考文献，调整生成策略
+    if (conversationContext.hasUserRequirements && referencedPapers.length > 0) {
+      message += `，结合我提到的研究需求，生成一个详细的定量研究方案。`
+    } else if (conversationContext.hasUserRequirements) {
+      message += `请基于我提到的研究需求，生成一个详细的定量研究方案。`
+    } else if (referencedPapers.length > 0) {
+      message += `生成一个详细的定量研究方案。`
+    } else {
+      message += `请生成一个详细的定量研究方案。`
     }
 
     message += `
@@ -1088,13 +1106,16 @@ const generateResearchPlan = async () => {
 #结果呈现：<此处说明结果展示形式>；
 
 要求：
-1. 如果有参考文献，请先仔细阅读链接中的完整文献内容
-2. 基于文献内容生成科学严谨的研究方案
-3. 必须严格按照上述格式返回,使用Markdown格式
-4. plan字段中的每个部分都要详细具体`
+1. 优先考虑我在对话中提到的具体研究需求和目标
+2. 如果有参考文献，请结合文献内容和我提到的需求进行设计
+3. 确保研究方案与我的研究目标高度匹配
+4. 基于文献内容生成科学严谨的研究方案
+5. 必须严格按照上述格式返回,使用Markdown格式
+6. plan字段中的每个部分都要详细具体`
     
     console.log('准备发送的消息:', message)
     console.log('参考文献数量:', referencedPapers.length)
+    console.log('是否有用户需求:', conversationContext.hasUserRequirements)
     
     // 发送消息到chatbox
     await sendMessage(message)
@@ -1103,6 +1124,99 @@ const generateResearchPlan = async () => {
     console.error('生成研究方案失败:', error)
   } finally {
     isGenerating.value = false
+  }
+}
+
+// 提取对话历史中的用户需求和上下文
+const extractConversationContext = () => {
+  const messages = chatState.messages
+  const userMessages = messages.filter(msg => msg.type === 'user' && msg.isComplete)
+  const assistantMessages = messages.filter(msg => msg.type === 'assistant' && msg.isComplete && !msg.isError)
+  
+  // 提取用户需求关键词
+  const userRequirements = []
+  const researchContext = []
+  
+  // 分析最近的用户消息（最多取最近10条）
+  const recentUserMessages = userMessages.slice(-10)
+  
+  for (const msg of recentUserMessages) {
+    const content = msg.content.toLowerCase()
+    
+    // 提取研究主题和领域
+    if (content.includes('研究') || content.includes('实验') || content.includes('调查')) {
+      // 提取包含"研究"、"实验"、"调查"等关键词的完整句子
+      const sentences = msg.content.split(/[。！？\n]/).filter(s => 
+        s.includes('研究') || s.includes('实验') || s.includes('调查') || 
+        s.includes('分析') || s.includes('评估') || s.includes('测试')
+      )
+      userRequirements.push(...sentences)
+    }
+    
+    // 提取具体的研究目标
+    if (content.includes('目标') || content.includes('目的') || content.includes('想要')) {
+      const sentences = msg.content.split(/[。！？\n]/).filter(s => 
+        s.includes('目标') || s.includes('目的') || s.includes('想要') ||
+        s.includes('希望') || s.includes('需要')
+      )
+      userRequirements.push(...sentences)
+    }
+    
+    // 提取研究变量和指标
+    if (content.includes('变量') || content.includes('指标') || content.includes('测量') || 
+        content.includes('因素') || content.includes('影响') || content.includes('关系')) {
+      const sentences = msg.content.split(/[。！？\n]/).filter(s => 
+        s.includes('变量') || s.includes('指标') || s.includes('测量') ||
+        s.includes('因素') || s.includes('影响') || s.includes('关系')
+      )
+      userRequirements.push(...sentences)
+    }
+    
+    // 提取研究方法和设计偏好
+    if (content.includes('方法') || content.includes('设计') || content.includes('问卷') ||
+        content.includes('访谈') || content.includes('观察') || content.includes('实验')) {
+      const sentences = msg.content.split(/[。！？\n]/).filter(s => 
+        s.includes('方法') || s.includes('设计') || s.includes('问卷') ||
+        s.includes('访谈') || s.includes('观察') || s.includes('实验')
+      )
+      userRequirements.push(...sentences)
+    }
+    
+    // 提取研究背景和上下文信息
+    if (content.includes('背景') || content.includes('现状') || content.includes('问题') ||
+        content.includes('领域') || content.includes('行业') || content.includes('应用')) {
+      const sentences = msg.content.split(/[。！？\n]/).filter(s => 
+        s.includes('背景') || s.includes('现状') || s.includes('问题') ||
+        s.includes('领域') || s.includes('行业') || s.includes('应用')
+      )
+      researchContext.push(...sentences)
+    }
+  }
+  
+  // 去重并清理
+  const uniqueRequirements = [...new Set(userRequirements)].filter(req => req.trim().length > 5)
+  const uniqueContext = [...new Set(researchContext)].filter(ctx => ctx.trim().length > 5)
+  
+  // 构建格式化的需求描述
+  let formattedRequirements = ''
+  if (uniqueRequirements.length > 0) {
+    formattedRequirements = uniqueRequirements.slice(0, 5).join('\n• ')
+  }
+  
+  let formattedContext = ''
+  if (uniqueContext.length > 0) {
+    formattedContext = uniqueContext.slice(0, 3).join('\n• ')
+  }
+  
+  console.log('提取的用户需求:', uniqueRequirements)
+  console.log('提取的研究上下文:', uniqueContext)
+  
+  return {
+    hasUserRequirements: uniqueRequirements.length > 0,
+    userRequirements: formattedRequirements,
+    researchContext: formattedContext,
+    requirementCount: uniqueRequirements.length,
+    contextCount: uniqueContext.length
   }
 }
 
@@ -1160,11 +1274,22 @@ const exitHistoryView = () => {
     try {
       isEvaluating.value = true
       
+      // 提取对话历史中的用户需求
+      const conversationContext = extractConversationContext()
+      
       // 构建评估提示
-      const evaluationPrompt = `请对以下研究方案进行系统评估，分别从以下三方面进行分析：
+      let evaluationPrompt = `请对以下研究方案进行系统评估，分别从以下三方面进行分析：
 1. 逻辑性：评估研究目的、研究假设、评估指标等的前后对应关系
 2. 合理性：评估各评估指标、评估工具、评估方法等是否有效且合适
-3. 可行性：评估用户实验的任务量、时间、成本等是否可行
+3. 可行性：评估用户实验的任务量、时间、成本等是否可行`
+
+      // 如果有用户需求，添加需求匹配度评估
+      if (conversationContext.hasUserRequirements) {
+        evaluationPrompt += `
+4. 需求匹配度：评估方案是否充分满足用户的具体研究需求和目标`
+      }
+
+      evaluationPrompt += `
 
 最后请总结指出方案的优点和可改进之处。
 
@@ -1176,6 +1301,25 @@ ${JSON.stringify({
   analysisMethod: currentPlanState.analysisMethod || '',
   expectedResults: currentPlanState.expectedResults || ''
 }, null, 2)}`
+
+      // 如果有用户需求，添加到评估提示中
+      if (conversationContext.hasUserRequirements) {
+        evaluationPrompt += `
+
+用户研究需求：
+${conversationContext.userRequirements}
+
+研究背景和上下文：
+${conversationContext.researchContext}
+
+请特别注意评估：
+1. 方案是否充分考虑了用户提到的具体研究目标
+2. 研究假设是否与用户的需求高度匹配
+3. 实验设计是否适合用户的研究场景和偏好
+4. 数据分析方法是否能够有效回答用户的研究问题`
+      }
+
+      console.log('评估提示包含用户需求:', conversationContext.hasUserRequirements)
 
       // 发送消息到对话
       await sendMessage(evaluationPrompt)
@@ -1224,8 +1368,11 @@ const iteratePlan = async () => {
       return
     }
 
+    // 提取对话历史中的用户需求
+    const conversationContext = extractConversationContext()
+    
     // 构建迭代提示
-    const iterationPrompt = `基于上一次的评估结果，请对研究方案进行优化和迭代。重点关注评估中指出的问题和改进建议，提供具体的优化方案。
+    let iterationPrompt = `基于上一次的评估结果，请对研究方案进行优化和迭代。重点关注评估中指出的问题和改进建议，提供具体的优化方案。
 
 评估结果：
 ${latestEvaluation.content}
@@ -1237,7 +1384,25 @@ ${JSON.stringify({
   experimentalDesign: currentPlanState.experimentalDesign || '',
   analysisMethod: currentPlanState.analysisMethod || '',
   expectedResults: currentPlanState.expectedResults || ''
-}, null, 2)}
+}, null, 2)}`
+
+    // 如果有用户需求，添加到迭代提示中
+    if (conversationContext.hasUserRequirements) {
+      iterationPrompt += `
+
+用户研究需求：
+${conversationContext.userRequirements}
+
+研究背景和上下文：
+${conversationContext.researchContext}
+
+请特别注意：
+1. 确保优化后的方案更好地满足用户的具体研究需求
+2. 在保持科学严谨性的同时，优先考虑用户提到的研究目标和偏好
+3. 结合评估建议和用户需求进行综合优化`
+    }
+
+    iterationPrompt += `
 
 请按照以下格式返回优化后的方案：
 #研究假设：<优化后的研究假设>
@@ -1249,8 +1414,11 @@ ${JSON.stringify({
 1. 重点优化评估中指出的问题部分
 2. 保持方案的整体一致性
 3. 确保优化后的方案更加科学严谨
-4. 必须按照上述格式返回完整的优化方案`
+4. 如果有用户需求，确保优化后的方案更好地满足这些需求
+5. 必须按照上述格式返回完整的优化方案`
 
+    console.log('迭代提示包含用户需求:', conversationContext.hasUserRequirements)
+    
     // 发送消息到对话
     await sendMessage(iterationPrompt)
 
@@ -1403,21 +1571,44 @@ const generateSourceIntroduction = async () => {
     }
     
     // 构建发送给Coze的提示
-    const prompt = `我将为你提供一个研究方案，以及研究方案参考的一些参考文献。请分析以下研究方案的"${sectionName}"部分参考了哪些参考文献的研究方法内容，并生成一个简洁的来源介绍。
+    let prompt = `我将为你提供一个研究方案，以及研究方案参考的一些参考文献。请分析以下研究方案的"${sectionName}"部分参考了哪些参考文献的研究方法内容，并生成一个简洁的来源介绍。
 
 研究方案的${sectionName}部分：
 ${currentSectionContent}
 
-参考文献信息：${referencesInfo}
+参考文献信息：${referencesInfo}`
+
+    // 如果有用户需求，添加到提示中
+    const conversationContext = extractConversationContext()
+    if (conversationContext.hasUserRequirements) {
+      prompt += `
+
+用户研究需求：
+${conversationContext.userRequirements}
+
+研究背景和上下文：
+${conversationContext.researchContext}`
+    }
+
+    prompt += `
 
 请分析${sectionName}部分具体参考了哪些文献的哪些研究方法要素，并生成一个200-300字的来源介绍，说明：
 1. 该部分主要参考了哪些文献
 2. 具体借鉴了这些文献的哪些研究方法要素
-3. 如何结合这些方法要素形成当前的方案设计
+3. 如何结合这些方法要素形成当前的方案设计`
+
+    // 如果有用户需求，添加个性化要求
+    if (conversationContext.hasUserRequirements) {
+      prompt += `
+4. 如何结合用户的具体研究需求来选择和调整这些方法要素`
+    }
+
+    prompt += `
 
 请用学术性的语言，简洁明了地说明来源和参考依据。`
 
     console.log('发送来源介绍生成请求:', prompt.substring(0, 200) + '...')
+    console.log('来源介绍生成包含用户需求:', conversationContext.hasUserRequirements)
     
     // 调用Coze API
     const response = await fetch('/api/coze-chat', {
@@ -1474,21 +1665,45 @@ const generateMethodIntroduction = async () => {
   
   try {
     // 构建发送给Coze的提示
-    const prompt = `我将为你提供一个研究方案的数据分析部分内容。请分析其中使用的研究方法和统计分析方法，并生成一个详细的方法介绍。
+    let prompt = `我将为你提供一个研究方案的数据分析部分内容。请分析其中使用的研究方法和统计分析方法，并生成一个详细的方法介绍。
 
 研究方案的数据分析部分：
-${analysisContent}
+${analysisContent}`
+
+    // 如果有用户需求，添加到提示中
+    const conversationContext = extractConversationContext()
+    if (conversationContext.hasUserRequirements) {
+      prompt += `
+
+用户研究需求：
+${conversationContext.userRequirements}
+
+研究背景和上下文：
+${conversationContext.researchContext}`
+    }
+
+    prompt += `
 
 请基于上述数据分析内容，生成一个300-500字的方法介绍，包括：
 1. 数据分析的总体策略和思路
 2. 具体使用的统计方法及其适用场景
 3. 数据处理和分析的步骤流程
 4. 各种统计方法的作用和意义
-5. 分析方法的优势和局限性
+5. 分析方法的优势和局限性`
+
+    // 如果有用户需求，添加个性化要求
+    if (conversationContext.hasUserRequirements) {
+      prompt += `
+6. 这些分析方法如何有效回答用户的具体研究问题
+7. 方法选择如何体现对用户研究需求的考虑`
+    }
+
+    prompt += `
 
 请用学术性的语言，清晰详细地介绍这些分析方法的原理、适用性和实施步骤。`
 
     console.log('发送方法介绍生成请求:', prompt.substring(0, 200) + '...')
+    console.log('方法介绍生成包含用户需求:', conversationContext.hasUserRequirements)
     
     // 调用Coze API
     const response = await fetch('/api/coze-chat', {
