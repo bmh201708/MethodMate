@@ -11,10 +11,22 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserStore } from './stores/userStore.js'
 import NavigationBar from './components/NavigationBar.vue'
 
 const router = useRouter()
+const userStore = useUserStore()
+
+// 应用启动时初始化用户状态
+onMounted(async () => {
+  try {
+    await userStore.initializeUser()
+  } catch (error) {
+    console.error('应用初始化用户状态失败:', error)
+  }
+})
 </script>
 
 <style>

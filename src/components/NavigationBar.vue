@@ -64,8 +64,8 @@
           </router-link>
         </nav>
 
-        <!-- 右上角：历史记录按钮 -->
-        <div class="flex items-center">
+        <!-- 右上角：历史记录按钮和用户菜单 -->
+        <div class="flex items-center space-x-4">
           <button
             @click="router.push('/history-plans')"
             class="flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 border border-gray-300 rounded-lg hover:border-blue-300 transition-colors"
@@ -76,6 +76,57 @@
             </svg>
             历史记录
           </button>
+
+          <!-- 用户菜单 -->
+          <div v-if="userStore.isAuthenticated" class="relative">
+            <button
+              @click="toggleUserMenu"
+              class="flex items-center px-3 py-2 text-gray-600 hover:text-blue-600 rounded-lg transition-colors"
+            >
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+              </svg>
+              {{ userStore.user?.username }}
+              <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+              </svg>
+            </button>
+
+            <!-- 用户下拉菜单 -->
+            <div v-show="showUserMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border z-50">
+              <div class="py-1">
+                <div class="px-4 py-2 text-sm text-gray-600 border-b">
+                  <div class="font-medium">{{ userStore.user?.username }}</div>
+                  <div class="text-xs text-gray-500">{{ userStore.user?.email }}</div>
+                </div>
+                <button
+                  @click="handleLogout"
+                  class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 001-1h10.586l-2.293-2.293a1 1 0 10-1.414 1.414L14.586 3H3zm11.707 4.707L16.414 9H11a1 1 0 100 2h5.414l-1.707 1.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 00-1.414 1.414z" clip-rule="evenodd"/>
+                  </svg>
+                  退出登录
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 登录/注册按钮 -->
+          <div v-else class="flex items-center space-x-2">
+            <router-link
+              to="/login"
+              class="px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors"
+            >
+              登录
+            </router-link>
+            <router-link
+              to="/register"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              注册
+            </router-link>
+          </div>
         </div>
 
         <!-- 移动端菜单按钮 -->
@@ -122,6 +173,45 @@
           >
             研究方案
           </router-link>
+          <router-link
+            to="/history-plans"
+            class="mobile-nav-link"
+            @click="closeMobileMenu"
+          >
+            历史记录
+          </router-link>
+          
+          <!-- 移动端用户菜单分隔线 -->
+          <div class="border-t pt-2 mt-2">
+            <div v-if="userStore.isAuthenticated" class="space-y-1">
+              <div class="px-3 py-2 text-sm text-gray-600">
+                <div class="font-medium">{{ userStore.user?.username }}</div>
+                <div class="text-xs text-gray-500">{{ userStore.user?.email }}</div>
+              </div>
+              <button
+                @click="handleLogout"
+                class="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+              >
+                退出登录
+              </button>
+            </div>
+            <div v-else class="space-y-1">
+              <router-link
+                to="/login"
+                class="mobile-nav-link"
+                @click="closeMobileMenu"
+              >
+                登录
+              </router-link>
+              <router-link
+                to="/register"
+                class="mobile-nav-link"
+                @click="closeMobileMenu"
+              >
+                注册
+              </router-link>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -129,14 +219,17 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { papersState } from '../stores/chatStore'
+import { useUserStore } from '../stores/userStore'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 // 移动端菜单状态
 const showMobileMenu = ref(false)
+const showUserMenu = ref(false)
 
 // 引用文献计数
 const referencedCount = computed(() => papersState.referencedPapers.size)
@@ -150,6 +243,41 @@ const toggleMobileMenu = () => {
 const closeMobileMenu = () => {
   showMobileMenu.value = false
 }
+
+// 切换用户菜单
+const toggleUserMenu = () => {
+  showUserMenu.value = !showUserMenu.value
+}
+
+// 关闭用户菜单
+const closeUserMenu = () => {
+  showUserMenu.value = false
+}
+
+// 处理用户登出
+const handleLogout = () => {
+  userStore.logout()
+  closeUserMenu()
+  router.push('/')
+}
+
+// 点击外部关闭用户菜单
+const handleClickOutside = (event) => {
+  const userMenuElement = event.target.closest('.relative')
+  if (!userMenuElement && showUserMenu.value) {
+    closeUserMenu()
+  }
+}
+
+// 初始化用户状态
+onMounted(async () => {
+  await userStore.initializeUser()
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <style scoped>

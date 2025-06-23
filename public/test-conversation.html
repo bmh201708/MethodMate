@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对话历史功能测试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .test-section h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MethodMate 对话历史功能测试</h1>
+        
+        <div class="test-section">
+            <h3>1. 测试用户认证</h3>
+            <button onclick="testAuth()">测试认证</button>
+            <div id="authResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. 创建对话</h3>
+            <input type="text" id="conversationTitle" placeholder="对话标题" value="测试对话">
+            <textarea id="conversationDesc" placeholder="对话描述" rows="3">这是一个测试对话</textarea>
+            <button onclick="createConversation()">创建对话</button>
+            <div id="createResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. 获取对话列表</h3>
+            <button onclick="getConversations()">获取对话列表</button>
+            <div id="listResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. 添加消息</h3>
+            <input type="number" id="conversationId" placeholder="对话ID">
+            <input type="text" id="messageContent" placeholder="消息内容" value="这是一条测试消息">
+            <select id="messageRole">
+                <option value="user">用户</option>
+                <option value="assistant">助手</option>
+            </select>
+            <button onclick="addMessage()">添加消息</button>
+            <div id="messageResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. 获取对话详情</h3>
+            <input type="number" id="getConversationId" placeholder="对话ID">
+            <button onclick="getConversationDetail()">获取对话详情</button>
+            <div id="detailResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>6. 删除对话</h3>
+            <input type="number" id="deleteConversationId" placeholder="对话ID">
+            <button onclick="deleteConversation()" style="background: #dc3545;">删除对话</button>
+            <div id="deleteResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3004';
+        
+        // 获取认证头
+        function getAuthHeaders() {
+            const token = localStorage.getItem('token');
+            return {
+                'Content-Type': 'application/json',
+                ...(token && { 'Authorization': `Bearer ${token}` })
+            };
+        }
+
+        // 测试认证
+        async function testAuth() {
+            const resultDiv = document.getElementById('authResult');
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/me`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.textContent = `认证成功！用户信息：\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: '解析错误' }));
+                    resultDiv.textContent = `认证失败：${errorData.error || response.statusText}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `请求失败：${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // 创建对话
+        async function createConversation() {
+            const resultDiv = document.getElementById('createResult');
+            const title = document.getElementById('conversationTitle').value;
+            const description = document.getElementById('conversationDesc').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/conversations`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ title, description })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.textContent = `对话创建成功！\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                    
+                    // 自动填充对话ID到其他输入框
+                    document.getElementById('conversationId').value = data.conversation.id;
+                    document.getElementById('getConversationId').value = data.conversation.id;
+                    document.getElementById('deleteConversationId').value = data.conversation.id;
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: '解析错误' }));
+                    resultDiv.textContent = `创建失败：${errorData.error || response.statusText}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `请求失败：${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // 获取对话列表
+        async function getConversations() {
+            const resultDiv = document.getElementById('listResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/conversations`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.textContent = `对话列表获取成功！\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: '解析错误' }));
+                    resultDiv.textContent = `获取失败：${errorData.error || response.statusText}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `请求失败：${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // 添加消息
+        async function addMessage() {
+            const resultDiv = document.getElementById('messageResult');
+            const conversationId = document.getElementById('conversationId').value;
+            const content = document.getElementById('messageContent').value;
+            const role = document.getElementById('messageRole').value;
+            
+            if (!conversationId) {
+                resultDiv.textContent = '请输入对话ID';
+                resultDiv.className = 'result error';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/conversations/${conversationId}/messages`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ role, content })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.textContent = `消息添加成功！\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: '解析错误' }));
+                    resultDiv.textContent = `添加失败：${errorData.error || response.statusText}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `请求失败：${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // 获取对话详情
+        async function getConversationDetail() {
+            const resultDiv = document.getElementById('detailResult');
+            const conversationId = document.getElementById('getConversationId').value;
+            
+            if (!conversationId) {
+                resultDiv.textContent = '请输入对话ID';
+                resultDiv.className = 'result error';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/conversations/${conversationId}`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.textContent = `对话详情获取成功！\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: '解析错误' }));
+                    resultDiv.textContent = `获取失败：${errorData.error || response.statusText}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `请求失败：${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // 删除对话
+        async function deleteConversation() {
+            const resultDiv = document.getElementById('deleteResult');
+            const conversationId = document.getElementById('deleteConversationId').value;
+            
+            if (!conversationId) {
+                resultDiv.textContent = '请输入对话ID';
+                resultDiv.className = 'result error';
+                return;
+            }
+            
+            if (!confirm('确定要删除这个对话吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/conversations/${conversationId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.textContent = `对话删除成功！\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: '解析错误' }));
+                    resultDiv.textContent = `删除失败：${errorData.error || response.statusText}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `请求失败：${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // 页面加载时自动测试认证
+        window.onload = function() {
+            testAuth();
+        };
+    </script>
+</body>
+</html> 

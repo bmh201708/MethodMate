@@ -113,6 +113,205 @@ const newMessage = ref('')
 const chatContainer = ref(null)
 const showOptimizeDialog = ref(false)
 
+// 用户状态
+const userStore = useUserStore()
+
+// 对话管理相关状态
+const conversations = ref([])
+const currentConversation = ref(null)
+const showConversationsList = ref(false)
+const conversationsLoading = ref(false)
+const isCreatingConversation = ref(false)
+
+// 计算属性：用户是否已登录
+const isAuthenticated = computed(() => userStore.isAuthenticated)
+
+// 初始化时加载对话列表
+onMounted(async () => {
+  if (isAuthenticated.value) {
+    await loadConversations()
+  }
+})
+
+// 监听用户登录状态变化
+watch(isAuthenticated, async (newVal) => {
+  if (newVal) {
+    await loadConversations()
+  } else {
+    // 用户登出时清空对话数据
+    conversations.value = []
+    currentConversation.value = null
+    showConversationsList.value = false
+  }
+})
+
+// 加载对话列表
+const loadConversations = async () => {
+  if (!isAuthenticated.value) return
+  
+  conversationsLoading.value = true
+  try {
+    const result = await conversationAPI.getAll()
+    if (result.success) {
+      conversations.value = result.conversations || []
+      console.log(`已加载 ${conversations.value.length} 个对话`)
+    }
+  } catch (error) {
+    console.error('加载对话列表失败:', error)
+  } finally {
+    conversationsLoading.value = false
+  }
+}
+
+// 创建新对话
+const createNewConversation = async () => {
+  if (!isAuthenticated.value) {
+    alert('请先登录后再创建对话')
+    return
+  }
+
+  isCreatingConversation.value = true
+  try {
+    // 生成对话标题（基于当前时间或消息内容）
+    const title = `新对话 ${new Date().toLocaleString('zh-CN')}`
+    const description = '用户创建的新对话'
+    
+    console.log('正在创建新对话:', { title, description })
+    
+    const result = await conversationAPI.create(title, description)
+    if (result.success) {
+      const newConversation = result.conversation
+      
+      console.log('对话创建成功:', newConversation)
+      
+      // 添加到对话列表开头
+      conversations.value.unshift(newConversation)
+      
+      // 设置当前对话
+      currentConversation.value = newConversation
+      chatState.conversationId = newConversation.id
+      
+      // 清空当前消息（保留欢迎消息）
+      clearMessages()
+      
+      // 强制刷新UI
+      await nextTick()
+      
+      console.log('新对话创建成功:', newConversation.title, 'ID:', newConversation.id)
+      alert('新对话创建成功！')
+    } else {
+      throw new Error(result.error || '创建对话失败')
+    }
+  } catch (error) {
+    console.error('创建新对话失败:', error)
+    alert('创建对话失败：' + error.message)
+  } finally {
+    isCreatingConversation.value = false
+  }
+}
+
+// 切换到指定对话
+const switchToConversation = async (conversation) => {
+  if (!isAuthenticated.value) return
+  
+  try {
+    console.log('切换到对话:', conversation.title, 'ID:', conversation.id)
+    
+    // 获取对话详情和消息
+    const result = await conversationAPI.getById(conversation.id)
+    if (result.success) {
+      // 设置当前对话
+      currentConversation.value = result.conversation
+      chatState.conversationId = conversation.id
+      
+      console.log('chatState.conversationId 已设置为:', chatState.conversationId)
+      
+      // 清空当前消息并加载历史消息
+      clearMessages()
+      
+      // 添加历史消息到chatState
+      if (result.messages && result.messages.length > 0) {
+        // 过滤掉第一条默认的欢迎消息，然后添加历史消息
+        chatState.messages = [
+          chatState.messages[0], // 保留欢迎消息
+          ...result.messages.map(msg => ({
+            id: msg.id,
+            type: msg.role,
+            content: msg.content,
+            isComplete: true,
+            isError: false,
+            saved: true, // 从数据库加载的消息标记为已保存
+            databaseId: msg.id
+          }))
+        ]
+      }
+      
+      console.log(`已加载对话 "${conversation.title}" 的 ${result.messages?.length || 0} 条消息`)
+      
+      // 强制刷新UI
+      await nextTick()
+      
+      // 滚动到底部
+      nextTick(() => {
+        if (chatContainer.value) {
+          chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+        }
+      })
+    }
+  } catch (error) {
+    console.error('切换对话失败:', error)
+    alert('切换对话失败：' + error.message)
+  }
+}
+
+// 删除对话
+const deleteConversation = async (conversation) => {
+  if (!isAuthenticated.value) return
+  
+  if (!confirm(`确定要删除对话"${conversation.title}"吗？此操作不可撤销。`)) {
+    return
+  }
+  
+  try {
+    const result = await conversationAPI.delete(conversation.id)
+    if (result.success) {
+      // 从列表中移除
+      const index = conversations.value.findIndex(c => c.id === conversation.id)
+      if (index > -1) {
+        conversations.value.splice(index, 1)
+      }
+      
+      // 如果删除的是当前对话，切换到新对话或清空
+      if (currentConversation.value?.id === conversation.id) {
+        if (conversations.value.length > 0) {
+          // 切换到第一个对话
+          await switchToConversation(conversations.value[0])
+        } else {
+          // 没有其他对话，重置为临时对话状态
+          currentConversation.value = null
+          chatState.conversationId = null
+          clearMessages()
+          
+          console.log('已重置为临时对话状态')
+        }
+      }
+      
+      console.log('对话删除成功:', conversation.title)
+    }
+  } catch (error) {
+    console.error('删除对话失败:', error)
+    alert('删除对话失败：' + error.message)
+  }
+}
+
+// 监听用户登录状态变化，如果用户登出后重新登录，重新加载对话
+watch(isAuthenticated, async (newVal, oldVal) => {
+  if (newVal && !oldVal) {
+    // 用户刚刚登录
+    await loadConversations()
+  }
+})
+
 // 配置markdown渲染器
 marked.setOptions({
   gfm: true, // GitHub风格的markdown

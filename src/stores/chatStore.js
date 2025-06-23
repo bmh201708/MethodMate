@@ -2,6 +2,48 @@
 import { reactive, ref } from 'vue'
 import { sendStreamMessageToCoze } from '../services/cozeApi'
 
+// API基础URL
+const API_BASE_URL = import.meta.env.MODE === 'production' 
+  ? 'https://method-mate.vercel.app' 
+  : 'http://localhost:3004'
+
+// 获取认证头
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token')
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  }
+}
+
+// 检查用户是否已登录
+const isUserAuthenticated = () => {
+  return !!localStorage.getItem('token')
+}
+
+// API请求辅助函数
+const apiRequest = async (url, options = {}) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      ...options,
+      headers: {
+        ...getAuthHeaders(),
+        ...options.headers
+      }
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: '网络错误' }))
+      throw new Error(errorData.error || `HTTP错误: ${response.status}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('API请求失败:', error)
+    throw error
+  }
+}
+
 // 聊天状态
 export const chatState = reactive({
   messages: [
@@ -43,6 +85,221 @@ export const historyState = reactive({
   currentViewingPlan: null, // 当前正在查看的历史方案
   currentAppliedPlanId: null // 当前应用中的方案ID
 })
+
+// ==================== 数据库操作辅助函数 ====================
+
+// 对话相关API
+export const conversationAPI = {
+  // 获取对话列表
+  async getAll() {
+    if (!isUserAuthenticated()) return { success: true, conversations: [] }
+    return await apiRequest('/api/conversations')
+  },
+
+  // 创建新对话
+  async create(title, description = '') {
+    if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
+    return await apiRequest('/api/conversations', {
+      method: 'POST',
+      body: JSON.stringify({ title, description })
+    })
+  },
+
+  // 获取对话详情
+  async getById(id) {
+    if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
+    return await apiRequest(`/api/conversations/${id}`)
+  },
+
+  // 添加消息到对话
+  async addMessage(conversationId, role, content) {
+    if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
+    return await apiRequest(`/api/conversations/${conversationId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ role, content })
+    })
+  },
+
+  // 删除对话
+  async delete(id) {
+    if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
+    return await apiRequest(`/api/conversations/${id}`, {
+      method: 'DELETE'
+    })
+  }
+}
+
+// 引用文献相关API
+export const referencePaperAPI = {
+  // 获取用户的引用文献
+  async getAll() {
+    if (!isUserAuthenticated()) return { success: true, papers: [] }
+    return await apiRequest('/api/reference-papers')
+  },
+
+  // 添加引用文献
+  async add(paperData) {
+    if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
+    return await apiRequest('/api/reference-papers', {
+      method: 'POST',
+      body: JSON.stringify(paperData)
+    })
+  },
+
+  // 删除引用文献
+  async delete(id) {
+    if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
+    return await apiRequest(`/api/reference-papers/${id}`, {
+      method: 'DELETE'
+    })
+  }
+}
+
+// 研究方案相关API
+export const researchPlanAPI = {
+  // 获取用户的研究方案
+  async getAll() {
+    if (!isUserAuthenticated()) return { success: true, plans: [] }
+    return await apiRequest('/api/research-plans')
+  },
+
+  // 创建研究方案
+  async create(planData) {
+    if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
+    return await apiRequest('/api/research-plans', {
+      method: 'POST',
+      body: JSON.stringify(planData)
+    })
+  },
+
+  // 获取研究方案详情
+  async getById(id) {
+    if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
+    return await apiRequest(`/api/research-plans/${id}`)
+  },
+
+  // 更新研究方案
+  async update(id, planData) {
+    if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
+    return await apiRequest(`/api/research-plans/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(planData)
+    })
+  },
+
+  // 删除研究方案
+  async delete(id) {
+    if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
+    return await apiRequest(`/api/research-plans/${id}`, {
+      method: 'DELETE'
+    })
+  }
+}
+
+// 数据加载函数
+export const loadUserData = async () => {
+  if (!isUserAuthenticated()) {
+    console.log('用户未登录，跳过数据加载')
+    return
+  }
+
+  try {
+    console.log('开始加载用户数据...')
+    
+    // 并行加载用户数据
+    const [conversationsResult, papersResult, plansResult] = await Promise.all([
+      conversationAPI.getAll(),
+      referencePaperAPI.getAll(),
+      researchPlanAPI.getAll()
+    ])
+
+    // 加载引用文献
+    if (papersResult.success && papersResult.papers) {
+      papersState.referencedPapersList = papersResult.papers.map(paper => ({
+        id: paper.paper_id || paper.id, // 使用paper_id作为前端ID，如果没有则使用数据库ID
+        title: paper.title,
+        authors: paper.authors ? paper.authors.split(', ') : [],
+        abstract: paper.abstract || '',
+        summary: paper.abstract || '',
+        doi: paper.doi || '',
+        url: paper.url || '',
+        scholar_url: paper.url || '',
+        year: paper.year,
+        journal: paper.journal || '',
+        venue: paper.journal || '',
+        referencedAt: paper.created_at,
+        source: 'database',
+        databaseId: paper.id // 保存数据库ID
+      }))
+      
+      // 更新引用文献ID集合，使用paper_id或数据库ID
+      papersState.referencedPapers.clear()
+      papersResult.papers.forEach(paper => {
+        const frontendId = paper.paper_id || paper.id
+        papersState.referencedPapers.add(frontendId)
+      })
+      
+      console.log(`已加载 ${papersResult.papers.length} 篇引用文献`)
+    }
+
+    // 加载历史方案
+    if (plansResult.success && plansResult.plans) {
+      historyState.historyPlans = plansResult.plans.map(plan => {
+        // 尝试解析methodology字段中的JSON数据
+        let parsedMethodology = {}
+        try {
+          if (plan.methodology) {
+            parsedMethodology = JSON.parse(plan.methodology)
+          }
+        } catch (error) {
+          console.warn(`解析方案 ${plan.title} 的methodology字段失败:`, error)
+        }
+        
+        // 尝试解析resources字段中的JSON数据（生成上下文）
+        let parsedContext = null
+        try {
+          if (plan.resources) {
+            parsedContext = JSON.parse(plan.resources)
+          }
+        } catch (error) {
+          console.warn(`解析方案 ${plan.title} 的resources字段失败:`, error)
+        }
+        
+        return {
+          id: plan.id,
+          title: plan.title,
+          description: plan.description,
+          createdAt: new Date(plan.created_at).toLocaleString('zh-CN'),
+          updatedAt: new Date(plan.updated_at).toLocaleString('zh-CN'),
+          author: 'AI智能体',
+          status: plan.status === 'active' ? '已应用' : '已生成',
+          fullPlan: {
+            title: plan.title,
+            researchQuestions: plan.description,
+            methodology: plan.methodology,
+            timeline: plan.timeline,
+            resources: plan.resources,
+            // 从解析的JSON中提取具体字段
+            hypotheses: parsedMethodology.hypotheses || [],
+            experimentalDesign: parsedMethodology.experimentalDesign || '',
+            analysisMethod: parsedMethodology.analysisMethod || '',
+            expectedResults: parsedMethodology.expectedResults || '',
+            isGenerated: true
+          },
+          generationContext: parsedContext,
+          sourceIntroductions: {},
+          databaseId: plan.id // 保存数据库ID
+        }
+      })
+      
+      console.log(`已加载 ${plansResult.plans.length} 个历史方案`)
+    }
+
+    console.log('用户数据加载完成')
+  } catch (error) {
+    console.error('加载用户数据失败:', error)
+  }
+}
 
 // 当前方案状态
 export const currentPlanState = reactive({
@@ -116,10 +373,26 @@ export const selectPaper = (paper) => {
 
 export const toggleReference = async (paper) => {
   const paperId = paper.id
+  
   if (papersState.referencedPapers.has(paperId)) {
     // 移除引用
+    const referencedPaper = papersState.referencedPapersList.find(p => p.id === paperId)
+    
+    // 从前端状态移除
     papersState.referencedPapers.delete(paperId)
     papersState.referencedPapersList = papersState.referencedPapersList.filter(p => p.id !== paperId)
+    
+    // 如果用户已登录且论文是从数据库加载的，则从数据库删除
+    if (isUserAuthenticated() && referencedPaper && referencedPaper.databaseId) {
+      try {
+        await referencePaperAPI.delete(referencedPaper.databaseId)
+        console.log(`已从数据库删除引用文献: ${paper.title}`)
+      } catch (error) {
+        console.error('从数据库删除引用文献失败:', error)
+        // 即使数据库操作失败，也保持前端状态的更新
+      }
+    }
+    
     console.log(`已移除引用文献: ${paper.title}`)
   } else {
     // 添加引用
@@ -129,12 +402,43 @@ export const toggleReference = async (paper) => {
     const referencedPaper = {
       ...paper,
       referencedAt: new Date().toISOString(),
-      source: paper.batchIndex ? 'recommendation' : 'search' // 标记来源
+      source: paper.batchIndex ? 'recommendation' : 'search', // 标记来源
+      databaseId: null // 数据库ID，稍后会更新
     }
     
-    // 立即添加到引用列表，不等待研究方法获取
+    // 立即添加到引用列表，不等待数据库操作
     papersState.referencedPapersList.push(referencedPaper)
     console.log(`已添加引用文献: ${paper.title}`)
+    
+    // 如果用户已登录，保存到数据库
+    if (isUserAuthenticated()) {
+      try {
+        const paperData = {
+          title: paper.title,
+          authors: Array.isArray(paper.authors) ? paper.authors.join(', ') : (paper.authors || ''),
+          abstract: paper.abstract || paper.summary || '',
+          doi: paper.doi || '',
+          url: paper.scholar_url || paper.url || '',
+          year: paper.year || null,
+          journal: paper.journal || paper.venue || '',
+          paper_id: paper.id ? paper.id.toString() : null,
+          conversation_id: chatState.conversationId || null
+        }
+        
+        const result = await referencePaperAPI.add(paperData)
+        if (result.success) {
+          // 更新前端对象的数据库ID
+          const refPaper = papersState.referencedPapersList.find(p => p.id === paperId)
+          if (refPaper) {
+            refPaper.databaseId = result.paper.id
+          }
+          console.log(`已保存引用文献到数据库: ${paper.title}`)
+        }
+      } catch (error) {
+        console.error('保存引用文献到数据库失败:', error)
+        // 不阻止添加引用，只记录错误
+      }
+    }
     
     // 如果论文没有研究方法，在后台异步获取
     if (!referencedPaper.researchMethod) {
@@ -145,7 +449,7 @@ export const toggleReference = async (paper) => {
           
           // 如果有全文，直接尝试提取研究方法
           if (referencedPaper.fullText) {
-            const methodResponse = await fetch('/api/paper/generate-method-summary', {
+            const methodResponse = await fetch(`${API_BASE_URL}/api/paper/generate-method-summary`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -172,7 +476,7 @@ export const toggleReference = async (paper) => {
           } 
           // 如果没有全文，先获取全文再提取研究方法
           else {
-            const response = await fetch('/api/paper/get-full-content', {
+            const response = await fetch(`${API_BASE_URL}/api/paper/get-full-content`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -203,7 +507,7 @@ export const toggleReference = async (paper) => {
                 }
                 // 如果没有研究方法但有全文，尝试生成研究方法概要
                 else if (result.fullText && refPaper) {
-                  const methodResponse = await fetch('/api/paper/generate-method-summary', {
+                  const methodResponse = await fetch(`${API_BASE_URL}/api/paper/generate-method-summary`, {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',
@@ -277,13 +581,32 @@ export const clearAllPapers = () => {
   papersState.referencedPapersList = []
 }
 
-export const clearReferences = () => {
+export const clearReferences = async () => {
+  // 如果用户已登录，批量删除数据库中的引用文献
+  if (isUserAuthenticated()) {
+    const deletePromises = papersState.referencedPapersList
+      .filter(paper => paper.databaseId)
+      .map(paper => referencePaperAPI.delete(paper.databaseId).catch(error => {
+        console.error(`删除文献 ${paper.title} 失败:`, error)
+      }))
+    
+    if (deletePromises.length > 0) {
+      try {
+        await Promise.all(deletePromises)
+        console.log('已从数据库删除所有引用文献')
+      } catch (error) {
+        console.error('批量删除引用文献时出现错误:', error)
+      }
+    }
+  }
+  
+  // 清空前端状态
   papersState.referencedPapers.clear()
   papersState.referencedPapersList = []
   console.log('已清空所有引用文献')
 }
 
-export const removePaperFromReferences = (paper) => {
+export const removePaperFromReferences = async (paper) => {
   // 从Set中移除
   papersState.referencedPapers.delete(paper.id || paper.title)
   
@@ -294,7 +617,20 @@ export const removePaperFromReferences = (paper) => {
   )
   
   if (index > -1) {
+    const referencedPaper = papersState.referencedPapersList[index]
     papersState.referencedPapersList.splice(index, 1)
+    
+    // 如果用户已登录且论文有数据库ID，从数据库删除
+    if (isUserAuthenticated() && referencedPaper.databaseId) {
+      try {
+        await referencePaperAPI.delete(referencedPaper.databaseId)
+        console.log(`已从数据库删除参考文献: ${paper.title}`)
+      } catch (error) {
+        console.error('从数据库删除参考文献失败:', error)
+        // 即使数据库操作失败，也保持前端状态的更新
+      }
+    }
+    
     console.log('移除参考文献:', paper.title)
   }
 }
@@ -344,23 +680,41 @@ export const sendMessage = async (message, pageContext = null) => {
   const messageId = chatState.messages.length + 1
   
   // 添加用户消息（只显示用户输入的消息，不包含上下文）
-  chatState.messages.push({
+  const userMessage = {
     id: messageId,
     type: 'user',
     content: message,
-    isComplete: true
-  })
+    isComplete: true,
+    saved: false // 标记为未保存到数据库
+  }
+  chatState.messages.push(userMessage)
+
+  // 如果有当前对话且用户已登录，立即保存用户消息
+  if (isUserAuthenticated() && chatState.conversationId) {
+    try {
+      const result = await conversationAPI.addMessage(chatState.conversationId, 'user', message)
+      if (result.success) {
+        userMessage.saved = true
+        userMessage.databaseId = result.message.id
+        console.log('用户消息已保存到数据库:', message.substring(0, 50) + '...')
+      }
+    } catch (error) {
+      console.error('保存用户消息失败:', error)
+    }
+  }
 
   chatState.isLoading = true
 
   // 添加助手消息占位
   const assistantMessageId = messageId + 1
-  chatState.messages.push({
+  const assistantMessage = {
     id: assistantMessageId,
     type: 'assistant',
     content: '',
-    isComplete: false
-  })
+    isComplete: false,
+    saved: false
+  }
+  chatState.messages.push(assistantMessage)
 
   // 构建实际发送给AI的消息（包含上下文）
   let messageWithContext = message
@@ -377,16 +731,30 @@ export const sendMessage = async (message, pageContext = null) => {
   try {
     await sendStreamMessageToCoze(messageWithContext, (chunk, fullResponse) => {
       // 更新助手消息内容
-      const assistantMessage = chatState.messages.find(m => m.id === assistantMessageId)
-      if (assistantMessage) {
-        assistantMessage.content = fullResponse
+      const assistantMsg = chatState.messages.find(m => m.id === assistantMessageId)
+      if (assistantMsg) {
+        assistantMsg.content = fullResponse
       }
     }, chatState.messages)
 
     // 标记消息完成
-    const assistantMessage = chatState.messages.find(m => m.id === assistantMessageId)
-    if (assistantMessage) {
-      assistantMessage.isComplete = true
+    const assistantMsg = chatState.messages.find(m => m.id === assistantMessageId)
+    if (assistantMsg) {
+      assistantMsg.isComplete = true
+      
+      // 如果有当前对话且用户已登录，保存助手消息
+      if (isUserAuthenticated() && chatState.conversationId) {
+        try {
+          const result = await conversationAPI.addMessage(chatState.conversationId, 'assistant', assistantMsg.content)
+          if (result.success) {
+            assistantMsg.saved = true
+            assistantMsg.databaseId = result.message.id
+            console.log('助手消息已保存到数据库:', assistantMsg.content.substring(0, 50) + '...')
+          }
+        } catch (error) {
+          console.error('保存助手消息失败:', error)
+        }
+      }
     }
   } catch (error) {
     console.error('聊天错误:', error)
@@ -395,13 +763,25 @@ export const sendMessage = async (message, pageContext = null) => {
     chatState.messages = chatState.messages.filter(m => m.id !== assistantMessageId)
     
     // 添加错误消息
-    chatState.messages.push({
+    const errorMessage = {
       id: assistantMessageId,
       type: 'assistant',
       content: '抱歉，我遇到了一些问题。错误信息：' + (error.message || '未知错误') + '\n请稍后再试，或者刷新页面重试。',
       isComplete: true,
-      isError: true
-    })
+      isError: true,
+      saved: false
+    }
+    chatState.messages.push(errorMessage)
+    
+    // 也尝试保存错误消息
+    if (isUserAuthenticated() && chatState.conversationId) {
+      try {
+        await conversationAPI.addMessage(chatState.conversationId, 'assistant', errorMessage.content)
+        errorMessage.saved = true
+      } catch (saveError) {
+        console.error('保存错误消息失败:', saveError)
+      }
+    }
   } finally {
     chatState.isLoading = false
   }
@@ -458,7 +838,7 @@ export const clearMessages = () => {
 }
 
 // 历史方案相关方法
-export const addHistoryPlan = (planData, generationContext = null) => {
+export const addHistoryPlan = async (planData, generationContext = null) => {
   console.log('=== 开始添加历史方案 ===')
   console.log('新方案数据:', {
     title: planData.title,
@@ -525,14 +905,6 @@ export const addHistoryPlan = (planData, generationContext = null) => {
         return false
       }
       
-      console.log('- 历史方案内容:', {
-        hypotheses: existingFullPlan.hypotheses,
-        experimentalDesign: existingFullPlan.experimentalDesign,
-        analysisMethod: existingFullPlan.analysisMethod,
-        expectedResults: existingFullPlan.expectedResults,
-        researchQuestions: existingFullPlan.researchQuestions
-      })
-      
       // 比较核心字段是否完全相同
       const isSameHypotheses = JSON.stringify(existingFullPlan.hypotheses || []) === JSON.stringify(planData.hypotheses || [])
       const isSameDesign = (existingFullPlan.experimentalDesign || '') === (planData.experimentalDesign || '')
@@ -540,53 +912,16 @@ export const addHistoryPlan = (planData, generationContext = null) => {
       const isSameResults = (existingFullPlan.expectedResults || '') === (planData.expectedResults || '')
       const isSameQuestions = (existingFullPlan.researchQuestions || '') === (planData.researchQuestions || '')
       
-      console.log('- 字段比较结果:')
-      console.log('  * 研究假设相同:', isSameHypotheses)
-      if (!isSameHypotheses) {
-        console.log('    历史:', JSON.stringify(existingFullPlan.hypotheses || []))
-        console.log('    新建:', JSON.stringify(planData.hypotheses || []))
-      }
-      console.log('  * 实验设计相同:', isSameDesign)
-      if (!isSameDesign) {
-        console.log('    历史:', existingFullPlan.experimentalDesign || '')
-        console.log('    新建:', planData.experimentalDesign || '')
-      }
-      console.log('  * 数据分析相同:', isSameAnalysis)
-      if (!isSameAnalysis) {
-        console.log('    历史:', existingFullPlan.analysisMethod || '')
-        console.log('    新建:', planData.analysisMethod || '')
-      }
-      console.log('  * 结果呈现相同:', isSameResults)
-      if (!isSameResults) {
-        console.log('    历史:', existingFullPlan.expectedResults || '')
-        console.log('    新建:', planData.expectedResults || '')
-      }
-      console.log('  * 研究问题相同:', isSameQuestions)
-      if (!isSameQuestions) {
-        console.log('    历史:', existingFullPlan.researchQuestions || '')
-        console.log('    新建:', planData.researchQuestions || '')
-      }
-      
       // 检查生成上下文是否相同（比如参考文献）
       const existingContext = existingPlan.generationContext
       const isSameContext = JSON.stringify(existingContext || {}) === JSON.stringify(generationContext || {})
-      
-      console.log('- 生成上下文比较:')
-      console.log('  * 历史方案上下文:', existingContext)
-      console.log('  * 新方案上下文:', generationContext)
-      console.log('  * 上下文相同:', isSameContext)
       
       // 如果内容相同但上下文不同（如参考文献不同），则不认为是重复
       const isContentSame = isSameHypotheses && isSameDesign && isSameAnalysis && isSameResults && isSameQuestions
       const isDuplicateEntry = isContentSame && isSameContext
       
-      console.log('- 内容完全相同:', isContentSame)
-      console.log('- 是否认为是重复方案:', isDuplicateEntry)
-      
       if (isDuplicateEntry) {
         console.log('*** 检测到相同内容且相同上下文的方案，将跳过添加 ***')
-      } else if (isContentSame && !isSameContext) {
-        console.log('*** 内容相同但上下文不同，将保留此方案 ***')
       }
       
       return isDuplicateEntry
@@ -609,10 +944,48 @@ export const addHistoryPlan = (planData, generationContext = null) => {
     fullPlan: JSON.parse(JSON.stringify(planData)), // 保存完整方案数据的深拷贝
     generationContext: generationContext, // 保存生成时的上下文
     sourceIntroductions: currentPlanState.sourceIntroductions ? 
-      JSON.parse(JSON.stringify(currentPlanState.sourceIntroductions)) : {} // 保存来源介绍
+      JSON.parse(JSON.stringify(currentPlanState.sourceIntroductions)) : {}, // 保存来源介绍
+    databaseId: null // 数据库ID，稍后会更新
   }
   
+  // 立即添加到前端状态
   historyState.historyPlans.unshift(newPlan) // 添加到数组开头，最新的在前面
+  
+  // 如果用户已登录，保存到数据库
+  if (isUserAuthenticated()) {
+    try {
+      // 获取关联的引用文献ID
+      const referenceIds = papersState.referencedPapersList
+        .filter(paper => paper.databaseId)
+        .map(paper => paper.databaseId)
+      
+      const planDataForDB = {
+        title: newPlan.title,
+        description: newPlan.description,
+        methodology: JSON.stringify({
+          hypotheses: planData.hypotheses || [],
+          experimentalDesign: planData.experimentalDesign || '',
+          analysisMethod: planData.analysisMethod || '',
+          expectedResults: planData.expectedResults || ''
+        }),
+        timeline: '',
+        resources: JSON.stringify(generationContext || {}),
+        status: 'draft',
+        conversation_id: chatState.conversationId || null,
+        reference_ids: referenceIds
+      }
+      
+      const result = await researchPlanAPI.create(planDataForDB)
+      if (result.success) {
+        // 更新前端对象的数据库ID
+        newPlan.databaseId = result.plan.id
+        console.log(`已保存研究方案到数据库: ${newPlan.title}`)
+      }
+    } catch (error) {
+      console.error('保存研究方案到数据库失败:', error)
+      // 不阻止添加方案，只记录错误
+    }
+  }
   
   // 如果当前没有应用中的方案，自动将新生成的方案设为应用中
   if (!historyState.currentAppliedPlanId) {
@@ -625,16 +998,31 @@ export const addHistoryPlan = (planData, generationContext = null) => {
   console.log('当前历史方案总数:', historyState.historyPlans.length)
 }
 
-export const removeHistoryPlan = (planId) => {
-  const index = historyState.historyPlans.findIndex(plan => plan.id === planId)
-  if (index > -1) {
+export const removeHistoryPlan = async (planId) => {
+  const planIndex = historyState.historyPlans.findIndex(plan => plan.id === planId)
+  if (planIndex > -1) {
+    const plan = historyState.historyPlans[planIndex]
+    
     // 如果删除的是当前应用的方案，清除应用状态
     if (historyState.currentAppliedPlanId === planId) {
       historyState.currentAppliedPlanId = null
       console.log('清除当前应用方案状态')
     }
     
-    historyState.historyPlans.splice(index, 1)
+    // 从前端状态移除
+    historyState.historyPlans.splice(planIndex, 1)
+    
+    // 如果用户已登录且方案有数据库ID，从数据库删除
+    if (isUserAuthenticated() && plan.databaseId) {
+      try {
+        await researchPlanAPI.delete(plan.databaseId)
+        console.log(`已从数据库删除研究方案: ${plan.title}`)
+      } catch (error) {
+        console.error('从数据库删除研究方案失败:', error)
+        // 即使数据库操作失败，也保持前端状态的更新
+      }
+    }
+    
     console.log('删除历史方案，ID:', planId)
   }
 }
