@@ -8,23 +8,12 @@ import { getDatabaseConfig } from './config.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// 加载.env文件 - 优先从项目根目录加载，如果不存在则从server目录加载
-const rootEnvPath = join(__dirname, '..', '.env');
-const serverEnvPath = join(__dirname, '.env');
-
-try {
-  // 尝试从项目根目录加载
-  dotenv.config({ path: rootEnvPath });
-  console.log('✅ 从项目根目录加载.env文件');
-} catch (error) {
-  // 如果根目录没有.env文件，尝试从server目录加载
-  try {
-    dotenv.config({ path: serverEnvPath });
-    console.log('✅ 从server目录加载.env文件');
-  } catch (serverError) {
-    console.warn('⚠️ 未找到.env文件，使用默认配置');
-  }
-}
+// 注意：环境变量应该在main应用程序中已经加载，这里不再重复加载
+// 如果需要在独立运行时加载环境变量，请取消下面代码的注释
+/*
+dotenv.config({ path: join(__dirname, '..', '.env') });
+console.log('✅ 从项目根目录加载.env文件');
+*/
 
 // 数据库配置
 const dbConfig = getDatabaseConfig();

@@ -14,8 +14,8 @@ import { getJWTConfig, getServerConfig } from './config.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// 加载.env文件 - 修复：从当前目录加载
-dotenv.config({ path: join(__dirname, '.env') });
+// 加载.env文件 - 从项目根目录加载
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const app = express();
 const serverConfig = getServerConfig();

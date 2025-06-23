@@ -114,31 +114,21 @@
                  v-html="renderMarkdown(getDisplayContent(message))">
             </div>
             
-            <!-- 研究方案PDF下载按钮 -->
-            <div v-if="message.type === 'assistant' && message.fullContent && isResearchPlan(message.fullContent)" 
+            <!-- 展开按钮（用于长回答） -->
+            <div v-if="message.type === 'assistant' && message.fullContent && message.isTruncated" 
                  class="mt-3 pt-3 border-t border-gray-200">
-              <div class="flex items-center justify-between bg-blue-50 rounded-lg p-3">
-                <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="text-sm font-medium text-gray-900">定量研究方案.pdf</p>
-                    <p class="text-xs text-gray-500">完整研究方案文档</p>
-                  </div>
-                </div>
-                <button 
-                  @click="handleDownloadPDF(message.fullContent)"
-                  class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                  </svg>
-                  <span>下载PDF</span>
-                </button>
-              </div>
+              <button 
+                @click="toggleMessageExpansion(message)"
+                class="flex items-center space-x-2 px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                <svg v-if="!message.isExpanded" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                </svg>
+                <span>{{ message.isExpanded ? '收起' : '展开完整内容' }}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -206,7 +196,6 @@ import { sendSilentMessageToCoze } from '../services/cozeApi'
 import LoadingDots from './LoadingDots.vue'
 import ConversationGuide from './ConversationGuide.vue'
 import PromptOptimizeDialog from './PromptOptimizeDialog.vue'
-import html2pdf from 'html2pdf.js'
 import { marked } from 'marked'
 
 // 接收页面上下文的props
@@ -443,304 +432,20 @@ const renderMarkdown = (content) => {
   }
 }
 
-// 检测是否为研究方案
-const isResearchPlan = (content) => {
-  const planKeywords = ['研究假设', '实验设计', '数据分析', '结果呈现', '#研究假设', '#实验设计', '#数据分析', '#结果呈现']
-  const keywordCount = planKeywords.filter(keyword => content.includes(keyword)).length
-  return keywordCount >= 2 // 至少包含2个关键词才认为是研究方案
-  }
-  
-  // 将markdown转换为HTML
-  const markdownToHtml = (text) => {
-    if (!text) return ''
-    
-    let html = text
-      // 处理标题（从大到小处理，避免冲突）
-      .replace(/#{6}\s+(.*?)(\n|$)/g, '<h6>$1</h6>')
-      .replace(/#{5}\s+(.*?)(\n|$)/g, '<h5>$1</h5>')
-      .replace(/#{4}\s+(.*?)(\n|$)/g, '<h4>$1</h4>')
-      .replace(/#{3}\s+(.*?)(\n|$)/g, '<h3>$1</h3>')
-      .replace(/#{2}\s+(.*?)(\n|$)/g, '<h2>$1</h2>')
-      .replace(/#{1}\s+(.*?)(\n|$)/g, '<h1>$1</h1>')
-      // 处理粗体和斜体
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      // 处理代码
-      .replace(/`(.*?)`/g, '<code>$1</code>')
-      // 处理链接
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
-    
-    // 处理列表
-    const lines = html.split('\n')
-    const processedLines = []
-    let inList = false
-    
-    lines.forEach(line => {
-      const trimmedLine = line.trim()
-      
-      // 检查是否是列表项
-      if (trimmedLine.match(/^[-*+]\s+/) || trimmedLine.match(/^\d+\.\s+/)) {
-        if (!inList) {
-          processedLines.push('<ul>')
-          inList = true
-        }
-        // 移除列表标记并包装为li
-        const content = trimmedLine.replace(/^[-*+]\s+/, '').replace(/^\d+\.\s+/, '')
-        processedLines.push(`<li>${content}</li>`)
-      } else {
-        if (inList) {
-          processedLines.push('</ul>')
-          inList = false
-        }
-        processedLines.push(line)
-      }
-    })
-    
-    // 如果最后还在列表中，关闭列表
-    if (inList) {
-      processedLines.push('</ul>')
+// 检测是否为长回答（需要截断显示）
+const isLongResponse = (content) => {
+  return content && content.length > 300 // 超过300个字符视为长回答
+}
+
+// 切换消息展开状态
+const toggleMessageExpansion = (message) => {
+  message.isExpanded = !message.isExpanded
+  // 强制重新渲染
+  nextTick(() => {
+    if (chatContainer.value) {
+      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
     }
-    
-    html = processedLines.join('\n')
-    
-    // 处理段落（按双换行符分割）
-    const paragraphs = html.split(/\n\s*\n/)
-    const processedParagraphs = paragraphs.map(paragraph => {
-      const trimmed = paragraph.trim()
-      if (!trimmed) return ''
-      
-      // 如果已经是HTML标签，直接返回
-      if (trimmed.match(/^<(h[1-6]|ul|ol|li|p|div)/)) {
-        return trimmed
-      }
-      
-      // 否则包装为段落
-      return `<p>${trimmed.replace(/\n/g, '<br>')}</p>`
-    })
-    
-    return processedParagraphs.filter(p => p).join('\n')
-  }
-  
-  // 生成PDF
-const generatePDF = async (content, title = '定量研究方案') => {
-  try {
-    console.log('开始生成PDF，内容长度:', content.length)
-    
-    // 解析内容结构
-    const sections = [
-      { title: '研究假设', content: '', id: 'hypothesis' },
-      { title: '实验设计', content: '', id: 'design' },
-      { title: '数据分析', content: '', id: 'analysis' },
-      { title: '结果呈现', content: '', id: 'results' }
-    ]
-    
-    // 简单的内容分割逻辑
-    let currentSection = null
-    const lines = content.split('\n')
-    
-    lines.forEach(line => {
-      const trimmedLine = line.trim()
-      if (trimmedLine.includes('研究假设') && !currentSection) {
-        currentSection = sections.find(s => s.title === '研究假设')
-      } else if (trimmedLine.includes('实验设计')) {
-        currentSection = sections.find(s => s.title === '实验设计')
-      } else if (trimmedLine.includes('数据分析')) {
-        currentSection = sections.find(s => s.title === '数据分析')
-      } else if (trimmedLine.includes('结果呈现')) {
-        currentSection = sections.find(s => s.title === '结果呈现')
-      } else if (currentSection && trimmedLine && !trimmedLine.match(/^#+\s/)) {
-        // 只添加非标题行的内容
-        currentSection.content += trimmedLine + '\n'
-      }
-    })
-    
-    // 如果没有找到结构化内容，就使用原始内容
-    if (sections.every(s => !s.content.trim())) {
-      sections[0].content = content
-      sections[0].title = '研究方案内容'
-    }
-    
-    console.log('解析的sections:', sections.map(s => ({ title: s.title, hasContent: !!s.content.trim() })))
-    
-    // 直接创建HTML字符串
-    const timestamp = new Date().toLocaleString('zh-CN')
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html lang="zh-CN">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${title}</title>
-        <style>
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-          
-          body {
-            font-family: "Microsoft YaHei", "SimSun", "PingFang SC", Arial, sans-serif;
-            line-height: 1.8;
-            color: #333;
-            background: white;
-            padding: 30px;
-            max-width: 800px;
-            margin: 0 auto;
-          }
-          
-          .header {
-            text-align: center;
-            margin-bottom: 40px;
-            border-bottom: 2px solid #e5e7eb;
-            padding-bottom: 20px;
-          }
-          
-          .title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #1f2937;
-            margin-bottom: 10px;
-          }
-          
-          .timestamp {
-            font-size: 12px;
-            color: #6b7280;
-          }
-          
-          .section {
-            margin-bottom: 30px;
-            page-break-inside: avoid;
-          }
-          
-          .section-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #374151;
-            margin-bottom: 15px;
-            border-left: 4px solid #8b5cf6;
-            padding-left: 15px;
-            background-color: #f9fafb;
-            padding: 10px 15px;
-          }
-          
-          .section-content {
-            font-size: 14px;
-            line-height: 1.8;
-            text-align: justify;
-            padding: 15px;
-            background-color: #fafafa;
-            border-radius: 5px;
-          }
-          
-          .section-content h1, .section-content h2, .section-content h3, 
-          .section-content h4, .section-content h5, .section-content h6 {
-            margin: 15px 0 10px 0;
-            color: #374151;
-            font-weight: bold;
-          }
-          
-          .section-content h1 { font-size: 18px; }
-          .section-content h2 { font-size: 16px; }
-          .section-content h3 { font-size: 15px; }
-          .section-content h4, .section-content h5, .section-content h6 { font-size: 14px; }
-          
-          .section-content strong {
-            font-weight: bold;
-            color: #1f2937;
-          }
-          
-          .section-content em {
-            font-style: italic;
-            color: #4b5563;
-          }
-          
-          .section-content code {
-            background-color: #f3f4f6;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-family: "Courier New", monospace;
-            font-size: 12px;
-          }
-          
-          .section-content ul, .section-content ol {
-            margin: 10px 0;
-            padding-left: 20px;
-          }
-          
-          .section-content li {
-            margin: 5px 0;
-          }
-          
-          .section-content p {
-            margin: 8px 0;
-          }
-          
-          .section-content a {
-            color: #3b82f6;
-            text-decoration: underline;
-          }
-          
-          @media print {
-            body { 
-              margin: 0; 
-              padding: 20px;
-            }
-            .section {
-              page-break-inside: avoid;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="title">${title}</div>
-          <div class="timestamp">生成时间：${timestamp}</div>
-        </div>
-        
-        <div class="content">
-          ${sections.filter(section => section.content.trim()).map(section => `
-            <div class="section">
-              <div class="section-title">${section.title}</div>
-              <div class="section-content">${markdownToHtml(section.content.trim())}</div>
-            </div>
-          `).join('')}
-        </div>
-      </body>
-      </html>
-    `
-    
-    console.log('生成的HTML内容长度:', htmlContent.length)
-    
-    // 配置PDF选项
-    const options = {
-      margin: [10, 10, 10, 10],
-      filename: `定量研究方案_${new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19)}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { 
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false
-      },
-      jsPDF: { 
-        unit: 'mm', 
-        format: 'a4', 
-        orientation: 'portrait' 
-      }
-    }
-    
-    // 生成PDF
-    console.log('开始PDF转换...')
-    await html2pdf().set(options).from(htmlContent).save()
-    console.log('PDF生成完成')
-    
-    return options.filename
-  } catch (error) {
-    console.error('PDF生成失败:', error)
-    alert('PDF生成失败：' + error.message)
-    return null
-  }
+  })
 }
 
 // 处理消息显示内容
@@ -852,31 +557,24 @@ const getDisplayContent = (message) => {
     }
   }
   
-  // 检查是否为研究方案，如果是则截断显示并存储完整内容
-  if (isResearchPlan(displayContent)) {
-    // 存储完整内容用于PDF生成
+  // 检查是否为长回答，如果是则截断显示并存储完整内容
+  if (isLongResponse(displayContent)) {
+    // 存储完整内容用于展开显示
     message.fullContent = displayContent
+    message.isTruncated = true
     
-    // 只显示前200个字符
-    if (displayContent.length > 200) {
-      return displayContent.substring(0, 200) + '...\n\n[完整内容已生成PDF文件]'
+    // 如果当前是展开状态，显示完整内容
+    if (message.isExpanded) {
+      return displayContent
     }
+    
+    // 否则只显示前300个字符
+    return displayContent.substring(0, 300) + '...'
   }
   
   // 默认返回原内容
   return displayContent
 }
-
-// 处理PDF下载
-const handleDownloadPDF = (content) => {
-  const filename = generatePDF(content)
-  if (filename) {
-    // 显示成功提示
-    alert(`PDF文件"${filename}"已生成并下载`)
-  }
-}
-
-
 
 // 处理提示词点击
 const handlePromptMessage = async (prompt) => {
@@ -1047,46 +745,5 @@ watch(() => chatState.messages.length, () => {
   margin: 0.8em 0;
   padding: 0.5em 1em;
   background-color: #f9fafb;
-}
-
-.markdown-content :deep(table) {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 0.8em 0;
-}
-
-.markdown-content :deep(th),
-.markdown-content :deep(td) {
-  border: 1px solid #d1d5db;
-  padding: 0.5em;
-  text-align: left;
-}
-
-.markdown-content :deep(th) {
-  background-color: #f3f4f6;
-  font-weight: 600;
-}
-
-.markdown-content :deep(a) {
-  color: #3b82f6;
-  text-decoration: underline;
-}
-
-.markdown-content :deep(a:hover) {
-  color: #1d4ed8;
-}
-
-.markdown-content :deep(strong) {
-  font-weight: 600;
-}
-
-.markdown-content :deep(em) {
-  font-style: italic;
-}
-
-.markdown-content :deep(hr) {
-  border: none;
-  border-top: 1px solid #e5e7eb;
-  margin: 1.5em 0;
 }
 </style> 
