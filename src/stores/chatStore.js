@@ -105,18 +105,9 @@ export const currentPlanState = reactive({
 })
 
 // 推荐文献相关方法
-export const addRecommendedPapers = (newPapers) => {
-  // 为新文献添加唯一ID和批次信息
-  const papersWithId = newPapers.map((paper, index) => ({
-    ...paper,
-    id: Date.now() + index, // 使用时间戳+索引作为唯一ID
-    batchIndex: Math.floor(papersState.recommendedPapers.length / 3) + 1 // 批次编号
-  }))
-  
-  // 累加到现有文献列表
-  papersState.recommendedPapers.push(...papersWithId)
-  
-  console.log(`成功添加 ${papersWithId.length} 篇新文献，当前共有 ${papersState.recommendedPapers.length} 篇文献`)
+export const addRecommendedPapers = (papers) => {
+  // 使用 unshift 将新论文添加到列表顶部
+  papersState.recommendedPapers.unshift(...papers)
 }
 
 export const selectPaper = (paper) => {
