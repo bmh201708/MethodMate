@@ -1019,9 +1019,28 @@ app.post('/api/scholar-search', async (req, res) => {
     console.error('Scholar Search Error:', error);
     console.error('Error stack:', error.stack);
     
-    res.status(500).json({ 
+    let statusCode = 500;
+    let errorMessage = error.message;
+
+    if (error.message && error.message.includes('status:')) {
+      const match = error.message.match(/status: (\d+)/);
+      if (match && match[1]) {
+        const apiStatus = parseInt(match[1], 10);
+        if (apiStatus === 429) {
+          statusCode = 429;
+          errorMessage = '请求过于频繁，请稍后再试。';
+        } else if (apiStatus >= 400 && apiStatus < 500) {
+          statusCode = apiStatus;
+        } else if (apiStatus >= 500) {
+          statusCode = 502; // Bad Gateway
+          errorMessage = `上游服务错误: ${apiStatus}`;
+        }
+      }
+    }
+    
+    res.status(statusCode).json({ 
       success: false,
-      error: error.message
+      error: errorMessage
     });
   }
 });
@@ -1245,9 +1264,29 @@ Please respond in the following JSON format:
 
   } catch (error) {
     console.error('关键词提取API错误:', error);
-    res.status(500).json({ 
+    
+    let statusCode = 500;
+    let errorMessage = error.message;
+
+    if (error.message && error.message.includes('status:')) {
+      const match = error.message.match(/status: (\d+)/);
+      if (match && match[1]) {
+        const apiStatus = parseInt(match[1], 10);
+        if (apiStatus === 429) {
+          statusCode = 429;
+          errorMessage = '请求过于频繁，请稍后再试。';
+        } else if (apiStatus >= 400 && apiStatus < 500) {
+          statusCode = apiStatus;
+        } else if (apiStatus >= 500) {
+          statusCode = 502; // Bad Gateway
+          errorMessage = `上游服务错误: ${apiStatus}`;
+        }
+      }
+    }
+
+    res.status(statusCode).json({ 
       success: false,
-      error: error.message,
+      error: errorMessage,
       keywords: '',
       session_id: (req.body && req.body.session_id) || 'default'
     });
@@ -1571,9 +1610,28 @@ Please respond in the following JSON format:
     console.error('推荐API错误:', error);
     console.error('Error stack:', error.stack);
     
-    res.status(500).json({ 
+    let statusCode = 500;
+    let errorMessage = error.message;
+
+    if (error.message && error.message.includes('status:')) {
+      const match = error.message.match(/status: (\d+)/);
+      if (match && match[1]) {
+        const apiStatus = parseInt(match[1], 10);
+        if (apiStatus === 429) {
+          statusCode = 429;
+          errorMessage = '请求过于频繁，请稍后再试。';
+        } else if (apiStatus >= 400 && apiStatus < 500) {
+          statusCode = apiStatus;
+        } else if (apiStatus >= 500) {
+          statusCode = 502; // Bad Gateway
+          errorMessage = `上游服务错误: ${apiStatus}`;
+        }
+      }
+    }
+
+    res.status(statusCode).json({ 
       success: false,
-      error: error.message,
+      error: errorMessage,
       papers: [],
       rawResponse: `错误：${error.message}`,
       session_id: (req.body && req.body.session_id) || 'default'
@@ -1611,9 +1669,29 @@ app.post('/api/paper/get-full-content', async (req, res) => {
     });
   } catch (error) {
     console.error('获取论文内容错误:', error);
-    res.status(500).json({ 
+    
+    let statusCode = 500;
+    let errorMessage = error.message;
+
+    if (error.message && error.message.includes('status:')) {
+      const match = error.message.match(/status: (\d+)/);
+      if (match && match[1]) {
+        const apiStatus = parseInt(match[1], 10);
+        if (apiStatus === 429) {
+          statusCode = 429;
+          errorMessage = '请求过于频繁，请稍后再试。';
+        } else if (apiStatus >= 400 && apiStatus < 500) {
+          statusCode = apiStatus;
+        } else if (apiStatus >= 500) {
+          statusCode = 502; // Bad Gateway
+          errorMessage = `上游服务错误: ${apiStatus}`;
+        }
+      }
+    }
+
+    res.status(statusCode).json({ 
       success: false,
-      error: error.message
+      error: errorMessage
     });
   }
 });
@@ -1754,9 +1832,29 @@ app.post('/api/query-statistical-method', async (req, res) => {
     });
   } catch (error) {
     console.error('查询统计方法错误:', error);
-    res.status(500).json({ 
+    
+    let statusCode = 500;
+    let errorMessage = error.message;
+
+    if (error.message && error.message.includes('status:')) {
+      const match = error.message.match(/status: (\d+)/);
+      if (match && match[1]) {
+        const apiStatus = parseInt(match[1], 10);
+        if (apiStatus === 429) {
+          statusCode = 429;
+          errorMessage = '请求过于频繁，请稍后再试。';
+        } else if (apiStatus >= 400 && apiStatus < 500) {
+          statusCode = apiStatus;
+        } else if (apiStatus >= 500) {
+          statusCode = 502; // Bad Gateway
+          errorMessage = `上游服务错误: ${apiStatus}`;
+        }
+      }
+    }
+
+    res.status(statusCode).json({ 
       success: false,
-      error: error.message
+      error: errorMessage
     });
   }
 });
@@ -1825,9 +1923,29 @@ app.post('/api/coze-chat', async (req, res) => {
     });
   } catch (error) {
     console.error('Coze聊天API错误:', error);
-    res.status(500).json({ 
+    
+    let statusCode = 500;
+    let errorMessage = error.message;
+
+    if (error.message && error.message.includes('status:')) {
+      const match = error.message.match(/status: (\d+)/);
+      if (match && match[1]) {
+        const apiStatus = parseInt(match[1], 10);
+        if (apiStatus === 429) {
+          statusCode = 429;
+          errorMessage = '请求过于频繁，请稍后再试。';
+        } else if (apiStatus >= 400 && apiStatus < 500) {
+          statusCode = apiStatus;
+        } else if (apiStatus >= 500) {
+          statusCode = 502; // Bad Gateway
+          errorMessage = `上游服务错误: ${apiStatus}`;
+        }
+      }
+    }
+
+    res.status(statusCode).json({ 
       success: false,
-      error: error.message
+      error: errorMessage
     });
   }
 });
