@@ -508,7 +508,11 @@ const fetchPaperContent = async () => {
     })
     
     if (!response.ok) {
-      throw new Error(`API responded with status: ${response.status}`)
+      if (response.status === 429) {
+        throw new Error('请求过于频繁，请稍后再试。');
+      }
+      const errorResult = await response.json().catch(() => ({}));
+      throw new Error(errorResult.error || `API响应错误: ${response.status}`);
     }
     
     const result = await response.json()
@@ -546,8 +550,7 @@ const fetchPaperContent = async () => {
         }
       }
     } else {
-      console.error('获取论文内容失败:', result.error)
-      alert('获取论文内容失败: ' + (result.error || '未知错误'))
+      throw new Error(result.error || '获取论文内容失败');
     }
   } catch (error) {
     console.error('获取论文内容出错:', error)
@@ -562,52 +565,48 @@ const tryGenerateMethodSummary = async () => {
   if (!papersState.selectedPaper || !papersState.selectedPaper.fullText) {
     return false
   }
-  
-  try {
-    console.log('使用备用方法生成研究方法概要:', papersState.selectedPaper.title)
-    
-    const response = await fetch('/api/paper/generate-method-summary', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: papersState.selectedPaper.title,
-        fullText: papersState.selectedPaper.fullText
-      })
+
+  const response = await fetch('/api/paper/generate-method-summary', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      title: papersState.selectedPaper.title,
+      fullText: papersState.selectedPaper.fullText
     })
+  })
     
-    if (!response.ok) {
-      throw new Error(`API responded with status: ${response.status}`)
+  if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error('请求过于频繁，请稍后再试。');
     }
+    const errorResult = await response.json().catch(() => ({}));
+    throw new Error(errorResult.error || `生成概要失败: ${response.status}`);
+  }
     
-    const result = await response.json()
+  const result = await response.json()
     
-    if (result.success && result.methodSummary) {
-      // 更新选中论文的研究方法
-      papersState.selectedPaper.researchMethod = result.methodSummary
-      showFullText.value = true // 自动展开研究方法
-      // 重置研究方法翻译状态
-      showMethodTranslation.value = false
-      translatedMethod.value = ''
+  if (result.success && result.methodSummary) {
+    // 更新选中论文的研究方法
+    papersState.selectedPaper.researchMethod = result.methodSummary
+    showFullText.value = true // 自动展开研究方法
+    // 重置研究方法翻译状态
+    showMethodTranslation.value = false
+    translatedMethod.value = ''
       
-      // 同时更新推荐论文列表中的对应论文
-      const paperIndex = papersState.recommendedPapers.findIndex(
-        paper => paper.title === papersState.selectedPaper.title
-      )
+    // 同时更新推荐论文列表中的对应论文
+    const paperIndex = papersState.recommendedPapers.findIndex(
+      paper => paper.title === papersState.selectedPaper.title
+    )
       
-      if (paperIndex !== -1) {
-        papersState.recommendedPapers[paperIndex].researchMethod = result.methodSummary
-      }
-      
-      return true
-    } else {
-      console.error('备用方法生成研究方法概要失败:', result.error)
-      return false
+    if (paperIndex !== -1) {
+      papersState.recommendedPapers[paperIndex].researchMethod = result.methodSummary
     }
-  } catch (error) {
-    console.error('备用方法生成研究方法概要出错:', error)
-    return false
+      
+    return true
+  } else {
+    throw new Error(result.error || '备用方法生成研究方法概要失败');
   }
 }
 
@@ -860,7 +859,11 @@ const extractKeywordsFromChat = async () => {
     })
     
     if (!response.ok) {
-      throw new Error(`API responded with status: ${response.status}`)
+      if (response.status === 429) {
+        throw new Error('请求过于频繁，请稍后再试。');
+      }
+      const errorResult = await response.json().catch(() => ({}));
+      throw new Error(errorResult.error || `提取关键词失败，状态码: ${response.status}`);
     }
     
     const result = await response.json()
@@ -870,12 +873,11 @@ const extractKeywordsFromChat = async () => {
       searchKeywords.value = result.keywords
       alert('关键词提取成功！')
     } else {
-      console.error('提取关键词失败:', result.error)
-      alert('提取关键词失败: ' + (result.error || '未知错误'))
+      throw new Error(result.error || '提取关键词失败');
     }
   } catch (error) {
     console.error('提取关键词出错:', error)
-    alert('提取关键词出错: ' + error.message)
+    alert(error.message)
   } finally {
     isExtractingKeywords.value = false
   }
@@ -921,7 +923,11 @@ const getRecommendedPapers = async () => {
     console.log('API请求参数:', requestBody);
 
     if (!response.ok) {
-      throw new Error(`API responded with status: ${response.status}`)
+      if (response.status === 429) {
+        throw new Error('请求过于频繁，请稍后再试。');
+      }
+      const errorResult = await response.json().catch(() => ({}));
+      throw new Error(errorResult.error || `获取推荐文献失败，状态码: ${response.status}`);
     }
 
     const result = await response.json()
@@ -964,7 +970,7 @@ const getRecommendedPapers = async () => {
 
   } catch (error) {
     console.error('获取推荐文献失败:', error)
-    setRecommendationError(`获取推荐文献失败: ${error.message}`)
+    setRecommendationError(error.message)
   } finally {
     setLoadingRecommendations(false)
   }
