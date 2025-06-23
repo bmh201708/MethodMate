@@ -102,7 +102,7 @@
       <div class="flex-1 overflow-y-auto mb-4 space-y-4" ref="chatContainer">
         <div v-for="message in chatState.messages" :key="message.id" 
              :class="['flex', message.type === 'user' ? 'justify-end' : 'justify-start']">
-          <div :class="['max-w-[70%] rounded-lg p-4', 
+          <div :class="['max-w-[70%] rounded-lg p-4 relative', 
                        message.type === 'user' ? 'bg-purple-100' : 
                        message.isError ? 'bg-red-50 border border-red-200' : 'bg-gray-100']">
             <!-- 用户消息：纯文本显示 -->
@@ -112,6 +112,21 @@
             <div v-else-if="message.type === 'assistant'" 
                  :class="['markdown-content', message.isError ? 'text-red-700' : 'text-gray-800']"
                  v-html="renderMarkdown(getDisplayContent(message))">
+            </div>
+            
+            <!-- 研究方案查看按钮（右上角） -->
+            <div v-if="message.type === 'assistant' && !message.isError && message.isComplete && isResearchPlan(getOriginalContent(message))"
+                 class="absolute top-2 right-2">
+              <button 
+                @click="handleViewInRightPanel(message)"
+                class="flex items-center space-x-1 px-2 py-1 text-xs text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors border border-green-200 bg-white/80 backdrop-blur-sm"
+                title="将研究方案显示在右侧面板"
+              >
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span>在右侧查看</span>
+              </button>
             </div>
             
             <!-- 展开按钮（用于长回答） -->
@@ -190,7 +205,7 @@
 
 <script setup>
 import { ref, watch, nextTick, onMounted, computed } from 'vue'
-import { chatState, sendMessage, conversationAPI, clearMessages } from '../stores/chatStore'
+import { chatState, sendMessage, conversationAPI, clearMessages, updateCurrentPlan } from '../stores/chatStore'
 import { useUserStore } from '../stores/userStore.js'
 import { sendSilentMessageToCoze } from '../services/cozeApi'
 import LoadingDots from './LoadingDots.vue'
@@ -417,6 +432,253 @@ marked.setOptions({
   mangle: false // 禁用标题锚点混淆
 })
 
+// 检测是否为研究方案
+const isResearchPlan = (content) => {
+  if (!content || typeof content !== 'string') return false
+  
+  // 检查关键词组合，提高检测准确性
+  const researchKeywords = [
+    '研究假设', '实验设计', '数据分析', '结果呈现',
+    '研究方案', '实验方案', '定量研究', '研究方法',
+    '研究目标', '研究问题', '实验组', '对照组',
+    'H1:', 'H2:', 'H3:', '假设一', '假设二', '假设三'
+  ]
+  
+  const designKeywords = [
+    '2x2设计', '实验设计', '自变量', '因变量', '控制变量',
+    '随机分组', '实验条件', '实验程序', '被试'
+  ]
+  
+  const analysisKeywords = [
+    'SPSS', 'R Studio', '方差分析', 'ANOVA', '回归分析',
+    't检验', '卡方检验', '统计分析', '数据处理'
+  ]
+  
+  // 计算匹配的关键词数量
+  const countMatches = (keywords) => {
+    return keywords.filter(keyword => content.includes(keyword)).length
+  }
+  
+  const researchMatches = countMatches(researchKeywords)
+  const designMatches = countMatches(designKeywords)
+  const analysisMatches = countMatches(analysisKeywords)
+  
+  // 至少包含多个不同类别的关键词才判断为研究方案
+  const totalMatches = researchMatches + designMatches + analysisMatches
+  const categoryCount = (researchMatches > 0 ? 1 : 0) + 
+                       (designMatches > 0 ? 1 : 0) + 
+                       (analysisMatches > 0 ? 1 : 0)
+  
+  // 判断标准：总匹配数>=3 且 涉及至少2个类别
+  const isValidPlan = totalMatches >= 3 && categoryCount >= 2
+  
+  console.log('研究方案检测:', {
+    totalMatches,
+    categoryCount,
+    researchMatches,
+    designMatches, 
+    analysisMatches,
+    isValidPlan,
+    content: content.substring(0, 200) + '...'
+  })
+  
+  return isValidPlan
+}
+
+// 解析研究方案内容并更新右侧显示
+const parseAndDisplayResearchPlan = (content) => {
+  try {
+    console.log('开始解析研究方案...')
+    
+    // 首先尝试从JSON中提取内容
+    let actualContent = content
+    try {
+      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/i) || content.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        let jsonStr = jsonMatch[1] || jsonMatch[0]
+        jsonStr = jsonStr.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']').trim()
+        const jsonData = JSON.parse(jsonStr)
+        if (jsonData.output) {
+          actualContent = jsonData.output
+        } else if (jsonData.otherIntention) {
+          actualContent = jsonData.otherIntention
+        }
+      }
+    } catch (jsonError) {
+      console.log('JSON解析失败，使用原始内容')
+    }
+    
+    // 提取各个部分
+    const extractSection = (text, patterns, sectionName) => {
+      console.log(`开始提取${sectionName}...`)
+      for (let i = 0; i < patterns.length; i++) {
+        const pattern = patterns[i]
+        const match = text.match(pattern)
+        console.log(`${sectionName} 模式 ${i + 1} 匹配结果:`, match ? '匹配成功' : '未匹配')
+        if (match) {
+          let content = match[1] || match[2] || match[0]
+          console.log(`${sectionName} 原始匹配内容:`, content.substring(0, 200) + '...')
+          // 清理内容：移除多余的标点和换行
+          content = content.replace(/^[：:\s]+/, '').replace(/\s+$/, '').trim()
+          if (content.length > 10) { // 确保提取到有意义的内容
+            console.log(`${sectionName} 清理后内容长度:`, content.length)
+            return content
+          }
+        }
+      }
+      console.log(`${sectionName} 所有模式都未匹配成功`)
+      return null
+    }
+    
+    // 研究假设提取模式（支持markdown格式）
+    const hypothesisPatterns = [
+      // Markdown标题格式: # 研究假设
+      /(?:#+\s*(?:研究假设|实验假设|假设).*?)\n((?:(?!#+\s*(?:实验设计|数据分析|结果呈现|研究设计|统计分析|预期结果)).)+?)(?=\n#+\s*(?:实验设计|数据分析|结果呈现|研究设计|统计分析|预期结果)|$)/is,
+      // 传统冒号格式
+      /(?:研究假设|实验假设)[：:\s]*\n?((?:(?:H\d+[:：]|假设\d+[:：]|\d+[\.、]|[•·*-]\s*).*\n?)+)/i,
+      /(?:假设|hypothesis)[：:\s]*\n?((?:(?:H\d+[:：]|假设\d+[:：]|\d+[\.、]|[•·*-]\s*).*\n?)+)/i,
+      /((?:H\d+[:：]|假设\d+[:：]).*(?:\n(?:H\d+[:：]|假设\d+[:：]).*)*)/i
+    ]
+    
+    // 实验设计提取模式（支持markdown格式）
+    const designPatterns = [
+      // Markdown标题格式: # 实验设计
+      /(?:#+\s*(?:实验设计|研究设计|设计方案).*?)\n((?:(?!#+\s*(?:数据分析|结果呈现|研究假设|统计分析|预期结果)).)+?)(?=\n#+\s*(?:数据分析|结果呈现|研究假设|统计分析|预期结果)|$)/is,
+      // 传统冒号格式
+      /(?:实验设计|研究设计)[：:\s]*\n?((?:(?!(?:数据分析|结果呈现|研究假设)).)+?)(?=(?:\n\s*(?:数据分析|结果呈现|研究假设|$)))/is,
+      /(?:设计方案|实验方法)[：:\s]*\n?((?:(?!(?:数据分析|结果呈现|研究假设)).)+?)(?=(?:\n\s*(?:数据分析|结果呈现|研究假设|$)))/is
+    ]
+    
+    // 数据分析提取模式（支持markdown格式）
+    const analysisPatterns = [
+      // Markdown标题格式: # 数据分析
+      /(?:#+\s*(?:数据分析|统计分析|分析方法).*?)\n((?:(?!#+\s*(?:结果呈现|研究假设|实验设计|预期结果)).)+?)(?=\n#+\s*(?:结果呈现|研究假设|实验设计|预期结果)|$)/is,
+      // 传统冒号格式
+      /(?:数据分析|统计分析|分析方法)[：:\s]*\n?((?:(?!(?:结果呈现|研究假设|实验设计)).)+?)(?=(?:\n\s*(?:结果呈现|研究假设|实验设计|$)))/is,
+      /(?:分析工具|统计方法|数据处理)[：:\s]*\n?((?:(?!(?:结果呈现|研究假设|实验设计)).)+?)(?=(?:\n\s*(?:结果呈现|研究假设|实验设计|$)))/is
+    ]
+    
+    // 结果呈现提取模式（支持markdown格式）
+    const resultsPatterns = [
+      // Markdown标题格式: # 结果呈现
+      /(?:#+\s*(?:结果呈现|预期结果|研究结果).*?)\n((?:(?!#+\s*(?:研究假设|实验设计|数据分析)).)+?)(?=\n#+\s*(?:研究假设|实验设计|数据分析)|$)/is,
+      // 传统冒号格式
+      /(?:结果呈现|预期结果|研究结果)[：:\s]*\n?((?:(?!(?:研究假设|实验设计|数据分析)).)+?)(?=(?:\n\s*(?:研究假设|实验设计|数据分析|$)))/is,
+      /(?:预期|预计|期望).*?(?:结果|发现|效应)[：:\s]*\n?((?:(?!(?:研究假设|实验设计|数据分析)).)+?)(?=(?:\n\s*(?:研究假设|实验设计|数据分析|$)))/is
+    ]
+    
+    // 提取各部分内容
+    const hypothesis = extractSection(actualContent, hypothesisPatterns, '研究假设')
+    const design = extractSection(actualContent, designPatterns, '实验设计')
+    const analysis = extractSection(actualContent, analysisPatterns, '数据分析')
+    const results = extractSection(actualContent, resultsPatterns, '结果呈现')
+    
+    console.log('提取结果:')
+    console.log('- 研究假设:', hypothesis ? '✓ 已提取' : '✗ 未提取', hypothesis ? `(${hypothesis.length}字符)` : '')
+    console.log('- 实验设计:', design ? '✓ 已提取' : '✗ 未提取', design ? `(${design.length}字符)` : '')
+    console.log('- 数据分析:', analysis ? '✓ 已提取' : '✗ 未提取', analysis ? `(${analysis.length}字符)` : '')
+    console.log('- 结果呈现:', results ? '✓ 已提取' : '✗ 未提取', results ? `(${results.length}字符)` : '')
+    
+    // 检查是否提取到至少一个有效内容
+    const hasValidContent = hypothesis || design || analysis || results
+    if (!hasValidContent) {
+      console.log('未提取到任何有效的研究方案内容')
+      console.log('完整内容长度:', actualContent.length)
+      console.log('内容包含的关键词:')
+      console.log('- 研究假设:', actualContent.includes('研究假设'))
+      console.log('- 实验设计:', actualContent.includes('实验设计'))
+      console.log('- 数据分析:', actualContent.includes('数据分析'))
+      console.log('- 结果呈现:', actualContent.includes('结果呈现'))
+      console.log('实际内容前1000字符:', actualContent.substring(0, 1000))
+      return false
+    }
+    
+    // 构建新的研究方案数据
+    const planData = {
+      title: `基于Coze生成的研究方案`,
+      researchQuestions: 'Coze智能体生成的研究方案',
+      methodology: `基于用户需求生成的研究方法 (生成时间: ${new Date().toLocaleString('zh-CN')})`,
+      dataCollection: '根据研究设计制定的数据收集方案',
+      hypotheses: [],
+      experimentalDesign: '',
+      analysisMethod: '',
+      expectedResults: ''
+    }
+    
+    let updatedFields = 0
+    
+    // 更新研究假设
+    if (hypothesis) {
+      // 如果包含多个假设，分割成数组
+      const hypothesesArray = hypothesis.split(/\n(?=H\d+[:：]|假设\d+[:：]|\d+[\.、]|[•·]\s*)/).filter(h => h.trim())
+      if (hypothesesArray.length > 1) {
+        planData.hypotheses = hypothesesArray.map(h => h.trim())
+      } else {
+        planData.hypotheses = [hypothesis]
+      }
+      updatedFields++
+    }
+    
+    // 更新实验设计
+    if (design) {
+      planData.experimentalDesign = design
+      updatedFields++
+    }
+    
+    // 更新数据分析
+    if (analysis) {
+      planData.analysisMethod = analysis
+      updatedFields++
+    }
+    
+    // 更新结果呈现
+    if (results) {
+      planData.expectedResults = results
+      updatedFields++
+    }
+    
+    // 如果至少更新了一个字段，就应用到右侧显示
+    if (updatedFields >= 1) {
+      // 使用 updateCurrentPlan 更新当前方案状态
+      updateCurrentPlan(planData)
+      
+      console.log(`成功解析并更新研究方案，更新了 ${updatedFields} 个字段`)
+      
+      // 显示成功提示
+      setTimeout(() => {
+        alert('研究方案已更新到右侧！请查看各个模块的内容。')
+      }, 500)
+      
+      return true
+    } else {
+      console.log('未更新任何字段，解析失败')
+      return false
+    }
+    
+  } catch (error) {
+    console.error('解析研究方案时出现错误:', error)
+    return false
+  }
+}
+
+// 获取消息的原始完整内容（用于解析）
+const getOriginalContent = (message) => {
+  // 直接返回原始内容，不经过任何处理
+  return message.content
+}
+
+// 处理"在右侧查看"按钮点击
+const handleViewInRightPanel = (message) => {
+  // 使用原始完整内容进行解析，避免截断问题
+  const originalContent = getOriginalContent(message)
+  const success = parseAndDisplayResearchPlan(originalContent)
+  
+  if (!success) {
+    console.log('解析失败，原始内容前500字符:', originalContent.substring(0, 500))
+    alert('解析研究方案失败，请检查方案格式是否正确。')
+  }
+}
+
 // markdown渲染函数
 const renderMarkdown = (content) => {
   if (!content) return ''
@@ -430,22 +692,6 @@ const renderMarkdown = (content) => {
     // 如果渲染失败，返回原始文本并转义HTML
     return content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   }
-}
-
-// 检测是否为长回答（需要截断显示）
-const isLongResponse = (content) => {
-  return content && content.length > 300 // 超过300个字符视为长回答
-}
-
-// 切换消息展开状态
-const toggleMessageExpansion = (message) => {
-  message.isExpanded = !message.isExpanded
-  // 强制重新渲染
-  nextTick(() => {
-    if (chatContainer.value) {
-      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
-    }
-  })
 }
 
 // 处理消息显示内容
@@ -574,6 +820,22 @@ const getDisplayContent = (message) => {
   
   // 默认返回原内容
   return displayContent
+}
+
+// 检测是否为长回答（需要截断显示）
+const isLongResponse = (content) => {
+  return content && content.length > 300 // 超过300个字符视为长回答
+}
+
+// 切换消息展开状态
+const toggleMessageExpansion = (message) => {
+  message.isExpanded = !message.isExpanded
+  // 强制重新渲染
+  nextTick(() => {
+    if (chatContainer.value) {
+      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+    }
+  })
 }
 
 // 处理提示词点击
