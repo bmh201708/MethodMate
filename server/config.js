@@ -72,7 +72,7 @@ export const getJWTConfig = () => {
  */
 export const getServerConfig = () => {
   return {
-    port: process.env.PORT || 3002,
+    port: process.env.PORT || 3004,
     nodeEnv: process.env.NODE_ENV || 'development'
   };
 };

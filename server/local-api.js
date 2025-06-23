@@ -5,6 +5,10 @@ import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { initDatabase, getPool } from './database.js';
+import { getJWTConfig, getServerConfig } from './config.js';
 
 // 获取当前文件的目录
 const __filename = fileURLToPath(import.meta.url);
@@ -14,7 +18,24 @@ const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '.env') });
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const serverConfig = getServerConfig();
+const jwtConfig = getJWTConfig();
+const PORT = serverConfig.port;
+
+// 初始化数据库
+let database = null;
+const initServer = async () => {
+  try {
+    database = await initDatabase();
+    console.log('✅ 数据库初始化成功');
+  } catch (error) {
+    console.error('❌ 数据库初始化失败:', error);
+    process.exit(1);
+  }
+};
+
+// 启动时初始化数据库
+initServer();
 
 // CORS配置 - 支持生产环境
 const corsOptions = {
@@ -572,6 +593,220 @@ if (!CORE_API_KEY) {
 // 中间件
 app.use(express.json());
 app.use(express.static(join(__dirname, '..', 'public')));
+
+// JWT认证中间件
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: '访问令牌未提供' });
+  }
+
+  jwt.verify(token, jwtConfig.secret, (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: '访问令牌无效' });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+// 可选的认证中间件（如果有token则验证，没有则跳过）
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token) {
+    jwt.verify(token, jwtConfig.secret, (err, user) => {
+      if (!err) {
+        req.user = user;
+      }
+    });
+  }
+  next();
+};
+
+// 用户注册API
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    
+    if (!username || !email || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '用户名、邮箱和密码都是必需的' 
+      });
+    }
+
+    // 验证邮箱格式
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '邮箱格式不正确' 
+      });
+    }
+
+    // 验证密码长度
+    if (password.length < 6) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '密码长度至少为6位' 
+      });
+    }
+
+    const pool = getPool();
+    
+    // 检查用户名是否已存在
+    const [existingUsers] = await pool.execute(
+      'SELECT id FROM users WHERE username = ? OR email = ?',
+      [username, email]
+    );
+
+    if (existingUsers.length > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '用户名或邮箱已存在' 
+      });
+    }
+
+    // 加密密码
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // 创建用户
+    const [result] = await pool.execute(
+      'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
+      [username, email, hashedPassword]
+    );
+
+    const userId = result.insertId;
+
+    // 生成JWT token
+    const token = jwt.sign(
+      { id: userId, username, email },
+      jwtConfig.secret,
+      { expiresIn: jwtConfig.expiresIn }
+    );
+
+    res.status(201).json({
+      success: true,
+      message: '用户注册成功',
+      user: {
+        id: userId,
+        username,
+        email
+      },
+      token
+    });
+  } catch (error) {
+    console.error('用户注册错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 用户登录API
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '用户名和密码都是必需的' 
+      });
+    }
+
+    const pool = getPool();
+    
+    // 查找用户（支持用户名或邮箱登录）
+    const [users] = await pool.execute(
+      'SELECT id, username, email, password_hash FROM users WHERE username = ? OR email = ?',
+      [username, username]
+    );
+
+    if (users.length === 0) {
+      return res.status(401).json({ 
+        success: false, 
+        error: '用户名或密码错误' 
+      });
+    }
+
+    const user = users[0];
+
+    // 验证密码
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    if (!isValidPassword) {
+      return res.status(401).json({ 
+        success: false, 
+        error: '用户名或密码错误' 
+      });
+    }
+
+    // 生成JWT token
+    const token = jwt.sign(
+      { id: user.id, username: user.username, email: user.email },
+      jwtConfig.secret,
+      { expiresIn: jwtConfig.expiresIn }
+    );
+
+    res.json({
+      success: true,
+      message: '登录成功',
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email
+      },
+      token
+    });
+  } catch (error) {
+    console.error('用户登录错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 获取用户信息API
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const [users] = await pool.execute(
+      'SELECT id, username, email, created_at FROM users WHERE id = ?',
+      [req.user.id]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: '用户不存在' 
+      });
+    }
+
+    const user = users[0];
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        createdAt: user.created_at
+      }
+    });
+  } catch (error) {
+    console.error('获取用户信息错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
 
 // 添加根路由重定向到测试页面
 app.get('/', (req, res) => {
