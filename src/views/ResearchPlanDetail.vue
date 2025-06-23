@@ -112,40 +112,7 @@
 
                 <!-- 各部分内容 -->
                 <div v-if="activeSection === 'full'">
-                  <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">{{ hasGeneratedPlan ? currentPlanState.title : '定量研究方案' }}</h2>
-                    <!-- 完整方案操作按钮 -->
-                    <div v-if="hasGeneratedPlan" class="flex items-center space-x-3">
-                      <button
-                        @click="iterateSingleSection('full')"
-                        :disabled="isIterating"
-                        class="px-3 py-1.5 text-sm bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
-                      >
-                        <svg v-if="isIterating" class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 814 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        <span>{{ isIterating ? '迭代中...' : '迭代' }}</span>
-                      </button>
-                      <button
-                        @click="evaluateSingleSection('full')"
-                        :disabled="isEvaluatingSection"
-                        class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
-                      >
-                        <svg v-if="isEvaluatingSection && currentEvaluatingSection === 'full'" class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 814 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>{{ (isEvaluatingSection && currentEvaluatingSection === 'full') ? '评估中...' : '评估' }}</span>
-                      </button>
-                    </div>
-                  </div>
+                  <h2 class="text-2xl font-bold text-gray-900 mb-6">{{ hasGeneratedPlan ? currentPlanState.title : '定量研究方案' }}</h2>
                   <div class="space-y-6">
                     <!-- 如果有解析的plan数据，显示四个字段的内容 -->
                     <div v-if="hasGeneratedPlan">
@@ -173,8 +140,6 @@
                         <h3 class="text-lg font-semibold text-gray-900 mb-3">结果呈现</h3>
                         <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedExpectedResults"></div>
                       </div>
-                      
-
                     </div>
                     
                     <!-- 未生成方案时的提示 -->
@@ -212,46 +177,12 @@
                   </div>
                 </div>
                 <div v-if="activeSection === 'hypothesis'">
-                  <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">研究假设</h2>
-                    <!-- 研究假设操作按钮 -->
-                    <div v-if="hasGeneratedPlan" class="flex items-center space-x-3">
-                      <button
-                        @click="iterateSingleSection('hypothesis')"
-                        :disabled="isIterating"
-                        class="px-3 py-1.5 text-sm bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
-                      >
-                        <svg v-if="isIterating" class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 814 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        <span>{{ isIterating ? '迭代中...' : '迭代' }}</span>
-                      </button>
-                      <button
-                        @click="evaluateSingleSection('hypothesis')"
-                        :disabled="isEvaluatingSection"
-                        class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
-                      >
-                        <svg v-if="isEvaluatingSection && currentEvaluatingSection === 'hypothesis'" class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 814 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>{{ (isEvaluatingSection && currentEvaluatingSection === 'hypothesis') ? '评估中...' : '评估' }}</span>
-                      </button>
-                    </div>
-                  </div>
+                  <h2 class="text-2xl font-bold text-gray-900 mb-6">研究假设</h2>
                   <div v-if="hasGeneratedPlan && currentPlanState.hypotheses && currentPlanState.hypotheses.length > 0" class="space-y-4">
                     <div v-for="(hypothesis, index) in renderedHypotheses" :key="index" 
                          class="p-4 bg-gray-50 rounded-lg">
                       <div class="text-gray-900 prose prose-sm max-w-none" v-html="hypothesis"></div>
                     </div>
-
                   </div>
                   <div v-else class="text-center py-12">
                     <div class="mb-4">
@@ -263,45 +194,11 @@
                   </div>
                 </div>
                 <div v-if="activeSection === 'design'">
-                  <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">实验设计</h2>
-                    <!-- 实验设计操作按钮 -->
-                    <div v-if="hasGeneratedPlan" class="flex items-center space-x-3">
-                      <button
-                        @click="iterateSingleSection('design')"
-                        :disabled="isIterating"
-                        class="px-3 py-1.5 text-sm bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
-                      >
-                        <svg v-if="isIterating" class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 814 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        <span>{{ isIterating ? '迭代中...' : '迭代' }}</span>
-                      </button>
-                      <button
-                        @click="evaluateSingleSection('design')"
-                        :disabled="isEvaluatingSection"
-                        class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
-                      >
-                        <svg v-if="isEvaluatingSection && currentEvaluatingSection === 'design'" class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 814 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>{{ (isEvaluatingSection && currentEvaluatingSection === 'design') ? '评估中...' : '评估' }}</span>
-                      </button>
-                    </div>
-                  </div>
+                  <h2 class="text-2xl font-bold text-gray-900 mb-6">实验设计</h2>
                   <div v-if="hasGeneratedPlan && currentPlanState.experimentalDesign" class="space-y-6">
                     <div>
                       <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedExperimentalDesign"></div>
                     </div>
-
                   </div>
                   <div v-else class="text-center py-12">
                     <div class="mb-4">
@@ -313,45 +210,11 @@
                   </div>
                 </div>
                 <div v-if="activeSection === 'analysis'">
-                  <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">数据分析</h2>
-                    <!-- 数据分析操作按钮 -->
-                    <div v-if="hasGeneratedPlan" class="flex items-center space-x-3">
-                      <button
-                        @click="iterateSingleSection('analysis')"
-                        :disabled="isIterating"
-                        class="px-3 py-1.5 text-sm bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
-                      >
-                        <svg v-if="isIterating" class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 814 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        <span>{{ isIterating ? '迭代中...' : '迭代' }}</span>
-                      </button>
-                      <button
-                        @click="evaluateSingleSection('analysis')"
-                        :disabled="isEvaluatingSection"
-                        class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
-                      >
-                        <svg v-if="isEvaluatingSection && currentEvaluatingSection === 'analysis'" class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 814 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>{{ (isEvaluatingSection && currentEvaluatingSection === 'analysis') ? '评估中...' : '评估' }}</span>
-                      </button>
-                    </div>
-                  </div>
+                  <h2 class="text-2xl font-bold text-gray-900 mb-6">数据分析</h2>
                   <div v-if="hasGeneratedPlan && currentPlanState.analysisMethod" class="space-y-6">
                     <div>
                       <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedAnalysisMethod"></div>
                     </div>
-
                   </div>
                   <div v-else class="text-center py-12">
                     <div class="mb-4">
@@ -363,45 +226,11 @@
                   </div>
                 </div>
                 <div v-if="activeSection === 'results'">
-                  <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">结果呈现</h2>
-                    <!-- 结果呈现操作按钮 -->
-                    <div v-if="hasGeneratedPlan" class="flex items-center space-x-3">
-                      <button
-                        @click="iterateSingleSection('results')"
-                        :disabled="isIterating"
-                        class="px-3 py-1.5 text-sm bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
-                      >
-                        <svg v-if="isIterating" class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        <span>{{ isIterating ? '迭代中...' : '迭代' }}</span>
-                      </button>
-                      <button
-                        @click="evaluateSingleSection('results')"
-                        :disabled="isEvaluatingSection"
-                        class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
-                      >
-                        <svg v-if="isEvaluatingSection && currentEvaluatingSection === 'results'" class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>{{ (isEvaluatingSection && currentEvaluatingSection === 'results') ? '评估中...' : '评估' }}</span>
-                      </button>
-                    </div>
-                  </div>
+                  <h2 class="text-2xl font-bold text-gray-900 mb-6">结果呈现</h2>
                   <div v-if="hasGeneratedPlan && currentPlanState.expectedResults" class="space-y-6">
                     <div>
                       <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedExpectedResults"></div>
                     </div>
-
                   </div>
                   <div v-else class="text-center py-12">
                     <div class="mb-4">
@@ -414,7 +243,29 @@
                 </div>
               </div>
 
-
+              <!-- 方案评估和迭代按钮 -->
+              <div v-if="hasGeneratedPlan" class="bg-white rounded-xl shadow-sm p-4 mb-4">
+                <div class="flex justify-end space-x-4">
+                  <button
+                    @click="evaluatePlan"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>评估方案</span>
+                  </button>
+                  <button
+                    @click="iteratePlan"
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span>方案迭代</span>
+                  </button>
+                </div>
+              </div>
 
               <!-- 来源和方法介绍卡片 -->
               <div class="bg-white rounded-xl shadow-sm p-8">
@@ -583,10 +434,6 @@ const isQuerying = ref(false) // 是否正在查询统计方法
 const isGeneratingSource = ref(false) // 是否正在生成来源介绍
 const isGeneratingMethod = ref(false) // 是否正在生成方法介绍
 const analysisSubSection = ref('source') // 数据分析页面的子部分：source(来源介绍)、method(方法介绍)、query(统计方法查询)
-const isIteratingSection = ref(false) // 是否正在迭代某个部分
-const currentIteratingSection = ref('') // 当前正在迭代的部分
-const isEvaluatingSection = ref(false) // 是否正在评估某个部分
-const currentEvaluatingSection = ref('') // 当前正在评估的部分
 
 const sections = [
   { id: 'full', name: '完整方案' },
@@ -725,15 +572,6 @@ watch(() => chatState.messages, (newMessages) => {
     if (isEvaluationMessage) {
       console.log('检测到评估消息，重置评估状态')
       isEvaluating.value = false
-      // 同时重置分部分评估状态
-      if (isEvaluatingSection.value) {
-        console.log('检测到分部分评估消息，重置分部分评估状态')
-        const sectionName = currentEvaluatingSection.value
-        isEvaluatingSection.value = false
-        currentEvaluatingSection.value = ''
-        
-
-      }
       return
     }
     
@@ -743,8 +581,8 @@ watch(() => chatState.messages, (newMessages) => {
       return
     }
     
-    // 如果正在生成状态、迭代状态或单个部分迭代状态，按原有逻辑处理
-    if (isGenerating.value || isIterating.value || isIteratingSection.value) {
+    // 如果正在生成状态或迭代状态，按原有逻辑处理
+    if (isGenerating.value || isIterating.value) {
       // 检查消息ID，只处理在生成开始之后的新消息
       if (lastMessageIdBeforeGenerate.value && latestAssistantMessage.id <= lastMessageIdBeforeGenerate.value) {
         console.log('跳过生成开始前的旧消息，消息ID:', latestAssistantMessage.id, '生成前最后消息ID:', lastMessageIdBeforeGenerate.value)
@@ -1052,29 +890,18 @@ const parseResearchPlanResponse = (content) => {
       // 显示成功提示
       console.log('成功解析并更新研究方案')
       
-              // 使用Vue的nextTick确保DOM更新完成后再显示提示
-        setTimeout(() => {
-          if (isIteratingSection.value) {
-            // 单个部分迭代状态下的提示
-            const sectionNames = {
-              'full': '完整方案',
-              'hypothesis': '研究假设',
-              'design': '实验设计',
-              'analysis': '数据分析',
-              'results': '结果呈现'
-            }
-            const sectionName = sectionNames[currentIteratingSection.value] || '该部分'
-            alert(`${sectionName}迭代成功！请查看优化后的内容。`)
-          } else if (isIterating.value) {
-            // 迭代状态下的提示
-            if (updatedFields >= 3) {
-              alert('方案迭代成功！已优化研究假设、实验设计、数据分析和结果呈现四个完整部分。')
-            } else if (updatedFields >= 2) {
-              alert(`方案迭代成功！已优化 ${updatedFields} 个部分，请查看各个板块的内容。`)
-            } else {
-              alert('方案迭代成功！请查看右侧内容。')
-            }
-          } else if (isGenerating.value) {
+      // 使用Vue的nextTick确保DOM更新完成后再显示提示
+      setTimeout(() => {
+        if (isIterating.value) {
+          // 迭代状态下的提示
+          if (updatedFields >= 3) {
+            alert('方案迭代成功！已优化研究假设、实验设计、数据分析和结果呈现四个完整部分。')
+          } else if (updatedFields >= 2) {
+            alert(`方案迭代成功！已优化 ${updatedFields} 个部分，请查看各个板块的内容。`)
+          } else {
+            alert('方案迭代成功！请查看右侧内容。')
+          }
+        } else if (isGenerating.value) {
           // 生成状态下的提示
           if (updatedFields >= 3) {
             alert('研究方案生成成功！已包含研究假设、实验设计、数据分析和结果呈现四个完整部分。PDF文件可在聊天框中下载。')
@@ -1086,43 +913,26 @@ const parseResearchPlanResponse = (content) => {
         }
       }, 500)
       
-              // 添加到历史方案（生成新方案或迭代方案时都添加）
-        if (updatedFields >= 1 && (isIterating.value || isGenerating.value || isIteratingSection.value)) {
-          console.log('准备添加到历史方案，状态:', isIteratingSection.value ? `单个部分迭代(${currentIteratingSection.value})` : (isIterating.value ? '迭代' : '生成'))
-          
-          // 构建生成上下文
-          const generationContext = {
-            referencedPapers: Array.from(papersState.referencedPapersList).map(paper => ({
-              title: paper.title,
-              authors: paper.authors,
-              year: paper.year,
-              source: paper.source
-            })),
-            generationType: isIteratingSection.value ? 'section_iteration' : (isIterating.value ? 'iteration' : 'generation'),
-            sectionIterated: isIteratingSection.value ? currentIteratingSection.value : null,
-            timestamp: new Date().toISOString()
-          }
-          
-                  addHistoryPlan(currentPlanState, generationContext)
+      // 添加到历史方案（生成新方案或迭代方案时都添加）
+      if (updatedFields >= 1 && (isIterating.value || isGenerating.value)) {
+        console.log('准备添加到历史方案，状态:', isIterating.value ? '迭代' : '生成')
+        
+        // 构建生成上下文
+        const generationContext = {
+          referencedPapers: Array.from(papersState.referencedPapersList).map(paper => ({
+            title: paper.title,
+            authors: paper.authors,
+            year: paper.year,
+            source: paper.source
+          })),
+          generationType: isIterating.value ? 'iteration' : 'generation',
+          timestamp: new Date().toISOString()
+        }
+        
+        addHistoryPlan(currentPlanState, generationContext)
       }
-
-      // 重置相关状态（如果在前面的逻辑中未重置）
-      if (isGenerating.value) {
-        isGenerating.value = false
-      }
-      if (isIterating.value) {
-        isIterating.value = false
-      }
-      if (isIteratingSection.value) {
-        isIteratingSection.value = false
-        currentIteratingSection.value = ''
-      }
-      if (isEvaluatingSection.value) {
-        isEvaluatingSection.value = false
-        currentEvaluatingSection.value = ''
-      }
-    
-    return true // 成功解析并更新了研究方案
+      
+      return true // 成功解析并更新了研究方案
     } else {
       console.log('未更新任何字段，解析失败')
       return false
@@ -1537,151 +1347,6 @@ ${conversationContext.researchContext}
     }
   }
 
-// 迭代单个部分的方案
-const iterateSingleSection = async (section) => {
-  if (isIteratingSection.value || !currentPlanState) return
-
-  try {
-    isIteratingSection.value = true
-    currentIteratingSection.value = section
-    
-    console.log(`开始迭代 ${section} 部分`)
-
-    // 提取对话历史中的用户需求
-    const conversationContext = extractConversationContext()
-    
-    // 获取当前部分的内容
-    let currentSectionContent = ''
-    let sectionDisplayName = ''
-    let targetField = ''
-    
-    switch (section) {
-      case 'full':
-        sectionDisplayName = '完整方案'
-        targetField = 'all'
-        currentSectionContent = `研究假设：${currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : ''}
-实验设计：${currentPlanState.experimentalDesign || ''}
-数据分析：${currentPlanState.analysisMethod || ''}
-结果呈现：${currentPlanState.expectedResults || ''}`
-        break
-      case 'hypothesis':
-        sectionDisplayName = '研究假设'
-        targetField = 'hypotheses'
-        currentSectionContent = currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : ''
-        break
-      case 'design':
-        sectionDisplayName = '实验设计'
-        targetField = 'experimentalDesign'
-        currentSectionContent = currentPlanState.experimentalDesign || ''
-        break
-      case 'analysis':
-        sectionDisplayName = '数据分析'
-        targetField = 'analysisMethod'
-        currentSectionContent = currentPlanState.analysisMethod || ''
-        break
-      case 'results':
-        sectionDisplayName = '结果呈现'
-        targetField = 'expectedResults'
-        currentSectionContent = currentPlanState.expectedResults || ''
-        break
-      default:
-        alert('不支持的部分')
-        return
-    }
-    
-    if (!currentSectionContent.trim()) {
-      alert(`${sectionDisplayName}部分内容为空，无法进行迭代`)
-      return
-    }
-
-    // 构建迭代提示
-    let iterationPrompt = `我需要你帮我迭代优化研究方案中的"${sectionDisplayName}"部分。请注意，只需要优化这一个部分，其他部分保持不变。
-
-当前完整研究方案：
-${JSON.stringify({
-  title: currentPlanState.title || '定量研究方案',
-  hypotheses: currentPlanState.hypotheses || [],
-  experimentalDesign: currentPlanState.experimentalDesign || '',
-  analysisMethod: currentPlanState.analysisMethod || '',
-  expectedResults: currentPlanState.expectedResults || ''
-}, null, 2)}
-
-需要优化的部分：${sectionDisplayName}
-当前${sectionDisplayName}的内容：
-${currentSectionContent}`
-
-    // 如果有用户需求，添加到迭代提示中
-    if (conversationContext.hasUserRequirements) {
-      iterationPrompt += `
-
-用户研究需求：
-${conversationContext.userRequirements}
-
-研究背景和上下文：
-${conversationContext.researchContext}
-
-请特别注意：
-1. 确保优化后的${sectionDisplayName}更好地满足用户的具体研究需求
-2. 保持与其他部分的一致性和连贯性
-3. 结合用户需求进行针对性优化`
-    }
-
-    // 根据不同部分添加具体的优化要求
-    iterationPrompt += `
-
-请对"${sectionDisplayName}"部分进行优化，要求：
-1. 保持其他部分（除${sectionDisplayName}外）完全不变
-2. 只优化${sectionDisplayName}部分的内容
-3. 确保优化后的内容更加科学严谨`
-
-    if (section === 'hypothesis') {
-      iterationPrompt += `
-4. 研究假设应该具体可验证
-5. 假设应该基于理论基础和文献支撑
-6. 假设应该与研究目标和实验设计相匹配`
-    } else if (section === 'design') {
-      iterationPrompt += `
-4. 实验设计应该能够有效验证研究假设
-5. 设计应该考虑控制变量和混淆因素
-6. 设计应该具有良好的内外部效度`
-    } else if (section === 'analysis') {
-      iterationPrompt += `
-4. 数据分析方法应该适合研究设计和数据类型
-5. 分析方法应该能够有效验证研究假设
-6. 分析步骤应该清晰完整`
-    } else if (section === 'results') {
-      iterationPrompt += `
-4. 结果呈现应该全面反映分析结果
-5. 结果展示应该清晰直观
-6. 结果解释应该与研究目标相符`
-    }
-
-    iterationPrompt += `
-
-请按照以下格式返回优化后的完整方案：
-#研究假设：<优化后的研究假设（如果${sectionDisplayName}不是研究假设，则保持原内容不变）>
-#实验设计：<优化后的实验设计（如果${sectionDisplayName}不是实验设计，则保持原内容不变）>
-#数据分析：<优化后的数据分析（如果${sectionDisplayName}不是数据分析，则保持原内容不变）>
-#结果呈现：<优化后的结果呈现（如果${sectionDisplayName}不是结果呈现，则保持原内容不变）>
-
-重要提醒：只优化"${sectionDisplayName}"部分，其他三个部分必须保持与当前方案完全一致！`
-
-    console.log(`迭代提示包含用户需求:`, conversationContext.hasUserRequirements)
-    console.log(`正在迭代部分: ${sectionDisplayName}`)
-    
-    // 发送消息到对话
-    await sendMessage(iterationPrompt)
-    
-
-
-  } catch (error) {
-    console.error(`迭代${section}部分失败:`, error)
-    alert(`迭代${section}部分失败，请重试`)
-    isIteratingSection.value = false
-    currentIteratingSection.value = ''
-  }
-}
-
 // 迭代研究方案
 const iteratePlan = async () => {
   if (isIterating.value || !currentPlanState) return
@@ -1765,8 +1430,6 @@ ${conversationContext.researchContext}
     isIterating.value = false
   }
   // 注意：不在这里重置isIterating，让解析成功时再重置，避免过早重置导致解析逻辑失效
-    isIterating.value = false
-  }
 }
 
 // 查询统计方法
@@ -2098,175 +1761,7 @@ const applyHistoryPlan = () => {
     alert('历史方案已应用为当前方案！')
   }
 }
-
-// 评估单个部分的方案
-const evaluateSingleSection = async (section) => {
-  if (isEvaluatingSection.value || !currentPlanState) return
-
-  try {
-    isEvaluatingSection.value = true
-    currentEvaluatingSection.value = section
-    
-    console.log(`开始评估 ${section} 部分`)
-
-    // 提取对话历史中的用户需求
-    const conversationContext = extractConversationContext()
-    
-    // 获取当前部分的内容
-    let currentSectionContent = ''
-    let sectionDisplayName = ''
-    
-    switch (section) {
-      case 'full':
-        sectionDisplayName = '完整方案'
-        currentSectionContent = `研究假设：${currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : ''}
-实验设计：${currentPlanState.experimentalDesign || ''}
-数据分析：${currentPlanState.analysisMethod || ''}
-结果呈现：${currentPlanState.expectedResults || ''}`
-        break
-      case 'hypothesis':
-        sectionDisplayName = '研究假设'
-        currentSectionContent = currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : ''
-        break
-      case 'design':
-        sectionDisplayName = '实验设计'
-        currentSectionContent = currentPlanState.experimentalDesign || ''
-        break
-      case 'analysis':
-        sectionDisplayName = '数据分析'
-        currentSectionContent = currentPlanState.analysisMethod || ''
-        break
-      case 'results':
-        sectionDisplayName = '结果呈现'
-        currentSectionContent = currentPlanState.expectedResults || ''
-        break
-      default:
-        alert('不支持的部分')
-        return
-    }
-    
-    if (!currentSectionContent.trim()) {
-      alert(`${sectionDisplayName}部分内容为空，无法进行评估`)
-      return
-    }
-
-    // 构建评估提示
-    let evaluationPrompt = `请帮我评估研究方案中的"${sectionDisplayName}"部分。我需要你重点评估这一个部分的质量，而不是整个研究方案。
-
-完整研究方案上下文：
-${JSON.stringify({
-  title: currentPlanState.title || '定量研究方案',
-  hypotheses: currentPlanState.hypotheses || [],
-  experimentalDesign: currentPlanState.experimentalDesign || '',
-  analysisMethod: currentPlanState.analysisMethod || '',
-  expectedResults: currentPlanState.expectedResults || ''
-}, null, 2)}
-
-需要评估的部分：${sectionDisplayName}
-该部分的内容：
-${currentSectionContent}`
-
-    // 根据不同部分添加具体的评估维度
-    if (section === 'full') {
-      evaluationPrompt += `
-
-请从以下维度对整体方案进行评估：
-1. **整体逻辑性** (1-10分)：各部分之间是否逻辑连贯，形成完整的研究体系
-2. **科学严谨性** (1-10分)：研究方案是否符合科学研究的标准和规范
-3. **可操作性** (1-10分)：方案是否具有实际可行性，能够顺利实施
-4. **创新性** (1-10分)：研究方案是否具有一定的创新价值
-5. **完整性** (1-10分)：方案是否包含了研究所需的各个要素`
-    } else if (section === 'hypothesis') {
-      evaluationPrompt += `
-
-请从以下维度对研究假设进行评估：
-1. **假设的可验证性** (1-10分)：假设是否具体明确，可以通过实验验证
-2. **理论基础** (1-10分)：假设是否基于充分的理论依据和文献支撑
-3. **逻辑性** (1-10分)：假设之间是否逻辑一致，无矛盾
-4. **与研究目标的匹配度** (1-10分)：假设是否很好地回应了研究目标
-5. **假设的科学性** (1-10分)：假设是否符合科学研究的基本要求`
-    } else if (section === 'design') {
-      evaluationPrompt += `
-
-请从以下维度对实验设计进行评估：
-1. **设计的合理性** (1-10分)：实验设计是否适合验证研究假设
-2. **变量控制** (1-10分)：是否有效控制了无关变量和混淆因素
-3. **内部效度** (1-10分)：设计是否能够确保因果关系的有效性
-4. **外部效度** (1-10分)：研究结果是否具有良好的推广性
-5. **可操作性** (1-10分)：实验设计是否具有实际可行性`
-    } else if (section === 'analysis') {
-      evaluationPrompt += `
-
-请从以下维度对数据分析方法进行评估：
-1. **方法的适用性** (1-10分)：分析方法是否适合研究设计和数据类型
-2. **分析的完整性** (1-10分)：分析步骤是否全面，能够充分回答研究问题
-3. **方法的科学性** (1-10分)：分析方法是否符合统计学原理
-4. **结果解释能力** (1-10分)：分析方法是否能够有效验证研究假设
-5. **技术可行性** (1-10分)：分析方法是否具有实际可操作性`
-    } else if (section === 'results') {
-      evaluationPrompt += `
-
-请从以下维度对结果呈现方式进行评估：
-1. **呈现的全面性** (1-10分)：是否全面展示了分析结果
-2. **可视化效果** (1-10分)：结果展示是否清晰直观
-3. **结果解释** (1-10分)：对结果的解释是否准确深入
-4. **与假设的对应** (1-10分)：结果呈现是否很好地回应了研究假设
-5. **学术规范性** (1-10分)：结果呈现是否符合学术写作规范`
-    }
-
-    // 如果有用户需求，添加到评估提示中
-    if (conversationContext.hasUserRequirements) {
-      evaluationPrompt += `
-
-用户研究需求：
-${conversationContext.userRequirements}
-
-研究背景和上下文：
-${conversationContext.researchContext}
-
-请特别考虑：
-1. 该部分是否充分考虑了用户的具体研究需求
-2. 是否与用户的研究目标和期望高度匹配
-3. 是否适合用户的研究场景和条件`
-    }
-
-    evaluationPrompt += `
-
-请提供详细的评估报告，包括：
-1. 各维度的具体评分和理由
-2. 该部分的主要优点
-3. 存在的问题和不足
-4. 具体的改进建议
-5. 总体评价和建议
-
-请以专业、客观的态度进行评估，并提供建设性的改进意见。`
-
-    console.log(`评估提示包含用户需求:`, conversationContext.hasUserRequirements)
-    console.log(`正在评估部分: ${sectionDisplayName}`)
-    
-    // 发送消息到对话
-    await sendMessage(evaluationPrompt)
-    
-
-
-    // 设置一个定时器，在10秒后重置评估状态
-    setTimeout(() => {
-      if (isEvaluatingSection.value) {
-        console.log('分部分评估状态超时，自动重置')
-        isEvaluatingSection.value = false
-        currentEvaluatingSection.value = ''
-      }
-    }, 15000)
-
-  } catch (error) {
-    console.error(`评估${section}部分失败:`, error)
-    alert(`评估${section}部分失败，请重试`)
-    isEvaluatingSection.value = false
-    currentEvaluatingSection.value = ''
-  }
-}
-
-  </script>
+</script>
 
 <style scoped>
 /* 自定义滚动条样式 */

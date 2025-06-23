@@ -945,8 +945,8 @@ export const addHistoryPlan = async (planData, generationContext = null) => {
   }
   
   const newPlan = {
-    id: Date.now(), // 使用时间戳作为ID
-    title: generatePlanTitle(planData, historyState.historyPlans),
+    id: Date.now(), // 使用时间戳作为前端ID
+    title: planData.title || '基于AI智能体生成的定量研究方案',
     description: planData.researchQuestions || planData.output || '暂无描述',
     createdAt: new Date().toLocaleString('zh-CN'),
     updatedAt: new Date().toLocaleString('zh-CN'),
@@ -1094,7 +1094,7 @@ export const applyPlanAsCurrentPlan = (planData, planId = null, sourceIntroducti
   }
   
   // 重新生成时间戳，标记为新的当前方案
-  currentPlanState.title = generatePlanTitle(planData, historyState.historyPlans)
+  currentPlanState.title = '基于AI智能体生成的定量研究方案'
   currentPlanState.methodology = `基于参考文献生成的研究方法 (应用时间: ${new Date().toLocaleString('zh-CN')})`
   
   // 标记当前应用的方案ID
@@ -1125,92 +1125,4 @@ export const clearSourceIntroductions = () => {
     })
     console.log('清空所有来源介绍')
   }
-}
-
-// 智能生成方案名称
-const generatePlanTitle = (planData, historyPlans) => {
-  // 尝试从研究问题中提取关键词
-  let title = ''
-  
-  // 方法1：从研究问题中提取关键词
-  if (planData.researchQuestions) {
-    const questions = planData.researchQuestions
-    
-    // 提取可能的研究主题关键词
-    const keywords = []
-    
-    // 常见研究领域关键词
-    const researchFields = [
-      '人工智能', 'AI', '机器学习', '深度学习', '自然语言处理', 'NLP',
-      '心理学', '认知科学', '教育', '社会学', '医学', '生物学',
-      '经济学', '管理学', '计算机科学', '数据科学',
-      '用户体验', 'UX', '人机交互', 'HCI', '移动应用', '游戏',
-      '环境科学', '可持续发展', '气候变化',
-      '营销', '品牌', '消费者行为', '市场研究'
-    ]
-    
-    // 常见研究对象关键词
-    const researchObjects = [
-      '学生', '用户', '消费者', '患者', '员工', '老年人', '儿童',
-      '记忆', '学习', '行为', '态度', '情感', '认知', '决策',
-      '效果', '影响', '关系', '差异', '变化', '发展'
-    ]
-    
-    // 提取关键词
-    researchFields.forEach(field => {
-      if (questions.includes(field)) {
-        keywords.push(field)
-      }
-    })
-    
-    researchObjects.forEach(obj => {
-      if (questions.includes(obj)) {
-        keywords.push(obj)
-      }
-    })
-    
-    // 如果找到关键词，生成主题相关的标题
-    if (keywords.length > 0) {
-      const mainKeyword = keywords[0]
-      const secondKeyword = keywords[1]
-      
-      if (secondKeyword) {
-        title = `${mainKeyword}与${secondKeyword}研究`
-      } else {
-        title = `${mainKeyword}研究方案`
-      }
-    }
-  }
-  
-  // 方法2：从实验设计中提取方法关键词
-  if (!title && planData.experimentalDesign) {
-    const design = planData.experimentalDesign
-    if (design.includes('问卷调查')) {
-      title = '问卷调查研究'
-    } else if (design.includes('实验') || design.includes('实验设计')) {
-      title = '实验研究方案'
-    } else if (design.includes('访谈') || design.includes('深度访谈')) {
-      title = '访谈研究方案'
-    } else if (design.includes('观察') || design.includes('行为观察')) {
-      title = '观察研究方案'
-    } else if (design.includes('混合') || design.includes('mixed')) {
-      title = '混合方法研究'
-    }
-  }
-  
-  // 方法3：使用简单编号
-  if (!title) {
-    const planCount = historyPlans.length + 1
-    title = `研究方案${planCount}`
-  }
-  
-  // 确保标题唯一性
-  let finalTitle = title
-  let counter = 1
-  while (historyPlans.some(plan => plan.title === finalTitle)) {
-    finalTitle = `${title}(${counter})`
-    counter++
-  }
-  
-  return finalTitle
 } 
