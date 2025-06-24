@@ -190,6 +190,32 @@
                     已选为参考
                   </span>
                   <button 
+                    @click="savePaperToCache(papersState.selectedPaper)"
+                    :disabled="isSavingToCache"
+                    class="px-3 py-1 text-xs rounded transition-colors flex items-center space-x-1"
+                    :class="[
+                      paperCacheStatus === 'saved' 
+                        ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                        : paperCacheStatus === 'updated'
+                        ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ]"
+                    :title="paperCacheStatus === 'saved' ? '已保存到本地' : paperCacheStatus === 'updated' ? '已更新本地缓存' : '保存到本地缓存'"
+                  >
+                    <svg v-if="isSavingToCache" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                    </svg>
+                    <span>{{ 
+                      isSavingToCache ? '保存中...' : 
+                      paperCacheStatus === 'saved' ? '已保存' : 
+                      paperCacheStatus === 'updated' ? '已更新' : '保存到本地' 
+                    }}</span>
+                  </button>
+                  <button 
                     @click="toggleReference(papersState.selectedPaper)"
                     class="px-4 py-2 text-sm rounded-lg transition-colors"
                     :class="[
@@ -484,6 +510,10 @@ const filterTopVenues = ref(false)
 // 关键词输入
 const searchKeywords = ref('')
 const isExtractingKeywords = ref(false)
+
+// 论文缓存相关状态
+const isSavingToCache = ref(false)
+const paperCacheStatus = ref('') // 'saved', 'updated', ''
 
 // 手动获取论文全文和研究方法
 const fetchPaperContent = async () => {
@@ -974,6 +1004,110 @@ const getRecommendedPapers = async () => {
   } finally {
     setLoadingRecommendations(false)
   }
+}
+
+// 保存论文到本地缓存
+const savePaperToCache = async (paper) => {
+  if (!paper || !paper.title) {
+    alert('无效的论文信息')
+    return
+  }
+
+  isSavingToCache.value = true
+  paperCacheStatus.value = ''
+
+  try {
+    console.log('保存论文到本地缓存:', paper.title)
+
+    // 准备要保存的论文数据
+    const paperData = {
+      title: paper.title,
+      authors: Array.isArray(paper.authors) ? paper.authors.join(', ') : (paper.authors || ''),
+      abstract: paper.abstract || '',
+      doi: paper.doi || '',
+      url: paper.url || paper.scholar_url || '',
+      download_url: paper.downloadUrl || paper.pdf_url || '',
+      year: paper.year ? parseInt(paper.year) : null,
+      journal: paper.journal || '',
+      venue: paper.venue || paper.journal || '',
+      citation_count: paper.citationCount || paper.citations || 0,
+      research_method: paper.researchMethod || '',
+      full_text: paper.fullText || '',
+      translated_abstract: translatedAbstract.value || '',
+      translated_method: translatedMethod.value || '',
+      paper_id: paper.paper_id || paper.id || '',
+      source: 'recommendation',
+      is_top_venue: paper.isTopVenue || false,
+      download_sources: paper.downloadSources || null,
+      metadata: {
+        batchIndex: paper.batchIndex,
+        from_cache: paper.from_cache || false,
+        saved_at: new Date().toISOString()
+      }
+    }
+
+    const response = await fetch('/api/paper-cache/save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(paperData)
+    })
+
+    if (!response.ok) {
+      const errorResult = await response.json().catch(() => ({}))
+      throw new Error(errorResult.error || `保存失败，状态码: ${response.status}`)
+    }
+
+    const result = await response.json()
+
+    if (result.success) {
+      paperCacheStatus.value = result.is_update ? 'updated' : 'saved'
+      console.log(`✅ 论文${result.is_update ? '更新' : '保存'}成功:`, paper.title)
+      
+      // 显示成功消息
+      const message = result.is_update ? '论文缓存已更新' : '论文已保存到本地缓存'
+      
+      // 3秒后重置状态
+      setTimeout(() => {
+        paperCacheStatus.value = ''
+      }, 3000)
+      
+    } else {
+      throw new Error(result.error || '保存失败')
+    }
+
+  } catch (error) {
+    console.error('保存论文到缓存失败:', error)
+    alert('保存失败: ' + error.message)
+    paperCacheStatus.value = ''
+  } finally {
+    isSavingToCache.value = false
+  }
+}
+
+// 检查论文是否已缓存
+const checkPaperCache = async (paper) => {
+  try {
+    const response = await fetch('/api/paper-cache/check', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: paper.title,
+        doi: paper.doi || ''
+      })
+    })
+
+    if (response.ok) {
+      const result = await response.json()
+      return result.cached
+    }
+  } catch (error) {
+    console.error('检查论文缓存失败:', error)
+  }
+  return false
 }
 </script>
 

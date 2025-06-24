@@ -1100,155 +1100,205 @@ app.post('/api/scholar-search', async (req, res) => {
 
     console.log(`执行学术搜索，查询: "${query}", 结果数: ${num_results}, 语言: ${lang}`);
     
-    // 检测是否包含中文，如果包含则翻译
-    let searchQuery = query;
-    if (/[\u4e00-\u9fa5]/.test(query)) {
-      try {
-        console.log('检测到中文查询，进行翻译');
-        searchQuery = await translateToEnglish(query);
-        console.log(`查询已翻译: "${query}" => "${searchQuery}"`);
-      } catch (error) {
-        console.error('翻译查询失败:', error);
-        // 翻译失败时继续使用原始查询
-        searchQuery = query;
+    // 首先从本地缓存搜索
+    console.log('🔍 首先从本地缓存搜索...');
+    const cacheResults = await searchFromCache(query, num_results, filter_venues);
+    console.log(`📚 本地缓存找到 ${cacheResults.length} 篇论文`);
+    
+    let allResults = [];
+    let needExternalSearch = true;
+    
+    if (cacheResults.length > 0) {
+      // 将缓存结果转换为统一格式
+      const formattedCacheResults = cacheResults.map(paper => ({
+        title: paper.title || '',
+        authors: paper.authors ? (typeof paper.authors === 'string' ? paper.authors.split(', ') : paper.authors) : [],
+        journal: paper.venue || paper.journal || '',
+        year: paper.year?.toString() || '',
+        citations: paper.citation_count || 0,
+        summary: paper.abstract || '',
+        pdf_url: paper.download_url || null,
+        scholar_url: paper.url || '',
+        doi: paper.doi || '',
+        relevance_score: paper.relevance_score || 0.9,
+        isTopVenue: paper.is_top_venue || false,
+        from_cache: true,
+        cache_id: paper.id,
+        research_method: paper.research_method,
+        full_text: paper.full_text,
+        translated_abstract: paper.translated_abstract,
+        translated_method: paper.translated_method
+      }));
+      
+      allResults = formattedCacheResults;
+      
+      // 如果缓存结果已经足够，就不需要外部搜索
+      if (cacheResults.length >= num_results) {
+        needExternalSearch = false;
+        console.log('📚 本地缓存结果充足，无需外部搜索');
       }
     }
     
-    // 定义允许的期刊/会议列表
-    const allowedVenues = [
-      // 顶会
-      'Computer-Supported Cooperative Work', 'CSCW',
-      'Human Factors in Computing Systems', 'CHI',
-      'Pervasive and Ubiquitous Computing', 'UbiComp',
-      'User Interface Software and Technology', 'UIST',
+    // 如果本地结果不足，继续外部搜索
+    if (needExternalSearch) {
+      const remainingCount = Math.max(0, num_results - allResults.length);
+      console.log(`🌐 本地结果不足，继续外部搜索 ${remainingCount} 篇论文...`);
       
-      // 顶刊
-      'Computers in Human Behavior',
-      'CoDesign',
-      'Technovation',
-      'Design Studies',
-      'Journal of Mixed Methods Research',
-      'ACM Transactions on Computer-Human Interaction', 'TOCHI',
-      'International Journal of Human-Computer Studies',
-      'Design Issues',
-      'Human-Computer Interaction',
-      'Computer-Aided Design',
-      'Applied Ergonomics',
-      'International Journal of Design',
-      'Human Factors',
-      'Leonardo',
-      'The Design Journal'
-    ];
-    
-    // 构建 Semantic Scholar API 请求
-    // 根据最新的API文档调整字段，移除不支持的doi字段
-    const fields = 'title,authors,abstract,year,citationCount,venue,url,openAccessPdf,externalIds';
-    
-    // 构建基本查询参数，使用翻译后的查询但不进行URL编码
-    let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${searchQuery}&limit=${num_results}&fields=${fields}`;
-    
-    // 如果需要过滤期刊/会议，使用venue参数
-    if (filter_venues) {
-      // 直接使用原始venue名称，用逗号连接
-      const venueParam = allowedVenues.join(',');
-      // 直接添加到URL中，不进行编码
-      searchUrl += `&venue=${venueParam}`;
-    }
-    
-    console.log('请求URL:', searchUrl);
-    
-    // 准备请求头
-    const headers = {
-      'Accept': 'application/json',
-    };
-    
-    
-    
-    // 使用重试机制发送请求
-    const response = await fetchWithRetry(searchUrl, {
-      headers: headers
-    }, 3, 1000); // 最多重试3次，初始延迟1秒
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Semantic Scholar API错误响应 (${response.status}):`, errorText);
-      throw new Error(`Semantic Scholar API responded with status: ${response.status}`);
-    }
-
-    const searchData = await response.json();
-    console.log('Semantic Scholar API响应:', JSON.stringify(searchData, null, 2));
-    
-    // 检查是否有搜索结果
-    if (!searchData.data || searchData.data.length === 0) {
-      console.log('没有找到匹配的论文');
-      return res.json({
-        success: true,
-        query: query,
-        results: [],
-        total_results: 0
-      });
-    }
-    
-    // 转换结果
-    const results = searchData.data.map(paper => {
-      const venue = paper.venue || '';
-      
-      // 更精确的顶会顶刊判断逻辑
-      const isTopVenue = allowedVenues.some(allowedVenue => {
-        const allowedLower = allowedVenue.toLowerCase();
-        const venueLower = venue.toLowerCase();
-        
-        // 完全匹配
-        if (venueLower === allowedLower) return true;
-        
-        // 处理简写形式的精确匹配
-        if (allowedLower === 'cscw' && (venueLower === 'cscw' || venueLower.includes('computer-supported cooperative work'))) return true;
-        if (allowedLower === 'chi' && (venueLower === 'chi' || venueLower.includes('human factors in computing systems'))) return true;
-        if (allowedLower === 'ubicomp' && (venueLower === 'ubicomp' || venueLower.includes('pervasive and ubiquitous computing'))) return true;
-        if (allowedLower === 'uist' && (venueLower === 'uist' || venueLower.includes('user interface software and technology'))) return true;
-        if (allowedLower === 'tochi' && (venueLower === 'tochi' || venueLower.includes('transactions on computer-human interaction'))) return true;
-        
-        // 对于其他期刊，使用更严格的匹配规则
-        // 检查是否是完整的子字符串，而不是部分匹配
-        // 例如，"design studies"应该匹配"design studies"，但不应该匹配"design studies in earth science"
-        const words = allowedLower.split(' ');
-        if (words.length > 1) {
-          // 对于多词名称，要求完整匹配或作为独立短语出现
-          return venueLower === allowedLower || 
-                 venueLower.includes(` ${allowedLower} `) || 
-                 venueLower.startsWith(`${allowedLower} `) || 
-                 venueLower.endsWith(` ${allowedLower}`);
+      // 检测是否包含中文，如果包含则翻译
+      let searchQuery = query;
+      if (/[\u4e00-\u9fa5]/.test(query)) {
+        try {
+          console.log('检测到中文查询，进行翻译');
+          searchQuery = await translateToEnglish(query);
+          console.log(`查询已翻译: "${query}" => "${searchQuery}"`);
+        } catch (error) {
+          console.error('翻译查询失败:', error);
+          // 翻译失败时继续使用原始查询
+          searchQuery = query;
         }
+      }
+      
+      // 定义允许的期刊/会议列表
+      const allowedVenues = [
+        // 顶会
+        'Computer-Supported Cooperative Work', 'CSCW',
+        'Human Factors in Computing Systems', 'CHI',
+        'Pervasive and Ubiquitous Computing', 'UbiComp',
+        'User Interface Software and Technology', 'UIST',
         
-        // 对于单词名称，要求是完整的单词匹配
-        return venueLower === allowedLower || 
-               venueLower.includes(` ${allowedLower} `) || 
-               venueLower.startsWith(`${allowedLower} `) || 
-               venueLower.endsWith(` ${allowedLower}`);
-      });
+        // 顶刊
+        'Computers in Human Behavior',
+        'CoDesign',
+        'Technovation',
+        'Design Studies',
+        'Journal of Mixed Methods Research',
+        'ACM Transactions on Computer-Human Interaction', 'TOCHI',
+        'International Journal of Human-Computer Studies',
+        'Design Issues',
+        'Human-Computer Interaction',
+        'Computer-Aided Design',
+        'Applied Ergonomics',
+        'International Journal of Design',
+        'Human Factors',
+        'Leonardo',
+        'The Design Journal'
+      ];
       
-      console.log(`Scholar Search - Venue: "${venue}", isTopVenue: ${isTopVenue}`);
+      // 构建 Semantic Scholar API 请求
+      const fields = 'title,authors,abstract,year,citationCount,venue,url,openAccessPdf,externalIds';
       
-      return {
-        title: paper.title || '',
-        authors: paper.authors?.map(author => author.name) || [],
-        journal: venue,
-        year: paper.year?.toString() || '',
-        citations: paper.citationCount || 0,
-        summary: paper.abstract || '',
-        pdf_url: paper.openAccessPdf?.url || null,
-        scholar_url: paper.url || '',
-        doi: paper.externalIds?.DOI || '',
-        relevance_score: 0.9, // Semantic Scholar API 目前不返回相关性分数
-        isTopVenue: isTopVenue // 标记是否来自顶会顶刊
+      let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${searchQuery}&limit=${remainingCount}&fields=${fields}`;
+      
+      // 如果需要过滤期刊/会议，使用venue参数
+      if (filter_venues) {
+        const venueParam = allowedVenues.join(',');
+        searchUrl += `&venue=${venueParam}`;
+      }
+      
+      console.log('外部搜索URL:', searchUrl);
+      
+      const headers = {
+        'Accept': 'application/json',
       };
-    });
+      
+      try {
+        // 使用重试机制发送请求
+        const response = await fetchWithRetry(searchUrl, {
+          headers: headers
+        }, 3, 1000);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Semantic Scholar API错误响应 (${response.status}):`, errorText);
+          throw new Error(`Semantic Scholar API responded with status: ${response.status}`);
+        }
+
+        const searchData = await response.json();
+        console.log('Semantic Scholar API响应论文数量:', searchData.data?.length || 0);
+        
+        // 处理外部搜索结果
+        if (searchData.data && searchData.data.length > 0) {
+          const externalResults = searchData.data.map(paper => {
+            const venue = paper.venue || '';
+            
+            // 判断是否是顶会顶刊
+            const isTopVenue = allowedVenues.some(allowedVenue => {
+              const allowedLower = allowedVenue.toLowerCase();
+              const venueLower = venue.toLowerCase();
+              
+              if (venueLower === allowedLower) return true;
+              
+              if (allowedLower === 'cscw' && (venueLower === 'cscw' || venueLower.includes('computer-supported cooperative work'))) return true;
+              if (allowedLower === 'chi' && (venueLower === 'chi' || venueLower.includes('human factors in computing systems'))) return true;
+              if (allowedLower === 'ubicomp' && (venueLower === 'ubicomp' || venueLower.includes('pervasive and ubiquitous computing'))) return true;
+              if (allowedLower === 'uist' && (venueLower === 'uist' || venueLower.includes('user interface software and technology'))) return true;
+              if (allowedLower === 'tochi' && (venueLower === 'tochi' || venueLower.includes('transactions on computer-human interaction'))) return true;
+              
+              const words = allowedLower.split(' ');
+              if (words.length > 1) {
+                return venueLower === allowedLower || 
+                       venueLower.includes(` ${allowedLower} `) || 
+                       venueLower.startsWith(`${allowedLower} `) || 
+                       venueLower.endsWith(` ${allowedLower}`);
+              }
+              
+              return venueLower === allowedLower || 
+                     venueLower.includes(` ${allowedLower} `) || 
+                     venueLower.startsWith(`${allowedLower} `) || 
+                     venueLower.endsWith(` ${allowedLower}`);
+            });
+            
+            return {
+              title: paper.title || '',
+              authors: paper.authors?.map(author => author.name) || [],
+              journal: venue,
+              year: paper.year?.toString() || '',
+              citations: paper.citationCount || 0,
+              summary: paper.abstract || '',
+              pdf_url: paper.openAccessPdf?.url || null,
+              scholar_url: paper.url || '',
+              doi: paper.externalIds?.DOI || '',
+              relevance_score: 0.9,
+              isTopVenue: isTopVenue,
+              from_cache: false
+            };
+          });
+
+          // 合并结果，去重（基于标题）
+          const existingTitles = new Set(allResults.map(r => r.title.toLowerCase()));
+          const newResults = externalResults.filter(r => 
+            r.title && !existingTitles.has(r.title.toLowerCase())
+          );
+          
+          allResults = allResults.concat(newResults);
+          console.log(`🌐 外部搜索新增 ${newResults.length} 篇论文`);
+        }
+      } catch (externalError) {
+        console.error('外部搜索失败:', externalError);
+        // 外部搜索失败不影响返回缓存结果
+      }
+    }
+
+    // 限制结果数量并排序
+    allResults = allResults
+      .slice(0, num_results)
+      .sort((a, b) => {
+        // 优先显示缓存结果，然后按相关性和引用次数排序
+        if (a.from_cache && !b.from_cache) return -1;
+        if (!a.from_cache && b.from_cache) return 1;
+        if (a.relevance_score !== b.relevance_score) return b.relevance_score - a.relevance_score;
+        return b.citations - a.citations;
+      });
+
+    console.log(`✅ 最终返回 ${allResults.length} 篇论文 (缓存: ${allResults.filter(r => r.from_cache).length}, 外部: ${allResults.filter(r => !r.from_cache).length})`);
 
     res.json({
       success: true,
       query: query,
-      results: results,
-      total_results: results.length
+      results: allResults,
+      total_results: allResults.length,
+      cache_hits: allResults.filter(r => r.from_cache).length,
+      external_hits: allResults.filter(r => !r.from_cache).length
     });
   } catch (error) {
     console.error('Scholar Search Error:', error);
@@ -1267,7 +1317,7 @@ app.post('/api/scholar-search', async (req, res) => {
         } else if (apiStatus >= 400 && apiStatus < 500) {
           statusCode = apiStatus;
         } else if (apiStatus >= 500) {
-          statusCode = 502; // Bad Gateway
+          statusCode = 502;
           errorMessage = `上游服务错误: ${apiStatus}`;
         }
       }
@@ -1279,6 +1329,235 @@ app.post('/api/scholar-search', async (req, res) => {
     });
   }
 });
+
+// 辅助函数：从缓存搜索论文
+const searchFromCache = async (query, limit = 10, filter_venues = false) => {
+  try {
+    const pool = getPool();
+    const searchQuery = query.trim();
+    
+    if (!searchQuery || searchQuery.length < 2) {
+      console.log('🔍 搜索查询过短，返回空结果');
+      return [];
+    }
+    
+    console.log(`🔍 开始缓存搜索，查询: "${searchQuery}", 限制: ${limit}, 过滤顶会: ${filter_venues}`);
+    
+    // 第一步：检测并翻译中文关键词
+    let translatedQuery = searchQuery;
+    if (/[\u4e00-\u9fa5]/.test(searchQuery)) {
+      try {
+        console.log('🈯 检测到中文，开始翻译关键词...');
+        translatedQuery = await translateToEnglish(searchQuery);
+        console.log(`🔄 翻译结果: "${searchQuery}" => "${translatedQuery}"`);
+      } catch (error) {
+        console.warn('⚠️ 翻译失败，使用原始查询:', error.message);
+        translatedQuery = searchQuery;
+      }
+    }
+    
+    // 第二步：按逗号分割关键词并清理
+    const keywords = translatedQuery
+      .split(',')
+      .map(kw => kw.trim())
+      .filter(kw => kw.length > 1)
+      .slice(0, 10); // 最多10个关键词
+    
+    console.log('🔍 原始查询:', query);
+    console.log('🔄 翻译后查询:', translatedQuery);
+    console.log('🔑 分割后关键词:', keywords);
+    console.log('📊 关键词数量:', keywords.length);
+    
+    if (keywords.length === 0) {
+      console.log('⚠️ 没有有效的搜索关键词');
+      return [];
+    }
+    
+    // 第三步：简化SQL查询 - 只搜索论文标题，任一关键词匹配即可
+    console.log('🎯 简化搜索策略：只搜索论文标题');
+    
+    // 将关键词按空格和逗号进一步分割，获取更多搜索词
+    const searchTerms = [];
+    keywords.forEach(keyword => {
+      // 按空格分割每个关键词
+      const terms = keyword.split(/\s+/).filter(term => term.length > 1);
+      searchTerms.push(...terms);
+    });
+    
+    // 去重并限制数量
+    const uniqueTerms = [...new Set(searchTerms)].slice(0, 10);
+    console.log('🔎 最终搜索词:', uniqueTerms);
+    
+    if (uniqueTerms.length === 0) {
+      console.log('⚠️ 没有有效的搜索词');
+      return [];
+    }
+    
+    // 使用最简单的查询方式，避免复杂的条件
+    console.log('🚫 使用最简单的SQL查询方式');
+    
+    // 只使用第一个搜索词，避免复杂的OR条件
+    const firstTerm = uniqueTerms[0];
+    console.log('🎯 使用第一个搜索词:', firstTerm);
+    
+    let sqlQuery = `
+      SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
+             citation_count, research_method, full_text, translated_abstract, translated_method,
+             paper_id, source, is_top_venue, quality_score, download_sources, metadata,
+             created_at, updated_at
+      FROM paper_cache 
+      WHERE title LIKE ?
+    `;
+    
+    // 构建参数数组 - 只有一个参数
+    const params = [`%${firstTerm.toLowerCase()}%`];
+    
+    // 如果需要过滤顶会顶刊
+    if (filter_venues) {
+      sqlQuery += ' AND is_top_venue = TRUE';
+    }
+    
+    // 按创建时间排序，使用简单的数字限制
+    sqlQuery += ' ORDER BY created_at DESC';
+    sqlQuery += ` LIMIT ${parseInt(limit)}`;  // 直接写入SQL，不使用参数
+    
+    console.log('🔍 执行最简化搜索...');
+    console.log('📝 SQL查询:', sqlQuery.replace(/\s+/g, ' ').trim());
+    console.log('📋 搜索参数数量:', params.length);
+    console.log('📋 预期参数数量: 1'); // 只有一个LIKE参数
+    console.log('🔧 构建的参数:', params);
+    
+    const [results] = await pool.execute(sqlQuery, params);
+    console.log(`✅ 最简化搜索成功，找到 ${results.length} 篇论文`);
+    
+    // 处理结果，只解析必要的JSON字段
+    const processedResults = results.map(paper => ({
+      ...paper,
+      download_sources: paper.download_sources ? 
+        (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null,
+      metadata: paper.metadata ? 
+        (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
+      relevance_score: 1.0,
+      matched_term: firstTerm // 添加匹配的搜索词信息
+    }));
+    
+    return processedResults;
+    
+  } catch (error) {
+    console.error('❌ 缓存搜索失败:', error);
+    console.error('错误详情:', error.stack);
+    
+    // 如果新搜索失败，使用简化的备用搜索
+    try {
+      console.log('🆘 使用备用搜索方案...');
+      return await fallbackSearch(query, limit, filter_venues);
+    } catch (fallbackError) {
+      console.error('❌ 备用搜索也失败了:', fallbackError);
+      return [];
+    }
+  }
+};
+
+// 简化的备用搜索函数 - 只搜索标题
+const fallbackSearch = async (query, limit = 10, filter_venues = false) => {
+  try {
+    const pool = getPool();
+    console.log('🆘 执行备用搜索（仅搜索标题）...');
+    
+    // 简单的关键词分割（按空格和逗号）
+    const keywords = query
+      .toLowerCase()
+      .split(/[\s,]+/)
+      .filter(word => word.length > 1)
+      .slice(0, 5); // 取前5个关键词
+    
+    if (keywords.length === 0) {
+      console.log('⚠️ 备用搜索：没有有效关键词，返回最新论文');
+      return await getLatestPapers(limit, filter_venues);
+    }
+    
+    console.log('🔑 备用搜索关键词:', keywords);
+    
+    // 最简化备用搜索 - 只使用第一个关键词
+    const firstKeyword = keywords[0];
+    console.log('🎯 备用搜索使用第一个关键词:', firstKeyword);
+    
+    let sqlQuery = `
+      SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
+             citation_count, research_method, full_text, translated_abstract, translated_method,
+             paper_id, source, is_top_venue, quality_score, download_sources, metadata,
+             created_at, updated_at
+      FROM paper_cache 
+      WHERE title LIKE ?
+    `;
+    
+    const params = [`%${firstKeyword}%`];
+    
+    if (filter_venues) {
+      sqlQuery += ' AND is_top_venue = 1';
+    }
+    
+    sqlQuery += ` ORDER BY created_at DESC LIMIT ${parseInt(limit)}`;
+    
+    console.log('🔧 备用搜索SQL:', sqlQuery.replace(/\s+/g, ' ').trim());
+    console.log('🔧 备用搜索参数:', params);
+    
+    const [results] = await pool.execute(sqlQuery, params);
+    console.log(`✅ 备用搜索找到 ${results.length} 篇论文`);
+    
+    return results.map(paper => ({
+      ...paper,
+      download_sources: paper.download_sources ? JSON.parse(paper.download_sources) : null,
+      metadata: paper.metadata ? JSON.parse(paper.metadata) : null,
+      relevance_score: 0.6
+    }));
+    
+  } catch (error) {
+    console.error('❌ 备用搜索失败:', error);
+    // 最后返回最新论文
+    return await getLatestPapers(limit, filter_venues);
+  }
+};
+
+// 获取最新论文的函数 - 最简化版本
+const getLatestPapers = async (limit = 10, filter_venues = false) => {
+  try {
+    const pool = getPool();
+    console.log('📅 获取最新论文（最简化查询）...');
+    
+    let sqlQuery = `
+      SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
+             citation_count, research_method, full_text, translated_abstract, translated_method,
+             paper_id, source, is_top_venue, quality_score, download_sources, metadata,
+             created_at, updated_at
+      FROM paper_cache
+    `;
+    
+    if (filter_venues) {
+      sqlQuery += ' WHERE is_top_venue = 1';
+    }
+    
+    sqlQuery += ` ORDER BY created_at DESC LIMIT ${parseInt(limit)}`;
+    
+    console.log('🔧 最新论文SQL:', sqlQuery.replace(/\s+/g, ' ').trim());
+    
+    const [results] = await pool.execute(sqlQuery);  // 不使用任何参数
+    console.log(`📚 返回 ${results.length} 篇最新论文`);
+    
+    return results.map(paper => ({
+      ...paper,
+      download_sources: paper.download_sources ? 
+        (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null,
+      metadata: paper.metadata ? 
+        (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
+      relevance_score: 0.3
+    }));
+    
+  } catch (error) {
+    console.error('❌ 获取最新论文失败:', error);
+    return [];
+  }
+};
 
 // 解析Coze API响应，提取关键词
 const parseKeywordsFromCozeResponse = (reply) => {
@@ -2848,6 +3127,381 @@ app.delete('/api/research-plans/:id', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('删除研究方案错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// ==================== 论文缓存管理API ====================
+
+// 保存或更新论文到缓存
+app.post('/api/paper-cache/save', optionalAuth, async (req, res) => {
+  try {
+    const { 
+      title, 
+      authors, 
+      abstract, 
+      doi, 
+      url, 
+      download_url, 
+      year, 
+      journal, 
+      venue,
+      citation_count, 
+      research_method, 
+      full_text, 
+      translated_abstract, 
+      translated_method,
+      paper_id, 
+      source, 
+      is_top_venue,
+      download_sources,
+      metadata 
+    } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '论文标题是必需的' 
+      });
+    }
+
+    // 验证和处理source值
+    const allowedSources = ['search', 'recommendation', 'manual'];
+    let validSource = 'manual'; // 默认值
+    
+    if (source && typeof source === 'string') {
+      console.log('🔍 收到的source值:', JSON.stringify(source));
+      const trimmedSource = source.trim().toLowerCase();
+      if (allowedSources.includes(trimmedSource)) {
+        validSource = trimmedSource;
+      } else {
+        console.warn('⚠️ 无效的source值:', source, '使用默认值:', validSource);
+      }
+    }
+    
+    console.log('✅ 使用的source值:', validSource);
+
+    // 验证和处理paper_id长度
+    let validPaperId = paper_id;
+    if (paper_id && typeof paper_id === 'string') {
+      if (paper_id.length > 255) {
+        console.warn('⚠️ paper_id过长，进行截断:', paper_id.length, '字符');
+        validPaperId = paper_id.substring(0, 255);
+        console.log('✂️ 截断后的paper_id长度:', validPaperId.length);
+      }
+    }
+    
+    // 验证其他字段长度
+    let validTitle = title;
+    if (title && title.length > 500) {
+      console.warn('⚠️ 标题过长，进行截断:', title.length, '字符');
+      validTitle = title.substring(0, 500);
+    }
+    
+    let validDoi = doi;
+    if (doi && doi.length > 100) {
+      console.warn('⚠️ DOI过长，进行截断:', doi.length, '字符');
+      validDoi = doi.substring(0, 100);
+    }
+
+    const pool = getPool();
+    
+    // 计算质量评分 (基于引用次数、是否顶会顶刊等)
+    let quality_score = 0.5; // 基础分
+    if (citation_count) {
+      quality_score += Math.min(citation_count / 1000, 0.3); // 引用次数加分，最多0.3
+    }
+    if (is_top_venue) {
+      quality_score += 0.2; // 顶会顶刊加分
+    }
+    quality_score = Math.min(quality_score, 1.0); // 最高1.0分
+
+    // 检查论文是否已存在（基于标题和DOI）
+    let existingPaper = null;
+    if (validDoi) {
+      const [doiResults] = await pool.execute(
+        'SELECT id FROM paper_cache WHERE doi = ? AND doi IS NOT NULL AND doi != ""',
+        [validDoi]
+      );
+      if (doiResults.length > 0) {
+        existingPaper = doiResults[0];
+      }
+    }
+    
+    if (!existingPaper) {
+      const [titleResults] = await pool.execute(
+        'SELECT id FROM paper_cache WHERE title = ?',
+        [validTitle]
+      );
+      if (titleResults.length > 0) {
+        existingPaper = titleResults[0];
+      }
+    }
+
+    let paperId;
+    
+    if (existingPaper) {
+      // 更新现有论文
+      paperId = existingPaper.id;
+      await pool.execute(
+        `UPDATE paper_cache SET 
+         title = ?, authors = ?, abstract = ?, doi = ?, url = ?, download_url = ?,
+         year = ?, journal = ?, venue = ?, citation_count = ?, research_method = ?,
+         full_text = ?, translated_abstract = ?, translated_method = ?, paper_id = ?,
+         source = ?, is_top_venue = ?, quality_score = ?, download_sources = ?, metadata = ?,
+         updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        [
+          validTitle, authors, abstract, validDoi, url, download_url, year, journal, venue,
+          citation_count || 0, research_method, full_text, translated_abstract, 
+          translated_method, validPaperId, validSource, is_top_venue || false,
+          quality_score, download_sources ? JSON.stringify(download_sources) : null,
+          metadata ? JSON.stringify(metadata) : null, paperId
+        ]
+      );
+      console.log(`✅ 更新论文缓存: ${validTitle}`);
+    } else {
+      // 创建新论文缓存
+      const [result] = await pool.execute(
+        `INSERT INTO paper_cache 
+         (title, authors, abstract, doi, url, download_url, year, journal, venue,
+          citation_count, research_method, full_text, translated_abstract, translated_method,
+          paper_id, source, is_top_venue, quality_score, download_sources, metadata) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          validTitle, authors, abstract, validDoi, url, download_url, year, journal, venue,
+          citation_count || 0, research_method, full_text, translated_abstract, 
+          translated_method, validPaperId, validSource, is_top_venue || false,
+          quality_score, download_sources ? JSON.stringify(download_sources) : null,
+          metadata ? JSON.stringify(metadata) : null
+        ]
+      );
+      paperId = result.insertId;
+      console.log(`✅ 新增论文缓存: ${validTitle}`);
+    }
+
+    res.json({
+      success: true,
+      message: existingPaper ? '论文缓存更新成功' : '论文缓存保存成功',
+      paper_id: paperId,
+      is_update: !!existingPaper
+    });
+  } catch (error) {
+    console.error('保存论文缓存错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 检查论文是否已缓存
+app.post('/api/paper-cache/check', optionalAuth, async (req, res) => {
+  try {
+    const { title, doi } = req.body;
+    
+    if (!title && !doi) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '需要提供论文标题或DOI' 
+      });
+    }
+
+    const pool = getPool();
+    let query = 'SELECT id, title, updated_at FROM paper_cache WHERE ';
+    let params = [];
+    
+    if (doi) {
+      query += 'doi = ? AND doi IS NOT NULL AND doi != ""';
+      params.push(doi);
+    } else {
+      query += 'title = ?';
+      params.push(title);
+    }
+
+    const [results] = await pool.execute(query, params);
+    
+    res.json({
+      success: true,
+      cached: results.length > 0,
+      paper: results.length > 0 ? results[0] : null
+    });
+  } catch (error) {
+    console.error('检查论文缓存错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 从本地缓存搜索论文
+app.post('/api/paper-cache/search', optionalAuth, async (req, res) => {
+  try {
+    const { query, limit = 10, filter_venues = false } = req.body;
+    
+    if (!query || query.trim().length < 2) {
+      return res.json({
+        success: true,
+        papers: [],
+        total: 0,
+        from_cache: true
+      });
+    }
+
+    const pool = getPool();
+    const searchQuery = query.trim();
+    
+    // 构建SQL查询
+    let sqlQuery = `
+      SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
+             citation_count, research_method, full_text, translated_abstract, translated_method,
+             paper_id, source, is_top_venue, quality_score, download_sources, metadata,
+             created_at, updated_at,
+             MATCH(title, abstract) AGAINST(? IN NATURAL LANGUAGE MODE) as relevance_score
+      FROM paper_cache 
+      WHERE MATCH(title, abstract) AGAINST(? IN NATURAL LANGUAGE MODE)
+    `;
+    
+    let params = [searchQuery, searchQuery];
+    
+    // 如果需要过滤顶会顶刊
+    if (filter_venues) {
+      sqlQuery += ' AND is_top_venue = TRUE';
+    }
+    
+    // 按相关性和质量评分排序
+    sqlQuery += ' ORDER BY relevance_score DESC, quality_score DESC, citation_count DESC';
+    sqlQuery += ' LIMIT ?';
+    params.push(parseInt(limit));
+
+    const [results] = await pool.execute(sqlQuery, params);
+    
+    // 处理结果，解析JSON字段
+    const papers = results.map(paper => ({
+      ...paper,
+      download_sources: paper.download_sources ? JSON.parse(paper.download_sources) : null,
+      metadata: paper.metadata ? JSON.parse(paper.metadata) : null,
+      from_cache: true
+    }));
+
+    console.log(`🔍 本地缓存搜索到 ${papers.length} 篇论文，查询: "${searchQuery}"`);
+
+    res.json({
+      success: true,
+      papers: papers,
+      total: papers.length,
+      from_cache: true,
+      query: searchQuery
+    });
+  } catch (error) {
+    console.error('本地缓存搜索错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 获取缓存的论文详情
+app.get('/api/paper-cache/:id', optionalAuth, async (req, res) => {
+  try {
+    const paperId = req.params.id;
+    const pool = getPool();
+
+    const [results] = await pool.execute(
+      `SELECT * FROM paper_cache WHERE id = ?`,
+      [paperId]
+    );
+
+    if (results.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: '论文不存在' 
+      });
+    }
+
+    const paper = results[0];
+    
+    // 解析JSON字段
+    paper.download_sources = paper.download_sources ? JSON.parse(paper.download_sources) : null;
+    paper.metadata = paper.metadata ? JSON.parse(paper.metadata) : null;
+    paper.from_cache = true;
+
+    res.json({
+      success: true,
+      paper: paper
+    });
+  } catch (error) {
+    console.error('获取缓存论文详情错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 删除缓存的论文
+app.delete('/api/paper-cache/:id', authenticateToken, async (req, res) => {
+  try {
+    const paperId = req.params.id;
+    const pool = getPool();
+
+    const [result] = await pool.execute(
+      'DELETE FROM paper_cache WHERE id = ?',
+      [paperId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: '论文不存在' 
+      });
+    }
+
+    res.json({
+      success: true,
+      message: '论文删除成功'
+    });
+  } catch (error) {
+    console.error('删除缓存论文错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 获取缓存统计信息
+app.get('/api/paper-cache/stats', optionalAuth, async (req, res) => {
+  try {
+    const pool = getPool();
+
+    const [totalResults] = await pool.execute(
+      'SELECT COUNT(*) as total FROM paper_cache'
+    );
+    
+    const [topVenueResults] = await pool.execute(
+      'SELECT COUNT(*) as top_venues FROM paper_cache WHERE is_top_venue = TRUE'
+    );
+    
+    const [recentResults] = await pool.execute(
+      'SELECT COUNT(*) as recent FROM paper_cache WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)'
+    );
+
+    res.json({
+      success: true,
+      stats: {
+        total_papers: totalResults[0].total,
+        top_venue_papers: topVenueResults[0].top_venues,
+        recent_papers: recentResults[0].recent
+      }
+    });
+  } catch (error) {
+    console.error('获取缓存统计错误:', error);
     res.status(500).json({ 
       success: false, 
       error: '服务器内部错误' 
