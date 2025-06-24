@@ -41,7 +41,7 @@ initServer();
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://method-mate.vercel.app', 'https://methodmate.vercel.app','http://118.195.129.161','http://118.195.129.161:3002'] 
-    : ['http://localhost:5173', 'http://localhost:3000'],
+    : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -1356,16 +1356,16 @@ const searchFromCache = async (query, limit = 10, filter_venues = false) => {
       }
     }
     
-    // 第二步：按逗号分割关键词并清理
+    // 第二步：按逗号分割关键词并清理，保留短语中的空格
     const keywords = translatedQuery
       .split(',')
       .map(kw => kw.trim())
       .filter(kw => kw.length > 1)
-      .slice(0, 10); // 最多10个关键词
+      .slice(0, 5); // 最多5个关键词，避免查询过于复杂
     
     console.log('🔍 原始查询:', query);
     console.log('🔄 翻译后查询:', translatedQuery);
-    console.log('🔑 分割后关键词:', keywords);
+    console.log('🔑 按逗号分割的关键词:', keywords);
     console.log('📊 关键词数量:', keywords.length);
     
     if (keywords.length === 0) {
@@ -1373,32 +1373,8 @@ const searchFromCache = async (query, limit = 10, filter_venues = false) => {
       return [];
     }
     
-    // 第三步：简化SQL查询 - 只搜索论文标题，任一关键词匹配即可
-    console.log('🎯 简化搜索策略：只搜索论文标题');
-    
-    // 将关键词按空格和逗号进一步分割，获取更多搜索词
-    const searchTerms = [];
-    keywords.forEach(keyword => {
-      // 按空格分割每个关键词
-      const terms = keyword.split(/\s+/).filter(term => term.length > 1);
-      searchTerms.push(...terms);
-    });
-    
-    // 去重并限制数量
-    const uniqueTerms = [...new Set(searchTerms)].slice(0, 10);
-    console.log('🔎 最终搜索词:', uniqueTerms);
-    
-    if (uniqueTerms.length === 0) {
-      console.log('⚠️ 没有有效的搜索词');
-      return [];
-    }
-    
-    // 使用最简单的查询方式，避免复杂的条件
-    console.log('🚫 使用最简单的SQL查询方式');
-    
-    // 只使用第一个搜索词，避免复杂的OR条件
-    const firstTerm = uniqueTerms[0];
-    console.log('🎯 使用第一个搜索词:', firstTerm);
+    // 第三步：构建SQL查询 - 要求论文标题必须包含所有关键词
+    console.log('🎯 搜索策略：论文标题必须包含所有关键词');
     
     let sqlQuery = `
       SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
@@ -1406,11 +1382,20 @@ const searchFromCache = async (query, limit = 10, filter_venues = false) => {
              paper_id, source, is_top_venue, quality_score, download_sources, metadata,
              created_at, updated_at
       FROM paper_cache 
-      WHERE title LIKE ?
+      WHERE 1=1
     `;
     
-    // 构建参数数组 - 只有一个参数
-    const params = [`%${firstTerm.toLowerCase()}%`];
+    // 构建参数数组 - 每个关键词都需要匹配
+    const params = [];
+    
+    // 为每个关键词添加AND条件
+    keywords.forEach((keyword, index) => {
+      sqlQuery += ` AND title LIKE ?`;
+      params.push(`%${keyword.toLowerCase()}%`);
+    });
+    
+    console.log('🔧 构建的SQL查询条件数量:', keywords.length);
+    console.log('🔧 关键词:', keywords);
     
     // 如果需要过滤顶会顶刊
     if (filter_venues) {
@@ -1464,12 +1449,12 @@ const fallbackSearch = async (query, limit = 10, filter_venues = false) => {
     const pool = getPool();
     console.log('🆘 执行备用搜索（仅搜索标题）...');
     
-    // 简单的关键词分割（按空格和逗号）
+    // 按逗号分割关键词（保留短语中的空格）
     const keywords = query
-      .toLowerCase()
-      .split(/[\s,]+/)
-      .filter(word => word.length > 1)
-      .slice(0, 5); // 取前5个关键词
+      .split(',')
+      .map(kw => kw.trim())
+      .filter(kw => kw.length > 1)
+      .slice(0, 3); // 备用搜索限制为3个关键词
     
     if (keywords.length === 0) {
       console.log('⚠️ 备用搜索：没有有效关键词，返回最新论文');
@@ -1478,9 +1463,8 @@ const fallbackSearch = async (query, limit = 10, filter_venues = false) => {
     
     console.log('🔑 备用搜索关键词:', keywords);
     
-    // 最简化备用搜索 - 只使用第一个关键词
-    const firstKeyword = keywords[0];
-    console.log('🎯 备用搜索使用第一个关键词:', firstKeyword);
+    // 备用搜索 - 要求包含所有关键词
+    console.log('🎯 备用搜索策略：标题必须包含所有关键词');
     
     let sqlQuery = `
       SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
@@ -1488,10 +1472,16 @@ const fallbackSearch = async (query, limit = 10, filter_venues = false) => {
              paper_id, source, is_top_venue, quality_score, download_sources, metadata,
              created_at, updated_at
       FROM paper_cache 
-      WHERE title LIKE ?
+      WHERE 1=1
     `;
     
-    const params = [`%${firstKeyword}%`];
+    const params = [];
+    
+    // 为每个关键词添加AND条件
+    keywords.forEach((keyword, index) => {
+      sqlQuery += ` AND title LIKE ?`;
+      params.push(`%${keyword.toLowerCase()}%`);
+    });
     
     if (filter_venues) {
       sqlQuery += ' AND is_top_venue = 1';
@@ -2045,79 +2035,183 @@ Please respond in the following JSON format:
     
     console.log('格式化后的搜索查询:', formattedSearchQuery);
     
-    // 构建基本查询参数 - 不对查询进行编码，保持原始格式
-    let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${formattedSearchQuery}&limit=5&fields=title,abstract,url,openAccessPdf,year,citationCount,authors,venue`;
+    // 第一步：优先从本地缓存搜索
+    console.log('🔍 首先从本地缓存搜索推荐论文...');
+    const cacheResults = await searchFromCache(formattedSearchQuery, 5, filter_venues);
+    console.log(`📚 本地缓存找到 ${cacheResults.length} 篇推荐论文`);
     
-    // 如果需要过滤期刊/会议，使用venue参数
-    if (filter_venues) {
-      // 使用原始venue名称，用逗号连接但不进行URL编码
-      const venueParam = allowedVenues.join(',');
-      searchUrl += `&venue=${venueParam}`;
-    }
+    let allPapers = [];
+    let needExternalSearch = true;
+    let externalSearchResult = null; // 声明外部搜索结果变量
     
-    // 输出最终请求URL用于调试
-    console.log('最终Semantic Scholar API请求URL:', searchUrl);
-
-    // 准备请求头 - 只使用基本的Accept头，避免API密钥问题
-    const headers = {
-      'Accept': 'application/json'
-    };
-    
-    // 输出请求信息用于调试
-    console.log('请求头:', JSON.stringify(headers));
-    console.log('SEMANTIC_API_KEY是否存在:', !!SEMANTIC_API_KEY);
-
-    // 调用Semantic Scholar API搜索相关论文 - 不使用API密钥
-    console.log('开始调用Semantic Scholar API...');
-    let searchResponse;
-    try {
-      searchResponse = await fetchWithRetry(searchUrl, {
-        headers: headers
-      }, 3, 1000); // 最多重试3次，初始延迟1秒
+    if (cacheResults.length > 0) {
+      // 将缓存结果转换为推荐论文格式
+      const formattedCacheResults = cacheResults.map(paper => ({
+        id: `cache_${paper.id}`,
+        title: paper.title || '',
+        abstract: paper.abstract || '',
+        downloadUrl: paper.download_url || null,
+        year: paper.year?.toString() || '',
+        citationCount: paper.citation_count || 0,
+        authors: paper.authors ? (typeof paper.authors === 'string' ? paper.authors.split(', ') : paper.authors) : [],
+        venue: paper.venue || paper.journal || '',
+        fullText: paper.full_text || null,
+        researchMethod: paper.research_method || null,
+        isTopVenue: paper.is_top_venue || false,
+        from_cache: true,
+        cache_id: paper.id,
+        translated_abstract: paper.translated_abstract,
+        translated_method: paper.translated_method,
+        source: 'cache'
+      }));
       
-      console.log('Semantic Scholar API响应状态:', searchResponse.status, searchResponse.statusText);
+      allPapers = formattedCacheResults;
       
-      if (!searchResponse.ok) {
-        const errorText = await searchResponse.text();
-        console.error('Semantic Scholar API错误响应:', errorText);
-        throw new Error(`Semantic Scholar API responded with status: ${searchResponse.status}`);
+      // 如果缓存结果已经足够，就不需要外部搜索
+      if (cacheResults.length >= 5) {
+        needExternalSearch = false;
+        console.log('📚 本地缓存结果充足，无需外部搜索');
       }
-    } catch (fetchError) {
-      console.error('Semantic Scholar API请求失败:', fetchError);
-      throw fetchError;
+    }
+    
+    // 第二步：如果本地结果不足，继续外部搜索
+    if (needExternalSearch) {
+      const remainingCount = Math.max(0, 5 - allPapers.length);
+      console.log(`🌐 本地结果不足，继续外部搜索 ${remainingCount} 篇论文...`);
+      
+      // 构建基本查询参数 - 不对查询进行编码，保持原始格式
+      let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${formattedSearchQuery}&limit=${remainingCount}&fields=title,abstract,url,openAccessPdf,year,citationCount,authors,venue`;
+      
+      // 如果需要过滤期刊/会议，使用venue参数
+      if (filter_venues) {
+        // 使用原始venue名称，用逗号连接但不进行URL编码
+        const venueParam = allowedVenues.join(',');
+        searchUrl += `&venue=${venueParam}`;
+      }
+      
+      // 输出最终请求URL用于调试
+      console.log('最终Semantic Scholar API请求URL:', searchUrl);
+
+      // 准备请求头 - 只使用基本的Accept头，避免API密钥问题
+      const headers = {
+        'Accept': 'application/json'
+      };
+      
+      // 输出请求信息用于调试
+      console.log('请求头:', JSON.stringify(headers));
+      console.log('SEMANTIC_API_KEY是否存在:', !!SEMANTIC_API_KEY);
+
+      // 调用Semantic Scholar API搜索相关论文 - 不使用API密钥
+      console.log('开始调用Semantic Scholar API...');
+      let searchResponse;
+      try {
+        searchResponse = await fetchWithRetry(searchUrl, {
+          headers: headers
+        }, 3, 1000); // 最多重试3次，初始延迟1秒
+        
+        console.log('Semantic Scholar API响应状态:', searchResponse.status, searchResponse.statusText);
+        
+        if (!searchResponse.ok) {
+          const errorText = await searchResponse.text();
+          console.error('Semantic Scholar API错误响应:', errorText);
+          throw new Error(`Semantic Scholar API responded with status: ${searchResponse.status}`);
+        }
+      } catch (fetchError) {
+        console.error('Semantic Scholar API请求失败:', fetchError);
+        throw fetchError;
+      }
+
+      // 解析响应
+      try {
+        externalSearchResult = await searchResponse.json();
+        console.log('Semantic Scholar API响应数据结构:', 
+          Object.keys(externalSearchResult), 
+          '数据项数量:', externalSearchResult.data ? externalSearchResult.data.length : 0
+        );
+      } catch (jsonError) {
+        console.error('解析Semantic Scholar API响应失败:', jsonError);
+        throw jsonError;
+      }
+
+      // 处理外部搜索结果
+      if (externalSearchResult.data && externalSearchResult.data.length > 0) {
+        const externalResults = externalSearchResult.data.map(paper => {
+          const venue = paper.venue || '';
+          
+          // 判断是否是顶会顶刊
+          const isTopVenue = allowedVenues.some(allowedVenue => {
+            const allowedLower = allowedVenue.toLowerCase();
+            const venueLower = venue.toLowerCase();
+            
+            if (venueLower === allowedLower) return true;
+            
+            if (allowedLower === 'cscw' && (venueLower === 'cscw' || venueLower.includes('computer-supported cooperative work'))) return true;
+            if (allowedLower === 'chi' && (venueLower === 'chi' || venueLower.includes('human factors in computing systems'))) return true;
+            if (allowedLower === 'ubicomp' && (venueLower === 'ubicomp' || venueLower.includes('pervasive and ubiquitous computing'))) return true;
+            if (allowedLower === 'uist' && (venueLower === 'uist' || venueLower.includes('user interface software and technology'))) return true;
+            if (allowedLower === 'tochi' && (venueLower === 'tochi' || venueLower.includes('transactions on computer-human interaction'))) return true;
+            
+            const words = allowedLower.split(' ');
+            if (words.length > 1) {
+              return venueLower === allowedLower || 
+                     venueLower.includes(` ${allowedLower} `) || 
+                     venueLower.startsWith(`${allowedLower} `) || 
+                     venueLower.endsWith(` ${allowedLower}`);
+            }
+            
+            return venueLower === allowedLower || 
+                   venueLower.includes(` ${allowedLower} `) || 
+                   venueLower.startsWith(`${allowedLower} `) || 
+                   venueLower.endsWith(` ${allowedLower}`);
+          });
+          
+          return {
+            id: `external_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
+            title: paper.title || '',
+            abstract: paper.abstract || '暂无摘要',
+            downloadUrl: (paper.openAccessPdf && paper.openAccessPdf.url) || paper.url || null,
+            year: paper.year?.toString() || '',
+            citationCount: paper.citationCount || 0,
+            authors: (paper.authors && paper.authors.map(author => author.name)) || [],
+            venue: venue,
+            fullText: null,
+            researchMethod: null,
+            isTopVenue: isTopVenue,
+            from_cache: false,
+            source: 'external'
+          };
+        });
+
+        // 合并结果，去重（基于标题）
+        const existingTitles = new Set(allPapers.map(r => r.title.toLowerCase()));
+        const newResults = externalResults.filter(r => 
+          r.title && !existingTitles.has(r.title.toLowerCase())
+        );
+        
+        allPapers = allPapers.concat(newResults);
+        console.log(`🌐 外部搜索新增 ${newResults.length} 篇论文`);
+      }
     }
 
-    // 解析响应
-    let result;
-    try {
-      result = await searchResponse.json();
-      console.log('Semantic Scholar API响应数据结构:', 
-        Object.keys(result), 
-        '数据项数量:', result.data ? result.data.length : 0
-      );
-    } catch (jsonError) {
-      console.error('解析Semantic Scholar API响应失败:', jsonError);
-      throw jsonError;
-    }
-
-    // 检查是否有搜索结果
-    if (!result.data || result.data.length === 0) {
-      console.log('没有找到匹配的论文');
-      return res.json({
-        success: true,
-        papers: [],
-        rawResponse: JSON.stringify(result),
-        session_id: session_id || 'default'
+    // 限制结果数量并排序
+    allPapers = allPapers
+      .slice(0, 5)
+      .sort((a, b) => {
+        // 优先显示缓存结果，然后按引用次数排序
+        if (a.from_cache && !b.from_cache) return -1;
+        if (!a.from_cache && b.from_cache) return 1;
+        return b.citationCount - a.citationCount;
       });
-    }
 
-    // 解析返回的论文数据
-    const papers = await parseSemanticResponse(result.data || []);
+    console.log(`✅ 最终返回 ${allPapers.length} 篇推荐论文 (缓存: ${allPapers.filter(r => r.from_cache).length}, 外部: ${allPapers.filter(r => !r.from_cache).length})`);
 
     res.json({
       success: true,
-      papers: papers,
-      rawResponse: JSON.stringify(result.data),
+      papers: allPapers,
+      cache_hits: allPapers.filter(r => r.from_cache).length,
+      external_hits: allPapers.filter(r => !r.from_cache).length,
+      total_papers: allPapers.length,
+      rawResponse: needExternalSearch ? JSON.stringify(externalSearchResult?.data || []) : '本地缓存结果',
       session_id: session_id || 'default'
     });
   } catch (error) {
