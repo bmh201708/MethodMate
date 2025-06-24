@@ -1138,11 +1138,58 @@ export const removeHistoryPlan = async (planId) => {
   }
 }
 
-export const clearHistoryPlans = () => {
+export const clearHistoryPlans = async () => {
+  console.log('=== 开始清除所有历史方案 ===')
+  const plansToDelete = [...historyState.historyPlans] // 创建副本
+  console.log(`需要删除 ${plansToDelete.length} 个方案`)
+  
+  // 如果用户已登录，先从数据库删除所有方案
+  if (isUserAuthenticated() && plansToDelete.length > 0) {
+    console.log('用户已登录，开始从数据库删除方案...')
+    
+    // 收集所有有数据库ID的方案
+    const plansWithDbId = plansToDelete.filter(plan => plan.databaseId)
+    console.log(`其中 ${plansWithDbId.length} 个方案有数据库ID，需要从数据库删除`)
+    
+    // 逐个删除数据库中的方案
+    const deletePromises = plansWithDbId.map(async (plan) => {
+      try {
+        await researchPlanAPI.delete(plan.databaseId)
+        console.log(`✅ 已从数据库删除方案: ${plan.title}`)
+        return { success: true, plan }
+      } catch (error) {
+        console.error(`❌ 从数据库删除方案失败: ${plan.title}`, error)
+        return { success: false, plan, error }
+      }
+    })
+    
+    // 等待所有删除操作完成
+    const deleteResults = await Promise.allSettled(deletePromises)
+    
+    // 统计删除结果
+    const successCount = deleteResults.filter(result => 
+      result.status === 'fulfilled' && result.value.success
+    ).length
+    const failureCount = deleteResults.length - successCount
+    
+    console.log(`数据库删除完成: 成功 ${successCount} 个，失败 ${failureCount} 个`)
+    
+    if (failureCount > 0) {
+      console.warn('部分方案从数据库删除失败，但前端状态仍会被清空')
+    }
+  } else if (!isUserAuthenticated()) {
+    console.log('用户未登录，跳过数据库删除操作')
+  } else {
+    console.log('没有方案需要删除')
+  }
+  
+  // 清空前端状态
   historyState.historyPlans = []
   historyState.currentViewingPlan = null
-  historyState.currentAppliedPlanId = null // 清除应用状态
-  console.log('清空所有历史方案')
+  historyState.currentAppliedPlanId = null
+  
+  console.log('=== 清除所有历史方案完成 ===')
+  console.log('前端状态已清空')
 }
 
 export const setCurrentViewingPlan = (plan) => {
