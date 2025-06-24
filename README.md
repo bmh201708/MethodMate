@@ -18,6 +18,17 @@
 
 MethodMate是一个专为人机交互(HCI)研究设计的智能学术助手，结合了AI技术与学术研究工作流，为研究者提供从文献推荐到研究方案生成的全链路支持。通过集成先进的AI技术和完善的本地开发环境，MethodMate为研究者打造了一个高效、智能的研究工具平台。
 
+### 📊 项目规模
+
+- **总代码行数**: ~15,865 行
+  - 前端代码 (Vue.js): 7,881 行
+  - 后端代码 (Node.js): 10,051 行  
+  - 样式文件 (CSS): 1,908 行
+  - 测试页面 (HTML): 5,876 行
+- **项目类型**: 全栈Web应用
+- **开发周期**: 持续迭代中
+- **技术架构**: 前后端分离 + 数据库驱动
+
 ### 🎯 核心价值
 
 - **智能推荐** - AI驱动的学术文献推荐系统，精准匹配研究需求
@@ -25,6 +36,7 @@ MethodMate是一个专为人机交互(HCI)研究设计的智能学术助手，�
 - **历史管理** - 完整的研究方案版本控制和比较功能
 - **PDF导出** - 专业格式的研究文档输出，支持中文
 - **本地开发** - 完整的前后端开发环境，支持自定义扩展
+- **数据持久化** - 完整的用户系统和数据管理功能
 
 ## ✨ 功能特性
 
@@ -32,18 +44,21 @@ MethodMate是一个专为人机交互(HCI)研究设计的智能学术助手，�
 - **实时对话** - 基于Coze API的智能学术助手
 - **上下文理解** - 记忆对话历史，提供连贯的建议
 - **专业回答** - 专注于HCI研究方法和实验设计
+- **对话历史** - 完整的对话记录和会话管理
 
 ### 📚 智能文献推荐
 - **语义搜索** - 基于对话内容的文献智能推荐
 - **多维筛选** - 支持顶级期刊会议过滤
 - **批量管理** - 文献收藏、引用和导出功能
 - **Google Scholar集成** - 直接搜索和获取学术文献
+- **本地缓存** - 高质量论文本地存储和快速检索
 
 ### 🔬 研究方案生成
 - **自动生成** - AI驱动的定量研究方案设计
 - **模块化展示** - 分别展示研究假设、实验设计、数据分析、结果呈现
 - **参考整合** - 基于选择的文献生成针对性方案
 - **格式规范** - 符合学术标准的方案结构
+- **方案关联** - 研究方案与参考文献的完整关联管理
 
 ### 📄 专业文档导出
 - **PDF生成** - 高质量的研究方案PDF导出
@@ -56,38 +71,62 @@ MethodMate是一个专为人机交互(HCI)研究设计的智能学术助手，�
 - **版本对比** - 查看不同版本的研究方案
 - **一键应用** - 历史方案快速应用为当前方案
 - **智能去重** - 避免重复保存相同内容
+- **状态管理** - 草稿、活跃、完成、归档等状态管理
 
 ### 🔍 文献内容分析
 - **全文获取** - 自动获取论文完整内容
 - **方法提取** - AI提取论文中的研究方法
 - **内容翻译** - 英文文献的中文翻译
 - **来源追踪** - 生成方案的文献来源说明
+- **元数据管理** - 完整的论文元数据和质量评分
 
-### 💾 论文缓存
+### 💾 论文缓存与数据管理
 - **本地保存** - 高质量论文本地保存，提高响应速度
 - **实时同步** - 支持对话历史和文献的云端同步
 - **个性化推荐** - 基于用户研究兴趣的智能推荐
+- **数据库驱动** - MySQL数据库确保数据完整性和一致性
+
+### 👥 用户系统
+- **用户注册/登录** - 完整的用户认证系统
+- **个人资料管理** - 用户信息和偏好设置
+- **数据隔离** - 用户间数据安全隔离
+- **会话管理** - 个人对话历史和方案管理
 
 ## 🛠️ 技术栈
 
 ### 前端技术
 - **Vue 3** - 渐进式JavaScript框架，采用Composition API
 - **Vue Router 4** - 现代化单页应用路由
+- **Pinia** - Vue 3状态管理解决方案
 - **TailwindCSS** - 原子化CSS框架，快速UI构建
 - **Vite** - 极速的前端构建工具
 - **html2pdf.js** - 客户端PDF生成库
 
 ### 后端技术
 - **Node.js + Express** - 高性能JavaScript后端服务
+- **MySQL 2** - 关系型数据库，使用连接池
 - **Coze API** - AI智能体平台集成
 - **Semantic Scholar API** - 学术文献数据源
 - **CORE API** - 开放获取文献平台
+- **JWT** - JSON Web Token用户认证
+- **bcrypt** - 密码加密存储
 
-### 开发工具
+### 数据库设计
+- **用户表 (users)** - 用户基本信息和认证
+- **对话表 (conversations)** - 会话记录和标题
+- **消息表 (messages)** - 对话消息内容
+- **文献表 (reference_papers)** - 引用文献管理
+- **研究方案表 (research_plans)** - 研究方案存储
+- **方案关联表 (plan_references)** - 方案与文献关联
+- **论文缓存表 (paper_cache)** - 高质量论文缓存
+
+### 开发工具与部署
 - **Git** - 版本控制系统
 - **npm** - 包管理器
 - **ESLint** - 代码质量检查
+- **PostCSS** - CSS后处理器
 - **Vercel** - 云部署平台
+- **Docker** - 容器化部署支持
 
 ## 🚀 快速开始
 
@@ -217,41 +256,98 @@ proxy: {
 ## 📁 项目结构
 
 ```
-MethodMate/
-├── public/                    # 静态资源
-│   ├── images/               # 图片资源
-│   └── test-*.html          # API测试页面
-├── src/                      # 前端源码
-│   ├── components/          # Vue组件
-│   │   ├── ChatBox.vue     # 聊天对话框
-│   │   ├── ScholarSearch.vue # 学术搜索
-│   │   └── ReferencedPapersList.vue # 引用文献列表
-│   ├── views/              # 页面组件
-│   │   ├── HomeView.vue    # 首页
-│   │   ├── PaperDetail.vue # 文献详情
-│   │   ├── ResearchPlanDetail.vue # 研究方案详情
-│   │   └── HistoryPlans.vue # 历史方案
-│   ├── services/           # API服务
-│   │   ├── api.js          # 通用API服务
-│   │   ├── cozeApi.js      # Coze API集成
-│   │   └── cozeService.js  # Coze服务封装
-│   ├── stores/             # 状态管理
-│   │   └── chatStore.js    # 聊天和方案状态
-│   ├── router/             # 路由配置
-│   │   └── index.js        # 路由定义
-│   └── style.css           # 全局样式
-├── server/                   # 后端源码
-│   ├── local-api.js         # 主API服务器
-│   ├── package.json         # 后端依赖配置
-│   ├── translate-service.js # 翻译服务
-│   ├── coze-translate-service.js # Coze翻译服务
-│   └── *.js                 # 其他后端模块
-├── package.json             # 前端依赖配置
-├── vite.config.js           # Vite构建配置(支持本地/远程后端代理)
-├── tailwind.config.js       # TailwindCSS配置
-├── test-local-api.html      # API测试工具页面
-├── vercel.json              # Vercel部署配置
-└── README.md               # 项目文档
+MethodMate/ (~15,865 行代码)
+├── 📁 前端源码 (7,881 行)
+│   ├── public/                    # 静态资源目录
+│   │   ├── images/               # 图片资源 (AI图标、操作系统图标等)
+│   │   ├── debug-conversation.html # 对话调试页面
+│   │   ├── test-api.html         # API接口测试
+│   │   ├── test-conversation.html # 对话功能测试
+│   │   ├── test-core-api.html    # CORE API测试
+│   │   ├── test-latex-render.html # LaTeX渲染测试
+│   │   ├── test-local-search.html # 本地搜索测试
+│   │   └── test-recommendations.html # 推荐功能测试
+│   ├── src/                      # Vue.js前端源码
+│   │   ├── components/          # Vue组件库
+│   │   │   ├── ChatBox.vue     # 智能对话组件
+│   │   │   ├── ConversationGuide.vue # 对话引导组件
+│   │   │   ├── LoadingDots.vue # 加载动画组件
+│   │   │   ├── NavigationBar.vue # 顶部导航栏
+│   │   │   ├── PromptOptimizeDialog.vue # 提示优化对话框
+│   │   │   ├── ReferencedPapersList.vue # 引用文献列表
+│   │   │   ├── ScholarSearch.vue # 学术搜索组件
+│   │   │   └── TypewriterText.vue # 打字机效果组件
+│   │   ├── views/              # 页面组件
+│   │   │   ├── HomeView.vue    # 首页 (智能对话)
+│   │   │   ├── LoginView.vue   # 用户登录页面
+│   │   │   ├── RegisterView.vue # 用户注册页面
+│   │   │   ├── PaperDetail.vue # 文献详情页面
+│   │   │   ├── ReferencesView.vue # 引用文献管理
+│   │   │   ├── ResearchPlanDetail.vue # 研究方案详情
+│   │   │   ├── HistoryPlans.vue # 历史方案管理
+│   │   │   └── ScholarSearchView.vue # 文献搜索页面
+│   │   ├── services/           # API服务层
+│   │   │   ├── api.js          # 通用API服务封装
+│   │   │   ├── cozeApi.js      # Coze AI API集成
+│   │   │   └── cozeService.js  # Coze服务高级封装
+│   │   ├── stores/             # Pinia状态管理
+│   │   │   ├── chatStore.js    # 聊天和方案状态
+│   │   │   └── userStore.js    # 用户认证状态
+│   │   ├── router/             # Vue Router配置
+│   │   │   └── index.js        # 路由定义和权限控制
+│   │   ├── main.js             # 应用入口文件
+│   │   ├── App.vue             # 根组件
+│   │   └── style.css           # 全局样式定义
+│   ├── scripts/                  # 构建脚本
+│   │   └── setup-plugin.js     # 插件安装脚本
+│
+├── 🗄️ 后端源码 (10,051 行)
+│   └── server/                   # Node.js后端服务
+│       ├── database.js          # MySQL数据库连接和表结构
+│       ├── config.js            # 配置管理 (环境变量、API密钥)
+│       ├── local-api.js         # 主API服务器 (Express)
+│       ├── routes/              # API路由目录
+│       ├── middleware/          # Express中间件
+│       ├── cache/               # 缓存目录
+│       ├── translate-service.js # 翻译服务模块
+│       ├── coze-translate-service.js # Coze翻译服务
+│       ├── statistical-methods-data.js # 统计方法数据
+│       ├── 🧪 测试文件
+│       │   ├── api-test.js         # API功能测试
+│       │   ├── quick-test.js       # 快速功能测试
+│       │   ├── simple-test.cjs     # 简单测试脚本
+│       │   ├── test-apis.cjs       # API接口测试
+│       │   ├── test-coze-api.js    # Coze API测试
+│       │   └── test-research-plans.js # 研究方案测试
+│       ├── 🔄 数据库迁移
+│       │   ├── migrate-paper-id-length.js # 论文ID长度迁移
+│       │   └── migrate-research-plans.js  # 研究方案迁移
+│       ├── package.json         # 后端依赖配置
+│       ├── entrypoint.sh        # Docker入口脚本
+│       └── README.md           # 后端使用说明
+│
+├── 🎨 样式文件 (1,908 行)
+│   ├── style.css               # 主样式文件
+│   ├── tailwind.config.js      # TailwindCSS配置
+│   └── postcss.config.js       # PostCSS配置
+│
+├── 🧪 测试页面 (5,876 行)
+│   ├── test-*.html             # 各种功能测试页面
+│   ├── test-*.js               # 测试脚本文件
+│   └── 本地功能验证指南.md       # 功能验证文档
+│
+├── ⚙️ 配置文件
+│   ├── package.json            # 前端依赖和脚本配置
+│   ├── vite.config.js          # Vite构建配置 (代理、环境变量)
+│   ├── vercel.json            # Vercel部署配置
+│   ├── index.html             # 应用入口HTML
+│   └── LICENSE                # MIT开源协议
+│
+└── 📚 项目文档
+    ├── README.md              # 项目主文档 (本文件)
+    ├── manual-verification-guide.md # 手动验证指南
+    ├── 本地搜索功能验证指南.md    # 本地搜索验证
+    └── 验证本地缓存优先功能.md    # 缓存验证指南
 ```
 
 ## 📖 使用指南
@@ -334,25 +430,55 @@ MethodMate/
 | `/api/paper/generate-method-summary` | POST | 生成方法概要 |
 | `/api/query-statistical-method` | POST | 查询统计方法 |
 
-### 环境变量
+### 环境变量配置
 
 在`server/.env`文件中配置以下变量：
 
 ```env
-# Coze API配置
+# 🤖 Coze AI API配置
 COZE_API_KEY=your_coze_api_key
 COZE_API_URL=https://api.coze.com
 COZE_BOT_ID=your_bot_id
 COZE_USER_ID=your_user_id
 
-# 外部API配置
+# 📚 外部学术API配置
 CORE_API_KEY=your_core_api_key
 SEMANTIC_API_KEY=your_semantic_scholar_api_key
 
-# 服务器配置
+# 🗄️ 数据库配置 (MySQL)
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=methodmate
+DB_USER=your_db_username
+DB_PASSWORD=your_db_password
+DB_CHARSET=utf8mb4
+
+# 🔐 JWT认证配置
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRES_IN=7d
+
+# 🌐 服务器配置
 PORT=3002
 NODE_ENV=development
+API_BASE_URL=http://localhost:3002
+
+# 📋 可选配置
+ENABLE_LOGGING=true
+CACHE_TTL=3600
+MAX_POOL_SIZE=10
 ```
+
+### 数据库初始化
+
+首次运行时，系统会自动创建所需的数据库表：
+
+1. **users** - 用户基本信息和认证
+2. **conversations** - 对话会话记录
+3. **messages** - 对话消息详情
+4. **reference_papers** - 文献引用管理
+5. **research_plans** - 研究方案存储
+6. **plan_references** - 方案文献关联
+7. **paper_cache** - 高质量论文缓存
 
 ## 🎯 适用场景
 
@@ -388,6 +514,16 @@ NODE_ENV=development
 - 更新相关文档
 
 ## 📝 更新日志
+
+### v3.0.0 (最新版本) - 全栈功能完善
+- ✅ **完整用户系统** - 注册、登录、JWT认证、权限管理
+- ✅ **MySQL数据库集成** - 7张核心表，完整的数据关系设计
+- ✅ **状态管理优化** - Pinia状态管理，用户状态持久化
+- ✅ **论文缓存系统** - 本地论文存储，快速检索，质量评分
+- ✅ **研究方案关联** - 方案与文献的完整关联管理
+- ✅ **数据库迁移** - 支持版本升级和数据迁移
+- ✅ **代码规模** - 项目达到 ~15,865 行代码
+- ✅ **测试覆盖** - 30+ 个测试文件，覆盖各种功能模块
 
 ### v2.1.0 (2025-06-21) - 本地开发环境支持
 - ✅ 新增完整的本地开发环境支持
