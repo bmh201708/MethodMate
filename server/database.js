@@ -110,7 +110,7 @@ const createTables = async () => {
         url VARCHAR(500),
         year INT,
         journal VARCHAR(200),
-        paper_id VARCHAR(100),
+        paper_id VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE SET NULL,
@@ -161,6 +161,46 @@ const createTables = async () => {
         UNIQUE KEY unique_plan_reference (plan_id, reference_id),
         INDEX idx_plan_id (plan_id),
         INDEX idx_reference_id (reference_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    // 论文缓存表 - 用于存储高质量论文的详细信息
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS paper_cache (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(500) NOT NULL,
+        authors TEXT,
+        abstract TEXT,
+        doi VARCHAR(100),
+        url VARCHAR(500),
+        download_url VARCHAR(500),
+        year INT,
+        journal VARCHAR(200),
+        venue VARCHAR(200),
+        citation_count INT DEFAULT 0,
+        research_method LONGTEXT,
+        full_text LONGTEXT,
+        translated_abstract TEXT,
+        translated_method LONGTEXT,
+        paper_id VARCHAR(255),
+        source ENUM('search', 'recommendation', 'manual') DEFAULT 'manual',
+        is_top_venue BOOLEAN DEFAULT FALSE,
+        quality_score DECIMAL(3,2) DEFAULT 0.00,
+        download_sources JSON,
+        metadata JSON,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_paper_title_doi (title, doi),
+        INDEX idx_title (title),
+        INDEX idx_doi (doi),
+        INDEX idx_paper_id (paper_id),
+        INDEX idx_year (year),
+        INDEX idx_citation_count (citation_count),
+        INDEX idx_is_top_venue (is_top_venue),
+        INDEX idx_quality_score (quality_score),
+        INDEX idx_created_at (created_at),
+        FULLTEXT KEY ft_title_abstract (title, abstract),
+        FULLTEXT KEY ft_content (title, abstract, research_method)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
