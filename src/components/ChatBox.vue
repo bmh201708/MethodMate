@@ -110,7 +110,26 @@
                        message.type === 'user' ? 'bg-purple-100' : 
                        message.isError ? 'bg-red-50 border border-red-200' : 'bg-gray-100']">
             <!-- 用户消息：纯文本显示 -->
-            <p v-if="message.type === 'user'" class="whitespace-pre-wrap text-gray-800">{{ getDisplayContent(message) }}</p>
+            <div v-if="message.type === 'user'">
+              <p class="whitespace-pre-wrap text-gray-800">{{ getDisplayContent(message) }}</p>
+              
+              <!-- 用户消息的展开按钮 -->
+              <div v-if="message.fullContent && message.isTruncated" 
+                   class="mt-3 pt-3 border-t border-purple-200">
+                <button 
+                  @click="toggleMessageExpansion(message)"
+                  class="flex items-center space-x-2 px-3 py-2 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  <svg v-if="!message.isExpanded" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                  <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                  </svg>
+                  <span>{{ message.isExpanded ? '收起' : '展开完整内容' }}</span>
+                </button>
+              </div>
+            </div>
             
             <!-- 助手消息：markdown渲染 -->
             <div v-else-if="message.type === 'assistant'" 
@@ -772,8 +791,30 @@ const renderMarkdown = (content) => {
 
 // 处理消息显示内容
 const getDisplayContent = (message) => {
-  // 如果是用户消息或错误消息，直接返回原内容
-  if (message.type === 'user' || message.isError) {
+  // 处理用户消息的长度截断
+  if (message.type === 'user') {
+    const content = message.content
+    
+    // 检查是否为长消息，如果是则截断显示并存储完整内容
+    if (isLongResponse(content)) {
+      // 存储完整内容用于展开显示
+      message.fullContent = content
+      message.isTruncated = true
+      
+      // 如果当前是展开状态，显示完整内容
+      if (message.isExpanded) {
+        return content
+      }
+      
+      // 否则只显示前200个字符（用户消息截断得更短一些）
+      return content.substring(0, 200) + '...'
+    }
+    
+    return content
+  }
+  
+  // 如果是错误消息，直接返回原内容
+  if (message.isError) {
     return message.content
   }
   
