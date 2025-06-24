@@ -1,12 +1,12 @@
 <template>
-  <div v-if="visible" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-xl shadow-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
+  <div v-if="visible" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden transform transition-all duration-300">
       <!-- 头部 -->
-      <div class="px-6 py-4 border-b border-gray-200">
+      <div class="px-8 py-6 border-b border-gray-100">
         <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-gray-900">润色提示词</h3>
-          <button @click="handleCancel" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <h3 class="text-xl font-semibold text-gray-900">润色提示词</h3>
+          <button @click="handleCancel" class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-xl hover:bg-gray-100">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -14,46 +14,63 @@
       </div>
 
       <!-- 内容区域 -->
-      <div class="px-6 py-4 max-h-[60vh] overflow-y-auto">
+      <div class="px-8 py-6 max-h-[60vh] overflow-y-auto">
         <!-- 快捷选项 -->
-        <div class="mb-4">
-          <div class="flex flex-wrap gap-2">
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-3">快速选择优化方式</label>
+          <div class="flex flex-wrap gap-3">
             <button 
               @click="handleQuickOption('auto')"
-              class="px-3 py-1.5 bg-purple-100 text-purple-700 text-sm rounded-full hover:bg-purple-200 transition-colors"
+              :class="[
+                'px-4 py-2.5 text-sm rounded-2xl transition-colors font-medium border',
+                selectedQuickOption === 'auto'
+                  ? 'bg-purple-100 text-purple-700 border-purple-300 shadow-sm'
+                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-700'
+              ]"
             >
-              自动优化
+              ✨ 自动优化
             </button>
             <button 
               @click="handleQuickOption('clear')"
-              class="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-gray-200 transition-colors"
+              :class="[
+                'px-4 py-2.5 text-sm rounded-2xl transition-colors font-medium border',
+                selectedQuickOption === 'clear'
+                  ? 'bg-purple-100 text-purple-700 border-purple-300 shadow-sm'
+                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-700'
+              ]"
             >
-              使表达更清晰
+              🎯 使表达更清晰
             </button>
             <button 
               @click="handleQuickOption('professional')"
-              class="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-gray-200 transition-colors"
+              :class="[
+                'px-4 py-2.5 text-sm rounded-2xl transition-colors font-medium border',
+                selectedQuickOption === 'professional'
+                  ? 'bg-purple-100 text-purple-700 border-purple-300 shadow-sm'
+                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-700'
+              ]"
             >
-              使表达更专业
+              📚 使表达更专业
             </button>
           </div>
         </div>
 
         <!-- 输入框 -->
-        <div class="mb-4">
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-3">自定义优化要求</label>
           <div class="relative">
             <input
               v-model="optimizeInstruction"
               type="text"
-              placeholder="您希望如何润色提示词？"
-              class="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="您希望如何润色提示词？例如：使语言更学术化..."
+              class="w-full rounded-2xl border border-gray-200 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
               @keyup.enter="handleOptimize"
               :disabled="isOptimizing"
             />
             <button
               @click="handleOptimize"
               :disabled="!optimizeInstruction.trim() || isOptimizing"
-              class="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -63,59 +80,62 @@
         </div>
 
         <!-- 原始提示词 -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">原始提示词:</label>
-          <div class="bg-gray-50 rounded-lg p-3">
-            <p class="text-gray-800 text-sm">{{ originalPrompt }}</p>
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-3">原始提示词</label>
+          <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+            <p class="text-gray-800 text-sm leading-relaxed">{{ originalPrompt }}</p>
           </div>
         </div>
 
         <!-- 润色结果 -->
-        <div v-if="optimizedPrompt || isOptimizing" class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">润色后的提示词:</label>
-          <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
-            <div v-if="isOptimizing" class="flex items-center space-x-2">
-              <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
-              <span class="text-sm text-gray-600">正在润色中...</span>
+        <div v-if="optimizedPrompt || isOptimizing" class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-3">润色后的提示词</label>
+          <div class="bg-purple-50 rounded-2xl p-4 border border-purple-200">
+            <div v-if="isOptimizing" class="flex items-center space-x-3">
+              <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
+              <span class="text-sm text-purple-700 font-medium">正在润色中...</span>
             </div>
-            <p v-else class="text-gray-800 text-sm whitespace-pre-wrap">{{ optimizedPrompt }}</p>
+            <p v-else class="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed">{{ optimizedPrompt }}</p>
           </div>
         </div>
 
         <!-- 润色建议 -->
-        <div v-if="optimizationSuggestions" class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">优化建议:</label>
-          <div class="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+        <div v-if="optimizationSuggestions" class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-3">💡 优化建议</label>
+          <div class="bg-purple-50 rounded-2xl p-4 border border-purple-200">
             <!-- 如果是数组格式的建议 -->
-            <ul v-if="Array.isArray(optimizationSuggestions)" class="space-y-2">
+            <ul v-if="Array.isArray(optimizationSuggestions)" class="space-y-3">
               <li v-for="(suggestion, index) in optimizationSuggestions" :key="index" 
-                  class="flex items-start space-x-2">
-                <span class="flex-shrink-0 w-5 h-5 bg-yellow-200 text-yellow-800 text-xs rounded-full flex items-center justify-center font-medium mt-0.5">
+                  class="flex items-start space-x-3">
+                <span class="flex-shrink-0 w-6 h-6 bg-purple-200 text-purple-800 text-xs rounded-full flex items-center justify-center font-semibold mt-0.5">
                   {{ index + 1 }}
                 </span>
-                <span class="text-gray-800 text-sm">{{ suggestion }}</span>
+                <span class="text-gray-800 text-sm leading-relaxed">{{ suggestion }}</span>
               </li>
             </ul>
             <!-- 如果是字符串格式的建议 -->
-            <p v-else class="text-gray-800 text-sm whitespace-pre-wrap">{{ optimizationSuggestions }}</p>
+            <p v-else class="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed">{{ optimizationSuggestions }}</p>
           </div>
         </div>
       </div>
 
       <!-- 底部按钮 -->
-      <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+      <div class="px-8 py-6 border-t border-gray-100 flex justify-end space-x-3">
         <button
           @click="handleCancel"
-          class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          class="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors font-medium"
         >
           取消
         </button>
         <button
           @click="handleReplace"
           :disabled="!optimizedPrompt"
-          class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-6 py-3 bg-purple-600 text-white rounded-2xl hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center space-x-2"
         >
-          替换
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          <span>替换</span>
         </button>
       </div>
     </div>
@@ -146,6 +166,7 @@ const optimizeInstruction = ref('')
 const optimizedPrompt = ref('')
 const optimizationSuggestions = ref(null) // 可以是字符串或数组
 const isOptimizing = ref(false)
+const selectedQuickOption = ref('') // 当前选中的快捷选项
 
 // 监听显示状态变化，重置数据
 watch(() => props.visible, (newVisible) => {
@@ -154,11 +175,13 @@ watch(() => props.visible, (newVisible) => {
     optimizedPrompt.value = ''
     optimizationSuggestions.value = null
     isOptimizing.value = false
+    selectedQuickOption.value = ''
   }
 })
 
 // 快捷选项处理
 const handleQuickOption = (type) => {
+  selectedQuickOption.value = type
   switch (type) {
     case 'auto':
       optimizeInstruction.value = '全面优化这个研究提示词，使其更符合学术研究标准，包含详细的方法论指导、理论背景和实践步骤，帮助研究者获得更深入的专业指导'

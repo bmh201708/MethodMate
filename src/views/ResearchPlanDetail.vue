@@ -551,54 +551,76 @@
     
     <!-- 迭代建议对话框 -->
     <div v-if="showIterateDialogModal" 
-         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
          @click.self="closeIterateDialog">
-      <div class="bg-white rounded-xl shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-auto">
-        <div class="mb-4">
-          <h3 class="text-xl font-bold text-gray-900">{{ getIterateDialogTitle() }}</h3>
-          <p class="text-gray-600 mt-2">
-            请输入您的迭代建议，AI将基于您的建议对{{ getSectionNameInChinese(iteratingSection) }}进行优化
-          </p>
-        </div>
-        
-        <!-- 预设建议选项 -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">快速选择建议</label>
-          <div class="grid grid-cols-2 gap-2">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden transform transition-all duration-300">
+        <!-- 头部 -->
+        <div class="px-8 py-6 border-b border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-xl font-semibold text-gray-900">{{ getIterateDialogTitle() }}</h3>
+              <p class="text-gray-600 mt-2 text-sm">
+                请输入您的迭代建议，AI将基于您的建议对{{ getSectionNameInChinese(iteratingSection) }}进行优化
+              </p>
+            </div>
             <button
-              v-for="(suggestion, index) in getPresetSuggestions()"
-              :key="index"
-              @click="selectPresetSuggestion(suggestion)"
-              class="text-left px-3 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+              @click="closeIterateDialog"
+              class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-xl hover:bg-gray-100"
             >
-              {{ suggestion }}
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
             </button>
           </div>
         </div>
         
-        <!-- 迭代建议输入框 -->
-        <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-2">迭代建议</label>
-          <textarea
-            v-model="iterateSuggestion"
-            rows="6"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            placeholder="请输入您的迭代建议..."
-          ></textarea>
-        </div>
+        <!-- 内容区域 -->
+        <div class="px-8 py-6 max-h-[60vh] overflow-y-auto">
         
+          <!-- 预设建议选项 -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-3">快速选择建议</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                v-for="(suggestion, index) in getPresetSuggestions()"
+                :key="index"
+                @click="selectPresetSuggestion(suggestion)"
+                :class="[
+                  'text-left px-4 py-3 rounded-2xl transition-colors text-sm font-medium border',
+                  selectedPresetSuggestion === suggestion
+                    ? 'bg-purple-100 text-purple-700 border-purple-300 shadow-sm'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-700'
+                ]"
+              >
+                {{ suggestion }}
+              </button>
+            </div>
+          </div>
+        
+                  <!-- 迭代建议输入框 -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-3">迭代建议</label>
+            <textarea
+              v-model="iterateSuggestion"
+              rows="6"
+              class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all duration-200"
+              placeholder="请输入您的迭代建议..."
+            ></textarea>
+          </div>
+        </div>
+
         <!-- 操作按钮 -->
-        <div class="flex justify-end space-x-3">
+        <div class="px-8 py-6 border-t border-gray-100 flex justify-end space-x-3">
           <button
             @click="closeIterateDialog"
-            class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            class="px-6 py-3 text-gray-700 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors font-medium"
           >
             取消
           </button>
           <button
             @click="confirmIterate"
             :disabled="!iterateSuggestion.trim() || isIterating"
-            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            class="px-6 py-3 bg-purple-600 text-white rounded-2xl hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center space-x-2"
           >
             <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -795,6 +817,7 @@ const evaluatingSection = ref('') // 当前正在评估的部分
 const showIterateDialogModal = ref(false) // 是否显示迭代建议对话框
 const iteratingSection = ref('') // 当前正在迭代的部分
 const iterateSuggestion = ref('') // 用户输入的迭代建议
+const selectedPresetSuggestion = ref('') // 当前选中的预设建议
 const showResearchPlanDialogModal = ref(false) // 是否显示研究方案生成对话框
 const researchPlanMode = ref('auto') // 研究方案生成模式：'auto' 或 'custom'
 const researchTopicInput = ref('') // 用户输入的研究主题
@@ -2699,6 +2722,7 @@ const showIterateDialog = (section) => {
   
   iteratingSection.value = section
   iterateSuggestion.value = ''
+  selectedPresetSuggestion.value = ''
   showIterateDialogModal.value = true
 }
 
@@ -2707,6 +2731,7 @@ const closeIterateDialog = () => {
   showIterateDialogModal.value = false
   iteratingSection.value = ''
   iterateSuggestion.value = ''
+  selectedPresetSuggestion.value = ''
 }
 
 // 获取迭代对话框标题
@@ -2778,6 +2803,7 @@ const getPresetSuggestions = () => {
 
 // 选择预设建议
 const selectPresetSuggestion = (suggestion) => {
+  selectedPresetSuggestion.value = suggestion
   iterateSuggestion.value = suggestion
 }
 
