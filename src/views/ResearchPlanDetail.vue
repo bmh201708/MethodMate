@@ -541,16 +541,15 @@ watch(() => analysisSubSection.value, (newSubSection) => {
 // 注释：移除自动生成来源介绍功能，改为手动生成
 
 // 监听聊天消息，解析研究方案
-watch(() => chatState.messages, (newMessages) => {
+watch(() => chatState.messages, (newMessages, oldMessages) => {
   // 获取最新的助手消息
   const latestAssistantMessage = newMessages
     .filter(msg => msg.type === 'assistant' && msg.isComplete && !msg.isError)
     .pop()
   
   if (latestAssistantMessage) {
-    // 防止重复处理同一条消息
+    // 简化重复处理检查：只检查消息ID
     if (lastProcessedMessageId.value === latestAssistantMessage.id) {
-      console.log('跳过重复处理的消息，ID:', latestAssistantMessage.id)
       return
     }
     
@@ -633,8 +632,7 @@ watch(() => chatState.messages, (newMessages) => {
       // 检查是否为新消息，避免重复解析
       const messageId = latestAssistantMessage.id
       
-      if (lastProcessedMessageId.value && messageId <= lastProcessedMessageId.value) {
-        console.log('跳过已解析的消息，ID:', messageId)
+      if (lastProcessedMessageId.value === messageId) {
         return
       }
       
@@ -913,26 +911,7 @@ const parseResearchPlanResponse = (content) => {
         }
       }, 500)
       
-      // 添加到历史方案（无论是通过按钮生成还是聊天生成，只要解析成功就保存）
-      if (updatedFields >= 1) {
-        const generationType = isIterating.value ? 'iteration' : 
-                              isGenerating.value ? 'generation' : 'chat'
-        console.log('准备添加到历史方案，状态:', generationType)
-        
-        // 构建生成上下文
-        const generationContext = {
-          referencedPapers: Array.from(papersState.referencedPapersList).map(paper => ({
-            title: paper.title,
-            authors: paper.authors,
-            year: paper.year,
-            source: paper.source
-          })),
-          generationType: generationType,
-          timestamp: new Date().toISOString()
-        }
-        
-        addHistoryPlan(currentPlanState, generationContext)
-      }
+      // 不再自动添加到历史方案
       
       return true // 成功解析并更新了研究方案
     } else {

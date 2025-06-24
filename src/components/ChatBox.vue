@@ -100,7 +100,11 @@
 
       <!-- 聊天记录 -->
       <div class="flex-1 overflow-y-auto mb-4 space-y-4" ref="chatContainer">
-        <div v-for="message in chatState.messages" :key="message.id" 
+        <!-- 调试信息 -->
+        <div v-if="true" class="text-xs text-gray-400 p-2 bg-yellow-50 border border-yellow-200 rounded">
+          调试：消息总数 {{ chatState.messages.length }}，最后更新时间 {{ new Date().toLocaleTimeString() }}，强制更新标志: {{ chatState.forceUpdateFlag }}
+        </div>
+        <div v-for="message in chatState.messages" :key="`msg_${message.id}_${message.content?.length || 0}`" 
              :class="['flex', message.type === 'user' ? 'justify-end' : 'justify-start']">
           <div :class="['max-w-[70%] rounded-lg p-4 relative', 
                        message.type === 'user' ? 'bg-purple-100' : 
@@ -110,8 +114,12 @@
             
             <!-- 助手消息：markdown渲染 -->
             <div v-else-if="message.type === 'assistant'" 
-                 :class="['markdown-content', message.isError ? 'text-red-700' : 'text-gray-800']"
-                 v-html="renderMarkdown(getDisplayContent(message))">
+                 :class="['markdown-content', message.isError ? 'text-red-700' : 'text-gray-800']">
+              <!-- 调试信息 -->
+              <div class="text-xs text-blue-500 mb-2 border-b border-blue-200 pb-1">
+                ID: {{ message.id }}, 长度: {{ message.content?.length || 0 }}, 完成: {{ message.isComplete }}
+              </div>
+              <div v-html="renderMarkdown(getDisplayContent(message))"></div>
             </div>
             
             <!-- 研究方案查看按钮（右上角） -->
@@ -240,8 +248,36 @@ const isAuthenticated = computed(() => userStore.isAuthenticated)
 
 // 初始化时加载对话列表
 onMounted(async () => {
+  console.log('=== ChatBox组件初始化 ===')
+  console.log('用户认证状态:', isAuthenticated.value)
+  
   if (isAuthenticated.value) {
     await loadConversations()
+    
+    // 检查是否有保存的对话ID，如果有则自动切换过去
+    const savedConversationId = localStorage.getItem('currentConversationId')
+    console.log('从localStorage读取的对话ID:', savedConversationId)
+    
+    if (savedConversationId) {
+      // 等待对话列表加载完成
+      await nextTick()
+      
+      console.log('当前可用对话列表:', conversations.value.map(c => ({ id: c.id, title: c.title })))
+      
+      // 查找保存的对话
+      const savedConversation = conversations.value.find(c => c.id.toString() === savedConversationId)
+      if (savedConversation) {
+        console.log('✅ 找到保存的对话，自动切换到:', savedConversation.title, 'ID:', savedConversation.id)
+        await switchToConversation(savedConversation)
+      } else {
+        console.log('❌ 保存的对话ID在对话列表中不存在，清除localStorage记录')
+        console.log('查找的ID:', savedConversationId, '类型:', typeof savedConversationId)
+        console.log('可用的对话IDs:', conversations.value.map(c => ({ id: c.id, toString: c.id.toString() })))
+        localStorage.removeItem('currentConversationId')
+      }
+    } else {
+      console.log('localStorage中没有保存的对话ID')
+    }
   }
 })
 
@@ -306,6 +342,9 @@ const createNewConversation = async () => {
       // 清空当前消息（保留欢迎消息）
       clearMessages()
       
+      // 设置为当前对话并保存到localStorage
+      localStorage.setItem('currentConversationId', newConversation.id.toString())
+      
       // 强制刷新UI
       await nextTick()
       
@@ -336,24 +375,38 @@ const switchToConversation = async (conversation) => {
       currentConversation.value = result.conversation
       chatState.conversationId = conversation.id
       
+      // 保存当前对话ID到localStorage，以便页面刷新后恢复
+      localStorage.setItem('currentConversationId', conversation.id.toString())
+      console.log('✅ 已保存对话ID到localStorage:', conversation.id.toString())
+      
       console.log('chatState.conversationId 已设置为:', chatState.conversationId)
       
-      // 清空当前消息并加载历史消息
-      clearMessages()
+      // 清空当前消息并加载历史消息（不重置conversationId）
+      chatState.messages = [
+        {
+          id: 1,
+          type: 'assistant',
+          content: '你好！我是 MethodMate AI 助手，请问有什么我可以帮助你的吗？',
+          isComplete: true
+        }
+      ]
+      console.log('✅ 已清空消息数组但保持conversationId:', chatState.conversationId)
       
       // 添加历史消息到chatState
       if (result.messages && result.messages.length > 0) {
         // 过滤掉第一条默认的欢迎消息，然后添加历史消息
+        // 确保历史消息ID不会与新消息冲突，使用连续的前端ID
+        let messageIdCounter = 2 // 从2开始，1是欢迎消息
         chatState.messages = [
           chatState.messages[0], // 保留欢迎消息
           ...result.messages.map(msg => ({
-            id: msg.id,
+            id: messageIdCounter++, // 使用连续的前端ID，避免与数据库ID冲突
             type: msg.role,
             content: msg.content,
             isComplete: true,
             isError: false,
             saved: true, // 从数据库加载的消息标记为已保存
-            databaseId: msg.id
+            databaseId: msg.id // 保存原始数据库ID
           }))
         ]
       }
@@ -404,6 +457,9 @@ const deleteConversation = async (conversation) => {
           chatState.conversationId = null
           clearMessages()
           
+          // 清除保存的对话ID
+          localStorage.removeItem('currentConversationId')
+          
           console.log('已重置为临时对话状态')
         }
       }
@@ -432,9 +488,18 @@ marked.setOptions({
   mangle: false // 禁用标题锚点混淆
 })
 
-// 检测是否为研究方案
+// 检测是否为研究方案（缓存结果避免重复计算）
+const researchPlanCache = new Map()
 const isResearchPlan = (content) => {
   if (!content || typeof content !== 'string') return false
+  
+  // 创建内容hash作为缓存键
+  const contentHash = content.length + '_' + content.substring(0, 100)
+  
+  // 检查缓存
+  if (researchPlanCache.has(contentHash)) {
+    return researchPlanCache.get(contentHash)
+  }
   
   // 检查关键词组合，提高检测准确性
   const researchKeywords = [
@@ -472,15 +537,26 @@ const isResearchPlan = (content) => {
   // 判断标准：总匹配数>=3 且 涉及至少2个类别
   const isValidPlan = totalMatches >= 3 && categoryCount >= 2
   
-  console.log('研究方案检测:', {
-    totalMatches,
-    categoryCount,
-    researchMatches,
-    designMatches, 
-    analysisMatches,
-    isValidPlan,
-    content: content.substring(0, 200) + '...'
-  })
+  // 缓存结果
+  researchPlanCache.set(contentHash, isValidPlan)
+  
+  // 限制缓存大小
+  if (researchPlanCache.size > 50) {
+    const firstKey = researchPlanCache.keys().next().value
+    researchPlanCache.delete(firstKey)
+  }
+  
+  // 只在检测到研究方案时输出日志，减少控制台噪音
+  if (isValidPlan) {
+    console.log('检测到研究方案:', {
+      totalMatches,
+      categoryCount,
+      researchMatches,
+      designMatches, 
+      analysisMatches,
+      content: content.substring(0, 200) + '...'
+    })
+  }
   
   return isValidPlan
 }

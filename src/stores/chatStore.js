@@ -55,8 +55,22 @@ export const chatState = reactive({
     }
   ],
   isLoading: false,
-  conversationId: null
+  conversationId: null,
+  forceUpdateFlag: 0 // 强制更新标志
 })
+
+// 监听conversationId的变化，帮助调试
+import { watch } from 'vue'
+watch(
+  () => chatState.conversationId,
+  (newVal, oldVal) => {
+    if (newVal !== oldVal) {
+      console.warn(`🔄 conversationId 发生变化: ${oldVal} → ${newVal}`)
+      console.trace('变化调用堆栈:')
+    }
+  },
+  { immediate: false }
+)
 
 // 推荐文献状态
 export const papersState = reactive({
@@ -85,6 +99,9 @@ export const historyState = reactive({
   currentViewingPlan: null, // 当前正在查看的历史方案
   currentAppliedPlanId: null // 当前应用中的方案ID
 })
+
+// 消息处理队列，防止重复请求
+const messageProcessingQueue = new Map()
 
 // ==================== 数据库操作辅助函数 ====================
 
@@ -686,85 +703,163 @@ export const clearSearchResults = () => {
 
 // 发送消息的方法
 export const sendMessage = async (message, pageContext = null) => {
-  if (!message.trim() || chatState.isLoading) return
-
-  const messageId = chatState.messages.length + 1
-  
-  // 添加用户消息（只显示用户输入的消息，不包含上下文）
-  const userMessage = {
-    id: messageId,
-    type: 'user',
-    content: message,
-    isComplete: true,
-    saved: false // 标记为未保存到数据库
-  }
-  chatState.messages.push(userMessage)
-
-  // 如果有当前对话且用户已登录，立即保存用户消息
-  if (isUserAuthenticated() && chatState.conversationId) {
-    try {
-      const result = await conversationAPI.addMessage(chatState.conversationId, 'user', message)
-      if (result.success) {
-        userMessage.saved = true
-        userMessage.databaseId = result.message.id
-        console.log('用户消息已保存到数据库:', message.substring(0, 50) + '...')
-      }
-    } catch (error) {
-      console.error('保存用户消息失败:', error)
-    }
-  }
-
-  chatState.isLoading = true
-
-  // 添加助手消息占位
-  const assistantMessageId = messageId + 1
-  const assistantMessage = {
-    id: assistantMessageId,
-    type: 'assistant',
-    content: '',
-    isComplete: false,
-    saved: false
-  }
-  chatState.messages.push(assistantMessage)
-
-  // 构建实际发送给AI的消息（包含上下文）
-  let messageWithContext = message
-  
-  if (pageContext === 'research-plan') {
-    // 在研究方案页面，添加当前方案作为上下文
-    const planContext = buildCurrentPlanContext()
-    if (planContext) {
-      messageWithContext = `${planContext}\n\n用户问题：${message}`
-      console.log('发送包含当前方案上下文的消息')
-    }
-  }
-
   try {
+    console.log('🔥 sendMessage开始执行')
+    console.log('conversationId在sendMessage开始时:', chatState.conversationId)
+    
+    const processingId = Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+    
+    // 检查是否已经在处理相同的消息
+    if (messageProcessingQueue.has(message)) {
+      console.log('消息正在处理中，跳过重复请求')
+      return
+    }
+    
+    // 检查消息是否为空或者正在加载中
+    if (!message.trim() || chatState.isLoading) return
+    
+    // 设置加载状态并添加到处理队列
+    chatState.isLoading = true
+    messageProcessingQueue.set(message, processingId)
+    
+    console.log('设置isLoading后，conversationId:', chatState.conversationId)
+
+    // 确保新消息ID不会与现有消息冲突
+    const existingIds = new Set(chatState.messages.map(m => m.id))
+    let messageId = chatState.messages.length + 1
+    while (existingIds.has(messageId)) {
+      messageId++
+    }
+    
+    // 添加用户消息（只显示用户输入的消息，不包含上下文）
+    const userMessage = {
+      id: messageId,
+      type: 'user',
+      content: message,
+      isComplete: true,
+      saved: false // 标记为未保存到数据库
+    }
+    chatState.messages.push(userMessage)
+
+    console.log('=== 准备保存用户消息 ===')
+    console.log('用户已登录:', isUserAuthenticated())
+    console.log('当前对话ID:', chatState.conversationId)
+    console.log('用户消息内容:', message.substring(0, 50) + '...')
+    
+    // 如果有当前对话且用户已登录，立即保存用户消息
+    if (isUserAuthenticated() && chatState.conversationId) {
+      try {
+        console.log('正在调用API保存用户消息到对话:', chatState.conversationId)
+        const result = await conversationAPI.addMessage(chatState.conversationId, 'user', message)
+        if (result.success) {
+          userMessage.saved = true
+          userMessage.databaseId = result.message.id
+          console.log('✅ 用户消息已保存到数据库:', message.substring(0, 50) + '...', '数据库ID:', result.message.id)
+        } else {
+          console.error('❌ 用户消息保存失败:', result.error)
+        }
+      } catch (error) {
+        console.error('保存用户消息时发生异常:', error)
+      }
+    } else {
+      console.warn('⚠️ 用户消息未保存 - 用户登录状态:', isUserAuthenticated(), '对话ID:', chatState.conversationId)
+    }
+
+    // 添加助手消息占位
+    const assistantMessageId = messageId + 1
+    const assistantMessage = {
+      id: assistantMessageId,
+      type: 'assistant',
+      content: '',
+      isComplete: false,
+      saved: false
+    }
+    chatState.messages.push(assistantMessage)
+
+    // 构建实际发送给AI的消息（包含上下文）
+    let messageWithContext = message
+    
+    if (pageContext === 'research-plan') {
+      // 在研究方案页面，添加当前方案作为上下文
+      const planContext = buildCurrentPlanContext()
+      if (planContext) {
+        messageWithContext = `${planContext}\n\n用户问题：${message}`
+        console.log('发送包含当前方案上下文的消息')
+      }
+    }
+
     await sendStreamMessageToCoze(messageWithContext, (chunk, fullResponse) => {
-      // 更新助手消息内容
-      const assistantMsg = chatState.messages.find(m => m.id === assistantMessageId)
-      if (assistantMsg) {
-        assistantMsg.content = fullResponse
+      // 更新助手消息内容 - 强制Vue响应式更新
+      console.log('chatStore onChunk被调用，内容长度:', fullResponse.length)
+      const assistantMsgIndex = chatState.messages.findIndex(m => m.id === assistantMessageId)
+      if (assistantMsgIndex !== -1) {
+        console.log('找到助手消息，更新内容:', assistantMessageId)
+        
+        // 创建新的消息数组，确保Vue检测到变化
+        const newMessages = [...chatState.messages]
+        newMessages[assistantMsgIndex] = {
+          ...newMessages[assistantMsgIndex],
+          content: fullResponse
+        }
+        chatState.messages = newMessages
+        
+        // 强制触发Vue重新渲染
+        chatState.forceUpdateFlag = Date.now()
+        
+                 console.log('助手消息内容已更新，新长度:', newMessages[assistantMsgIndex].content.length)
+         console.log('强制更新后的消息数组长度:', chatState.messages.length)
+         console.log('更新后的消息对象:', { 
+           id: newMessages[assistantMsgIndex].id,
+           type: newMessages[assistantMsgIndex].type,
+           content: newMessages[assistantMsgIndex].content.substring(0, 50) + '...',
+           isComplete: newMessages[assistantMsgIndex].isComplete
+         })
+      } else {
+        console.log('未找到助手消息，ID:', assistantMessageId)
+        console.log('当前消息列表:', chatState.messages.map(m => ({ id: m.id, type: m.type })))
       }
     }, chatState.messages)
 
     // 标记消息完成
-    const assistantMsg = chatState.messages.find(m => m.id === assistantMessageId)
-    if (assistantMsg) {
-      assistantMsg.isComplete = true
+    const assistantMsgIndex = chatState.messages.findIndex(m => m.id === assistantMessageId)
+    if (assistantMsgIndex !== -1) {
+      const newMessages = [...chatState.messages]
+      newMessages[assistantMsgIndex] = {
+        ...newMessages[assistantMsgIndex],
+        isComplete: true
+      }
+      chatState.messages = newMessages
+      
+      // 强制触发Vue重新渲染
+      chatState.forceUpdateFlag = Date.now()
+      
+      console.log('=== 准备保存助手消息 ===')
+      console.log('用户已登录:', isUserAuthenticated())
+      console.log('当前对话ID:', chatState.conversationId)
+      console.log('助手消息内容长度:', chatState.messages[assistantMsgIndex].content.length)
       
       // 如果有当前对话且用户已登录，保存助手消息
       if (isUserAuthenticated() && chatState.conversationId) {
         try {
-          const result = await conversationAPI.addMessage(chatState.conversationId, 'assistant', assistantMsg.content)
+          console.log('正在调用API保存助手消息到对话:', chatState.conversationId)
+          const result = await conversationAPI.addMessage(chatState.conversationId, 'assistant', chatState.messages[assistantMsgIndex].content)
           if (result.success) {
-            assistantMsg.saved = true
-            assistantMsg.databaseId = result.message.id
-            console.log('助手消息已保存到数据库:', assistantMsg.content.substring(0, 50) + '...')
+            const newMessages = [...chatState.messages]
+            newMessages[assistantMsgIndex] = {
+              ...newMessages[assistantMsgIndex],
+              saved: true,
+              databaseId: result.message.id
+            }
+            chatState.messages = newMessages
+            console.log('✅ 助手消息已保存到数据库:', newMessages[assistantMsgIndex].content.substring(0, 50) + '...', '数据库ID:', result.message.id)
+          } else {
+            console.error('❌ 助手消息保存失败:', result.error)
           }
         } catch (error) {
-          console.error('保存助手消息失败:', error)
+          console.error('保存助手消息时发生异常:', error)
         }
+      } else {
+        console.warn('⚠️ 助手消息未保存 - 用户登录状态:', isUserAuthenticated(), '对话ID:', chatState.conversationId)
       }
     }
   } catch (error) {
@@ -794,6 +889,8 @@ export const sendMessage = async (message, pageContext = null) => {
       }
     }
   } finally {
+    // 清理处理队列
+    messageProcessingQueue.delete(message)
     chatState.isLoading = false
   }
 }
@@ -837,6 +934,9 @@ const buildCurrentPlanContext = () => {
 
 // 清空聊天记录
 export const clearMessages = () => {
+  console.warn('🚨 CLEARMESSAGES被调用! 将重置conversationId为null')
+  console.trace('调用堆栈:') // 打印调用堆栈，帮助找到是谁调用的
+  
   chatState.messages = [
     {
       id: 1,

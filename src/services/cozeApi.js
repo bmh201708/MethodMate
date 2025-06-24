@@ -330,7 +330,7 @@ export const getRecommendedPapers = async (chatHistory = []) => {
 export const sendStreamMessageToCoze = async (message, onChunk, chatHistory = []) => {
   try {
     console.log('=== 准备发送消息到Coze ===')
-    console.log('消息内容:', message)
+    console.log('消息内容:', message.substring(0, 200) + (message.length > 200 ? '...' : ''))
     console.log('消息长度:', message.length)
     console.log('聊天历史长度:', chatHistory.length)
     
@@ -382,7 +382,10 @@ export const sendStreamMessageToCoze = async (message, onChunk, chatHistory = []
     let conversationId = null
     
     for await (const data of stream) {
-      console.log('收到流数据:', data)
+      // 减少日志输出，只在关键事件时输出
+      if (data.event !== 'conversation.message.delta') {
+        console.log('收到流数据:', data.event, data.data?.type || '')
+      }
       
       // 处理会话创建事件
       if (data.event === 'conversation.chat.created') {
@@ -414,7 +417,7 @@ export const sendStreamMessageToCoze = async (message, onChunk, chatHistory = []
       // 处理消息内容 - 根据文档，应该监听 conversation.message.completed
       if (data.event === 'conversation.message.completed') {
         const msgData = data.data
-        console.log('收到消息:', msgData)
+        console.log('收到完整消息:', msgData?.type, '内容长度:', msgData?.content?.length || 0)
         
         // 只处理 type=answer 的消息（agent回复）
         if (msgData?.type === 'answer') {
@@ -422,8 +425,12 @@ export const sendStreamMessageToCoze = async (message, onChunk, chatHistory = []
           if (content) {
             // 对于完整消息，直接设置而不是追加
             fullResponse = content
+            console.log('准备调用onChunk，内容:', content.substring(0, 100) + '...')
             if (onChunk) {
+              console.log('调用onChunk回调')
               onChunk(content, fullResponse)
+            } else {
+              console.log('onChunk回调为空')
             }
           }
         }

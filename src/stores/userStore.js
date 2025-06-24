@@ -220,6 +220,7 @@ export const useUserStore = defineStore('user', () => {
     token.value = null
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+    localStorage.removeItem('currentConversationId') // 清除保存的对话ID
   }
 
   // 初始化用户状态（从localStorage恢复）
