@@ -913,9 +913,11 @@ const parseResearchPlanResponse = (content) => {
         }
       }, 500)
       
-      // 添加到历史方案（生成新方案或迭代方案时都添加）
-      if (updatedFields >= 1 && (isIterating.value || isGenerating.value)) {
-        console.log('准备添加到历史方案，状态:', isIterating.value ? '迭代' : '生成')
+      // 添加到历史方案（无论是通过按钮生成还是聊天生成，只要解析成功就保存）
+      if (updatedFields >= 1) {
+        const generationType = isIterating.value ? 'iteration' : 
+                              isGenerating.value ? 'generation' : 'chat'
+        console.log('准备添加到历史方案，状态:', generationType)
         
         // 构建生成上下文
         const generationContext = {
@@ -925,7 +927,7 @@ const parseResearchPlanResponse = (content) => {
             year: paper.year,
             source: paper.source
           })),
-          generationType: isIterating.value ? 'iteration' : 'generation',
+          generationType: generationType,
           timestamp: new Date().toISOString()
         }
         
