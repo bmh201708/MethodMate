@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaTeX 渲染测试</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-title {
+            color: #333;
+            border-bottom: 2px solid #007cba;
+            padding-bottom: 10px;
+        }
+        .result {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>LaTeX 数学公式渲染测试</h1>
+    
+    <div class="test-section">
+        <h2 class="test-title">1. 单样本t检验公式</h2>
+        <p><strong>原始LaTeX:</strong> <code>$$t = \frac{\bar{x} - \mu_0}{s/\sqrt{n}}$$</code></p>
+        <div class="result" id="test1"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">2. 独立样本t检验公式</h2>
+        <p><strong>原始LaTeX:</strong> <code>$$t = \frac{\bar{x_1} - \bar{x_2}}{s_p\sqrt{\frac{1}{n_1} + \frac{1}{n_2}}}$$</code></p>
+        <div class="result" id="test2"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">3. 方差分析F检验公式</h2>
+        <p><strong>原始LaTeX:</strong> <code>$$F = \frac{MS_{组间}}{MS_{组内}}$$</code></p>
+        <div class="result" id="test3"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">4. 行内公式测试</h2>
+        <p><strong>原始LaTeX:</strong> <code>$\alpha = 0.05$</code></p>
+        <div class="result" id="test4"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script type="module">
+        import { marked } from 'https://cdn.jsdelivr.net/npm/marked@9.1.6/lib/marked.esm.js';
+        import markedKatex from 'https://cdn.jsdelivr.net/npm/marked-katex-extension@5.1.4/lib/index.mjs';
+        
+        // 配置marked支持LaTeX
+        marked.use(markedKatex({
+            throwOnError: false,
+            displayMode: false,
+            output: 'html'
+        }));
+        
+        // 测试内容
+        const tests = [
+            {
+                id: 'test1',
+                content: '单样本t检验的检验统计量为：$$t = \\frac{\\bar{x} - \\mu_0}{s/\\sqrt{n}}$$'
+            },
+            {
+                id: 'test2',
+                content: '独立样本t检验的检验统计量为：$$t = \\frac{\\bar{x_1} - \\bar{x_2}}{s_p\\sqrt{\\frac{1}{n_1} + \\frac{1}{n_2}}}$$'
+            },
+            {
+                id: 'test3',
+                content: '方差分析的F检验统计量为：$$F = \\frac{MS_{组间}}{MS_{组内}}$$'
+            },
+            {
+                id: 'test4',
+                content: '显著性水平通常设置为 $\\alpha = 0.05$，这是统计学中的常用标准。'
+            }
+        ];
+        
+        // 渲染测试
+        tests.forEach(test => {
+            try {
+                const html = marked.parse(test.content);
+                document.getElementById(test.id).innerHTML = html;
+                console.log(`✓ ${test.id} 渲染成功`);
+            } catch (error) {
+                document.getElementById(test.id).innerHTML = `<span style="color: red;">渲染失败: ${error.message}</span>`;
+                console.error(`✗ ${test.id} 渲染失败:`, error);
+            }
+        });
+        
+        console.log('LaTeX 渲染测试完成');
+    </script>
+</body>
+</html> 

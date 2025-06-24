@@ -407,8 +407,17 @@
 import { computed, ref } from 'vue'
 import { papersState, clearReferences, removePaperFromReferences } from '../stores/chatStore'
 import { marked } from 'marked'
+import markedKatex from 'marked-katex-extension'
+import 'katex/dist/katex.min.css'
 import { chatState } from '../stores/chatStore'
 import { sendSilentMessageToCoze } from '../services/cozeApi'
+
+// 配置marked支持LaTeX数学公式
+marked.use(markedKatex({
+  throwOnError: false,
+  displayMode: false,
+  output: 'html'
+}))
 
 // 配置marked安全选项
 marked.setOptions({

@@ -2385,6 +2385,24 @@ app.post('/api/query-statistical-method', async (req, res) => {
 
     console.log('开始查询统计方法:', method);
     
+    // 首先检查本地存储的方法
+    const { findStatisticalMethod } = await import('./statistical-methods-data.js');
+    const localMethod = findStatisticalMethod(method);
+    
+    if (localMethod) {
+      console.log('找到本地存储的方法:', localMethod.method);
+      return res.json({
+        success: true,
+        method: localMethod.method,
+        explanation: localMethod.content,
+        isLocalContent: true,
+        source: '本地数据库'
+      });
+    }
+    
+    // 如果本地没有找到，则调用AI API
+    console.log('本地未找到，调用AI API查询:', method);
+    
     const prompt = `作为一个统计学专家，请详细解释以下统计方法：${method}
     
 请包含以下内容：
@@ -2436,7 +2454,9 @@ app.post('/api/query-statistical-method', async (req, res) => {
     res.json({
       success: true,
       method: method,
-      explanation: explanation
+      explanation: explanation,
+      isLocalContent: false,
+      source: 'AI生成'
     });
   } catch (error) {
     console.error('查询统计方法错误:', error);

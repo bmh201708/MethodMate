@@ -793,6 +793,8 @@ import ChatBox from '../components/ChatBox.vue'
 import { sendMessage, chatState } from '../stores/chatStore'
 import { papersState, addHistoryPlan, historyState, clearCurrentViewingPlan, currentPlanState, updateCurrentPlan, applyPlanAsCurrentPlan, updateSourceIntroduction, getSourceIntroduction, clearSourceIntroductions } from '../stores/chatStore'
 import { marked } from 'marked'
+import markedKatex from 'marked-katex-extension'
+import 'katex/dist/katex.min.css'
 
 const router = useRouter()
 const currentSection = ref('research-plan')
@@ -847,7 +849,13 @@ const hasGeneratedPlan = computed(() => {
   return currentPlanState.isGenerated
 })
 
-// 配置marked选项
+// 配置marked选项，支持LaTeX数学公式
+marked.use(markedKatex({
+  throwOnError: false, // 数学公式错误时不抛出异常
+  displayMode: false,  // 默认为行内模式
+  output: 'html'       // 输出HTML格式
+}))
+
 marked.setOptions({
   breaks: true, // 支持换行
   gfm: true,    // 支持GitHub flavored markdown

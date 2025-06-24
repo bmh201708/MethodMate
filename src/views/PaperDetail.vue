@@ -464,6 +464,8 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import ChatBox from '../components/ChatBox.vue'
 import { marked } from 'marked'
+import markedKatex from 'marked-katex-extension'
+import 'katex/dist/katex.min.css'
 import { chatState } from '../stores/chatStore'
 import { sendSilentMessageToCoze } from '../services/cozeApi'
 import { 
@@ -639,6 +641,13 @@ const tryGenerateMethodSummary = async () => {
     throw new Error(result.error || '备用方法生成研究方法概要失败');
   }
 }
+
+// 配置marked支持LaTeX数学公式
+marked.use(markedKatex({
+  throwOnError: false,
+  displayMode: false,
+  output: 'html'
+}))
 
 // 渲染markdown内容
 const renderMarkdown = (markdown) => {
