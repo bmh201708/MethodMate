@@ -9,7 +9,7 @@
           <!-- 生成研究方案按钮 -->
           <div class="mt-4">
             <button
-              @click="generateResearchPlan"
+              @click="showResearchPlanDialog"
               :disabled="isGenerating"
               class="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
@@ -610,6 +610,158 @@
       </div>
     </div>
   </div>
+
+  <!-- 研究方案生成对话框 -->
+  <div v-if="showResearchPlanDialogModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full mx-4 transform transition-all duration-300">
+      <!-- 对话框头部 -->
+      <div class="px-8 py-6 border-b border-gray-100">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xl font-semibold text-gray-900">生成研究方案</h3>
+          <button
+            @click="closeResearchPlanDialog"
+            class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-xl hover:bg-gray-100"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- 对话框内容 -->
+      <div class="px-8 py-6">
+        <!-- 选项标签 -->
+        <div class="flex bg-gray-100 rounded-2xl p-1 mb-6">
+          <button
+            @click="researchPlanMode = 'auto'"
+            :class="[
+              'flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200',
+              researchPlanMode === 'auto'
+                ? 'bg-white text-purple-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            ]"
+          >
+            <div class="flex items-center justify-center space-x-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              <span>智能分析</span>
+            </div>
+          </button>
+          <button
+            @click="researchPlanMode = 'custom'"
+            :class="[
+              'flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200',
+              researchPlanMode === 'custom'
+                ? 'bg-white text-purple-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            ]"
+          >
+            <div class="flex items-center justify-center space-x-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
+              <span>自定义主题</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- 智能分析模式说明 -->
+        <div v-if="researchPlanMode === 'auto'" class="bg-purple-50 rounded-2xl p-6 mb-6">
+          <div class="flex items-start space-x-3">
+            <div class="flex-shrink-0">
+              <svg class="w-6 h-6 text-purple-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+            </div>
+            <div>
+              <h4 class="font-medium text-purple-900 mb-2">智能分析用户需求</h4>
+              <p class="text-sm text-purple-700 leading-relaxed">
+                系统将自动分析您在聊天历史中提到的研究需求、背景和目标，结合已选择的参考文献，生成个性化的定量研究方案。
+              </p>
+              <div class="mt-3 flex items-center space-x-4 text-xs text-purple-600">
+                <div class="flex items-center space-x-1">
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                  <span>分析对话历史</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                  <span>结合参考文献</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                  <span>智能生成方案</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 自定义主题模式 -->
+        <div v-if="researchPlanMode === 'custom'">
+          <label class="block text-sm font-medium text-gray-700 mb-3">请输入您的研究主题或问题</label>
+          <textarea
+            v-model="researchTopicInput"
+            placeholder="例如：探讨人工智能对大学生学习效果的影响研究..."
+            class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all duration-200"
+            rows="4"
+          ></textarea>
+          <p class="text-xs text-gray-500 mt-2">
+            系统将基于您输入的主题，结合参考文献生成相应的定量研究方案
+          </p>
+        </div>
+
+        <!-- 参考文献状态 -->
+        <div class="bg-gray-50 rounded-2xl p-4 mb-6">
+          <div class="flex items-center space-x-3">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-700">参考文献状态</p>
+              <p class="text-xs text-gray-500 mt-0.5">
+                {{ papersState.referencedPapers.size > 0 
+                  ? `已选择 ${papersState.referencedPapers.size} 篇参考文献` 
+                  : '暂无参考文献（可在相关文献页面选择）' }}
+              </p>
+            </div>
+            <div v-if="papersState.referencedPapers.size > 0" class="text-green-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 对话框底部 -->
+      <div class="px-8 py-6 border-t border-gray-100 flex justify-end space-x-3">
+        <button
+          @click="closeResearchPlanDialog"
+          class="px-6 py-3 text-gray-700 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors font-medium"
+        >
+          取消
+        </button>
+        <button
+          @click="confirmGenerateResearchPlan"
+          :disabled="researchPlanMode === 'custom' && !researchTopicInput.trim()"
+          class="px-6 py-3 bg-purple-600 text-white rounded-2xl hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center space-x-2"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          <span>开始生成</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -643,6 +795,9 @@ const evaluatingSection = ref('') // 当前正在评估的部分
 const showIterateDialogModal = ref(false) // 是否显示迭代建议对话框
 const iteratingSection = ref('') // 当前正在迭代的部分
 const iterateSuggestion = ref('') // 用户输入的迭代建议
+const showResearchPlanDialogModal = ref(false) // 是否显示研究方案生成对话框
+const researchPlanMode = ref('auto') // 研究方案生成模式：'auto' 或 'custom'
+const researchTopicInput = ref('') // 用户输入的研究主题
 
 const sections = [
   { id: 'full', name: '完整方案' },
@@ -1428,8 +1583,35 @@ const displayCompleteUpdatedPlan = (updatedSectionName) => {
   }
 }
 
-// 生成定量研究方案
-const generateResearchPlan = async () => {
+// 显示研究方案生成对话框
+const showResearchPlanDialog = () => {
+  researchPlanMode.value = 'auto'
+  researchTopicInput.value = ''
+  showResearchPlanDialogModal.value = true
+}
+
+// 关闭研究方案生成对话框
+const closeResearchPlanDialog = () => {
+  showResearchPlanDialogModal.value = false
+  researchPlanMode.value = 'auto'
+  researchTopicInput.value = ''
+}
+
+// 确认生成研究方案
+const confirmGenerateResearchPlan = async () => {
+  // 保存当前的模式和主题，避免在关闭对话框时被重置
+  const currentMode = researchPlanMode.value
+  const currentTopic = researchTopicInput.value
+  
+  // 关闭对话框
+  closeResearchPlanDialog()
+  
+  // 调用生成函数，传递保存的模式和主题
+  await generateResearchPlan(currentMode, currentTopic)
+}
+
+// 生成定量研究方案（修改为支持模式和主题参数）
+const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
   // 记录当前最新的消息ID
   const latestMessage = chatState.messages
     .filter(msg => msg.isComplete)
@@ -1442,16 +1624,27 @@ const generateResearchPlan = async () => {
   isGenerating.value = true
   
   console.log('开始生成新方案，当前最新消息ID:', lastMessageIdBeforeGenerate.value)
+  console.log('生成模式:', mode, '自定义主题:', customTopic)
   
   try {
     // 构建消息内容
     let message = "请帮我生成定量实验方案。"
     
-    // 1. 首先分析对话历史，提取用户需求和上下文
+    // 预先提取对话上下文（智能分析模式会用到）
     const conversationContext = extractConversationContext()
-    if (conversationContext.hasUserRequirements) {
-      message += `\n\n根据我们的对话历史，我了解到以下研究需求：\n${conversationContext.userRequirements}`
-      message += `\n\n研究背景和上下文：\n${conversationContext.researchContext}`
+    
+    // 根据模式决定使用自定义主题还是智能分析
+    if (mode === 'custom' && customTopic.trim()) {
+      console.log('使用自定义主题模式，主题:', customTopic.trim())
+      message += `\n\n**研究主题/问题：**\n${customTopic.trim()}`
+      message += `\n\n请基于以上研究主题生成详细的定量研究方案。`
+    } else {
+      console.log('使用智能分析模式')
+      // 使用智能分析模式，分析对话历史，提取用户需求和上下文
+      if (conversationContext.hasUserRequirements) {
+        message += `\n\n根据我们的对话历史，我了解到以下研究需求：\n${conversationContext.userRequirements}`
+        message += `\n\n研究背景和上下文：\n${conversationContext.researchContext}`
+      }
     }
     
     // 2. 获取所有参考文献信息（包括搜索和推荐的）
@@ -1572,15 +1765,25 @@ const generateResearchPlan = async () => {
       message += `\n\n`
     }
     
-    // 3. 根据是否有用户需求和参考文献，调整生成策略
-    if (conversationContext.hasUserRequirements && referencedPapers.length > 0) {
-      message += `，结合我提到的研究需求，生成一个详细的定量研究方案。`
-    } else if (conversationContext.hasUserRequirements) {
-      message += `请基于我提到的研究需求，生成一个详细的定量研究方案。`
-    } else if (referencedPapers.length > 0) {
-      message += `生成一个详细的定量研究方案。`
+    // 3. 根据模式、用户需求和参考文献，调整生成策略
+    if (mode === 'custom' && customTopic.trim()) {
+      // 自定义主题模式
+      if (referencedPapers.length > 0) {
+        message += `，结合上述研究主题，生成一个详细的定量研究方案。`
+      } else {
+        message += `，生成一个详细的定量研究方案。`
+      }
     } else {
-      message += `请生成一个详细的定量研究方案。`
+      // 智能分析模式
+      if (conversationContext.hasUserRequirements && referencedPapers.length > 0) {
+        message += `，结合我提到的研究需求，生成一个详细的定量研究方案。`
+      } else if (conversationContext.hasUserRequirements) {
+        message += `请基于我提到的研究需求，生成一个详细的定量研究方案。`
+      } else if (referencedPapers.length > 0) {
+        message += `生成一个详细的定量研究方案。`
+      } else {
+        message += `请生成一个详细的定量研究方案。`
+      }
     }
 
     message += `
@@ -1591,17 +1794,31 @@ const generateResearchPlan = async () => {
 #数据分析：<此处描述数据分析方法>；
 #结果呈现：<此处说明结果展示形式>；
 
-要求：
+要求：`
+    
+    // 根据模式添加不同的要求
+    if (mode === 'custom' && customTopic.trim()) {
+      message += `
+1. 紧密围绕上述研究主题进行设计
+2. 如果有参考文献，请结合文献内容和研究主题进行设计
+3. 确保研究方案与提供的研究主题高度匹配
+4. 基于文献内容生成科学严谨的研究方案
+5. 必须严格按照上述格式返回,使用Markdown格式
+6. plan字段中的每个部分都要详细具体`
+    } else {
+      message += `
 1. 优先考虑我在对话中提到的具体研究需求和目标
 2. 如果有参考文献，请结合文献内容和我提到的需求进行设计
 3. 确保研究方案与我的研究目标高度匹配
 4. 基于文献内容生成科学严谨的研究方案
 5. 必须严格按照上述格式返回,使用Markdown格式
 6. plan字段中的每个部分都要详细具体`
+    }
     
     console.log('准备发送的消息:', message)
+    console.log('生成模式:', mode)
+    console.log('自定义主题:', customTopic || '无')
     console.log('参考文献数量:', referencedPapers.length)
-    console.log('是否有用户需求:', conversationContext.hasUserRequirements)
     
     // 发送消息到chatbox
     await sendMessage(message)
