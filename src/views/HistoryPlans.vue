@@ -220,9 +220,33 @@ const confirmDelete = (plan) => {
 }
 
 // 确认清除所有方案
-const confirmClearAll = () => {
-  if (confirm(`确定要清除所有 ${historyState.historyPlans.length} 个历史方案吗？此操作不可撤销。`)) {
-    clearHistoryPlans()
+const confirmClearAll = async () => {
+  const planCount = historyState.historyPlans.length
+  if (confirm(`确定要清除所有 ${planCount} 个历史方案吗？此操作不可撤销。`)) {
+    try {
+      isLoading.value = true
+      console.log('开始清除所有历史方案...')
+      
+      await clearHistoryPlans()
+      
+      console.log('所有历史方案清除完成')
+      alert('所有历史方案已成功清除！')
+      
+      // 刷新调试信息
+      debugInfo.value.planCount = 0
+      debugInfo.value.apiResponse = '所有方案已清除'
+      debugInfo.value.errorMessage = null
+      
+    } catch (error) {
+      console.error('清除历史方案失败:', error)
+      alert(`清除历史方案时发生错误：${error.message}`)
+      
+      // 更新调试信息
+      debugInfo.value.errorMessage = `清除失败: ${error.message}`
+      
+    } finally {
+      isLoading.value = false
+    }
   }
 }
 </script>

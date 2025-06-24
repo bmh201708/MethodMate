@@ -1162,7 +1162,45 @@ const parseResearchPlanResponse = (content) => {
         }
       }, 500)
       
-      // 不再自动添加到历史方案
+      // 生成成功后，将方案添加到历史方案中
+      if (isGenerating.value) {
+        // 准备方案数据，用于添加到历史记录
+        const planData = {
+          title: currentPlanState.title,
+          researchQuestions: currentPlanState.researchQuestions,
+          methodology: currentPlanState.methodology,
+          hypotheses: currentPlanState.hypotheses,
+          experimentalDesign: currentPlanState.experimentalDesign,
+          analysisMethod: currentPlanState.analysisMethod,
+          expectedResults: currentPlanState.expectedResults,
+          timeline: currentPlanState.timeline || '',
+          isGenerated: true
+        }
+        
+        // 准备生成上下文，包含参考文献信息
+        const generationContext = {
+          referencedPapers: Array.from(papersState.referencedPapersList).map(paper => ({
+            title: paper.title,
+            authors: paper.authors,
+            year: paper.year,
+            source: paper.source
+          })),
+          generateTime: new Date().toISOString(),
+          userRequirements: extractConversationContext().userRequirements || ''
+        }
+        
+        console.log('准备添加研究方案到历史记录')
+        
+        // 延迟添加，确保UI更新完成
+        setTimeout(async () => {
+          try {
+            await addHistoryPlan(planData, generationContext)
+            console.log('成功添加研究方案到历史记录')
+          } catch (error) {
+            console.error('添加研究方案到历史记录失败:', error)
+          }
+        }, 1000)
+      }
       
       return true // 成功解析并更新了研究方案
     } else {
