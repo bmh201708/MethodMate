@@ -907,11 +907,29 @@ renderer.image = function(href, title, text) {
     console.log('使用代理访问图片:', cleanHref, '=>', finalHref)
   }
   
-  // 为LaTeX公式图片添加特殊处理
-  const className = isLatexImage ? 'latex-formula' : 'markdown-image'
-  const styles = isLatexImage 
-    ? 'display: inline-block; margin: 0 2px; vertical-align: middle; max-height: 1.5em; border: none; background: transparent;'
-    : 'max-width: 100%; height: auto; margin: 0.5rem 0; border-radius: 0.25rem;'
+  // 为LaTeX公式图片添加特殊处理 - 区分行内和行间公式
+  let className, styles
+  if (isLatexImage) {
+    // 通过URL参数或启发式方法判断是否为行间公式
+    const isDisplayMode = cleanHref.includes('displaystyle') || 
+                         cleanHref.includes('%5Cdisplaystyle') ||  // URL编码的\displaystyle
+                         cleanHref.includes('\\begin{') ||
+                         cleanHref.includes('%5Cbegin') ||  // URL编码的\begin
+                         cleanHref.includes('align') ||
+                         cleanHref.includes('equation') ||
+                         cleanHref.includes('$$') ||
+                         (text && (text.includes('$$') || text.length > 50)) // 长公式通常是行间公式
+    
+    className = isDisplayMode ? 'latex-formula-display' : 'latex-formula-inline'
+    styles = isDisplayMode 
+      ? 'display: block; margin: 0.5rem auto; max-width: 100%; max-height: 8em; border: none; background: transparent;'
+      : 'display: inline-block; margin: 0 2px; vertical-align: middle; max-height: 1.5em; border: none; background: transparent;'
+    
+    console.log(`LaTeX公式检测: ${isDisplayMode ? '行间公式' : '行内公式'}`, cleanHref)
+  } else {
+    className = 'markdown-image'
+    styles = 'max-width: 100%; height: auto; margin: 0.5rem 0; border-radius: 0.25rem;'
+  }
   
   // 添加referrer策略（作为备用方案）
   const referrerPolicy = isLatexImage ? ' referrerpolicy="no-referrer"' : ''
@@ -923,7 +941,20 @@ renderer.image = function(href, title, text) {
       ? `console.error('LaTeX图片加载失败:', '${finalHref}'); this.style.display='inline-block'; this.style.background='#f3f4f6'; this.style.padding='2px 4px'; this.style.border='1px dashed #ccc'; this.style.fontSize='0.75rem'; this.style.color='#666'; this.textContent='${text || '公式'}';`
       : `console.error('图片加载失败:', '${finalHref}'); this.style.display='block'; this.style.background='#f9f9f9'; this.style.padding='20px'; this.style.border='1px dashed #ccc'; this.textContent='图片加载失败';`
   
-  const result = `<img src="${finalHref}" class="${className}" style="${styles}" ${titleAttr}${altAttr}${referrerPolicy} onerror="${onError}" onload="console.log('✅ 图片加载成功:', '${finalHref}')" />`
+  // 添加加载完成后的尺寸优化
+  const onLoad = isLatexImage 
+    ? `console.log('✅ LaTeX图片加载成功:', '${finalHref}'); 
+       if (this.naturalHeight > 40) { 
+         this.style.maxHeight = 'none'; 
+         this.style.height = 'auto'; 
+         if (this.naturalHeight > 100) {
+           this.style.display = 'block';
+           this.style.margin = '0.5rem auto';
+         }
+       }`
+    : `console.log('✅ 图片加载成功:', '${finalHref}')`
+  
+  const result = `<img src="${finalHref}" class="${className}" style="${styles}" ${titleAttr}${altAttr}${referrerPolicy} onerror="${onError}" onload="${onLoad}" />`
   
   console.log('渲染器输出:', result)
   return result
@@ -3050,9 +3081,10 @@ const confirmIterate = async () => {
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
-/* LaTeX公式图片样式 */
+/* LaTeX公式图片样式 - 行内公式 */
 .prose img[src*="yuque/__latex"],
-.prose .latex-formula {
+.prose .latex-formula,
+.prose .latex-formula-inline {
   display: inline-block !important;
   margin: 0 2px !important;
   vertical-align: middle !important;
@@ -3061,6 +3093,39 @@ const confirmIterate = async () => {
   background: transparent !important;
   max-height: 1.5em !important;
   border: none !important;
+}
+
+/* LaTeX公式图片样式 - 行间公式 */
+.prose .latex-formula-display {
+  display: block !important;
+  margin: 0.75rem auto !important;
+  text-align: center !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  max-height: 10em !important;
+  max-width: 100% !important;
+  height: auto !important;
+  border: none !important;
+  padding: 0.25rem 0 !important;
+}
+
+/* 自适应LaTeX公式尺寸 */
+.prose img.latex-formula-display[style*="max-height: none"] {
+  max-height: none !important;
+}
+
+/* 大型公式的额外样式 */
+.prose .latex-formula-display {
+  transition: all 0.2s ease !important;
+}
+
+.prose .latex-formula-display:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 4px !important;
+  background: rgba(249, 250, 251, 0.8) !important;
+  padding: 0.5rem !important;
 }
 
 /* 普通markdown图片样式 */

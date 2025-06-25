@@ -17,13 +17,33 @@
             border-radius: 8px;
             background: #f9f9f9;
         }
-        .latex-formula {
+        .latex-formula,
+        .latex-formula-inline {
             display: inline-block;
             margin: 0 2px;
             vertical-align: middle;
             max-height: 1.5em;
             border: none;
             background: transparent;
+        }
+        .latex-formula-display {
+            display: block;
+            margin: 0.75rem auto;
+            text-align: center;
+            max-height: 10em;
+            max-width: 100%;
+            height: auto;
+            border: none;
+            background: transparent;
+            padding: 0.25rem 0;
+        }
+        .latex-formula-display:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            background: rgba(249, 250, 251, 0.8);
+            padding: 0.5rem;
+            transition: all 0.2s ease;
         }
         .proxy-url {
             background: #e3f2fd;
@@ -83,28 +103,79 @@
     </div>
 
     <div class="test-section">
-        <h2>4. Markdown渲染测试</h2>
+        <h2>4. 行内公式 vs 行间公式测试</h2>
+        <h3>行内公式（小尺寸，与文本在同一行）</h3>
+        <p>这是文本中的行内公式：<img src="/api/proxy-image?url=https%3A%2F%2Fcdn.nlark.com%2Fyuque%2F__latex%2F97175e519d61d550ce1d0327b2f7999f.svg" 
+           class="latex-formula-inline" 
+           alt="x^2" 
+           title="行内公式示例">，后面继续文本内容。</p>
+           
+        <h3>行间公式（大尺寸，独立成行）</h3>
+        <p>下面是一个行间公式：</p>
+        <img src="/api/proxy-image?url=https%3A%2F%2Fcdn.nlark.com%2Fyuque%2F__latex%2Fdisplaystyle_example_123.svg" 
+             class="latex-formula-display" 
+             alt="displaystyle formula" 
+             title="行间公式示例">
+        <p>公式上方的内容。</p>
+
+        <h3>自动检测测试</h3>
+        <p>包含displaystyle的公式：<img src="/api/proxy-image?url=https%3A%2F%2Fcdn.nlark.com%2Fyuque%2F__latex%2Fdisplaystyle_auto_detect.svg" 
+           id="auto-display1" 
+           alt="自动检测行间公式"></p>
+        <p>普通小公式：<img src="/api/proxy-image?url=https%3A%2F%2Fcdn.nlark.com%2Fyuque%2F__latex%2Fsimple_formula.svg" 
+           id="auto-inline1" 
+           alt="自动检测行内公式"></p>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Markdown渲染测试</h2>
         <div id="markdown-test"></div>
         <button onclick="testMarkdownRender()">测试Markdown渲染</button>
         <div id="markdown-status" class="status" style="display: none;">测试中...</div>
     </div>
 
     <script>
+        // 自动检测LaTeX公式类型的函数
+        function detectLatexType(src, alt) {
+            const isDisplayMode = src.includes('displaystyle') || 
+                                 src.includes('%5Cdisplaystyle') ||  // URL编码的\displaystyle
+                                 src.includes('\\begin{') ||
+                                 src.includes('%5Cbegin') ||  // URL编码的\begin
+                                 src.includes('align') ||
+                                 src.includes('equation') ||
+                                 src.includes('$$') ||
+                                 (alt && (alt.includes('$$') || alt.length > 50)); // 长公式通常是行间公式
+            
+            return isDisplayMode ? 'latex-formula-display' : 'latex-formula-inline';
+        }
+
         function testMarkdownRender() {
-            const testMarkdown = `测试LaTeX公式：![img](https://cdn.nlark.com/yuque/__latex/97175e519d61d550ce1d0327b2f7999f.svg) 和普通文本。
+            const testMarkdown = `行内公式测试：![img](https://cdn.nlark.com/yuque/__latex/inline_formula.svg) 和普通文本。
 
-这是一个包含公式的段落：![img](https://cdn.nlark.com/yuque/__latex/8b5e29dd6b5adf3f7a1ad48156d13c44.svg)
+行间公式测试（包含displaystyle）：
+![displaystyle formula](https://cdn.nlark.com/yuque/__latex/displaystyle_large_formula.svg)
 
-多个公式测试：![img](https://cdn.nlark.com/yuque/__latex/1a2b3c4d5e6f7g8h9i0j.svg)`;
+另一个行间公式（包含begin环境）：
+![equation environment](https://cdn.nlark.com/yuque/__latex/begin_equation_test.svg)
 
-            // 这里应该使用实际的markdown渲染器
-            // 由于这是纯HTML页面，我们简单模拟一下
+多个行内公式测试：![x](https://cdn.nlark.com/yuque/__latex/x.svg) + ![y](https://cdn.nlark.com/yuque/__latex/y.svg) = ![z](https://cdn.nlark.com/yuque/__latex/z.svg)`;
+
+            // 模拟markdown渲染器的LaTeX公式自动检测
             const renderedHtml = testMarkdown.replace(
                 /!\[([^\]]*)\]\(([^)]+)\)/g, 
                 (match, alt, src) => {
                     if (src.includes('yuque/__latex')) {
                         const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(src)}`;
-                        return `<img src="${proxyUrl}" class="latex-formula" alt="${alt}" onload="console.log('Markdown图片加载成功:', '${proxyUrl}')" onerror="console.error('Markdown图片加载失败:', '${proxyUrl}')">`;
+                        const className = detectLatexType(src, alt);
+                        console.log(`LaTeX公式检测: ${className === 'latex-formula-display' ? '行间公式' : '行内公式'}`, src);
+                        
+                        return `<img src="${proxyUrl}" class="${className}" alt="${alt}" 
+                                onload="console.log('✅ Markdown LaTeX图片加载成功:', '${proxyUrl}'); 
+                                        if (this.naturalHeight > 40 && this.className === 'latex-formula-inline') { 
+                                            this.className = 'latex-formula-display'; 
+                                            console.log('🔄 根据实际尺寸调整为行间公式'); 
+                                        }" 
+                                onerror="console.error('❌ Markdown LaTeX图片加载失败:', '${proxyUrl}')">`;
                     }
                     return `<img src="${src}" alt="${alt}">`;
                 }
@@ -113,11 +184,32 @@
             document.getElementById('markdown-test').innerHTML = renderedHtml;
             document.getElementById('markdown-status').style.display = 'block';
             document.getElementById('markdown-status').className = 'status success';
-            document.getElementById('markdown-status').textContent = '✅ Markdown渲染完成，请查看上方图片';
+            document.getElementById('markdown-status').textContent = '✅ Markdown渲染完成，请查看上方LaTeX公式的不同渲染效果';
+        }
+
+        // 自动检测测试中的公式类型
+        function setupAutoDetection() {
+            const autoDisplayImg = document.getElementById('auto-display1');
+            const autoInlineImg = document.getElementById('auto-inline1');
+            
+            if (autoDisplayImg) {
+                const displayClass = detectLatexType(autoDisplayImg.src, autoDisplayImg.alt);
+                autoDisplayImg.className = displayClass;
+                console.log('自动检测结果 - display1:', displayClass);
+            }
+            
+            if (autoInlineImg) {
+                const inlineClass = detectLatexType(autoInlineImg.src, autoInlineImg.alt);
+                autoInlineImg.className = inlineClass;
+                console.log('自动检测结果 - inline1:', inlineClass);
+            }
         }
 
         // 页面加载完成后的状态检查
         window.addEventListener('load', () => {
+            // 设置自动检测
+            setupAutoDetection();
+            
             setTimeout(() => {
                 console.log('页面加载完成，检查图片状态...');
                 
@@ -130,6 +222,10 @@
                         element.textContent = '❌ 加载超时';
                     }
                 });
+                
+                console.log('🧪 LaTeX公式渲染测试页面加载完成');
+                console.log('📏 行内公式应该显示较小，与文本对齐');
+                console.log('📐 行间公式应该显示较大，独立成行');
             }, 5000); // 5秒后检查
         });
     </script>
