@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import https from 'https';
 import fetch from 'node-fetch';
+import axios from 'axios';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -113,6 +114,9 @@ process.env.COZE_USER_ID = COZE_USER_ID;
 // 导入翻译服务
 import translate, { translateWithGoogleUnofficial } from './translate-service.js';
 import { translateWithCoze, translateWithSilentCoze } from './coze-translate-service.js';
+
+// 导入统计方法数据库查询服务
+import { searchStatisticalMethodFromDB, getAllStatisticalMethods, getStatisticalMethodById } from './statistical-methods-db.js';
 
 // 翻译函数 - 使用Coze API进行中文到英文的翻译
 const translateToEnglish = async (text, retries = 3) => {
@@ -2371,6 +2375,63 @@ app.post('/api/test-core', async (req, res) => {
   }
 });
 
+// 获取所有统计方法列表的API端点
+app.get('/api/statistical-methods', optionalAuth, async (req, res) => {
+  try {
+    console.log('获取所有统计方法列表');
+    
+    const methods = await getAllStatisticalMethods();
+    
+    res.json({
+      success: true,
+      methods: methods,
+      total: methods.length
+    });
+  } catch (error) {
+    console.error('获取统计方法列表错误:', error);
+    res.status(500).json({ 
+      success: false,
+      error: '服务器内部错误' 
+    });
+  }
+});
+
+// 根据ID获取统计方法详情的API端点
+app.get('/api/statistical-methods/:id', optionalAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id || isNaN(parseInt(id))) {
+      return res.status(400).json({ 
+        success: false,
+        error: '需要提供有效的方法ID' 
+      });
+    }
+
+    console.log('根据ID获取统计方法详情:', id);
+    
+    const method = await getStatisticalMethodById(parseInt(id));
+    
+    if (!method) {
+      return res.status(404).json({ 
+        success: false,
+        error: '未找到指定的统计方法' 
+      });
+    }
+    
+    res.json({
+      success: true,
+      method: method
+    });
+  } catch (error) {
+    console.error('根据ID获取统计方法错误:', error);
+    res.status(500).json({ 
+      success: false,
+      error: '服务器内部错误' 
+    });
+  }
+});
+
 // 查询统计方法的API端点
 app.post('/api/query-statistical-method', async (req, res) => {
   try {
@@ -2385,23 +2446,42 @@ app.post('/api/query-statistical-method', async (req, res) => {
 
     console.log('开始查询统计方法:', method);
     
-    // 首先检查本地存储的方法
+    // 第一优先级：从数据库查询
+    console.log('1️⃣ 从数据库查询统计方法...');
+    const dbMethod = await searchStatisticalMethodFromDB(method);
+    
+    if (dbMethod) {
+      console.log('✅ 数据库中找到方法:', dbMethod.method);
+      return res.json({
+        success: true,
+        method: dbMethod.method,
+        explanation: dbMethod.content,
+        keywords: dbMethod.keywords,
+        isLocalContent: true,
+        source: '数据库',
+        id: dbMethod.id,
+        file_source: dbMethod.file_source
+      });
+    }
+    
+    // 第二优先级：检查本地静态存储的方法
+    console.log('2️⃣ 从本地静态数据查询...');
     const { findStatisticalMethod } = await import('./statistical-methods-data.js');
     const localMethod = findStatisticalMethod(method);
     
     if (localMethod) {
-      console.log('找到本地存储的方法:', localMethod.method);
+      console.log('✅ 本地静态数据中找到方法:', localMethod.method);
       return res.json({
         success: true,
         method: localMethod.method,
         explanation: localMethod.content,
         isLocalContent: true,
-        source: '本地数据库'
+        source: '本地静态数据'
       });
     }
     
-    // 如果本地没有找到，则调用AI API
-    console.log('本地未找到，调用AI API查询:', method);
+    // 第三优先级：调用AI API生成
+    console.log('3️⃣ 本地未找到，调用AI API查询:', method);
     
     const prompt = `作为一个统计学专家，请详细解释以下统计方法：${method}
     
@@ -2450,6 +2530,8 @@ app.post('/api/query-statistical-method', async (req, res) => {
     if (!explanation) {
       throw new Error('未能获取统计方法解释');
     }
+
+    console.log('✅ AI API生成成功');
 
     res.json({
       success: true,
@@ -3619,6 +3701,78 @@ app.get('/api/paper-cache/stats', optionalAuth, async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: '服务器内部错误' 
+    });
+  }
+});
+
+// 图片代理API，用于绕过语雀等外部图片的防盗链限制
+app.get('/api/proxy-image', async (req, res) => {
+  try {
+    const { url } = req.query;
+    
+    if (!url) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '需要提供图片URL参数' 
+      });
+    }
+
+    // 验证URL是否为合法的图片链接
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'URL必须以http://或https://开头' 
+      });
+    }
+
+    console.log('代理获取图片:', url);
+
+    // 设置请求头，模拟浏览器访问并去除referrer
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+      // 故意不设置Referer头
+    };
+
+    // 获取图片
+    const imageResponse = await fetchWithRetry(url, {
+      headers: headers,
+      timeout: 10000 // 10秒超时
+    }, 2, 1000);
+
+    if (!imageResponse.ok) {
+      console.error(`获取图片失败，状态码: ${imageResponse.status}`);
+      return res.status(imageResponse.status).json({ 
+        success: false, 
+        error: `获取图片失败: ${imageResponse.status}` 
+      });
+    }
+
+    // 获取图片的内容类型
+    const contentType = imageResponse.headers.get('content-type') || 'image/svg+xml';
+    
+    // 设置响应头
+    res.set({
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=86400', // 缓存1天
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    });
+
+    // 将图片内容流式传输给客户端
+    imageResponse.body.pipe(res);
+
+    console.log('✅ 图片代理成功:', url);
+
+  } catch (error) {
+    console.error('图片代理错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '获取图片时发生错误' 
     });
   }
 });

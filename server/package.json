@@ -6,7 +6,8 @@
   "main": "local-api.js",
   "scripts": {
     "start": "node local-api.js",
-    "dev": "nodemon local-api.js"
+    "dev": "nodemon local-api.js",
+    "migrate-methods": "node run-migrate-statistical-methods.js"
   },
   "dependencies": {
     "@coze/api": "^1.2.0",

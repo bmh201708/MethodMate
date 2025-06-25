@@ -533,6 +533,28 @@
                         </button>
                       </div>
                       
+                      <!-- 测试按钮区域 -->
+                      <div class="flex flex-wrap gap-2 mb-4">
+                        <button
+                          @click="() => { statisticalMethodQuery = '单样本t检验'; queryStatisticalMethod(); }"
+                          class="px-3 py-1 text-sm bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                        >
+                          测试：单样本t检验
+                        </button>
+                        <button
+                          @click="testMarkdownRender"
+                          class="px-3 py-1 text-sm bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
+                        >
+                          测试渲染器
+                        </button>
+                        <button
+                          @click="() => { console.log('当前统计方法结果:', statisticalMethodResult); console.log('渲染结果:', renderedStatisticalMethodResult); }"
+                          class="px-3 py-1 text-sm bg-yellow-100 text-yellow-600 rounded hover:bg-yellow-200 transition-colors"
+                        >
+                          调试信息
+                        </button>
+                      </div>
+                      
                       <!-- 查询结果 -->
                       <div v-if="statisticalMethodResult" class="mt-4">
                         <div class="bg-white p-4 rounded-lg shadow-sm">
@@ -856,23 +878,152 @@ marked.use(markedKatex({
   output: 'html'       // 输出HTML格式
 }))
 
+// 自定义渲染器，确保图片能正确渲染
+const renderer = new marked.Renderer()
+
+// 自定义图片渲染
+renderer.image = function(href, title, text) {
+  console.log('正在渲染图片:', href)
+  
+  // 清理并验证URL
+  const cleanHref = href.trim()
+  if (!cleanHref) {
+    console.warn('图片URL为空')
+    return `<span style="color: #ef4444;">[图片URL为空]</span>`
+  }
+  
+  const titleAttr = title ? ` title="${title}"` : ''
+  const altAttr = text ? ` alt="${text || 'LaTeX公式'}"` : ' alt="LaTeX公式"'
+  
+  // 检查是否是外部图片，需要使用代理
+  const isExternalImage = cleanHref.startsWith('http://') || cleanHref.startsWith('https://')
+  const isLatexImage = cleanHref.includes('yuque/__latex')
+  
+  // 构建图片URL - 对于外部图片使用代理
+  let finalHref = cleanHref
+  if (isExternalImage && (isLatexImage || cleanHref.includes('cdn.nlark.com'))) {
+    // 对语雀等可能有防盗链的图片使用代理
+    finalHref = `/api/proxy-image?url=${encodeURIComponent(cleanHref)}`
+    console.log('使用代理访问图片:', cleanHref, '=>', finalHref)
+  }
+  
+  // 为LaTeX公式图片添加特殊处理 - 区分行内和行间公式
+  let className, styles
+  if (isLatexImage) {
+    // 通过URL参数或启发式方法判断是否为行间公式
+    const isDisplayMode = cleanHref.includes('displaystyle') || 
+                         cleanHref.includes('%5Cdisplaystyle') ||  // URL编码的\displaystyle
+                         cleanHref.includes('\\begin{') ||
+                         cleanHref.includes('%5Cbegin') ||  // URL编码的\begin
+                         cleanHref.includes('align') ||
+                         cleanHref.includes('equation') ||
+                         cleanHref.includes('$$') ||
+                         (text && (text.includes('$$') || text.length > 50)) // 长公式通常是行间公式
+    
+    className = isDisplayMode ? 'latex-formula-display' : 'latex-formula-inline'
+    styles = isDisplayMode 
+      ? 'display: block; margin: 0.5rem auto; max-width: 100%; max-height: 8em; border: none; background: transparent;'
+      : 'display: inline-block; margin: 0 2px; vertical-align: middle; max-height: 1.5em; border: none; background: transparent;'
+    
+    console.log(`LaTeX公式检测: ${isDisplayMode ? '行间公式' : '行内公式'}`, cleanHref)
+  } else {
+    className = 'markdown-image'
+    styles = 'max-width: 100%; height: auto; margin: 0.5rem 0; border-radius: 0.25rem;'
+  }
+  
+  // 添加referrer策略（作为备用方案）
+  const referrerPolicy = isLatexImage ? ' referrerpolicy="no-referrer"' : ''
+  
+  // 错误处理 - 如果代理失败，尝试直接访问
+  const onError = isExternalImage && (isLatexImage || cleanHref.includes('cdn.nlark.com'))
+    ? `console.error('代理图片加载失败:', '${finalHref}'); console.log('尝试直接访问:', '${cleanHref}'); this.src='${cleanHref}'; this.referrerPolicy='no-referrer';`
+    : isLatexImage 
+      ? `console.error('LaTeX图片加载失败:', '${finalHref}'); this.style.display='inline-block'; this.style.background='#f3f4f6'; this.style.padding='2px 4px'; this.style.border='1px dashed #ccc'; this.style.fontSize='0.75rem'; this.style.color='#666'; this.textContent='${text || '公式'}';`
+      : `console.error('图片加载失败:', '${finalHref}'); this.style.display='block'; this.style.background='#f9f9f9'; this.style.padding='20px'; this.style.border='1px dashed #ccc'; this.textContent='图片加载失败';`
+  
+  // 添加加载完成后的尺寸优化
+  const onLoad = isLatexImage 
+    ? `console.log('✅ LaTeX图片加载成功:', '${finalHref}'); 
+       if (this.naturalHeight > 40) { 
+         this.style.maxHeight = 'none'; 
+         this.style.height = 'auto'; 
+         if (this.naturalHeight > 100) {
+           this.style.display = 'block';
+           this.style.margin = '0.5rem auto';
+         }
+       }`
+    : `console.log('✅ 图片加载成功:', '${finalHref}')`
+  
+  const result = `<img src="${finalHref}" class="${className}" style="${styles}" ${titleAttr}${altAttr}${referrerPolicy} onerror="${onError}" onload="${onLoad}" />`
+  
+  console.log('渲染器输出:', result)
+  return result
+}
+
+// 自定义表格渲染，添加样式
+renderer.table = function(header, body) {
+  return `<div class="table-container" style="overflow-x: auto; margin: 1rem 0;">
+    <table class="markdown-table" style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb;">
+      <thead style="background-color: #f9fafb;">${header}</thead>
+      <tbody>${body}</tbody>
+    </table>
+  </div>`
+}
+
+renderer.tablerow = function(content) {
+  return `<tr style="border-bottom: 1px solid #e5e7eb;">${content}</tr>`
+}
+
+renderer.tablecell = function(content, flags) {
+  const type = flags.header ? 'th' : 'td'
+  const style = flags.header 
+    ? 'padding: 0.75rem; border: 1px solid #e5e7eb; font-weight: 600; text-align: left;'
+    : 'padding: 0.75rem; border: 1px solid #e5e7eb;'
+  return `<${type} style="${style}">${content}</${type}>`
+}
+
 marked.setOptions({
   breaks: true, // 支持换行
   gfm: true,    // 支持GitHub flavored markdown
   headerIds: false, // 禁用header id生成
   mangle: false, // 禁用邮箱混淆
   pedantic: false, // 使用更宽松的markdown解析
-  sanitize: false // 允许HTML（在受控环境中使用）
+  sanitize: false, // 允许HTML（在受控环境中使用）
+  renderer: renderer // 使用自定义渲染器
 })
 
 // 安全的markdown渲染函数
 const safeMarkdownRender = (text) => {
   try {
-    return marked(text || '')
+    if (!text) return ''
+    
+    console.log('开始渲染markdown，文本长度:', text.length)
+    console.log('前100字符:', text.substring(0, 100))
+    
+    const result = marked(text)
+    console.log('Markdown渲染完成，结果长度:', result.length)
+    console.log('渲染结果前200字符:', result.substring(0, 200))
+    
+    // 检查是否包含图片标签
+    const imgCount = (result.match(/<img/g) || []).length
+    console.log(`发现 ${imgCount} 个图片标签`)
+    
+    return result
   } catch (error) {
     console.error('Markdown渲染错误:', error)
     return text || '' // 如果渲染失败，返回原始文本
   }
+}
+
+// 测试markdown渲染的函数
+const testMarkdownRender = () => {
+  const testMarkdown = `测试LaTeX公式：![img](https://cdn.nlark.com/yuque/__latex/97175e519d61d550ce1d0327b2f7999f.svg) 和普通文本。`
+  console.log('=== 测试Markdown渲染 ===')
+  console.log('输入:', testMarkdown)
+  const rendered = safeMarkdownRender(testMarkdown)
+  console.log('输出:', rendered)
+  console.log('========================')
+  return rendered
 }
 
 // Markdown渲染计算属性
@@ -1956,6 +2107,10 @@ const extractConversationContext = () => {
 
 // 页面加载时检查是否有历史方案要显示
 onMounted(() => {
+  // 测试markdown渲染功能
+  console.log('🧪 开始测试markdown渲染功能')
+  testMarkdownRender()
+  
   if (historyState.currentViewingPlan) {
     // 延迟一点再加载，确保当前方案数据已经初始化完成
     setTimeout(() => {
@@ -2402,6 +2557,8 @@ const queryStatisticalMethod = async () => {
   statisticalMethodResult.value = ''
 
   try {
+    console.log('🔍 查询统计方法:', statisticalMethodQuery.value.trim())
+    
     const response = await fetch('/api/query-statistical-method', {
       method: 'POST',
       headers: {
@@ -2417,14 +2574,23 @@ const queryStatisticalMethod = async () => {
     }
 
     const data = await response.json()
+    console.log('📋 查询响应:', data)
     
     if (data.success) {
+      console.log('✅ 查询成功，解释内容长度:', data.explanation?.length || 0)
+      console.log('📝 解释内容前200字符:', data.explanation?.substring(0, 200) || '')
+      
       statisticalMethodResult.value = data.explanation
+      
+      // 验证渲染结果
+      setTimeout(() => {
+        console.log('🎨 当前渲染结果:', renderedStatisticalMethodResult.value?.substring(0, 300) || '')
+      }, 100)
     } else {
       throw new Error(data.error || '查询失败，请稍后重试')
     }
   } catch (error) {
-    console.error('查询统计方法失败:', error)
+    console.error('❌ 查询统计方法失败:', error)
     alert(error.message)
   } finally {
     isQuerying.value = false
@@ -2904,5 +3070,114 @@ const confirmIterate = async () => {
   padding-left: 1rem !important;
   margin: 1rem 0 !important;
   color: #6b7280 !important;
+}
+
+/* 图片样式 */
+.prose img {
+  max-width: 100% !important;
+  height: auto !important;
+  margin: 0.5rem 0 !important;
+  border-radius: 0.25rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* LaTeX公式图片样式 - 行内公式 */
+.prose img[src*="yuque/__latex"],
+.prose .latex-formula,
+.prose .latex-formula-inline {
+  display: inline-block !important;
+  margin: 0 2px !important;
+  vertical-align: middle !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  max-height: 1.5em !important;
+  border: none !important;
+}
+
+/* LaTeX公式图片样式 - 行间公式 */
+.prose .latex-formula-display {
+  display: block !important;
+  margin: 0.75rem auto !important;
+  text-align: center !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  max-height: 10em !important;
+  max-width: 100% !important;
+  height: auto !important;
+  border: none !important;
+  padding: 0.25rem 0 !important;
+}
+
+/* 自适应LaTeX公式尺寸 */
+.prose img.latex-formula-display[style*="max-height: none"] {
+  max-height: none !important;
+}
+
+/* 大型公式的额外样式 */
+.prose .latex-formula-display {
+  transition: all 0.2s ease !important;
+}
+
+.prose .latex-formula-display:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 4px !important;
+  background: rgba(249, 250, 251, 0.8) !important;
+  padding: 0.5rem !important;
+}
+
+/* 普通markdown图片样式 */
+.prose .markdown-image {
+  max-width: 100% !important;
+  height: auto !important;
+  margin: 0.5rem 0 !important;
+  border-radius: 0.25rem !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 确保所有图片都能正确加载 */
+.prose img {
+  display: inline-block !important;
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* 表格样式 */
+.prose .table-container {
+  overflow-x: auto !important;
+  margin: 1rem 0 !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+.prose .markdown-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-size: 0.875rem !important;
+}
+
+.prose .markdown-table th {
+  background-color: #f9fafb !important;
+  padding: 0.75rem !important;
+  border: 1px solid #e5e7eb !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+  color: #374151 !important;
+}
+
+.prose .markdown-table td {
+  padding: 0.75rem !important;
+  border: 1px solid #e5e7eb !important;
+  color: #6b7280 !important;
+}
+
+.prose .markdown-table tr:nth-child(even) {
+  background-color: #f9fafb !important;
+}
+
+.prose .markdown-table tr:hover {
+  background-color: #f3f4f6 !important;
 }
 </style> 
