@@ -183,7 +183,7 @@ const createTables = async () => {
         translated_abstract TEXT,
         translated_method LONGTEXT,
         paper_id VARCHAR(255),
-        source ENUM('search', 'recommendation', 'manual') DEFAULT 'manual',
+        source ENUM('search', 'recommendation', 'manual', 'database') DEFAULT 'manual',
         is_top_venue BOOLEAN DEFAULT FALSE,
         quality_score DECIMAL(3,2) DEFAULT 0.00,
         download_sources JSON,

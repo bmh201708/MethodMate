@@ -16,7 +16,7 @@ export const chatAPI = {
 
     try {
       // 调用 Vercel Edge Function
-      const response = await axios.post('/api/chat', {
+      const response = await axios.post('http://118.195.129.161:3004/api/chat', {
         message: data.message,
         session_id: sessionId,
         history: data.include_history ? sessions[sessionId] : []

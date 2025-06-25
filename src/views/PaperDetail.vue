@@ -190,32 +190,6 @@
                     已选为参考
                   </span>
                   <button 
-                    @click="savePaperToCache(papersState.selectedPaper)"
-                    :disabled="isSavingToCache"
-                    class="px-3 py-1 text-xs rounded transition-colors flex items-center space-x-1"
-                    :class="[
-                      paperCacheStatus === 'saved' 
-                        ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                        : paperCacheStatus === 'updated'
-                        ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    ]"
-                    :title="paperCacheStatus === 'saved' ? '已保存到本地' : paperCacheStatus === 'updated' ? '已更新本地缓存' : '保存到本地缓存'"
-                  >
-                    <svg v-if="isSavingToCache" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
-                    </svg>
-                    <span>{{ 
-                      isSavingToCache ? '保存中...' : 
-                      paperCacheStatus === 'saved' ? '已保存' : 
-                      paperCacheStatus === 'updated' ? '已更新' : '保存到本地' 
-                    }}</span>
-                  </button>
-                  <button 
                     @click="toggleReference(papersState.selectedPaper)"
                     class="px-4 py-2 text-sm rounded-lg transition-colors"
                     :class="[
@@ -241,6 +215,31 @@
                   <span v-if="papersState.selectedPaper.citationCount !== undefined" class="mr-4">
                     <span class="font-medium">被引用次数：</span>{{ papersState.selectedPaper.citationCount }}
                   </span>
+                </div>
+                
+                <!-- "保存到本地"按钮移到这里 -->
+                <div class="mb-4 pb-3 border-b border-gray-100">
+                  <button 
+                    @click="savePaperToCache(papersState.selectedPaper)"
+                    :disabled="isSavingToCache"
+                    class="p-1.5 text-xs rounded transition-colors opacity-50 hover:opacity-80"
+                    :class="[
+                      paperCacheStatus === 'saved' 
+                        ? 'bg-green-50 text-green-500 hover:bg-green-100'
+                        : paperCacheStatus === 'updated'
+                        ? 'bg-blue-50 text-blue-500 hover:bg-blue-100'
+                        : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                    ]"
+                    :title="paperCacheStatus === 'saved' ? '已保存到本地' : paperCacheStatus === 'updated' ? '已更新本地缓存' : '保存到本地缓存'"
+                  >
+                    <svg v-if="isSavingToCache" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                    </svg>
+                  </button>
                 </div>
                 
                 <div class="flex items-center justify-between mb-3">
@@ -528,7 +527,7 @@ const fetchPaperContent = async () => {
   try {
     console.log('手动获取论文内容:', papersState.selectedPaper.title)
     
-    const response = await fetch('/api/paper/get-full-content', {
+    const response = await fetch('http://118.195.129.161:3004/api/paper/get-full-content', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +597,7 @@ const tryGenerateMethodSummary = async () => {
     return false
   }
 
-  const response = await fetch('/api/paper/generate-method-summary', {
+      const response = await fetch('http://118.195.129.161:3004/api/paper/generate-method-summary', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -886,7 +885,7 @@ const extractKeywordsFromChat = async () => {
       return
     }
     
-    const response = await fetch('/api/extract-keywords', {
+    const response = await fetch('http://118.195.129.161:3004/api/extract-keywords', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -950,7 +949,7 @@ const getRecommendedPapers = async () => {
     }
 
     // 调用推荐API（通过Vue开发服务器代理）
-    const response = await fetch('/api/semantic-recommend', {
+    const response = await fetch('http://118.195.129.161:3004/api/semantic-recommend', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1055,7 +1054,7 @@ const savePaperToCache = async (paper) => {
       }
     }
 
-    const response = await fetch('/api/paper-cache/save', {
+          const response = await fetch('http://118.195.129.161:3004/api/paper-cache/save', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1098,7 +1097,7 @@ const savePaperToCache = async (paper) => {
 // 检查论文是否已缓存
 const checkPaperCache = async (paper) => {
   try {
-    const response = await fetch('/api/paper-cache/check', {
+          const response = await fetch('http://118.195.129.161:3004/api/paper-cache/check', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

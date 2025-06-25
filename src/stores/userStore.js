@@ -2,9 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 // API基础URL
-const API_BASE_URL = import.meta.env.MODE === 'production' 
-  ? 'https://method-mate.vercel.app' 
-  : 'http://localhost:3004'
+const API_BASE_URL = 'http://118.195.129.161:3004'
 
 export const useUserStore = defineStore('user', () => {
   // 状态

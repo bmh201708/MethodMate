@@ -3,9 +3,7 @@ import { reactive, ref } from 'vue'
 import { sendStreamMessageToCoze } from '../services/cozeApi'
 
 // API基础URL
-const API_BASE_URL = import.meta.env.MODE === 'production' 
-  ? 'https://method-mate.vercel.app' 
-  : 'http://localhost:3004'
+const API_BASE_URL = 'http://118.195.129.161:3004'
 
 // 获取认证头
 const getAuthHeaders = () => {

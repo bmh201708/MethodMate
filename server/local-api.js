@@ -177,7 +177,7 @@ const translateToEnglish = async (text, retries = 3) => {
   }
 };
 
-// 论文研究方法提取函数 - 改进版，处理长文本
+// 论文研究方法提取函数 - 改进版，处理长文本，支持智能段落定位
 const extractResearchMethod = async (fullText, retries = 3) => {
   try {
     if (!fullText || typeof fullText !== 'string') {
@@ -189,37 +189,39 @@ const extractResearchMethod = async (fullText, retries = 3) => {
     const textLength = fullText.length;
     console.log(`论文全文长度: ${textLength} 字符`);
 
-    // 定义最大段落长度（约8000个字符，大约是GPT模型处理能力的1/3）
-    const MAX_CHUNK_LENGTH = 8000;
+    // 定义最大段落长度（约10000个字符，适合处理较长的研究方法内容）
+    const MAX_CHUNK_LENGTH = 10000;
+    // 定义Coze API的实际处理上限（约20000字符）
+    const COZE_API_LIMIT = 20000;
     
-    // 如果文本较短，直接处理
-    if (textLength <= MAX_CHUNK_LENGTH) {
-      console.log('论文长度适中，直接处理全文');
-      return await processFullText(fullText, retries);
-    }
+    // 1. 首先尝试智能定位所有相关的研究方法段落
+    console.log('开始智能定位研究方法相关段落...');
+    const methodSections = locateMethodSection(fullText);
     
-    // 如果文本较长，先尝试定位方法部分
-    console.log('论文较长，尝试定位研究方法部分');
-    
-    // 1. 首先尝试定位可能包含研究方法的部分
-    const methodSection = locateMethodSection(fullText);
-    
-    if (methodSection) {
-      console.log('找到可能的方法部分，长度:', methodSection.length);
-      // 如果找到的方法部分仍然太长，进行分段处理
-      if (methodSection.length > MAX_CHUNK_LENGTH) {
-        console.log('找到的方法部分仍然较长，进行分段处理');
-        return await processTextInChunks(methodSection, retries);
+    if (methodSections) {
+      console.log(`成功定位研究方法段落，合并后长度: ${methodSections.length} 字符`);
+      
+      // 检查合并后的方法段落长度
+      if (methodSections.length <= MAX_CHUNK_LENGTH) {
+        console.log('合并的研究方法段落长度适中，直接处理');
+        return await processFullText(methodSections, retries);
+      } else if (methodSections.length <= COZE_API_LIMIT) {
+        console.log('合并的研究方法段落较长但在API限制内，直接处理');
+        return await processFullText(methodSections, retries);
       } else {
-        // 如果方法部分长度适中，直接处理
-        console.log('找到的方法部分长度适中，直接处理');
-        return await processFullText(methodSection, retries);
+        console.log(`合并的研究方法段落过长(${methodSections.length}字符)，超出API限制，进行智能分段处理`);
+        return await processTextInChunks(methodSections, retries);
       }
     }
     
-    // 2. 如果没有找到明确的方法部分，将全文分段处理
-    console.log('未找到明确的方法部分，对全文进行分段处理');
-    return await processTextInChunks(fullText, retries);
+    // 2. 如果智能定位失败，检查文本总长度决定处理策略
+    if (textLength <= MAX_CHUNK_LENGTH) {
+      console.log('智能定位失败，但论文长度适中，直接处理全文');
+      return await processFullText(fullText, retries);
+    } else {
+      console.log('智能定位失败且论文较长，对全文进行分段处理');
+      return await processTextInChunks(fullText, retries);
+    }
     
   } catch (error) {
     console.error('提取研究方法过程中发生未处理的错误:', error);
@@ -305,73 +307,291 @@ Remember: Just extract and return the relevant text. No need to analyze, summari
   }
 };
 
-// 分段处理长文本
+// 分段处理长文本 - 改进版，优化分段策略
 const processTextInChunks = async (text, retries = 3) => {
   try {
     // 将文本分成较小的块
-    const MAX_CHUNK_LENGTH = 8000;
+    const MAX_CHUNK_LENGTH = 10000;
     const chunks = [];
     let currentChunk = '';
     
-    // 按段落分割文本
-    const paragraphs = text.split(/\n\s*\n/);
+    // 应用智能段落分割策略（与locateMethodSection相同）
+    let paragraphs = [];
     
-    for (const paragraph of paragraphs) {
-      if (currentChunk.length + paragraph.length + 2 <= MAX_CHUNK_LENGTH) {
+    // 首先尝试标准的双换行分割
+    paragraphs = text.split(/\n\s*\n/);
+    
+    // 如果只有1个段落且长度超过10000字符，说明分割失败，使用两阶段优化策略
+    if (paragraphs.length === 1 && text.length > 10000) {
+      console.log('🚨 检测到单一超长段落，启用两阶段优化策略...');
+      console.log(`📏 原始文本长度: ${text.length} 字符`);
+      
+      // 阶段1：强制按10000字符分段
+      const FORCE_CHUNK_SIZE = 10000;
+      const forcedChunks = [];
+      
+      for (let i = 0; i < text.length; i += FORCE_CHUNK_SIZE) {
+        const chunk = text.slice(i, i + FORCE_CHUNK_SIZE);
+        forcedChunks.push(chunk);
+      }
+      
+      console.log(`🔪 阶段1: 强制分段完成，得到 ${forcedChunks.length} 个文本块`);
+      
+      // 阶段2：对每个文本块进行研究方法相关性评估
+      console.log('🔍 阶段2: 开始评估每个文本块的研究方法相关性...');
+      
+      const evaluatedChunks = [];
+      
+      forcedChunks.forEach((chunk, index) => {
+        const lowerChunk = chunk.toLowerCase();
+        let score = 0;
+        const foundKeywords = [];
+        
+        // 检查标题关键词（高权重）
+        const titleKeywordMatches = methodTitles.filter(title => {
+          const patterns = [
+            new RegExp(`\\b\\d+\\.?\\s+${title}\\b`, 'i'),
+            new RegExp(`\\b${title}\\b`, 'i'),
+            new RegExp(`\\b[ivxlcdm]+\\.?\\s+${title}\\b`, 'i'),
+          ];
+          return patterns.some(pattern => pattern.test(lowerChunk));
+        });
+        
+        if (titleKeywordMatches.length > 0) {
+          score += titleKeywordMatches.length * 15; // 在强制分段中给予更高权重
+          foundKeywords.push(...titleKeywordMatches.map(k => `[TITLE]${k}`));
+        }
+        
+        // 检查内容关键词
+        const contentKeywordMatches = methodKeywords.filter(keyword => 
+          lowerChunk.includes(keyword.toLowerCase())
+        );
+        score += contentKeywordMatches.length * 2;
+        foundKeywords.push(...contentKeywordMatches.slice(0, 3)); // 限制显示数量
+        
+        // 检查统计术语
+        const statisticalPatterns = [
+          /\b(p\s*[<>=]\s*0\.\d+|\bp\s*-?\s*value|\balpha\s*=|\bsignificant|\br\s*=|\bf\s*=|\bt\s*=)\b/i,
+          /\b(n\s*=\s*\d+|sample\s+size|\bmean\s*=|\bsd\s*=|\bregression|\bcorrelation)\b/i,
+          /\b(anova|t-test|chi-square|spss|r software|stata|participants|procedure)\b/i
+        ];
+        
+        const hasStatisticalTerms = statisticalPatterns.some(pattern => pattern.test(lowerChunk));
+        if (hasStatisticalTerms) {
+          score += 8; // 在强制分段中给予更高统计术语权重
+          foundKeywords.push('[STATS]');
+        }
+        
+        // 检查研究方法相关密度（关键词密度）
+        const keywordDensity = (contentKeywordMatches.length + titleKeywordMatches.length) / (chunk.length / 1000);
+        if (keywordDensity > 2) { // 每1000字符超过2个关键词
+          score += Math.floor(keywordDensity) * 3;
+          foundKeywords.push('[HIGH_DENSITY]');
+        }
+        
+        evaluatedChunks.push({
+          index,
+          chunk,
+          score,
+          keywords: foundKeywords,
+          length: chunk.length,
+          density: keywordDensity
+        });
+        
+        console.log(`  文本块 ${index + 1}: 得分=${score}, 长度=${chunk.length}, 密度=${keywordDensity.toFixed(2)}, 关键词=${foundKeywords.slice(0, 3).join(',')}`);
+      });
+      
+      // 阶段3：选择高相关性文本块
+      // 设定更严格的阈值：得分 >= 12 或包含标题关键词
+      const relevantChunks = evaluatedChunks.filter(item => {
+        const hasTitle = item.keywords.some(k => k.startsWith('[TITLE]'));
+        const hasHighScore = item.score >= 12;
+        const hasHighDensity = item.density > 3;
+        
+        return hasTitle || hasHighScore || hasHighDensity;
+      });
+      
+      console.log(`📋 阶段3: 筛选出 ${relevantChunks.length}/${forcedChunks.length} 个高相关性文本块`);
+      
+      if (relevantChunks.length === 0) {
+        console.log('⚠️ 强制分段后未找到研究方法相关内容，使用传统分割策略作为备用...');
+        // 备用策略：使用传统的分割方法
+        paragraphs = fullText.split(/[。！？]\s*\n/);
+        if (paragraphs.length <= 5) {
+          paragraphs = fullText.split(/\n+/);
+        }
+      } else {
+        // 按得分排序，选择最相关的文本块
+        relevantChunks.sort((a, b) => b.score - a.score);
+        
+        // 选择最多5个高相关性文本块，避免内容过多
+        const selectedChunks = relevantChunks.slice(0, Math.min(5, relevantChunks.length));
+        
+        console.log(`✅ 最终选择 ${selectedChunks.length} 个最相关的文本块:`);
+        selectedChunks.forEach((item, idx) => {
+          console.log(`  ${idx + 1}. 文本块${item.index + 1} (得分:${item.score}, 长度:${item.length}, 密度:${item.density.toFixed(2)})`);
+          console.log(`     关键词: ${item.keywords.join(', ')}`);
+        });
+        
+        // 将选中的文本块作为段落
+        paragraphs = selectedChunks.map(item => item.chunk);
+        
+        console.log(`🎯 两阶段策略完成，将 ${paragraphs.length} 个高相关性文本块作为段落进行后续处理`);
+      }
+    } else {
+      // 传统分割策略
+      if (paragraphs.length === 1 && fullText.length > 10000) {
+        console.log('标准段落分割失败，尝试其他分割策略...');
+        
+        // 策略1：按句号+换行分割
+        paragraphs = fullText.split(/[。！？]\s*\n/);
+        console.log(`按句号+换行分割，得到 ${paragraphs.length} 个段落`);
+        
+        // 如果还是太少，尝试按单换行分割
+        if (paragraphs.length <= 5) {
+          paragraphs = fullText.split(/\n+/);
+          console.log(`按单换行分割，得到 ${paragraphs.length} 个段落`);
+        }
+        
+        // 如果分割出的段落太多，合并短段落
+        if (paragraphs.length > 100) {
+          console.log('段落过多，执行段落合并...');
+          const mergedParagraphs = [];
+          let currentPara = '';
+          
+          for (const para of paragraphs) {
+            if (currentPara.length + para.length < 1000) {
+              currentPara += (currentPara ? '\n' : '') + para;
+            } else {
+              if (currentPara) {
+                mergedParagraphs.push(currentPara);
+              }
+              currentPara = para;
+            }
+          }
+          if (currentPara) {
+            mergedParagraphs.push(currentPara);
+          }
+          paragraphs = mergedParagraphs;
+          console.log(`合并后得到 ${paragraphs.length} 个段落`);
+        }
+      }
+    }
+    
+    // 过滤掉过短的段落（少于50字符）
+    const originalCount = paragraphs.length;
+    paragraphs = paragraphs.filter(p => p.trim().length >= 50);
+    if (paragraphs.length < originalCount) {
+      console.log(`🧹 过滤掉 ${originalCount - paragraphs.length} 个过短段落`);
+    }
+    
+    console.log(`📋 准备分段处理，共 ${paragraphs.length} 个有效段落`);
+    
+    // 如果还是只有1个段落且很长，强制按长度分割
+    if (paragraphs.length === 1 && paragraphs[0].length > MAX_CHUNK_LENGTH) {
+      console.log(`⚠️ 仍然只有1个超长段落(${paragraphs[0].length}字符)，强制按长度分割`);
+      const longParagraph = paragraphs[0];
+      paragraphs = [];
+      
+      // 按MAX_CHUNK_LENGTH强制分割
+      for (let i = 0; i < longParagraph.length; i += MAX_CHUNK_LENGTH) {
+        const chunk = longParagraph.slice(i, i + MAX_CHUNK_LENGTH);
+        paragraphs.push(chunk);
+      }
+      console.log(`🔪 强制分割后得到 ${paragraphs.length} 个段落`);
+    }
+    
+    // 现在按段落组合成块
+    for (let i = 0; i < paragraphs.length; i++) {
+      const paragraph = paragraphs[i];
+      const nextLength = currentChunk.length + paragraph.length + 2;
+      
+      if (nextLength <= MAX_CHUNK_LENGTH || currentChunk === '') {
+        // 如果加入当前段落不会超出限制，或者当前块为空，则加入
         currentChunk += (currentChunk ? '\n\n' : '') + paragraph;
       } else {
+        // 否则，保存当前块并开始新块
         if (currentChunk) {
           chunks.push(currentChunk);
+          console.log(`📦 创建文本块 ${chunks.length}，长度: ${currentChunk.length} 字符`);
         }
         currentChunk = paragraph;
       }
     }
     
+    // 添加最后一个块
     if (currentChunk) {
       chunks.push(currentChunk);
+      console.log(`📦 创建文本块 ${chunks.length}，长度: ${currentChunk.length} 字符`);
     }
     
-    console.log(`将文本分成 ${chunks.length} 个块进行处理`);
+    console.log(`✅ 文本分段完成，共生成 ${chunks.length} 个文本块`);
+    
+    // 验证没有超长块
+    const oversizedChunks = chunks.filter(chunk => chunk.length > MAX_CHUNK_LENGTH * 1.2);
+    if (oversizedChunks.length > 0) {
+      console.warn(`⚠️ 发现 ${oversizedChunks.length} 个可能过长的文本块，最大长度: ${Math.max(...oversizedChunks.map(c => c.length))} 字符`);
+    }
     
     // 处理每个块并收集结果
     const results = [];
+    const successfulChunks = [];
+    
     for (let i = 0; i < chunks.length; i++) {
-      console.log(`处理第 ${i + 1}/${chunks.length} 个文本块`);
-      const result = await processFullText(chunks[i], retries);
-      if (result) {
-        results.push(result);
+      console.log(`🔄 正在处理第 ${i + 1}/${chunks.length} 个文本块 (长度: ${chunks[i].length} 字符)`);
+      
+      try {
+        const result = await processFullText(chunks[i], retries);
+        if (result && result.trim()) {
+          results.push(result);
+          successfulChunks.push(i + 1);
+          console.log(`✅ 文本块 ${i + 1} 处理成功，提取到 ${result.length} 字符的方法内容`);
+        } else {
+          console.log(`⚠️ 文text块 ${i + 1} 未提取到有效的研究方法内容`);
+        }
+      } catch (error) {
+        console.error(`❌ 文本块 ${i + 1} 处理失败:`, error.message);
       }
       
       // 在处理块之间添加延迟，避免API限制
       if (i < chunks.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
       }
     }
     
-    // 如果没有找到任何方法相关内容，返回null
+    // 检查是否找到了任何方法相关内容
     if (results.length === 0) {
-      console.log('未从任何文本块中找到研究方法');
+      console.log('❌ 未从任何文本块中找到研究方法内容');
       return null;
     }
     
-    // 合并所有结果
-    const combinedResult = results.join('\n\n');
-    console.log(`成功从 ${results.length} 个文本块中提取研究方法`);
+    console.log(`✅ 成功处理 ${results.length}/${chunks.length} 个文本块，文本块编号: [${successfulChunks.join(', ')}]`);
     
-    // 如果合并后的结果过长，可能需要进行总结
-    if (combinedResult.length > MAX_CHUNK_LENGTH) {
-      console.log('合并结果过长，尝试生成摘要');
-      return await generateMethodSummary(combinedResult);
+    // 合并所有结果
+    const combinedResult = results.join('\n\n--- 分段提取结果合并 ---\n\n');
+    console.log(`📋 合并结果长度: ${combinedResult.length} 字符`);
+    
+    // 如果合并后的结果过长，生成简洁摘要
+    if (combinedResult.length > MAX_CHUNK_LENGTH * 1.5) {
+      console.log(`⚠️ 合并结果过长(${combinedResult.length}字符)，生成简洁摘要...`);
+      const summary = await generateMethodSummary(combinedResult);
+      if (summary) {
+        console.log(`✅ 摘要生成成功，长度: ${summary.length} 字符`);
+        return summary;
+      } else {
+        console.log('⚠️ 摘要生成失败，返回原始合并结果的前半部分');
+        return combinedResult.substring(0, MAX_CHUNK_LENGTH) + '\n\n[内容过长，已截断]';
+      }
     }
     
     return combinedResult;
   } catch (error) {
-    console.error('分段处理文本时出错:', error);
+    console.error('❌ 分段处理文本时出错:', error);
     return null;
   }
 };
 
-// 定位可能包含研究方法的部分
+// 定位可能包含研究方法的部分 - 改进版：搜索所有可能的研究方法段落
 const locateMethodSection = (fullText) => {
   try {
     // 转换为小写以进行不区分大小写的搜索
@@ -382,88 +602,331 @@ const locateMethodSection = (fullText) => {
       'method', 'methodology', 'research design', 'experimental design',
       'research methodology', 'data collection', 'procedure', 'experimental setup',
       'research approach', 'study design', 'research procedure', 'materials and methods',
-      '方法', '研究方法', '实验方法', '实验设计', '研究设计', '数据收集', '实验程序'
+      'data analysis', 'statistical analysis', 'statistical method', 'analytical approach',
+      '方法', '研究方法', '实验方法', '实验设计', '研究设计', '数据收集', '实验程序',
+      '数据分析', '统计分析', '统计方法', '分析方法'
     ];
     
-    // 查找可能的方法部分标题
-    let bestMatch = null;
-    let bestPosition = -1;
-    
-    for (const title of methodTitles) {
-      // 查找可能的标题格式（如 "3. Method" 或 "Method" 或 "III. Method"）
-      const patterns = [
-        new RegExp(`\\b\\d+\\.?\\s+${title}\\b`, 'i'),  // 数字编号格式
-        new RegExp(`\\b${title}\\b`, 'i'),              // 普通单词格式
-        new RegExp(`\\b[ivxlcdm]+\\.?\\s+${title}\\b`, 'i'), // 罗马数字格式
-      ];
-      
-      for (const pattern of patterns) {
-        const match = lowerText.match(pattern);
-        if (match && (bestPosition === -1 || match.index < bestPosition)) {
-          bestMatch = match[0];
-          bestPosition = match.index;
-        }
-      }
-    }
-    
-    // 如果找到方法部分标题
-    if (bestPosition !== -1) {
-      console.log(`找到可能的方法部分标题: "${bestMatch}" 在位置 ${bestPosition}`);
-      
-      // 查找下一个可能的章节标题，作为方法部分的结束
-      const nextSectionPattern = /\b(\d+\.\s+|\b[IVX]+\.\s+|Chapter\s+\d+\s*[:\.]\s*|\d+\s*[:\.]\s*)[A-Z]/;
-      const nextSection = lowerText.substring(bestPosition + bestMatch.length).match(nextSectionPattern);
-      
-      let endPosition;
-      if (nextSection) {
-        endPosition = bestPosition + bestMatch.length + nextSection.index;
-        console.log(`找到下一个章节标题，方法部分结束于位置 ${endPosition}`);
-      } else {
-        // 如果找不到下一个章节标题，取后续的一部分文本（最多10000字符）
-        endPosition = Math.min(bestPosition + bestMatch.length + 10000, fullText.length);
-        console.log(`未找到下一个章节标题，取后续 10000 字符作为方法部分`);
-      }
-      
-      // 提取方法部分文本
-      return fullText.substring(bestPosition, endPosition);
-    }
-    
-    // 如果没有找到明确的方法部分标题，尝试查找包含方法关键词的段落
-    console.log('未找到明确的方法部分标题，尝试查找包含方法关键词的段落');
-    
-    // 将文本分割成段落
-    const paragraphs = fullText.split(/\n\s*\n/);
-    
-    // 定义方法相关的关键词
+    // 定义方法相关的关键词（用于段落内容检测）
     const methodKeywords = [
       'participant', 'procedure', 'measure', 'analysis', 'collect data', 'sample',
       'experiment', 'survey', 'interview', 'questionnaire', 'observation',
       'statistical analysis', 'research design', 'study design', 'method',
+      'quantitative', 'qualitative', 'experimental', 'control group', 'treatment',
+      'variable', 'hypothesis', 'regression', 'correlation', 'anova', 't-test',
       '参与者', '程序', '测量', '分析', '收集数据', '样本', '实验', '调查', '访谈',
-      '问卷', '观察', '统计分析', '研究设计', '研究方法'
+      '问卷', '观察', '统计分析', '研究设计', '研究方法', '定量', '定性', '实验组',
+      '对照组', '变量', '假设', '回归', '相关', '方差分析', 't检验'
     ];
     
-    // 查找包含多个方法关键词的段落
-    const methodParagraphs = paragraphs.filter(para => {
-      const lowerPara = para.toLowerCase();
-      // 计算段落中包含的方法关键词数量
-      const keywordCount = methodKeywords.filter(keyword => 
-        lowerPara.includes(keyword.toLowerCase())
-      ).length;
-      
-      // 如果包含至少3个关键词，认为是方法相关段落
-      return keywordCount >= 3;
-    });
+    // 改进的段落分割策略：支持多种分割模式
+    let paragraphs = [];
     
-    if (methodParagraphs.length > 0) {
-      console.log(`找到 ${methodParagraphs.length} 个可能包含方法的段落`);
-      // 合并这些段落
-      return methodParagraphs.join('\n\n');
+    // 首先尝试标准的双换行分割
+    paragraphs = fullText.split(/\n\s*\n/);
+    
+    // 如果只有1个段落且长度超过10000字符，说明分割失败，使用两阶段优化策略
+    if (paragraphs.length === 1 && fullText.length > 10000) {
+      console.log('🚨 检测到单一超长段落，启用两阶段优化策略...');
+      console.log(`📏 原始文本长度: ${fullText.length} 字符`);
+      
+      // 阶段1：强制按10000字符分段
+      const FORCE_CHUNK_SIZE = 10000;
+      const forcedChunks = [];
+      
+      for (let i = 0; i < fullText.length; i += FORCE_CHUNK_SIZE) {
+        const chunk = fullText.slice(i, i + FORCE_CHUNK_SIZE);
+        forcedChunks.push(chunk);
+      }
+      
+      console.log(`🔪 阶段1: 强制分段完成，得到 ${forcedChunks.length} 个文本块`);
+      
+      // 阶段2：对每个文本块进行研究方法相关性评估
+      console.log('🔍 阶段2: 开始评估每个文本块的研究方法相关性...');
+      
+      const evaluatedChunks = [];
+      
+      forcedChunks.forEach((chunk, index) => {
+        const lowerChunk = chunk.toLowerCase();
+        let score = 0;
+        const foundKeywords = [];
+        
+        // 检查标题关键词（高权重）
+        const titleKeywordMatches = methodTitles.filter(title => {
+          const patterns = [
+            new RegExp(`\\b\\d+\\.?\\s+${title}\\b`, 'i'),
+            new RegExp(`\\b${title}\\b`, 'i'),
+            new RegExp(`\\b[ivxlcdm]+\\.?\\s+${title}\\b`, 'i'),
+          ];
+          return patterns.some(pattern => pattern.test(lowerChunk));
+        });
+        
+        if (titleKeywordMatches.length > 0) {
+          score += titleKeywordMatches.length * 15; // 在强制分段中给予更高权重
+          foundKeywords.push(...titleKeywordMatches.map(k => `[TITLE]${k}`));
+        }
+        
+        // 检查内容关键词
+        const contentKeywordMatches = methodKeywords.filter(keyword => 
+          lowerChunk.includes(keyword.toLowerCase())
+        );
+        score += contentKeywordMatches.length * 2;
+        foundKeywords.push(...contentKeywordMatches.slice(0, 3)); // 限制显示数量
+        
+        // 检查统计术语
+        const statisticalPatterns = [
+          /\b(p\s*[<>=]\s*0\.\d+|\bp\s*-?\s*value|\balpha\s*=|\bsignificant|\br\s*=|\bf\s*=|\bt\s*=)\b/i,
+          /\b(n\s*=\s*\d+|sample\s+size|\bmean\s*=|\bsd\s*=|\bregression|\bcorrelation)\b/i,
+          /\b(anova|t-test|chi-square|spss|r software|stata|participants|procedure)\b/i
+        ];
+        
+        const hasStatisticalTerms = statisticalPatterns.some(pattern => pattern.test(lowerChunk));
+        if (hasStatisticalTerms) {
+          score += 8; // 在强制分段中给予更高统计术语权重
+          foundKeywords.push('[STATS]');
+        }
+        
+        // 检查研究方法相关密度（关键词密度）
+        const keywordDensity = (contentKeywordMatches.length + titleKeywordMatches.length) / (chunk.length / 1000);
+        if (keywordDensity > 2) { // 每1000字符超过2个关键词
+          score += Math.floor(keywordDensity) * 3;
+          foundKeywords.push('[HIGH_DENSITY]');
+        }
+        
+        evaluatedChunks.push({
+          index,
+          chunk,
+          score,
+          keywords: foundKeywords,
+          length: chunk.length,
+          density: keywordDensity
+        });
+        
+        console.log(`  文本块 ${index + 1}: 得分=${score}, 长度=${chunk.length}, 密度=${keywordDensity.toFixed(2)}, 关键词=${foundKeywords.slice(0, 3).join(',')}`);
+      });
+      
+      // 阶段3：选择高相关性文本块
+      // 设定更严格的阈值：得分 >= 12 或包含标题关键词
+      const relevantChunks = evaluatedChunks.filter(item => {
+        const hasTitle = item.keywords.some(k => k.startsWith('[TITLE]'));
+        const hasHighScore = item.score >= 12;
+        const hasHighDensity = item.density > 3;
+        
+        return hasTitle || hasHighScore || hasHighDensity;
+      });
+      
+      console.log(`📋 阶段3: 筛选出 ${relevantChunks.length}/${forcedChunks.length} 个高相关性文本块`);
+      
+      if (relevantChunks.length === 0) {
+        console.log('⚠️ 强制分段后未找到研究方法相关内容，使用传统分割策略作为备用...');
+        // 备用策略：使用传统的分割方法
+        paragraphs = fullText.split(/[。！？]\s*\n/);
+        if (paragraphs.length <= 5) {
+          paragraphs = fullText.split(/\n+/);
+        }
+      } else {
+        // 按得分排序，选择最相关的文本块
+        relevantChunks.sort((a, b) => b.score - a.score);
+        
+        // 选择最多5个高相关性文本块，避免内容过多
+        const selectedChunks = relevantChunks.slice(0, Math.min(5, relevantChunks.length));
+        
+        console.log(`✅ 最终选择 ${selectedChunks.length} 个最相关的文本块:`);
+        selectedChunks.forEach((item, idx) => {
+          console.log(`  ${idx + 1}. 文本块${item.index + 1} (得分:${item.score}, 长度:${item.length}, 密度:${item.density.toFixed(2)})`);
+          console.log(`     关键词: ${item.keywords.join(', ')}`);
+        });
+        
+        // 将选中的文本块作为段落
+        paragraphs = selectedChunks.map(item => item.chunk);
+        
+        console.log(`🎯 两阶段策略完成，将 ${paragraphs.length} 个高相关性文本块作为段落进行后续处理`);
+      }
+    } else {
+      // 传统分割策略
+      if (paragraphs.length === 1 && fullText.length > 10000) {
+        console.log('标准段落分割失败，尝试其他分割策略...');
+        
+        // 策略1：按句号+换行分割
+        paragraphs = fullText.split(/[。！？]\s*\n/);
+        console.log(`按句号+换行分割，得到 ${paragraphs.length} 个段落`);
+        
+        // 如果还是太少，尝试按单换行分割
+        if (paragraphs.length <= 5) {
+          paragraphs = fullText.split(/\n+/);
+          console.log(`按单换行分割，得到 ${paragraphs.length} 个段落`);
+        }
+        
+        // 如果分割出的段落太多，合并短段落
+        if (paragraphs.length > 100) {
+          console.log('段落过多，执行段落合并...');
+          const mergedParagraphs = [];
+          let currentPara = '';
+          
+          for (const para of paragraphs) {
+            if (currentPara.length + para.length < 1000) {
+              currentPara += (currentPara ? '\n' : '') + para;
+            } else {
+              if (currentPara) {
+                mergedParagraphs.push(currentPara);
+              }
+              currentPara = para;
+            }
+          }
+          if (currentPara) {
+            mergedParagraphs.push(currentPara);
+          }
+          paragraphs = mergedParagraphs;
+          console.log(`合并后得到 ${paragraphs.length} 个段落`);
+        }
+      }
     }
     
-    // 如果仍然找不到，返回null
-    console.log('未能定位到明确的方法部分');
-    return null;
+    // 过滤掉过短的段落（少于50字符）
+    paragraphs = paragraphs.filter(p => p.trim().length >= 50);
+    
+    const methodRelatedParagraphs = [];
+    const paragraphScores = [];
+    
+    console.log(`文档共分为 ${paragraphs.length} 个段落，开始分析每个段落...`);
+    
+    // 第一步：分析每个段落，计算方法相关性得分
+    paragraphs.forEach((paragraph, index) => {
+      const lowerPara = paragraph.toLowerCase();
+      let score = 0;
+      const foundKeywords = [];
+      
+      // 检查是否包含标题关键词（高权重）
+      const titleKeywordMatches = methodTitles.filter(title => {
+        const patterns = [
+          new RegExp(`\\b\\d+\\.?\\s+${title}\\b`, 'i'),  // 数字编号格式
+          new RegExp(`\\b${title}\\b`, 'i'),              // 普通单词格式
+          new RegExp(`\\b[ivxlcdm]+\\.?\\s+${title}\\b`, 'i'), // 罗马数字格式
+        ];
+        
+        return patterns.some(pattern => pattern.test(lowerPara));
+      });
+      
+      if (titleKeywordMatches.length > 0) {
+        score += titleKeywordMatches.length * 10; // 标题关键词高权重
+        foundKeywords.push(...titleKeywordMatches.map(k => `[TITLE]${k}`));
+        console.log(`段落 ${index + 1} 包含标题关键词: ${titleKeywordMatches.join(', ')}`);
+      }
+      
+      // 检查内容关键词数量（中等权重）
+      const contentKeywordMatches = methodKeywords.filter(keyword => 
+        lowerPara.includes(keyword.toLowerCase())
+      );
+      
+      score += contentKeywordMatches.length * 2; // 内容关键词中等权重
+      foundKeywords.push(...contentKeywordMatches);
+      
+      // 检查段落长度（短段落降权）
+      if (paragraph.length < 100) {
+        score *= 0.5; // 过短段落降权
+      }
+      
+      // 检查是否包含数字和统计术语（加权）
+      const statisticalPatterns = [
+        /\b(p\s*[<>=]\s*0\.\d+|\bp\s*-?\s*value|\balpha\s*=|\bsignificant|\br\s*=|\bf\s*=|\bt\s*=|\bchi-?square|\bregression|\bcorrelation)\b/i,
+        /\b(n\s*=\s*\d+|sample\s+size|\bmean\s*=|\bsd\s*=|\bstd\s*=|\bmedian|\bmode)\b/i,
+        /\b(anova|t-test|chi-square|regression|correlation|spss|r software|stata|sas)\b/i
+      ];
+      
+      const hasStatisticalTerms = statisticalPatterns.some(pattern => pattern.test(lowerPara));
+      if (hasStatisticalTerms) {
+        score += 5; // 统计术语加权
+        foundKeywords.push('[STATS]');
+      }
+      
+      paragraphScores.push({
+        index,
+        paragraph,
+        score,
+        keywords: foundKeywords,
+        length: paragraph.length
+      });
+    });
+    
+    // 第二步：根据得分筛选相关段落
+    // 设定阈值：包含标题关键词的段落（score >= 10）或包含多个内容关键词的段落（score >= 6）
+    const relevantParagraphs = paragraphScores.filter(item => {
+      const hasTitle = item.keywords.some(k => k.startsWith('[TITLE]'));
+      const hasEnoughContent = item.score >= 6;
+      return hasTitle || hasEnoughContent;
+    });
+    
+    // 按得分排序
+    relevantParagraphs.sort((a, b) => b.score - a.score);
+    
+    console.log(`找到 ${relevantParagraphs.length} 个可能包含研究方法的段落:`);
+    relevantParagraphs.forEach((item, idx) => {
+      console.log(`  ${idx + 1}. 段落 ${item.index + 1} (得分: ${item.score}, 长度: ${item.length})`);
+      console.log(`     关键词: ${item.keywords.slice(0, 5).join(', ')}${item.keywords.length > 5 ? '...' : ''}`);
+    });
+    
+    if (relevantParagraphs.length === 0) {
+      console.log('未找到包含足够研究方法信息的段落');
+      return null;
+    }
+    
+    // 第三步：智能合并段落
+    let selectedParagraphs = [];
+    
+    // 如果有标题段落，优先选择得分最高的标题段落及其相邻段落
+    const titleParagraphs = relevantParagraphs.filter(item => 
+      item.keywords.some(k => k.startsWith('[TITLE]'))
+    );
+    
+    if (titleParagraphs.length > 0) {
+      console.log('找到标题段落，采用基于标题的策略');
+      
+      // 选择得分最高的标题段落
+      const primaryTitle = titleParagraphs[0];
+      selectedParagraphs.push(primaryTitle);
+      
+      // 查找该标题段落之后的相关段落（在一定范围内）
+      const maxRange = 10; // 最多向后查找10个段落
+      const startIdx = primaryTitle.index + 1;
+      const endIdx = Math.min(primaryTitle.index + maxRange, paragraphs.length);
+      
+      for (let i = startIdx; i < endIdx; i++) {
+        const candidateParagraph = paragraphScores.find(p => p.index === i);
+        if (candidateParagraph && candidateParagraph.score >= 4) {
+          selectedParagraphs.push(candidateParagraph);
+        }
+      }
+      
+      // 同时添加其他高得分的标题段落
+      titleParagraphs.slice(1).forEach(titlePara => {
+        if (titlePara.score >= 15) { // 只添加高得分的其他标题段落
+          selectedParagraphs.push(titlePara);
+        }
+      });
+    } else {
+      console.log('未找到明确标题段落，采用基于内容的策略');
+      // 如果没有标题段落，选择得分最高的几个段落
+      selectedParagraphs = relevantParagraphs.slice(0, Math.min(5, relevantParagraphs.length));
+    }
+    
+    // 去重并按原文顺序排序
+    const uniqueParagraphs = Array.from(new Set(selectedParagraphs.map(p => p.index)))
+      .sort((a, b) => a - b)
+      .map(index => paragraphScores.find(p => p.index === index));
+    
+    console.log(`最终选择 ${uniqueParagraphs.length} 个段落进行合并`);
+    
+    // 第四步：合并选中的段落
+    const combinedText = uniqueParagraphs.map(item => item.paragraph).join('\n\n');
+    
+    console.log(`合并后文本长度: ${combinedText.length} 字符`);
+    
+    if (combinedText.length === 0) {
+      console.log('合并后文本为空');
+      return null;
+    }
+    
+    return combinedText;
     
   } catch (error) {
     console.error('定位方法部分时出错:', error);
@@ -594,8 +1057,11 @@ if (!CORE_API_KEY) {
   console.log('CORE_API_KEY found:', CORE_API_KEY.substring(0, 4) + '...');
 }
 
-// 中间件
-app.use(express.json());
+// 中间件 - 增加请求体大小限制以支持论文全文保存
+app.use(express.json({ limit: '50mb', parameterLimit: 50000 }));
+app.use(express.urlencoded({ limit: '50mb', extended: true, parameterLimit: 50000 }));
+app.use(express.text({ limit: '50mb' }));
+app.use(express.raw({ limit: '50mb' }));
 app.use(express.static(join(__dirname, '..', 'public')));
 
 // JWT认证中间件
@@ -1334,7 +1800,7 @@ app.post('/api/scholar-search', async (req, res) => {
   }
 });
 
-// 辅助函数：从缓存搜索论文
+// 辅助函数：从缓存搜索论文 - 增强语义匹配版本
 const searchFromCache = async (query, limit = 10, filter_venues = false) => {
   try {
     const pool = getPool();
@@ -1345,7 +1811,7 @@ const searchFromCache = async (query, limit = 10, filter_venues = false) => {
       return [];
     }
     
-    console.log(`🔍 开始缓存搜索，查询: "${searchQuery}", 限制: ${limit}, 过滤顶会: ${filter_venues}`);
+    console.log(`🔍 开始增强语义缓存搜索，查询: "${searchQuery}", 限制: ${limit}, 过滤顶会: ${filter_venues}`);
     
     // 第一步：检测并翻译中文关键词
     let translatedQuery = searchQuery;
@@ -1360,7 +1826,7 @@ const searchFromCache = async (query, limit = 10, filter_venues = false) => {
       }
     }
     
-    // 第二步：按逗号分割关键词并清理，保留短语中的空格
+    // 第二步：智能关键词处理和扩展
     const keywords = translatedQuery
       .split(',')
       .map(kw => kw.trim())
@@ -1369,76 +1835,281 @@ const searchFromCache = async (query, limit = 10, filter_venues = false) => {
     
     console.log('🔍 原始查询:', query);
     console.log('🔄 翻译后查询:', translatedQuery);
-    console.log('🔑 按逗号分割的关键词:', keywords);
-    console.log('📊 关键词数量:', keywords.length);
+    console.log('🔑 基础关键词:', keywords);
     
     if (keywords.length === 0) {
       console.log('⚠️ 没有有效的搜索关键词');
       return [];
     }
     
-    // 第三步：构建SQL查询 - 要求论文标题必须包含所有关键词
-    console.log('🎯 搜索策略：论文标题必须包含所有关键词');
+    // 第三步：构建语义关键词扩展映射
+    const semanticExpansion = {
+      // 研究方法相关
+      'method': ['methodology', 'approach', 'technique', 'procedure', 'protocol'],
+      'methodology': ['method', 'approach', 'technique', 'framework', 'strategy'],
+      'approach': ['method', 'methodology', 'technique', 'strategy', 'framework'],
+      'analysis': ['analyze', 'analytical', 'examination', 'evaluation', 'assessment'],
+      'research': ['study', 'investigation', 'exploration', 'inquiry', 'examination'],
+      'study': ['research', 'investigation', 'exploration', 'analysis', 'examination'],
+      
+      // 数据分析相关
+      'quantitative': ['statistical', 'numerical', 'measurement', 'metrics', 'data'],
+      'qualitative': ['interpretive', 'descriptive', 'exploratory', 'interview', 'observation'],
+      'experimental': ['experiment', 'trial', 'testing', 'controlled', 'empirical'],
+      'statistical': ['quantitative', 'numerical', 'analysis', 'metrics', 'measurement'],
+      'data': ['information', 'dataset', 'evidence', 'findings', 'results'],
+      
+      // 设计相关
+      'design': ['framework', 'architecture', 'structure', 'layout', 'interface'],
+      'user': ['participant', 'subject', 'individual', 'person', 'human'],
+      'interface': ['UI', 'interaction', 'usability', 'experience', 'design'],
+      'interaction': ['interface', 'engagement', 'communication', 'behavior', 'activity'],
+      
+      // 技术相关
+      'machine': ['artificial', 'automated', 'computer', 'algorithm', 'AI'],
+      'learning': ['training', 'education', 'adaptation', 'improvement', 'development'],
+      'algorithm': ['method', 'procedure', 'technique', 'computation', 'process'],
+      'model': ['framework', 'structure', 'representation', 'system', 'architecture'],
+      'system': ['platform', 'framework', 'infrastructure', 'architecture', 'environment'],
+      
+      // 评估相关
+      'evaluation': ['assessment', 'analysis', 'testing', 'validation', 'measurement'],
+      'assessment': ['evaluation', 'testing', 'measurement', 'analysis', 'validation'],
+      'validation': ['verification', 'testing', 'confirmation', 'evaluation', 'proof'],
+      'performance': ['efficiency', 'effectiveness', 'results', 'outcomes', 'metrics']
+    };
     
-    let sqlQuery = `
-      SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
-             citation_count, research_method, full_text, translated_abstract, translated_method,
-             paper_id, source, is_top_venue, quality_score, download_sources, metadata,
-             created_at, updated_at
-      FROM paper_cache 
-      WHERE 1=1
-    `;
-    
-    // 构建参数数组 - 每个关键词都需要匹配
-    const params = [];
-    
-    // 为每个关键词添加AND条件
-    keywords.forEach((keyword, index) => {
-      sqlQuery += ` AND title LIKE ?`;
-      params.push(`%${keyword.toLowerCase()}%`);
+    // 第四步：为每个关键词生成语义扩展
+    const expandedKeywords = [];
+    keywords.forEach(keyword => {
+      const lowerKeyword = keyword.toLowerCase();
+      expandedKeywords.push(keyword); // 保留原始关键词
+      
+      // 查找完全匹配的扩展词
+      if (semanticExpansion[lowerKeyword]) {
+        expandedKeywords.push(...semanticExpansion[lowerKeyword]);
+      }
+      
+      // 查找部分匹配的扩展词
+      Object.keys(semanticExpansion).forEach(key => {
+        if (lowerKeyword.includes(key) || key.includes(lowerKeyword)) {
+          expandedKeywords.push(...semanticExpansion[key].slice(0, 2)); // 只取前2个，避免过度扩展
+        }
+      });
     });
     
-    console.log('🔧 构建的SQL查询条件数量:', keywords.length);
-    console.log('🔧 关键词:', keywords);
+    // 去重并限制扩展词数量
+    const uniqueExpandedKeywords = [...new Set(expandedKeywords)].slice(0, 15);
+    console.log('🚀 扩展后的语义关键词:', uniqueExpandedKeywords);
     
-    // 如果需要过滤顶会顶刊
-    if (filter_venues) {
-      sqlQuery += ' AND is_top_venue = TRUE';
+    // 第五步：构建多层次搜索策略
+    let results = [];
+    
+    // 策略1：全文搜索（最精确）
+    try {
+      console.log('📖 策略1：尝试MySQL全文搜索...');
+      const fullTextQuery = keywords.join(' ');
+      
+      let sqlQuery = `
+        SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
+               citation_count, research_method, full_text, translated_abstract, translated_method,
+               paper_id, source, is_top_venue, quality_score, download_sources, metadata,
+               created_at, updated_at,
+               MATCH(title, abstract) AGAINST(? IN NATURAL LANGUAGE MODE) as relevance_score
+        FROM paper_cache 
+        WHERE MATCH(title, abstract) AGAINST(? IN NATURAL LANGUAGE MODE)
+      `;
+      
+      const params = [fullTextQuery, fullTextQuery];
+      
+      if (filter_venues) {
+        sqlQuery += ' AND is_top_venue = TRUE';
+      }
+      
+      sqlQuery += ' ORDER BY relevance_score DESC, citation_count DESC';
+      sqlQuery += ` LIMIT ${parseInt(limit)}`;
+      
+      console.log('📝 全文搜索SQL:', sqlQuery.replace(/\s+/g, ' ').trim());
+      console.log('🔧 全文搜索参数:', params);
+      
+      const [fullTextResults] = await pool.execute(sqlQuery, params);
+      
+      if (fullTextResults.length > 0) {
+        console.log(`✅ 全文搜索成功，找到 ${fullTextResults.length} 篇论文`);
+        results = fullTextResults.map(paper => ({
+          ...paper,
+          download_sources: paper.download_sources ? 
+            (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null,
+          metadata: paper.metadata ? 
+            (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
+          matched_strategy: 'fulltext',
+          relevance_score: paper.relevance_score || 1.0
+        }));
+        
+        if (results.length >= limit) {
+          console.log('📚 全文搜索结果充足，直接返回');
+          return results;
+        }
+      } else {
+        console.log('⚠️ 全文搜索无结果，继续尝试其他策略');
+      }
+    } catch (fullTextError) {
+      console.log('⚠️ 全文搜索失败，继续尝试其他策略:', fullTextError.message);
     }
     
-    // 按创建时间排序，使用简单的数字限制
-    sqlQuery += ' ORDER BY created_at DESC';
-    sqlQuery += ` LIMIT ${parseInt(limit)}`;  // 直接写入SQL，不使用参数
+    // 策略2：扩展关键词匹配（语义相关）
+    if (results.length < limit) {
+      console.log('🎯 策略2：扩展关键词语义匹配...');
+      
+      let sqlQuery = `
+        SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
+               citation_count, research_method, full_text, translated_abstract, translated_method,
+               paper_id, source, is_top_venue, quality_score, download_sources, metadata,
+               created_at, updated_at
+        FROM paper_cache 
+        WHERE 1=1
+      `;
+      
+      const params = [];
+      
+      // 使用扩展关键词构建OR条件
+      const orConditions = [];
+      uniqueExpandedKeywords.forEach((keyword) => {
+        orConditions.push(`title LIKE ?`);
+        orConditions.push(`abstract LIKE ?`);
+        params.push(`%${keyword.toLowerCase()}%`);
+        params.push(`%${keyword.toLowerCase()}%`);
+      });
+      
+      if (orConditions.length > 0) {
+        sqlQuery += ` AND (${orConditions.join(' OR ')})`;
+      }
+      
+      if (filter_venues) {
+        sqlQuery += ' AND is_top_venue = TRUE';
+      }
+      
+      // 排除已找到的论文
+      if (results.length > 0) {
+        const excludeIds = results.map(r => r.id);
+        sqlQuery += ` AND id NOT IN (${excludeIds.map(() => '?').join(',')})`;
+        params.push(...excludeIds);
+      }
+      
+      sqlQuery += ' ORDER BY citation_count DESC, created_at DESC';
+      sqlQuery += ` LIMIT ${parseInt(limit - results.length)}`;
+      
+      console.log('📝 扩展关键词SQL:', sqlQuery.replace(/\s+/g, ' ').trim());
+      console.log('🔧 扩展关键词参数数量:', params.length);
+      
+      const [expandedResults] = await pool.execute(sqlQuery, params);
+      
+      if (expandedResults.length > 0) {
+        console.log(`✅ 扩展关键词搜索成功，找到 ${expandedResults.length} 篇论文`);
+        const processedExpanded = expandedResults.map(paper => ({
+          ...paper,
+          download_sources: paper.download_sources ? 
+            (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null,
+          metadata: paper.metadata ? 
+            (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
+          matched_strategy: 'semantic_expansion',
+          relevance_score: 0.8
+        }));
+        
+        results = results.concat(processedExpanded);
+      }
+    }
     
-    console.log('🔍 执行最简化搜索...');
-    console.log('📝 SQL查询:', sqlQuery.replace(/\s+/g, ' ').trim());
-    console.log('📋 搜索参数数量:', params.length);
-    console.log('📋 预期参数数量: 1'); // 只有一个LIKE参数
-    console.log('🔧 构建的参数:', params);
+    // 策略3：基础关键词匹配（回退策略）
+    if (results.length < limit) {
+      console.log('🔄 策略3：基础关键词匹配（回退策略）...');
+      
+      let sqlQuery = `
+        SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
+               citation_count, research_method, full_text, translated_abstract, translated_method,
+               paper_id, source, is_top_venue, quality_score, download_sources, metadata,
+               created_at, updated_at
+        FROM paper_cache 
+        WHERE 1=1
+      `;
+      
+      const params = [];
+      
+      // 使用原始关键词构建OR条件
+      const orConditions = [];
+      keywords.forEach((keyword) => {
+        orConditions.push(`title LIKE ?`);
+        orConditions.push(`abstract LIKE ?`);
+        params.push(`%${keyword.toLowerCase()}%`);
+        params.push(`%${keyword.toLowerCase()}%`);
+      });
+      
+      if (orConditions.length > 0) {
+        sqlQuery += ` AND (${orConditions.join(' OR ')})`;
+      }
+      
+      if (filter_venues) {
+        sqlQuery += ' AND is_top_venue = TRUE';
+      }
+      
+      // 排除已找到的论文
+      if (results.length > 0) {
+        const excludeIds = results.map(r => r.id);
+        sqlQuery += ` AND id NOT IN (${excludeIds.map(() => '?').join(',')})`;
+        params.push(...excludeIds);
+      }
+      
+      sqlQuery += ' ORDER BY citation_count DESC, created_at DESC';
+      sqlQuery += ` LIMIT ${parseInt(limit - results.length)}`;
+      
+      console.log('📝 基础关键词SQL:', sqlQuery.replace(/\s+/g, ' ').trim());
+      
+      const [basicResults] = await pool.execute(sqlQuery, params);
+      
+      if (basicResults.length > 0) {
+        console.log(`✅ 基础关键词搜索成功，找到 ${basicResults.length} 篇论文`);
+        const processedBasic = basicResults.map(paper => ({
+          ...paper,
+          download_sources: paper.download_sources ? 
+            (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null,
+          metadata: paper.metadata ? 
+            (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
+          matched_strategy: 'basic_keywords',
+          relevance_score: 0.6
+        }));
+        
+        results = results.concat(processedBasic);
+      }
+    }
     
-    const [results] = await pool.execute(sqlQuery, params);
-    console.log(`✅ 最简化搜索成功，找到 ${results.length} 篇论文`);
+    // 最终处理和排序
+    const finalResults = results
+      .slice(0, limit)
+      .sort((a, b) => {
+        // 按匹配策略和相关性排序
+        const strategyPriority = { 'fulltext': 3, 'semantic_expansion': 2, 'basic_keywords': 1 };
+        const aPriority = strategyPriority[a.matched_strategy] || 0;
+        const bPriority = strategyPriority[b.matched_strategy] || 0;
+        
+        if (aPriority !== bPriority) return bPriority - aPriority;
+        if (a.relevance_score !== b.relevance_score) return b.relevance_score - a.relevance_score;
+        return b.citation_count - a.citation_count;
+      });
     
-    // 处理结果，只解析必要的JSON字段
-    const processedResults = results.map(paper => ({
-      ...paper,
-      download_sources: paper.download_sources ? 
-        (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null,
-      metadata: paper.metadata ? 
-        (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
-      relevance_score: 1.0,
-      matched_term: firstTerm // 添加匹配的搜索词信息
-    }));
+    console.log(`🎉 增强语义搜索完成，总共找到 ${finalResults.length} 篇论文`);
+    finalResults.forEach((paper, index) => {
+      console.log(`  ${index + 1}. ${paper.title} (策略: ${paper.matched_strategy}, 相关性: ${paper.relevance_score})`);
+    });
     
-    return processedResults;
+    return finalResults;
     
   } catch (error) {
-    console.error('❌ 缓存搜索失败:', error);
+    console.error('❌ 增强语义缓存搜索失败:', error);
     console.error('错误详情:', error.stack);
     
-    // 如果新搜索失败，使用简化的备用搜索
+    // 如果增强搜索失败，使用原始的备用搜索
     try {
-      console.log('🆘 使用备用搜索方案...');
+      console.log('🆘 使用原始备用搜索方案...');
       return await fallbackSearch(query, limit, filter_venues);
     } catch (fallbackError) {
       console.error('❌ 备用搜索也失败了:', fallbackError);
@@ -1467,8 +2138,8 @@ const fallbackSearch = async (query, limit = 10, filter_venues = false) => {
     
     console.log('🔑 备用搜索关键词:', keywords);
     
-    // 备用搜索 - 要求包含所有关键词
-    console.log('🎯 备用搜索策略：标题必须包含所有关键词');
+    // 备用搜索 - 标题或摘要中包含任意关键词
+    console.log('🎯 备用搜索策略：标题或摘要中包含任意关键词');
     
     let sqlQuery = `
       SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
@@ -1481,11 +2152,17 @@ const fallbackSearch = async (query, limit = 10, filter_venues = false) => {
     
     const params = [];
     
-    // 为每个关键词添加AND条件
-    keywords.forEach((keyword, index) => {
-      sqlQuery += ` AND title LIKE ?`;
-      params.push(`%${keyword.toLowerCase()}%`);
-    });
+    // 构建OR条件：标题或摘要中包含任意关键词
+    if (keywords.length > 0) {
+      const orConditions = [];
+      keywords.forEach((keyword) => {
+        orConditions.push(`title LIKE ?`);
+        orConditions.push(`abstract LIKE ?`);
+        params.push(`%${keyword.toLowerCase()}%`);
+        params.push(`%${keyword.toLowerCase()}%`);
+      });
+      sqlQuery += ` AND (${orConditions.join(' OR ')})`;
+    }
     
     if (filter_venues) {
       sqlQuery += ' AND is_top_venue = 1';
@@ -2083,14 +2760,26 @@ Please respond in the following JSON format:
       const remainingCount = Math.max(0, 5 - allPapers.length);
       console.log(`🌐 本地结果不足，继续外部搜索 ${remainingCount} 篇论文...`);
       
-      // 构建基本查询参数 - 不对查询进行编码，保持原始格式
-      let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${formattedSearchQuery}&limit=${remainingCount}&fields=title,abstract,url,openAccessPdf,year,citationCount,authors,venue`;
+      // 确保查询参数不为空，并进行URL编码
+      let queryParam = formattedSearchQuery || searchQuery || 'research methodology';
+      if (!queryParam || queryParam.trim().length === 0) {
+        queryParam = 'research methodology experimental design';
+        console.log('⚠️ 搜索查询为空，使用默认查询:', queryParam);
+      }
+      
+      // 对查询参数进行URL编码以确保特殊字符正确处理
+      const encodedQuery = encodeURIComponent(queryParam.trim());
+      console.log('🔧 原始查询:', queryParam);
+      console.log('🔧 编码后查询:', encodedQuery);
+      
+      // 构建基本查询参数
+      let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${encodedQuery}&limit=${remainingCount}&fields=title,abstract,url,openAccessPdf,year,citationCount,authors,venue`;
       
       // 如果需要过滤期刊/会议，使用venue参数
       if (filter_venues) {
         // 使用原始venue名称，用逗号连接但不进行URL编码
         const venueParam = allowedVenues.join(',');
-        searchUrl += `&venue=${venueParam}`;
+        searchUrl += `&venue=${encodeURIComponent(venueParam)}`;
       }
       
       // 输出最终请求URL用于调试
@@ -3365,7 +4054,7 @@ app.post('/api/paper-cache/save', optionalAuth, async (req, res) => {
     }
 
     // 验证和处理source值
-    const allowedSources = ['search', 'recommendation', 'manual'];
+    const allowedSources = ['search', 'recommendation', 'manual', 'database'];
     let validSource = 'manual'; // 默认值
     
     if (source && typeof source === 'string') {
@@ -3451,11 +4140,27 @@ app.post('/api/paper-cache/save', optionalAuth, async (req, res) => {
          updated_at = CURRENT_TIMESTAMP
          WHERE id = ?`,
         [
-          validTitle, authors, abstract, validDoi, url, download_url, year, journal, venue,
-          citation_count || 0, research_method, full_text, translated_abstract, 
-          translated_method, validPaperId, validSource, is_top_venue || false,
-          quality_score, download_sources ? JSON.stringify(download_sources) : null,
-          metadata ? JSON.stringify(metadata) : null, paperId
+          validTitle || null, 
+          authors || null, 
+          abstract || null, 
+          validDoi || null, 
+          url || null, 
+          download_url || null, 
+          year || null, 
+          journal || null, 
+          venue || null,
+          citation_count || 0, 
+          research_method || null, 
+          full_text || null, 
+          translated_abstract || null, 
+          translated_method || null, 
+          validPaperId || null, 
+          validSource || 'manual', 
+          is_top_venue || false,
+          quality_score || 0.5, 
+          download_sources ? JSON.stringify(download_sources) : null,
+          metadata ? JSON.stringify(metadata) : null, 
+          paperId
         ]
       );
       console.log(`✅ 更新论文缓存: ${validTitle}`);
@@ -3468,10 +4173,25 @@ app.post('/api/paper-cache/save', optionalAuth, async (req, res) => {
           paper_id, source, is_top_venue, quality_score, download_sources, metadata) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          validTitle, authors, abstract, validDoi, url, download_url, year, journal, venue,
-          citation_count || 0, research_method, full_text, translated_abstract, 
-          translated_method, validPaperId, validSource, is_top_venue || false,
-          quality_score, download_sources ? JSON.stringify(download_sources) : null,
+          validTitle || null, 
+          authors || null, 
+          abstract || null, 
+          validDoi || null, 
+          url || null, 
+          download_url || null, 
+          year || null, 
+          journal || null, 
+          venue || null,
+          citation_count || 0, 
+          research_method || null, 
+          full_text || null, 
+          translated_abstract || null, 
+          translated_method || null, 
+          validPaperId || null, 
+          validSource || 'manual', 
+          is_top_venue || false,
+          quality_score || 0.5, 
+          download_sources ? JSON.stringify(download_sources) : null,
           metadata ? JSON.stringify(metadata) : null
         ]
       );
