@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语雀图片渲染测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .latex-formula {
+            display: inline-block;
+            margin: 0 2px;
+            vertical-align: middle;
+            max-height: 1.5em;
+            border: none;
+            background: transparent;
+        }
+        .proxy-url {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .success { background: #c8e6c9; color: #2e7d32; }
+        .error { background: #ffcdd2; color: #c62828; }
+    </style>
+</head>
+<body>
+    <h1>语雀图片渲染测试</h1>
+    
+    <div class="test-section">
+        <h2>1. 直接访问语雀LaTeX图片（预期失败）</h2>
+        <p>测试URL: <code>https://cdn.nlark.com/yuque/__latex/97175e519d61d550ce1d0327b2f7999f.svg</code></p>
+        <p>LaTeX公式：<img src="https://cdn.nlark.com/yuque/__latex/97175e519d61d550ce1d0327b2f7999f.svg" 
+           class="latex-formula" 
+           alt="LaTeX公式" 
+           onload="document.getElementById('direct-status').className='status success'; document.getElementById('direct-status').textContent='✅ 直接访问成功';"
+           onerror="document.getElementById('direct-status').className='status error'; document.getElementById('direct-status').textContent='❌ 直接访问失败（预期结果）';">
+        </p>
+        <div id="direct-status" class="status">加载中...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 通过代理访问语雀LaTeX图片（预期成功）</h2>
+        <div class="proxy-url">代理URL: /api/proxy-image?url=https%3A%2F%2Fcdn.nlark.com%2Fyuque%2F__latex%2F97175e519d61d550ce1d0327b2f7999f.svg</div>
+        <p>LaTeX公式：<img src="/api/proxy-image?url=https%3A%2F%2Fcdn.nlark.com%2Fyuque%2F__latex%2F97175e519d61d550ce1d0327b2f7999f.svg" 
+           class="latex-formula" 
+           alt="LaTeX公式" 
+           onload="document.getElementById('proxy-status').className='status success'; document.getElementById('proxy-status').textContent='✅ 代理访问成功';"
+           onerror="document.getElementById('proxy-status').className='status error'; document.getElementById('proxy-status').textContent='❌ 代理访问失败';">
+        </p>
+        <div id="proxy-status" class="status">加载中...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 测试no-referrer策略</h2>
+        <p>LaTeX公式：<img src="https://cdn.nlark.com/yuque/__latex/97175e519d61d550ce1d0327b2f7999f.svg" 
+           class="latex-formula" 
+           alt="LaTeX公式" 
+           referrerpolicy="no-referrer"
+           onload="document.getElementById('noreferrer-status').className='status success'; document.getElementById('noreferrer-status').textContent='✅ no-referrer策略成功';"
+           onerror="document.getElementById('noreferrer-status').className='status error'; document.getElementById('noreferrer-status').textContent='❌ no-referrer策略失败';">
+        </p>
+        <div id="noreferrer-status" class="status">加载中...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Markdown渲染测试</h2>
+        <div id="markdown-test"></div>
+        <button onclick="testMarkdownRender()">测试Markdown渲染</button>
+        <div id="markdown-status" class="status" style="display: none;">测试中...</div>
+    </div>
+
+    <script>
+        function testMarkdownRender() {
+            const testMarkdown = `测试LaTeX公式：![img](https://cdn.nlark.com/yuque/__latex/97175e519d61d550ce1d0327b2f7999f.svg) 和普通文本。
+
+这是一个包含公式的段落：![img](https://cdn.nlark.com/yuque/__latex/8b5e29dd6b5adf3f7a1ad48156d13c44.svg)
+
+多个公式测试：![img](https://cdn.nlark.com/yuque/__latex/1a2b3c4d5e6f7g8h9i0j.svg)`;
+
+            // 这里应该使用实际的markdown渲染器
+            // 由于这是纯HTML页面，我们简单模拟一下
+            const renderedHtml = testMarkdown.replace(
+                /!\[([^\]]*)\]\(([^)]+)\)/g, 
+                (match, alt, src) => {
+                    if (src.includes('yuque/__latex')) {
+                        const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(src)}`;
+                        return `<img src="${proxyUrl}" class="latex-formula" alt="${alt}" onload="console.log('Markdown图片加载成功:', '${proxyUrl}')" onerror="console.error('Markdown图片加载失败:', '${proxyUrl}')">`;
+                    }
+                    return `<img src="${src}" alt="${alt}">`;
+                }
+            );
+
+            document.getElementById('markdown-test').innerHTML = renderedHtml;
+            document.getElementById('markdown-status').style.display = 'block';
+            document.getElementById('markdown-status').className = 'status success';
+            document.getElementById('markdown-status').textContent = '✅ Markdown渲染完成，请查看上方图片';
+        }
+
+        // 页面加载完成后的状态检查
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                console.log('页面加载完成，检查图片状态...');
+                
+                // 检查各个测试的状态
+                const statuses = ['direct-status', 'proxy-status', 'noreferrer-status'];
+                statuses.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element.textContent === '加载中...') {
+                        element.className = 'status error';
+                        element.textContent = '❌ 加载超时';
+                    }
+                });
+            }, 5000); // 5秒后检查
+        });
+    </script>
+</body>
+</html> 
