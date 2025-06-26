@@ -42,7 +42,7 @@
       </div>
 
       <!-- 聊天框 -->
-      <div class="h-[calc(100vh-32rem)]">
+      <div class="h-[calc(100vh-22rem)]">
         <ChatBox />
       </div>
     </main>
