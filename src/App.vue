@@ -7,6 +7,9 @@
     <main class="flex-1">
       <router-view></router-view>
     </main>
+    
+    <!-- 环境调试工具 -->
+    <EnvironmentDebugTool />
   </div>
 </template>
 
@@ -15,6 +18,7 @@ import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from './stores/userStore.js'
 import NavigationBar from './components/NavigationBar.vue'
+import EnvironmentDebugTool from './components/EnvironmentDebugTool.vue'
 
 const router = useRouter()
 const userStore = useUserStore()

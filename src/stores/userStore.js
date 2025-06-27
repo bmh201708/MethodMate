@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-// API基础URL
-const API_BASE_URL = ''
+import { getApiBaseUrl } from '../config/environment.js'
 
 export const useUserStore = defineStore('user', () => {
   // 状态
@@ -46,7 +44,7 @@ export const useUserStore = defineStore('user', () => {
     loading.value = true
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      const response = await fetch(`${getApiBaseUrl()}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -99,7 +97,7 @@ export const useUserStore = defineStore('user', () => {
     loading.value = true
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const response = await fetch(`${getApiBaseUrl()}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -155,7 +153,7 @@ export const useUserStore = defineStore('user', () => {
     loading.value = true
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      const response = await fetch(`${getApiBaseUrl()}/auth/me`, {
         method: 'GET',
         headers: getAuthHeaders()
       })

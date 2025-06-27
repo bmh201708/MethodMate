@@ -64,8 +64,11 @@
           </router-link>
         </nav>
 
-        <!-- 右上角：历史记录按钮和用户菜单 -->
+        <!-- 右上角：环境切换器、历史记录按钮和用户菜单 -->
         <div class="flex items-center space-x-4">
+          <!-- 环境切换器 -->
+          <EnvironmentSwitcher />
+          
           <button
             @click="router.push('/history-plans')"
             class="flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 border border-gray-300 rounded-lg hover:border-blue-300 transition-colors"
@@ -223,6 +226,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { papersState } from '../stores/chatStore'
 import { useUserStore } from '../stores/userStore'
+import EnvironmentSwitcher from './EnvironmentSwitcher.vue'
 
 const router = useRouter()
 const userStore = useUserStore()

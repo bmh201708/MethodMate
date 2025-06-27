@@ -1283,6 +1283,17 @@ app.get('/', (req, res) => {
   res.redirect('/test-core-api.html');
 });
 
+// 健康检查端点
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    status: 'healthy',
+    message: 'MethodMate API服务器运行正常',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // 从CORE API获取论文全文，添加重试机制和请求间隔
 const getFullTextFromCore = async (title, doi = null, retries = 3, delay = 1000) => {
   try {

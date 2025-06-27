@@ -472,7 +472,7 @@ const fetchPaperContent = async () => {
   try {
     console.log('手动获取论文内容:', selectedPaper.value.title)
     
-            const response = await fetch('/api/paper/get-full-content', {
+    const response = await fetch('/api/paper/get-full-content', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -542,7 +542,7 @@ const tryGenerateMethodSummary = async () => {
   try {
     console.log('使用备用方法生成研究方法概要:', selectedPaper.value.title)
     
-          const response = await fetch('/api/paper/generate-method-summary', {
+    const response = await fetch('/api/paper/generate-method-summary', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

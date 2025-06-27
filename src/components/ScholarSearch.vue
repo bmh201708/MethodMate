@@ -437,7 +437,7 @@ export default {
       setSearchError(null)
 
       try {
-        // 使用相对路径，代理会自动转发到后端服务器
+        // 使用相对路径，通过Vite代理自动转发到配置的后端服务器
         const response = await fetch('/api/scholar-search', {
           method: 'POST',
           headers: {
@@ -485,7 +485,7 @@ export default {
       paper.downloadMessage = ''
 
       try {
-        // 使用相对路径，代理会自动转发到Vercel
+        // 使用相对路径，通过Vite代理自动转发到配置的后端服务器
         const response = await fetch('/api/paper-download', {
           method: 'POST',
           headers: {

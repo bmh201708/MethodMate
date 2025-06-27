@@ -885,7 +885,7 @@ const extractKeywordsFromChat = async () => {
       return
     }
     
-          const response = await fetch('/api/extract-keywords', {
+    const response = await fetch('/api/extract-keywords', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -949,7 +949,7 @@ const getRecommendedPapers = async () => {
     }
 
     // 调用推荐API（通过Vue开发服务器代理）
-          const response = await fetch('/api/semantic-recommend', {
+    const response = await fetch('/api/semantic-recommend', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
