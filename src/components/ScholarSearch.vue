@@ -316,7 +316,10 @@ import {
   setSearchLoading,
   setSearchError,
   updateSearchFilters,
-  clearSearchResults
+  clearSearchResults,
+  markPapersAsDisplayed,
+  getDisplayedPaperIds,
+  getDisplayedPaperTitles
 } from '@/stores/chatStore'
 
 export default {
@@ -422,6 +425,13 @@ export default {
       setSearchError(null)
 
       try {
+        // 收集已显示的论文ID和标题，避免重复搜索
+        const excludeIds = getDisplayedPaperIds()
+        const excludeTitles = getDisplayedPaperTitles()
+        
+        console.log('排除已显示的论文ID:', excludeIds)
+        console.log('排除已显示的论文标题:', excludeTitles)
+
         // 使用相对路径，通过Vite代理自动转发到配置的后端服务器
         const response = await fetch('/api/scholar-search', {
           method: 'POST',
@@ -431,7 +441,9 @@ export default {
           body: JSON.stringify({
             query: this.searchQuery,
             num_results: this.numResults,
-            filter_venues: !this.filterTopVenues // 默认只获取顶会顶刊，勾选扩大范围后获取所有文献
+            filter_venues: !this.filterTopVenues, // 默认只获取顶会顶刊，勾选扩大范围后获取所有文献
+            exclude_ids: excludeIds, // 传递要排除的论文ID
+            exclude_titles: excludeTitles // 传递要排除的论文标题
           })
         })
 
@@ -449,6 +461,10 @@ export default {
           
           // 保存到全局状态
           setSearchResults(processedResults, this.searchQuery)
+          
+          // 标记新搜索的论文为已显示
+          markPapersAsDisplayed(processedResults)
+          
           console.log('搜索结果已保存到全局状态:', processedResults)
         } else {
           setSearchError(data.error || '搜索失败，请重试')

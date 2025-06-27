@@ -85,7 +85,11 @@ export const papersState = reactive({
     filterTopVenues: false, // 默认只搜索顶会顶刊（false=只搜索顶会顶刊，true=扩大范围）
     showOnlyTopVenues: false,
     numResults: 10
-  }
+  },
+  // 全局已显示论文跟踪
+  displayedPapers: new Set(), // 记录所有已显示过的论文缓存ID
+  sessionDisplayedPapers: new Map(), // 会话级别的已显示论文记录 (缓存ID -> 论文标题)
+  displayedPaperTitles: new Set() // 记录所有已显示过的论文标题（用于去重）
 })
 
 // 历史方案状态
@@ -249,9 +253,14 @@ export const loadUserData = async () => {
       papersResult.papers.forEach(paper => {
         const frontendId = paper.paper_id || paper.id
         papersState.referencedPapers.add(frontendId)
+        
+        // 同时标记为已显示，避免重复推荐
+        if (paper.title) {
+          papersState.displayedPaperTitles.add(paper.title.toLowerCase())
+        }
       })
       
-      console.log(`已加载 ${papersResult.papers.length} 篇引用文献`)
+      console.log(`已加载 ${papersResult.papers.length} 篇引用文献，并标记为已显示`)
     }
 
     // 加载历史方案
@@ -941,6 +950,9 @@ export const clearMessages = () => {
     }
   ]
   chatState.conversationId = null
+  
+  // 清空已显示论文记录
+  clearDisplayedPapers()
 }
 
 // 历史方案相关方法
@@ -1267,4 +1279,106 @@ export const clearSourceIntroductions = () => {
     })
     console.log('清空所有来源介绍')
   }
+}
+
+// ==================== 已显示论文管理 ====================
+
+// 记录论文已被显示
+export const markPaperAsDisplayed = (paper) => {
+  if (paper.cache_id) {
+    papersState.displayedPapers.add(paper.cache_id)
+    papersState.sessionDisplayedPapers.set(paper.cache_id, paper.title)
+  }
+  
+  // 无论是否有缓存ID，都记录标题用于去重
+  if (paper.title) {
+    papersState.displayedPaperTitles.add(paper.title.toLowerCase())
+  }
+  
+  console.log(`标记论文已显示: ${paper.title} (缓存ID: ${paper.cache_id || '无'})`)
+}
+
+// 批量记录论文已被显示
+export const markPapersAsDisplayed = (papers) => {
+  papers.forEach(paper => {
+    if (paper.cache_id) {
+      papersState.displayedPapers.add(paper.cache_id)
+      papersState.sessionDisplayedPapers.set(paper.cache_id, paper.title)
+    }
+    
+    // 无论是否有缓存ID，都记录标题用于去重
+    if (paper.title) {
+      papersState.displayedPaperTitles.add(paper.title.toLowerCase())
+    }
+  })
+  console.log(`批量标记 ${papers.length} 篇论文已显示 (有缓存ID: ${papers.filter(p => p.cache_id).length} 篇)`)
+}
+
+// 获取所有已显示的论文缓存ID列表
+export const getDisplayedPaperIds = () => {
+  return Array.from(papersState.displayedPapers)
+}
+
+// 获取所有已显示的论文标题列表
+export const getDisplayedPaperTitles = () => {
+  return Array.from(papersState.displayedPaperTitles)
+}
+
+// 检查论文是否已被显示
+export const isPaperDisplayed = (paper) => {
+  return paper.cache_id && papersState.displayedPapers.has(paper.cache_id)
+}
+
+// 清空已显示论文记录（新对话开始时调用）
+export const clearDisplayedPapers = () => {
+  papersState.displayedPapers.clear()
+  papersState.sessionDisplayedPapers.clear()
+  papersState.displayedPaperTitles.clear()
+  console.log('已清空本次会话的已显示论文记录')
+}
+
+// 获取已显示论文的统计信息
+export const getDisplayedPapersStats = () => {
+  const totalDisplayedById = papersState.displayedPapers.size
+  const totalDisplayedByTitle = papersState.displayedPaperTitles.size
+  const currentRecommended = papersState.recommendedPapers.length
+  const currentSearched = papersState.searchResults.length
+  
+  return {
+    totalDisplayedById,
+    totalDisplayedByTitle,
+    currentRecommended,
+    currentSearched,
+    displayedTitles: Array.from(papersState.sessionDisplayedPapers.values())
+  }
+}
+
+// 测试去重机制的辅助函数（仅开发时使用）
+export const testDeduplicationMechanism = () => {
+  console.log('=== 去重机制状态检查 ===')
+  console.log('已显示论文缓存ID数量:', papersState.displayedPapers.size)
+  console.log('已显示论文标题数量:', papersState.displayedPaperTitles.size)
+  console.log('当前推荐论文数量:', papersState.recommendedPapers.length)
+  console.log('当前搜索结果数量:', papersState.searchResults.length)
+  
+  console.log('已显示的论文标题样例:')
+  Array.from(papersState.displayedPaperTitles).slice(0, 5).forEach((title, index) => {
+    console.log(`  ${index + 1}. ${title}`)
+  })
+  
+  console.log('=== 检查完成 ===')
+  
+  return {
+    displayedIds: Array.from(papersState.displayedPapers),
+    displayedTitles: Array.from(papersState.displayedPaperTitles),
+    recommendedCount: papersState.recommendedPapers.length,
+    searchedCount: papersState.searchResults.length
+  }
+}
+
+// 在开发环境中暴露调试函数
+if (process.env.NODE_ENV === 'development') {
+  window.testDeduplication = testDeduplicationMechanism
+  window.papersState = papersState
+  console.log('🔧 开发模式：已暴露去重测试函数 window.testDeduplication() 和状态对象 window.papersState')
 } 

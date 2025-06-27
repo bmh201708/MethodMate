@@ -1594,7 +1594,9 @@ app.post('/api/scholar-search', async (req, res) => {
     
     // 首先从本地缓存搜索
     console.log('🔍 首先从本地缓存搜索...');
-    const cacheResults = await searchFromCache(query, num_results, filter_venues);
+    const excludeIds = req.body.exclude_ids || []; // 从请求中获取要排除的论文ID
+    const excludeTitles = req.body.exclude_titles || []; // 从请求中获取要排除的论文标题
+    const cacheResults = await searchFromCache(query, num_results, filter_venues, excludeIds);
     console.log(`📚 本地缓存找到 ${cacheResults.length} 篇论文`);
     
     let allResults = [];
@@ -1757,10 +1759,15 @@ app.post('/api/scholar-search', async (req, res) => {
           });
 
           // 合并结果，去重（基于标题）
-          const existingTitles = new Set(allResults.map(r => r.title.toLowerCase()));
+          const existingTitles = new Set([
+            ...allResults.map(r => r.title.toLowerCase()),  // 本次搜索的缓存结果
+            ...excludeTitles.map(t => t.toLowerCase())      // 全局已显示的论文标题
+          ]);
           const newResults = externalResults.filter(r => 
             r.title && !existingTitles.has(r.title.toLowerCase())
           );
+          
+          console.log(`🔍 外部搜索去重：排除了 ${externalResults.length - newResults.length} 篇重复论文`);
           
           allResults = allResults.concat(newResults);
           console.log(`🌐 外部搜索新增 ${newResults.length} 篇论文`);
@@ -1823,7 +1830,7 @@ app.post('/api/scholar-search', async (req, res) => {
 });
 
 // 辅助函数：从缓存搜索论文 - 增强语义匹配版本
-const searchFromCache = async (query, limit = 10, filter_venues = false) => {
+const searchFromCache = async (query, limit = 10, filter_venues = false, excludeIds = []) => {
   try {
     const pool = getPool();
     const searchQuery = query.trim();
@@ -1833,7 +1840,7 @@ const searchFromCache = async (query, limit = 10, filter_venues = false) => {
       return [];
     }
     
-    console.log(`🔍 开始增强语义缓存搜索，查询: "${searchQuery}", 限制: ${limit}, 过滤顶会: ${filter_venues}`);
+    console.log(`🔍 开始增强语义缓存搜索，查询: "${searchQuery}", 限制: ${limit}, 过滤顶会: ${filter_venues}, 排除论文数: ${excludeIds.length}`);
     
     // 第一步：检测并翻译中文关键词
     let translatedQuery = searchQuery;
@@ -1948,6 +1955,13 @@ const searchFromCache = async (query, limit = 10, filter_venues = false) => {
         sqlQuery += ' AND is_top_venue = TRUE';
       }
       
+      // 排除已显示的论文
+      if (excludeIds.length > 0) {
+        const placeholders = excludeIds.map(() => '?').join(',');
+        sqlQuery += ` AND id NOT IN (${placeholders})`;
+        params.push(...excludeIds);
+      }
+      
       sqlQuery += ' ORDER BY relevance_score DESC, citation_count DESC';
       sqlQuery += ` LIMIT ${parseInt(limit)}`;
       
@@ -2011,11 +2025,18 @@ const searchFromCache = async (query, limit = 10, filter_venues = false) => {
         sqlQuery += ' AND is_top_venue = TRUE';
       }
       
+      // 排除已显示的论文
+      if (excludeIds.length > 0) {
+        const placeholders = excludeIds.map(() => '?').join(',');
+        sqlQuery += ` AND id NOT IN (${placeholders})`;
+        params.push(...excludeIds);
+      }
+      
       // 排除已找到的论文
       if (results.length > 0) {
-        const excludeIds = results.map(r => r.id);
-        sqlQuery += ` AND id NOT IN (${excludeIds.map(() => '?').join(',')})`;
-        params.push(...excludeIds);
+        const foundIds = results.map(r => r.id);
+        sqlQuery += ` AND id NOT IN (${foundIds.map(() => '?').join(',')})`;
+        params.push(...foundIds);
       }
       
       sqlQuery += ' ORDER BY citation_count DESC, created_at DESC';
@@ -2074,11 +2095,18 @@ const searchFromCache = async (query, limit = 10, filter_venues = false) => {
         sqlQuery += ' AND is_top_venue = TRUE';
       }
       
+      // 排除已显示的论文
+      if (excludeIds.length > 0) {
+        const placeholders = excludeIds.map(() => '?').join(',');
+        sqlQuery += ` AND id NOT IN (${placeholders})`;
+        params.push(...excludeIds);
+      }
+      
       // 排除已找到的论文
       if (results.length > 0) {
-        const excludeIds = results.map(r => r.id);
-        sqlQuery += ` AND id NOT IN (${excludeIds.map(() => '?').join(',')})`;
-        params.push(...excludeIds);
+        const foundIds = results.map(r => r.id);
+        sqlQuery += ` AND id NOT IN (${foundIds.map(() => '?').join(',')})`;
+        params.push(...foundIds);
       }
       
       sqlQuery += ' ORDER BY citation_count DESC, created_at DESC';
@@ -2141,7 +2169,7 @@ const searchFromCache = async (query, limit = 10, filter_venues = false) => {
 };
 
 // 简化的备用搜索函数 - 只搜索标题
-const fallbackSearch = async (query, limit = 10, filter_venues = false) => {
+const fallbackSearch = async (query, limit = 10, filter_venues = false, excludeIds = []) => {
   try {
     const pool = getPool();
     console.log('🆘 执行备用搜索（仅搜索标题）...');
@@ -2155,7 +2183,7 @@ const fallbackSearch = async (query, limit = 10, filter_venues = false) => {
     
     if (keywords.length === 0) {
       console.log('⚠️ 备用搜索：没有有效关键词，返回最新论文');
-      return await getLatestPapers(limit, filter_venues);
+      return await getLatestPapers(limit, filter_venues, excludeIds);
     }
     
     console.log('🔑 备用搜索关键词:', keywords);
@@ -2190,6 +2218,13 @@ const fallbackSearch = async (query, limit = 10, filter_venues = false) => {
       sqlQuery += ' AND is_top_venue = 1';
     }
     
+    // 排除已显示的论文
+    if (excludeIds.length > 0) {
+      const placeholders = excludeIds.map(() => '?').join(',');
+      sqlQuery += ` AND id NOT IN (${placeholders})`;
+      params.push(...excludeIds);
+    }
+    
     sqlQuery += ` ORDER BY created_at DESC LIMIT ${parseInt(limit)}`;
     
     console.log('🔧 备用搜索SQL:', sqlQuery.replace(/\s+/g, ' ').trim());
@@ -2208,12 +2243,12 @@ const fallbackSearch = async (query, limit = 10, filter_venues = false) => {
   } catch (error) {
     console.error('❌ 备用搜索失败:', error);
     // 最后返回最新论文
-    return await getLatestPapers(limit, filter_venues);
+    return await getLatestPapers(limit, filter_venues, excludeIds);
   }
 };
 
 // 获取最新论文的函数 - 最简化版本
-const getLatestPapers = async (limit = 10, filter_venues = false) => {
+const getLatestPapers = async (limit = 10, filter_venues = false, excludeIds = []) => {
   try {
     const pool = getPool();
     console.log('📅 获取最新论文（最简化查询）...');
@@ -2226,15 +2261,29 @@ const getLatestPapers = async (limit = 10, filter_venues = false) => {
       FROM paper_cache
     `;
     
+    const params = [];
+    const conditions = [];
+    
     if (filter_venues) {
-      sqlQuery += ' WHERE is_top_venue = 1';
+      conditions.push('is_top_venue = 1');
+    }
+    
+    // 排除已显示的论文
+    if (excludeIds.length > 0) {
+      const placeholders = excludeIds.map(() => '?').join(',');
+      conditions.push(`id NOT IN (${placeholders})`);
+      params.push(...excludeIds);
+    }
+    
+    if (conditions.length > 0) {
+      sqlQuery += ` WHERE ${conditions.join(' AND ')}`;
     }
     
     sqlQuery += ` ORDER BY created_at DESC LIMIT ${parseInt(limit)}`;
     
     console.log('🔧 最新论文SQL:', sqlQuery.replace(/\s+/g, ' ').trim());
     
-    const [results] = await pool.execute(sqlQuery);  // 不使用任何参数
+    const [results] = await pool.execute(sqlQuery, params);
     console.log(`📚 返回 ${results.length} 篇最新论文`);
     
     return results.map(paper => ({
@@ -2740,7 +2789,9 @@ Please respond in the following JSON format:
     
     // 第一步：优先从本地缓存搜索
     console.log('🔍 首先从本地缓存搜索推荐论文...');
-    const cacheResults = await searchFromCache(formattedSearchQuery, 5, filter_venues);
+    const excludeIds = req.body.exclude_ids || []; // 从请求中获取要排除的论文ID
+    const excludeTitles = req.body.exclude_titles || []; // 从请求中获取要排除的论文标题
+    const cacheResults = await searchFromCache(formattedSearchQuery, 5, filter_venues, excludeIds);
     console.log(`📚 本地缓存找到 ${cacheResults.length} 篇推荐论文`);
     
     let allPapers = [];
@@ -2896,10 +2947,15 @@ Please respond in the following JSON format:
         });
 
         // 合并结果，去重（基于标题）
-        const existingTitles = new Set(allPapers.map(r => r.title.toLowerCase()));
+        const existingTitles = new Set([
+          ...allPapers.map(r => r.title.toLowerCase()),  // 本次搜索的缓存结果
+          ...excludeTitles.map(t => t.toLowerCase())     // 全局已显示的论文标题
+        ]);
         const newResults = externalResults.filter(r => 
           r.title && !existingTitles.has(r.title.toLowerCase())
         );
+        
+        console.log(`🔍 推荐外部搜索去重：排除了 ${externalResults.length - newResults.length} 篇重复论文`);
         
         allPapers = allPapers.concat(newResults);
         console.log(`🌐 外部搜索新增 ${newResults.length} 篇论文`);

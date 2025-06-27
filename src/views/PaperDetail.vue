@@ -477,7 +477,10 @@ import {
   clearAllPapers,
   clearReferences,
   setLoadingRecommendations,
-  setRecommendationError
+  setRecommendationError,
+  markPapersAsDisplayed,
+  getDisplayedPaperIds,
+  getDisplayedPaperTitles
 } from '../stores/chatStore'
 
 // 配置marked安全选项
@@ -932,10 +935,19 @@ const getRecommendedPapers = async () => {
     console.log('当前聊天历史:', chatHistory)
     console.log('用户输入的关键词:', searchKeywords.value)
 
+    // 收集已显示的论文ID和标题，避免重复推荐
+    const excludeIds = getDisplayedPaperIds()
+    const excludeTitles = getDisplayedPaperTitles()
+    
+    console.log('排除已显示的论文ID:', excludeIds)
+    console.log('排除已显示的论文标题:', excludeTitles)
+
     // 构建请求参数
     const requestBody = {
       filter_venues: !expandRange.value, // 默认只获取顶刊顶会，勾选扩大范围后获取所有文献
-      session_id: Date.now().toString()
+      session_id: Date.now().toString(),
+      exclude_ids: excludeIds, // 传递要排除的论文ID
+      exclude_titles: excludeTitles // 传递要排除的论文标题
     }
     
     // 如果用户输入了关键词，优先使用用户输入的关键词
@@ -990,6 +1002,9 @@ const getRecommendedPapers = async () => {
       }));
 
       addRecommendedPapers(processedPapers)
+      
+      // 标记新获取的论文为已显示
+      markPapersAsDisplayed(processedPapers)
       
       console.log('获取到推荐文献:', processedPapers)
       console.log('累加后的文献列表:', papersState.recommendedPapers)
