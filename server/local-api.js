@@ -1570,7 +1570,7 @@ app.post('/api/scholar-search', async (req, res) => {
   console.log('Scholar Search API被调用');
   
   try {
-    const { query, num_results = 10, lang = 'zh-CN', filter_venues = false } = req.body;
+    const { query, num_results = 10, filter_venues = false } = req.body;
     
     if (!query) {
       return res.status(400).json({ 
@@ -1579,7 +1579,7 @@ app.post('/api/scholar-search', async (req, res) => {
       });
     }
 
-    console.log(`执行学术搜索，查询: "${query}", 结果数: ${num_results}, 语言: ${lang}`);
+          console.log(`执行学术搜索，查询: "${query}", 结果数: ${num_results}`);
     
     // 首先从本地缓存搜索
     console.log('🔍 首先从本地缓存搜索...');

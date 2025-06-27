@@ -57,17 +57,17 @@
                 <span>{{ papersState.isLoadingRecommendations ? '获取中...' : (papersState.recommendedPapers.length > 0 ? '获取更多文献' : '获取相关文献') }}</span>
               </button>
               
-              <!-- 顶刊顶会过滤选项 -->
+              <!-- 扩大范围选项 -->
               <div class="flex items-center justify-between px-1">
                 <label class="flex items-center text-sm text-gray-600 cursor-pointer">
                   <input 
                     type="checkbox" 
-                    v-model="filterTopVenues" 
+                    v-model="expandRange" 
                     class="form-checkbox h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
                   />
-                  <span class="ml-2">只获取顶刊顶会文献</span>
+                  <span class="ml-2">扩大范围，不限顶刊顶会文献</span>
                 </label>
-                <span class="text-xs text-gray-500">提高文献质量</span>
+                <span class="text-xs text-gray-500">包含更多文献源</span>
               </div>
             </div>
           </div>
@@ -505,8 +505,8 @@ const isTranslatingMethod = ref(false)
 // 论文内容加载状态
 const isLoadingPaperContent = ref(false)
 
-// 顶刊顶会过滤选项
-const filterTopVenues = ref(false)
+// 扩大范围选项 - 默认为false（只获取顶刊顶会）
+const expandRange = ref(false)
 
 // 关键词输入
 const searchKeywords = ref('')
@@ -934,7 +934,7 @@ const getRecommendedPapers = async () => {
 
     // 构建请求参数
     const requestBody = {
-      filter_venues: filterTopVenues.value,
+      filter_venues: !expandRange.value, // 默认只获取顶刊顶会，勾选扩大范围后获取所有文献
       session_id: Date.now().toString()
     }
     

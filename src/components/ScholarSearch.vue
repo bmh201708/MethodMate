@@ -27,7 +27,7 @@
                 v-model="filterTopVenues"
                 class="form-checkbox h-5 w-5 text-blue-600"
               />
-              <span class="ml-2 text-gray-700">仅搜索顶会顶刊</span>
+              <span class="ml-2 text-gray-700">扩大范围，不限顶刊顶会文献</span>
             </label>
           </div>
           
@@ -42,15 +42,7 @@
               <option value="50">50篇</option>
             </select>
             
-            <select
-              v-model="language"
-              class="px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-            >
-              <option value="zh-CN">中文</option>
-              <option value="en">English</option>
-              <option value="ja">日本語</option>
-              <option value="ko">한국어</option>
-            </select>
+
             
             <button
               type="submit"
@@ -369,14 +361,7 @@ export default {
       }
     },
     
-    language: {
-      get() {
-        return papersState.searchFilters.language
-      },
-      set(value) {
-        updateSearchFilters({ language: value })
-      }
-    },
+
     
     filterTopVenues: {
       get() {
@@ -446,8 +431,7 @@ export default {
           body: JSON.stringify({
             query: this.searchQuery,
             num_results: this.numResults,
-            lang: this.language,
-            filter_venues: this.filterTopVenues
+            filter_venues: !this.filterTopVenues // 默认只获取顶会顶刊，勾选扩大范围后获取所有文献
           })
         })
 

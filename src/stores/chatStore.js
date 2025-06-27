@@ -82,10 +82,9 @@ export const papersState = reactive({
   searchLoading: false, // 搜索加载状态
   searchError: null, // 搜索错误信息
   searchFilters: { // 搜索过滤器状态
-    filterTopVenues: false,
+    filterTopVenues: false, // 默认只搜索顶会顶刊（false=只搜索顶会顶刊，true=扩大范围）
     showOnlyTopVenues: false,
-    numResults: 10,
-    language: 'zh-CN'
+    numResults: 10
   }
 })
 
