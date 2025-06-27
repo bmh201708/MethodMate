@@ -432,6 +432,13 @@ export default {
         console.log('排除已显示的论文ID:', excludeIds)
         console.log('排除已显示的论文标题:', excludeTitles)
 
+        // 检查搜索论文池状态（搜索功能使用独立的论文池逻辑）
+        const currentSearchQuery = this.searchQuery.trim()
+        
+        // 对于搜索功能，我们一次性获取用户要求的数量，而不是固定的50篇
+        // 这样可以避免获取过多不相关的论文
+        const requestedCount = Math.min(parseInt(this.numResults), 50) // 最多50篇
+
         // 使用相对路径，通过Vite代理自动转发到配置的后端服务器
         const response = await fetch('/api/scholar-search', {
           method: 'POST',
@@ -439,8 +446,8 @@ export default {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            query: this.searchQuery,
-            num_results: this.numResults,
+            query: currentSearchQuery,
+            num_results: requestedCount,
             filter_venues: !this.filterTopVenues, // 默认只获取顶会顶刊，勾选扩大范围后获取所有文献
             exclude_ids: excludeIds, // 传递要排除的论文ID
             exclude_titles: excludeTitles // 传递要排除的论文标题
@@ -466,6 +473,7 @@ export default {
           markPapersAsDisplayed(processedResults)
           
           console.log('搜索结果已保存到全局状态:', processedResults)
+          console.log(`📊 搜索统计: 缓存命中 ${data.cache_hits || 0} 篇, 外部获取 ${data.external_hits || 0} 篇`)
         } else {
           setSearchError(data.error || '搜索失败，请重试')
           setSearchResults([], this.searchQuery)

@@ -52,7 +52,10 @@ export const chatState = reactive({
   ],
   isLoading: false,
   conversationId: null,
-  forceUpdateFlag: 0 // 强制更新标志
+  forceUpdateFlag: 0, // 强制更新标志
+  currentUser: null,
+  isTyping: false,
+  error: null
 })
 
 // 监听conversationId的变化，帮助调试
@@ -89,7 +92,15 @@ export const papersState = reactive({
   // 全局已显示论文跟踪
   displayedPapers: new Set(), // 记录所有已显示过的论文缓存ID
   sessionDisplayedPapers: new Map(), // 会话级别的已显示论文记录 (缓存ID -> 论文标题)
-  displayedPaperTitles: new Set() // 记录所有已显示过的论文标题（用于去重）
+  displayedPaperTitles: new Set(), // 记录所有已显示过的论文标题（用于去重）
+  // 外部论文池：一次性获取20篇，然后根据需要扩展
+  externalPaperPool: {
+    papers: [], // 外部论文池
+    currentKeywords: '', // 当前关键词
+    totalFetched: 0, // 已获取总数
+    isPoolEmpty: false, // 论文池是否已空
+    lastFetchTime: null // 上次获取时间
+  }
 })
 
 // 历史方案状态
@@ -953,6 +964,9 @@ export const clearMessages = () => {
   
   // 清空已显示论文记录
   clearDisplayedPapers()
+  // 清空外部论文池
+  clearExternalPaperPool()
+  console.log('🧹 已清空所有消息和论文记录')
 }
 
 // 历史方案相关方法
@@ -1373,6 +1387,100 @@ export const testDeduplicationMechanism = () => {
     displayedTitles: Array.from(papersState.displayedPaperTitles),
     recommendedCount: papersState.recommendedPapers.length,
     searchedCount: papersState.searchResults.length
+  }
+}
+
+// 外部论文池管理函数
+export const clearExternalPaperPool = () => {
+  papersState.externalPaperPool.papers = []
+  papersState.externalPaperPool.currentKeywords = ''
+  papersState.externalPaperPool.totalFetched = 0
+  papersState.externalPaperPool.isPoolEmpty = false
+  papersState.externalPaperPool.lastFetchTime = null
+  console.log('🗑️ 外部论文池已清空')
+}
+
+export const addToExternalPaperPool = (papers, keywords, poolInfo = null) => {
+  if (!Array.isArray(papers) || papers.length === 0) {
+    console.warn('⚠️ 尝试添加空论文列表到外部论文池')
+    return
+  }
+  
+  // 如果关键词变了，清空现有论文池
+  if (papersState.externalPaperPool.currentKeywords !== keywords) {
+    console.log('🔄 关键词变化，清空外部论文池:', papersState.externalPaperPool.currentKeywords, '->', keywords)
+    clearExternalPaperPool()
+    papersState.externalPaperPool.currentKeywords = keywords
+  }
+  
+  // 根据动作类型更新论文池
+  const action = poolInfo?.action || 'creating_new_pool'
+  
+  if (action === 'creating_new_pool' || action === 'pool_exhausted') {
+    // 创建新论文池或重建论文池：替换现有论文
+    papersState.externalPaperPool.papers = [...papers]
+    papersState.externalPaperPool.totalFetched = poolInfo?.totalFetched || papers.length
+    console.log(`🆕 ${action === 'creating_new_pool' ? '创建新' : '重建'}论文池，总数: ${papers.length}`)
+  } else if (action === 'expanding_pool') {
+    // 扩展论文池：使用服务器返回的完整合并后的论文池
+    const previousTotal = papersState.externalPaperPool.totalFetched
+    papersState.externalPaperPool.papers = [...papers]
+    papersState.externalPaperPool.totalFetched = previousTotal + (poolInfo?.totalFetched || 0)
+    console.log(`🚀 扩展论文池，新总数: ${papers.length}, 累计获取: ${papersState.externalPaperPool.totalFetched}`)
+  } else {
+    // 默认行为：追加论文
+    papersState.externalPaperPool.papers.push(...papers)
+    papersState.externalPaperPool.totalFetched += papers.length
+    console.log(`📚 追加论文到池中，新总数: ${papersState.externalPaperPool.papers.length}`)
+  }
+  
+  papersState.externalPaperPool.lastFetchTime = Date.now()
+  
+  console.log(`✅ 外部论文池更新完成 - 动作: ${action}, 论文数: ${papersState.externalPaperPool.papers.length}, 总获取: ${papersState.externalPaperPool.totalFetched}`)
+}
+
+export const getUnusedExternalPapers = (count = 5) => {
+  const unusedPapers = papersState.externalPaperPool.papers.filter(paper => {
+    // 检查是否已显示
+    const titleLower = paper.title?.toLowerCase() || ''
+    return !papersState.displayedPaperTitles.has(titleLower)
+  })
+  
+  console.log(`🔍 外部论文池中未使用的论文数量: ${unusedPapers.length}/${papersState.externalPaperPool.papers.length}`)
+  
+  return unusedPapers.slice(0, count)
+}
+
+export const isExternalPoolAvailable = (keywords) => {
+  const poolKeywords = papersState.externalPaperPool.currentKeywords
+  const keywordsMatch = poolKeywords === keywords || 
+                       (poolKeywords && keywords && 
+                        (poolKeywords.includes(keywords.split(' ')[0]) || keywords.includes(poolKeywords.split(' ')[0])))
+  const hasUnusedPapers = getUnusedExternalPapers(5).length >= 5 // 至少要有5篇可用论文
+  const isNotExpired = papersState.externalPaperPool.lastFetchTime && 
+                      (Date.now() - papersState.externalPaperPool.lastFetchTime) < 30 * 60 * 1000 // 30分钟有效期
+  
+  console.log('🧪 论文池可用性详细检查:', {
+    poolKeywords,
+    inputKeywords: keywords,
+    keywordsMatch,
+    hasUnusedPapers,
+    unusedCount: getUnusedExternalPapers(5).length,
+    isNotExpired,
+    totalPapers: papersState.externalPaperPool.papers.length,
+    lastFetchTime: papersState.externalPaperPool.lastFetchTime
+  })
+  
+  return keywordsMatch && hasUnusedPapers && isNotExpired
+}
+
+export const getExternalPoolStatus = () => {
+  return {
+    totalPapers: papersState.externalPaperPool.papers.length,
+    unusedPapers: getUnusedExternalPapers().length,
+    currentKeywords: papersState.externalPaperPool.currentKeywords,
+    isEmpty: papersState.externalPaperPool.isPoolEmpty,
+    lastFetchTime: papersState.externalPaperPool.lastFetchTime
   }
 }
 

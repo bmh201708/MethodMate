@@ -2554,8 +2554,22 @@ app.post('/api/semantic-recommend', async (req, res) => {
   console.log('语义推荐API被调用');
   
   try {
-    const { chatHistory = [], filter_venues = false, session_id = Date.now().toString(), keywords = null } = req.body;
-    console.log('接收到的数据:', JSON.stringify(req.body, null, 2));
+    const { 
+      chatHistory = [], 
+      filter_venues = false, 
+      session_id = Date.now().toString(), 
+      keywords = null,
+      useExternalPool = false, // 新增：是否使用外部论文池
+      externalPoolData = null, // 新增：外部论文池数据
+      poolKeywords = '' // 新增：论文池对应的关键词
+    } = req.body;
+    
+    console.log('接收到的数据:', {
+      hasKeywords: !!keywords,
+      useExternalPool,
+      hasPoolData: !!externalPoolData,
+      poolKeywords
+    });
     
     let searchQuery = 'research methodology quantitative analysis experimental design'; // 默认关键词
     
@@ -2797,6 +2811,7 @@ Please respond in the following JSON format:
     let allPapers = [];
     let needExternalSearch = true;
     let externalSearchResult = null; // 声明外部搜索结果变量
+    let externalPoolInfo = null; // 外部论文池信息
     
     if (cacheResults.length > 0) {
       // 将缓存结果转换为推荐论文格式
@@ -2828,137 +2843,320 @@ Please respond in the following JSON format:
       }
     }
     
-    // 第二步：如果本地结果不足，继续外部搜索
+    // 第二步：处理外部论文池和搜索
     if (needExternalSearch) {
       const remainingCount = Math.max(0, 5 - allPapers.length);
-      console.log(`🌐 本地结果不足，继续外部搜索 ${remainingCount} 篇论文...`);
+      console.log(`🌐 本地结果不足，需要从外部获取 ${remainingCount} 篇论文...`);
       
-      // 确保查询参数不为空，并进行URL编码
-      let queryParam = formattedSearchQuery || searchQuery || 'research methodology';
-      if (!queryParam || queryParam.trim().length === 0) {
-        queryParam = 'research methodology experimental design';
-        console.log('⚠️ 搜索查询为空，使用默认查询:', queryParam);
-      }
+      // 检查是否可以使用外部论文池
+      console.log('🔍 论文池使用检查:', {
+        useExternalPool,
+        hasPoolData: !!externalPoolData,
+        hasPapers: externalPoolData?.papers?.length > 0,
+        poolPaperCount: externalPoolData?.papers?.length || 0,
+        poolKeywords: externalPoolData?.currentKeywords,
+        searchKeywords: formattedSearchQuery,
+        keywordsMatch: externalPoolData?.currentKeywords === formattedSearchQuery
+      })
       
-      // 对查询参数进行URL编码以确保特殊字符正确处理
-      console.log('🔧 原始查询:', queryParam);
-      
-      // 构建基本查询参数
-      let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${queryParam}&limit=${remainingCount}&fields=title,abstract,url,openAccessPdf,year,citationCount,authors,venue`;
-      
-      // 如果需要过滤期刊/会议，使用venue参数
-      if (filter_venues) {
-        // 使用原始venue名称，用逗号连接但不进行URL编码
-        const venueParam = allowedVenues.join(',');
-        searchUrl += `&venue=${venueParam}`;
-      }
-      
-      // 输出最终请求URL用于调试
-      console.log('最终Semantic Scholar API请求URL:', searchUrl);
-
-      // 准备请求头 - 只使用基本的Accept头，避免API密钥问题
-      const headers = {
-        'Accept': 'application/json'
-      };
-      
-      // 输出请求信息用于调试
-      console.log('请求头:', JSON.stringify(headers));
-      console.log('SEMANTIC_API_KEY是否存在:', !!SEMANTIC_API_KEY);
-
-      // 调用Semantic Scholar API搜索相关论文 - 不使用API密钥
-      console.log('开始调用Semantic Scholar API...');
-      let searchResponse;
-      try {
-        searchResponse = await fetchWithRetry(searchUrl, {
-          headers: headers
-        }, 3, 1000); // 最多重试3次，初始延迟1秒
+      // 使用更宽松的关键词匹配条件
+      let keywordsMatch = false
+      if (externalPoolData?.currentKeywords && formattedSearchQuery) {
+        const poolWords = externalPoolData.currentKeywords.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2)
+        const searchWords = formattedSearchQuery.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2)
         
-        console.log('Semantic Scholar API响应状态:', searchResponse.status, searchResponse.statusText);
+        // 如果有任何词汇重叠，就认为匹配
+        keywordsMatch = poolWords.some(pw => searchWords.some(sw => 
+          pw.includes(sw) || sw.includes(pw) || pw === sw
+        )) || externalPoolData.currentKeywords === formattedSearchQuery
+      }
+      
+      console.log('🔑 后端关键词匹配检查:', {
+        poolKeywords: externalPoolData?.currentKeywords,
+        searchKeywords: formattedSearchQuery,
+        keywordsMatch,
+        poolWords: externalPoolData?.currentKeywords?.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2),
+        searchWords: formattedSearchQuery.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2)
+      })
+      
+      if (useExternalPool && externalPoolData && 
+          externalPoolData.papers && externalPoolData.papers.length > 0) { // 简化条件：只要有论文池就尝试使用
         
-        if (!searchResponse.ok) {
-          const errorText = await searchResponse.text();
-          console.error('Semantic Scholar API错误响应:', errorText);
-          throw new Error(`Semantic Scholar API responded with status: ${searchResponse.status}`);
-        }
-      } catch (fetchError) {
-        console.error('Semantic Scholar API请求失败:', fetchError);
-        throw fetchError;
-      }
-
-      // 解析响应
-      try {
-        externalSearchResult = await searchResponse.json();
-        console.log('Semantic Scholar API响应数据结构:', 
-          Object.keys(externalSearchResult), 
-          '数据项数量:', externalSearchResult.data ? externalSearchResult.data.length : 0
-        );
-      } catch (jsonError) {
-        console.error('解析Semantic Scholar API响应失败:', jsonError);
-        throw jsonError;
-      }
-
-      // 处理外部搜索结果
-      if (externalSearchResult.data && externalSearchResult.data.length > 0) {
-        const externalResults = externalSearchResult.data.map(paper => {
-          const venue = paper.venue || '';
-          
-          // 判断是否是顶会顶刊
-          const isTopVenue = allowedVenues.some(allowedVenue => {
-            const allowedLower = allowedVenue.toLowerCase();
-            const venueLower = venue.toLowerCase();
-            
-            if (venueLower === allowedLower) return true;
-            
-            if (allowedLower === 'cscw' && (venueLower === 'cscw' || venueLower.includes('computer-supported cooperative work'))) return true;
-            if (allowedLower === 'chi' && (venueLower === 'chi' || venueLower.includes('human factors in computing systems'))) return true;
-            if (allowedLower === 'ubicomp' && (venueLower === 'ubicomp' || venueLower.includes('pervasive and ubiquitous computing'))) return true;
-            if (allowedLower === 'uist' && (venueLower === 'uist' || venueLower.includes('user interface software and technology'))) return true;
-            if (allowedLower === 'tochi' && (venueLower === 'tochi' || venueLower.includes('transactions on computer-human interaction'))) return true;
-            
-            const words = allowedLower.split(' ');
-            if (words.length > 1) {
-              return venueLower === allowedLower || 
-                     venueLower.includes(` ${allowedLower} `) || 
-                     venueLower.startsWith(`${allowedLower} `) || 
-                     venueLower.endsWith(` ${allowedLower}`);
-            }
-            
-            return venueLower === allowedLower || 
-                   venueLower.includes(` ${allowedLower} `) || 
-                   venueLower.startsWith(`${allowedLower} `) || 
-                   venueLower.endsWith(` ${allowedLower}`);
-          });
-          
-          return {
-            id: `external_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
-            title: paper.title || '',
-            abstract: paper.abstract || '暂无摘要',
-            downloadUrl: (paper.openAccessPdf && paper.openAccessPdf.url) || paper.url || null,
-            year: paper.year?.toString() || '',
-            citationCount: paper.citationCount || 0,
-            authors: (paper.authors && paper.authors.map(author => author.name)) || [],
-            venue: venue,
-            fullText: null,
-            researchMethod: null,
-            isTopVenue: isTopVenue,
-            from_cache: false,
-            source: 'external'
-          };
-        });
-
-        // 合并结果，去重（基于标题）
+        console.log('✅ 满足论文池使用条件，检查现有外部论文池，池中论文数:', externalPoolData.papers.length);
+        
+        // 从论文池中筛选未显示的论文
         const existingTitles = new Set([
           ...allPapers.map(r => r.title.toLowerCase()),  // 本次搜索的缓存结果
-          ...excludeTitles.map(t => t.toLowerCase())     // 全局已显示的论文标题
+          ...excludeTitles.map(t => t.toLowerCase())      // 全局已显示的论文标题
         ]);
-        const newResults = externalResults.filter(r => 
-          r.title && !existingTitles.has(r.title.toLowerCase())
+        
+        const unusedPoolPapers = externalPoolData.papers.filter(paper => 
+          paper.title && !existingTitles.has(paper.title.toLowerCase())
         );
         
-        console.log(`🔍 推荐外部搜索去重：排除了 ${externalResults.length - newResults.length} 篇重复论文`);
+        console.log(`📋 论文池中可用论文数: ${unusedPoolPapers.length}/${externalPoolData.papers.length}`);
         
-        allPapers = allPapers.concat(newResults);
-        console.log(`🌐 外部搜索新增 ${newResults.length} 篇论文`);
+        if (unusedPoolPapers.length >= remainingCount) {
+          // 论文池中有足够的论文，直接使用
+          const selectedPapers = unusedPoolPapers.slice(0, remainingCount);
+          allPapers = allPapers.concat(selectedPapers);
+          needExternalSearch = false; // 关键：标记不需要外部搜索
+          
+          externalPoolInfo = {
+            used: true,
+            selectedCount: selectedPapers.length,
+            remainingCount: unusedPoolPapers.length - selectedPapers.length,
+            totalPoolSize: externalPoolData.papers.length,
+            action: 'used_existing_pool'
+          };
+          
+          console.log('✅ 从外部论文池成功获取论文:', selectedPapers.length);
+          console.log('✅ 跳过外部API调用，直接使用论文池');
+        } else if (unusedPoolPapers.length > 0) {
+          // 论文池中有一些论文但不够，先用完现有的，然后扩展论文池
+          console.log('📋 论文池部分可用，先使用现有论文，然后扩展论文池');
+          
+          // 先添加现有的论文
+          allPapers = allPapers.concat(unusedPoolPapers);
+          const stillNeedCount = remainingCount - unusedPoolPapers.length;
+          
+          console.log(`🔄 已使用论文池中的 ${unusedPoolPapers.length} 篇，还需要 ${stillNeedCount} 篇`);
+          
+          // 计算扩展后的论文池大小：当前大小 * 2，最少20篇
+          const currentPoolSize = externalPoolData.totalFetched || externalPoolData.papers.length;
+          const expandedPoolSize = Math.max(currentPoolSize * 2, 20);
+          
+          // 标记需要扩展论文池
+          externalPoolInfo = {
+            used: true,
+            selectedCount: unusedPoolPapers.length,
+            remainingCount: 0,
+            totalPoolSize: externalPoolData.papers.length,
+            action: 'expanding_pool',
+            expandedPoolSize: expandedPoolSize,
+            stillNeedCount: stillNeedCount
+          };
+          
+          console.log(`🚀 论文池将扩展至 ${expandedPoolSize} 篇`);
+          // 仍需要外部搜索来扩展论文池
+        } else {
+          // 论文池已完全耗尽，需要扩展
+          console.log('💫 论文池已耗尽，需要扩展论文池');
+          
+          const currentPoolSize = externalPoolData.totalFetched || externalPoolData.papers.length;
+          const expandedPoolSize = Math.max(currentPoolSize * 2, 20);
+          
+          externalPoolInfo = {
+            used: false,
+            action: 'pool_exhausted',
+            expandedPoolSize: expandedPoolSize,
+            previousPoolSize: currentPoolSize
+          };
+          
+          console.log(`🚀 论文池已耗尽，将扩展至 ${expandedPoolSize} 篇`);
+          // 需要外部搜索来重建论文池
+        }
+      } else {
+        // 没有可用的论文池，需要建立新的论文池
+        console.log('🆕 没有可用的外部论文池，将建立新的论文池');
+        
+        externalPoolInfo = {
+          used: false,
+          action: 'creating_new_pool',
+          initialPoolSize: 20
+        };
+      }
+      
+      // 如果仍需要外部搜索，执行搜索并建立/扩展论文池
+      if (needExternalSearch) {
+        const action = externalPoolInfo?.action || 'creating_new_pool';
+        console.log(`🔍 执行外部搜索，动作: ${action}`);
+        
+        // 确保查询参数不为空
+        let queryParam = formattedSearchQuery || searchQuery || 'research methodology';
+        if (!queryParam || queryParam.trim().length === 0) {
+          queryParam = 'research methodology experimental design';
+          console.log('⚠️ 搜索查询为空，使用默认查询:', queryParam);
+        }
+        
+        console.log('🔧 搜索查询:', queryParam);
+        
+        // 根据动作确定论文池大小
+        let poolLimit;
+        if (action === 'creating_new_pool') {
+          poolLimit = 20; // 首次创建：20篇
+        } else if (action === 'expanding_pool' || action === 'pool_exhausted') {
+          poolLimit = externalPoolInfo.expandedPoolSize; // 扩展：翻倍
+        } else {
+          poolLimit = 20; // 默认
+        }
+        
+        console.log(`📏 论文池目标大小: ${poolLimit} 篇`);
+        let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${queryParam}&limit=${poolLimit}&fields=title,abstract,url,openAccessPdf,year,citationCount,authors,venue`;
+        
+        // 如果需要过滤期刊/会议，使用venue参数
+        if (filter_venues) {
+          // 使用原始venue名称，用逗号连接但不进行URL编码
+          const venueParam = allowedVenues.join(',');
+          searchUrl += `&venue=${venueParam}`;
+        }
+        
+        // 输出最终请求URL用于调试
+        console.log('外部搜索URL (论文池):', searchUrl);
+
+        // 准备请求头 - 只使用基本的Accept头，避免API密钥问题
+        const headers = {
+          'Accept': 'application/json'
+        };
+        
+        // 输出请求信息用于调试
+        console.log('请求头:', JSON.stringify(headers));
+        console.log('SEMANTIC_API_KEY是否存在:', !!SEMANTIC_API_KEY);
+
+        // 调用Semantic Scholar API搜索相关论文 - 不使用API密钥
+        console.log('开始调用Semantic Scholar API建立论文池...');
+        let searchResponse;
+        try {
+          searchResponse = await fetchWithRetry(searchUrl, {
+            headers: headers
+          }, 3, 1000); // 最多重试3次，初始延迟1秒
+          
+          console.log('Semantic Scholar API响应状态:', searchResponse.status, searchResponse.statusText);
+          
+          if (!searchResponse.ok) {
+            const errorText = await searchResponse.text();
+            console.error('Semantic Scholar API错误响应:', errorText);
+            throw new Error(`Semantic Scholar API responded with status: ${searchResponse.status}`);
+          }
+        } catch (fetchError) {
+          console.error('Semantic Scholar API请求失败:', fetchError);
+          throw fetchError;
+        }
+
+        // 解析响应
+        try {
+          externalSearchResult = await searchResponse.json();
+          console.log('Semantic Scholar API响应数据结构:', 
+            Object.keys(externalSearchResult), 
+            '数据项数量:', externalSearchResult.data ? externalSearchResult.data.length : 0
+          );
+        } catch (jsonError) {
+          console.error('解析Semantic Scholar API响应失败:', jsonError);
+          throw jsonError;
+        }
+
+                 // 处理外部搜索结果并建立/扩展论文池
+         if (externalSearchResult.data && externalSearchResult.data.length > 0) {
+           const externalResults = externalSearchResult.data.map(paper => {
+             const venue = paper.venue || '';
+             
+             // 判断是否是顶会顶刊
+             const isTopVenue = allowedVenues.some(allowedVenue => {
+               const allowedLower = allowedVenue.toLowerCase();
+               const venueLower = venue.toLowerCase();
+               
+               if (venueLower === allowedLower) return true;
+               
+               if (allowedLower === 'cscw' && (venueLower === 'cscw' || venueLower.includes('computer-supported cooperative work'))) return true;
+               if (allowedLower === 'chi' && (venueLower === 'chi' || venueLower.includes('human factors in computing systems'))) return true;
+               if (allowedLower === 'ubicomp' && (venueLower === 'ubicomp' || venueLower.includes('pervasive and ubiquitous computing'))) return true;
+               if (allowedLower === 'uist' && (venueLower === 'uist' || venueLower.includes('user interface software and technology'))) return true;
+               if (allowedLower === 'tochi' && (venueLower === 'tochi' || venueLower.includes('transactions on computer-human interaction'))) return true;
+               
+               const words = allowedLower.split(' ');
+               if (words.length > 1) {
+                 return venueLower === allowedLower || 
+                        venueLower.includes(` ${allowedLower} `) || 
+                        venueLower.startsWith(`${allowedLower} `) || 
+                        venueLower.endsWith(` ${allowedLower}`);
+               }
+               
+               return venueLower === allowedLower || 
+                      venueLower.includes(` ${allowedLower} `) || 
+                      venueLower.startsWith(`${allowedLower} `) || 
+                      venueLower.endsWith(` ${allowedLower}`);
+             });
+             
+             return {
+               id: `external_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
+               title: paper.title || '',
+               abstract: paper.abstract || '暂无摘要',
+               downloadUrl: (paper.openAccessPdf && paper.openAccessPdf.url) || paper.url || null,
+               year: paper.year?.toString() || '',
+               citationCount: paper.citationCount || 0,
+               authors: (paper.authors && paper.authors.map(author => author.name)) || [],
+               venue: venue,
+               fullText: null,
+               researchMethod: null,
+               isTopVenue: isTopVenue,
+               from_cache: false,
+               source: 'external'
+             };
+           });
+
+           const action = externalPoolInfo?.action || 'creating_new_pool';
+           console.log(`🏊‍♂️ ${action === 'creating_new_pool' ? '建立新的' : '扩展'}外部论文池，总共获取 ${externalResults.length} 篇论文`);
+
+           // 去重（基于标题）- 排除已显示的论文
+           const existingTitles = new Set([
+             ...allPapers.map(r => r.title.toLowerCase()),  // 本次搜索的缓存结果  
+             ...excludeTitles.map(t => t.toLowerCase())     // 全局已显示的论文标题
+           ]);
+           const newResults = externalResults.filter(r => 
+             r.title && !existingTitles.has(r.title.toLowerCase())
+           );
+           
+           console.log(`🔍 外部搜索去重：排除了 ${externalResults.length - newResults.length} 篇重复论文`);
+           
+           // 如果正在扩展论文池且有现有论文池，需要合并
+           let finalPool = newResults;
+           if (action === 'expanding_pool' && externalPoolData && externalPoolData.papers) {
+             // 合并现有论文池和新获取的论文
+             const existingPoolTitles = new Set(externalPoolData.papers.map(p => p.title?.toLowerCase()).filter(Boolean));
+             const uniqueNewResults = newResults.filter(r => 
+               r.title && !existingPoolTitles.has(r.title.toLowerCase())
+             );
+             
+             finalPool = [...externalPoolData.papers, ...uniqueNewResults];
+             console.log(`🔄 合并论文池：现有 ${externalPoolData.papers.length} 篇 + 新增 ${uniqueNewResults.length} 篇 = 总计 ${finalPool.length} 篇`);
+           }
+           
+           // 计算还需要从新论文池中取多少篇论文
+           let stillNeedCount = remainingCount;
+           if (action === 'expanding_pool' && externalPoolInfo.selectedCount) {
+             stillNeedCount = externalPoolInfo.stillNeedCount || (remainingCount - externalPoolInfo.selectedCount);
+           }
+           
+           console.log(`📋 当前还需要 ${stillNeedCount} 篇论文`);
+           
+           // 从最终论文池中选择需要的论文（排除已显示的）
+           const availableForSelection = finalPool.filter(r => 
+             r.title && !existingTitles.has(r.title.toLowerCase())
+           );
+           
+           const selectedPapers = availableForSelection.slice(0, stillNeedCount);
+           allPapers = allPapers.concat(selectedPapers);
+           
+           // 更新外部论文池信息
+           externalPoolInfo = {
+             ...externalPoolInfo,
+             totalFetched: externalResults.length,
+             deduplicatedCount: newResults.length,
+             selectedCount: (externalPoolInfo.selectedCount || 0) + selectedPapers.length,
+             pool: finalPool, // 返回整个合并后的论文池给前端
+             keywords: formattedSearchQuery,
+             finalPoolSize: finalPool.length,
+             remainingInPool: availableForSelection.length - selectedPapers.length
+           };
+           
+           console.log(`🌐 外部搜索新增 ${selectedPapers.length} 篇论文，论文池储备 ${finalPool.length} 篇，剩余可用 ${availableForSelection.length - selectedPapers.length} 篇`);
+         } else {
+           // 外部搜索没有返回结果
+           console.log('⚠️ 外部搜索未返回任何结果');
+           if (externalPoolInfo) {
+             externalPoolInfo.error = '外部搜索未返回结果';
+           }
+         }
       }
     }
 
@@ -2981,7 +3179,10 @@ Please respond in the following JSON format:
       external_hits: allPapers.filter(r => !r.from_cache).length,
       total_papers: allPapers.length,
       rawResponse: needExternalSearch ? JSON.stringify(externalSearchResult?.data || []) : '本地缓存结果',
-      session_id: session_id || 'default'
+      session_id: session_id || 'default',
+      
+      // 新增：外部论文池信息
+      externalPoolInfo: externalPoolInfo
     });
   } catch (error) {
     console.error('推荐API错误:', error);
