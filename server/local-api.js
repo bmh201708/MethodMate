@@ -1102,20 +1102,23 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
     
-    if (!username || !email || !password) {
+    // 用户名和密码是必需的，邮箱可选
+    if (!username || !password) {
       return res.status(400).json({ 
         success: false, 
-        error: '用户名、邮箱和密码都是必需的' 
+        error: '用户名和密码都是必需的' 
       });
     }
 
-    // 验证邮箱格式
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ 
-        success: false, 
-        error: '邮箱格式不正确' 
-      });
+    // 如果提供了邮箱，验证邮箱格式
+    if (email && email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        return res.status(400).json({ 
+          success: false, 
+          error: '邮箱格式不正确' 
+        });
+      }
     }
 
     // 验证密码长度
@@ -1128,16 +1131,24 @@ app.post('/api/auth/register', async (req, res) => {
 
     const pool = getPool();
     
-    // 检查用户名是否已存在
-    const [existingUsers] = await pool.execute(
-      'SELECT id FROM users WHERE username = ? OR email = ?',
-      [username, email]
-    );
+    // 处理邮箱：如果为空字符串或未提供，设为null
+    const cleanEmail = (email && email.trim()) ? email.trim() : null;
+    
+    // 检查用户名是否已存在，以及邮箱是否已存在（如果提供了邮箱）
+    let checkQuery = 'SELECT id FROM users WHERE username = ?';
+    let checkParams = [username];
+    
+    if (cleanEmail) {
+      checkQuery += ' OR email = ?';
+      checkParams.push(cleanEmail);
+    }
+    
+    const [existingUsers] = await pool.execute(checkQuery, checkParams);
 
     if (existingUsers.length > 0) {
       return res.status(400).json({ 
         success: false, 
-        error: '用户名或邮箱已存在' 
+        error: cleanEmail ? '用户名或邮箱已存在' : '用户名已存在' 
       });
     }
 
@@ -1148,14 +1159,14 @@ app.post('/api/auth/register', async (req, res) => {
     // 创建用户
     const [result] = await pool.execute(
       'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-      [username, email, hashedPassword]
+      [username, cleanEmail, hashedPassword]
     );
 
     const userId = result.insertId;
 
     // 生成JWT token
     const token = jwt.sign(
-      { id: userId, username, email },
+      { id: userId, username, email: cleanEmail },
       jwtConfig.secret,
       { expiresIn: jwtConfig.expiresIn }
     );
@@ -1166,7 +1177,7 @@ app.post('/api/auth/register', async (req, res) => {
       user: {
         id: userId,
         username,
-        email
+        email: cleanEmail
       },
       token
     });
@@ -1195,7 +1206,7 @@ app.post('/api/auth/login', async (req, res) => {
     
     // 查找用户（支持用户名或邮箱登录）
     const [users] = await pool.execute(
-      'SELECT id, username, email, password_hash FROM users WHERE username = ? OR email = ?',
+      'SELECT id, username, email, password_hash FROM users WHERE username = ? OR (email IS NOT NULL AND email = ?)',
       [username, username]
     );
 

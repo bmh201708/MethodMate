@@ -23,6 +23,7 @@
                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="请输入用户名或邮箱"
           />
+          <p class="mt-1 text-xs text-gray-500">可以使用用户名或邮箱登录（如果注册时提供了邮箱）</p>
         </div>
 
         <!-- 密码输入 -->

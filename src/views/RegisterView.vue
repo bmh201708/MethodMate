@@ -25,19 +25,18 @@
           />
         </div>
 
-        <!-- 邮箱输入 -->
+        <!-- 邮箱输入（可选） -->
         <div>
           <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-            邮箱 *
+            邮箱 <span class="text-gray-400">(可选)</span>
           </label>
           <input
             id="email"
             v-model="registerForm.email"
             type="email"
-            required
             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 
                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="请输入邮箱地址"
+            placeholder="请输入邮箱地址（可选）"
           />
         </div>
 
@@ -152,8 +151,8 @@ export default {
     const success = ref('')
     
     const validateForm = () => {
-      if (!registerForm.value.username || !registerForm.value.email || 
-          !registerForm.value.password || !registerForm.value.confirmPassword) {
+      if (!registerForm.value.username || !registerForm.value.password || 
+          !registerForm.value.confirmPassword) {
         error.value = '请填写所有必填字段'
         return false
       }
@@ -168,10 +167,13 @@ export default {
         return false
       }
       
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(registerForm.value.email)) {
-        error.value = '请输入有效的邮箱地址'
-        return false
+      // 邮箱为可选，但如果填写了邮箱，需要验证格式
+      if (registerForm.value.email && registerForm.value.email.trim()) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(registerForm.value.email.trim())) {
+          error.value = '请输入有效的邮箱地址'
+          return false
+        }
       }
       
       return true
