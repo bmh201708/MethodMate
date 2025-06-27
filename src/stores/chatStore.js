@@ -1,9 +1,7 @@
 // 全局聊天状态管理
 import { reactive, ref } from 'vue'
 import { sendStreamMessageToCoze } from '../services/cozeApi'
-
-// API基础URL
-const API_BASE_URL = 'http://118.195.129.161:3004'
+import { getApiBaseUrl } from '../config/environment.js'
 
 // 获取认证头
 const getAuthHeaders = () => {
@@ -22,7 +20,7 @@ const isUserAuthenticated = () => {
 // API请求辅助函数
 const apiRequest = async (url, options = {}) => {
   try {
-    const response = await fetch(`${API_BASE_URL}${url}`, {
+    const response = await fetch(`${getApiBaseUrl()}${url}`, {
       ...options,
       headers: {
         ...getAuthHeaders(),
@@ -108,13 +106,13 @@ export const conversationAPI = {
   // 获取对话列表
   async getAll() {
     if (!isUserAuthenticated()) return { success: true, conversations: [] }
-    return await apiRequest('/api/conversations')
+    return await apiRequest('/conversations')
   },
 
   // 创建新对话
   async create(title, description = '') {
     if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
-    return await apiRequest('/api/conversations', {
+    return await apiRequest('/conversations', {
       method: 'POST',
       body: JSON.stringify({ title, description })
     })
@@ -123,13 +121,13 @@ export const conversationAPI = {
   // 获取对话详情
   async getById(id) {
     if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
-    return await apiRequest(`/api/conversations/${id}`)
+    return await apiRequest(`/conversations/${id}`)
   },
 
   // 添加消息到对话
   async addMessage(conversationId, role, content) {
     if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
-    return await apiRequest(`/api/conversations/${conversationId}/messages`, {
+    return await apiRequest(`/conversations/${conversationId}/messages`, {
       method: 'POST',
       body: JSON.stringify({ role, content })
     })
@@ -138,7 +136,7 @@ export const conversationAPI = {
   // 删除对话
   async delete(id) {
     if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
-    return await apiRequest(`/api/conversations/${id}`, {
+    return await apiRequest(`/conversations/${id}`, {
       method: 'DELETE'
     })
   }
@@ -149,13 +147,13 @@ export const referencePaperAPI = {
   // 获取用户的引用文献
   async getAll() {
     if (!isUserAuthenticated()) return { success: true, papers: [] }
-    return await apiRequest('/api/reference-papers')
+    return await apiRequest('/reference-papers')
   },
 
   // 添加引用文献
   async add(paperData) {
     if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
-    return await apiRequest('/api/reference-papers', {
+    return await apiRequest('/reference-papers', {
       method: 'POST',
       body: JSON.stringify(paperData)
     })
@@ -164,7 +162,7 @@ export const referencePaperAPI = {
   // 删除引用文献
   async delete(id) {
     if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
-    return await apiRequest(`/api/reference-papers/${id}`, {
+    return await apiRequest(`/reference-papers/${id}`, {
       method: 'DELETE'
     })
   }
@@ -175,13 +173,13 @@ export const researchPlanAPI = {
   // 获取用户的研究方案
   async getAll() {
     if (!isUserAuthenticated()) return { success: true, plans: [] }
-    return await apiRequest('/api/research-plans')
+    return await apiRequest('/research-plans')
   },
 
   // 创建研究方案
   async create(planData) {
     if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
-    return await apiRequest('/api/research-plans', {
+    return await apiRequest('/research-plans', {
       method: 'POST',
       body: JSON.stringify(planData)
     })
@@ -190,13 +188,13 @@ export const researchPlanAPI = {
   // 获取研究方案详情
   async getById(id) {
     if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
-    return await apiRequest(`/api/research-plans/${id}`)
+    return await apiRequest(`/research-plans/${id}`)
   },
 
   // 更新研究方案
   async update(id, planData) {
     if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
-    return await apiRequest(`/api/research-plans/${id}`, {
+    return await apiRequest(`/research-plans/${id}`, {
       method: 'PUT',
       body: JSON.stringify(planData)
     })
@@ -205,7 +203,7 @@ export const researchPlanAPI = {
   // 删除研究方案
   async delete(id) {
     if (!isUserAuthenticated()) return { success: false, error: '用户未登录' }
-    return await apiRequest(`/api/research-plans/${id}`, {
+    return await apiRequest(`/research-plans/${id}`, {
       method: 'DELETE'
     })
   }
@@ -475,7 +473,7 @@ export const toggleReference = async (paper) => {
           
           // 如果有全文，直接尝试提取研究方法
           if (referencedPaper.fullText) {
-            const methodResponse = await fetch(`${API_BASE_URL}/api/paper/generate-method-summary`, {
+            const methodResponse = await fetch(`${getApiBaseUrl()}/paper/generate-method-summary`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -502,7 +500,7 @@ export const toggleReference = async (paper) => {
           } 
           // 如果没有全文，先获取全文再提取研究方法
           else {
-            const response = await fetch(`${API_BASE_URL}/api/paper/get-full-content`, {
+            const response = await fetch(`${getApiBaseUrl()}/paper/get-full-content`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -533,7 +531,7 @@ export const toggleReference = async (paper) => {
                 }
                 // 如果没有研究方法但有全文，尝试生成研究方法概要
                 else if (result.fullText && refPaper) {
-                  const methodResponse = await fetch(`${API_BASE_URL}/api/paper/generate-method-summary`, {
+                  const methodResponse = await fetch(`${getApiBaseUrl()}/paper/generate-method-summary`, {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',

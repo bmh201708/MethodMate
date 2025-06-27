@@ -527,7 +527,7 @@ const fetchPaperContent = async () => {
   try {
     console.log('手动获取论文内容:', papersState.selectedPaper.title)
     
-    const response = await fetch('http://118.195.129.161:3004/api/paper/get-full-content', {
+            const response = await fetch('/api/paper/get-full-content', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -597,7 +597,7 @@ const tryGenerateMethodSummary = async () => {
     return false
   }
 
-      const response = await fetch('http://118.195.129.161:3004/api/paper/generate-method-summary', {
+              const response = await fetch('/api/paper/generate-method-summary', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -885,7 +885,7 @@ const extractKeywordsFromChat = async () => {
       return
     }
     
-    const response = await fetch('http://118.195.129.161:3004/api/extract-keywords', {
+    const response = await fetch('/api/extract-keywords', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -949,7 +949,7 @@ const getRecommendedPapers = async () => {
     }
 
     // 调用推荐API（通过Vue开发服务器代理）
-    const response = await fetch('http://118.195.129.161:3004/api/semantic-recommend', {
+    const response = await fetch('/api/semantic-recommend', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1054,7 +1054,7 @@ const savePaperToCache = async (paper) => {
       }
     }
 
-          const response = await fetch('http://118.195.129.161:3004/api/paper-cache/save', {
+          const response = await fetch('/api/paper-cache/save', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1097,7 +1097,7 @@ const savePaperToCache = async (paper) => {
 // 检查论文是否已缓存
 const checkPaperCache = async (paper) => {
   try {
-          const response = await fetch('http://118.195.129.161:3004/api/paper-cache/check', {
+          const response = await fetch('/api/paper-cache/check', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

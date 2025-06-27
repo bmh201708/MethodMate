@@ -903,7 +903,7 @@ renderer.image = function(href, title, text) {
   let finalHref = cleanHref
   if (isExternalImage && (isLatexImage || cleanHref.includes('cdn.nlark.com'))) {
     // 对语雀等可能有防盗链的图片使用代理
-            finalHref = `http://118.195.129.161:3004/api/proxy-image?url=${encodeURIComponent(cleanHref)}`
+            finalHref = `/api/proxy-image?url=${encodeURIComponent(cleanHref)}`
     console.log('使用代理访问图片:', cleanHref, '=>', finalHref)
   }
   
@@ -1854,7 +1854,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
         // 如果没有研究方法但有全文，尝试获取研究方法
         else if (paper.fullText) {
           try {
-            const response = await fetch('http://118.195.129.161:3004/api/paper/generate-method-summary', {
+            const response = await fetch('/api/paper/generate-method-summary', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -1880,7 +1880,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
         // 如果既没有研究方法也没有全文，尝试获取全文和研究方法
         else {
           try {
-            const response = await fetch('http://118.195.129.161:3004/api/paper/get-full-content', {
+            const response = await fetch('/api/paper/get-full-content', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -1907,7 +1907,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
                 // 如果没有获取到研究方法但有全文，尝试生成研究方法概要
                 else if (paper.fullText) {
                   try {
-                    const methodResponse = await fetch('http://118.195.129.161:3004/api/paper/generate-method-summary', {
+                    const methodResponse = await fetch('/api/paper/generate-method-summary', {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
@@ -2559,7 +2559,7 @@ const queryStatisticalMethod = async () => {
   try {
     console.log('🔍 查询统计方法:', statisticalMethodQuery.value.trim())
     
-          const response = await fetch('http://118.195.129.161:3004/api/query-statistical-method', {
+          const response = await fetch('/api/query-statistical-method', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -2662,7 +2662,7 @@ const generateSourceIntroduction = async () => {
       } else {
         // 如果没有研究方法总结，尝试从缓存中获取
         try {
-          const response = await fetch('http://118.195.129.161:3004/api/paper/get-cached-method', {
+          const response = await fetch('/api/paper/get-cached-method', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -2734,7 +2734,7 @@ ${conversationContext.researchContext}`
     console.log('来源介绍生成包含用户需求:', conversationContext.hasUserRequirements)
     
     // 调用Coze API
-    const response = await fetch('http://118.195.129.161:3004/api/coze-chat', {
+    const response = await fetch('/api/coze-chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -2829,7 +2829,7 @@ ${conversationContext.researchContext}`
     console.log('方法介绍生成包含用户需求:', conversationContext.hasUserRequirements)
     
     // 调用Coze API
-    const response = await fetch('http://118.195.129.161:3004/api/coze-chat', {
+    const response = await fetch('/api/coze-chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
