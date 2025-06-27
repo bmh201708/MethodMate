@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 // API基础URL
-const API_BASE_URL = 'http://118.195.129.161:3004'
+const API_BASE_URL = ''
 
 export const useUserStore = defineStore('user', () => {
   // 状态

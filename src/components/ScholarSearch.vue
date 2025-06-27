@@ -438,7 +438,7 @@ export default {
 
       try {
         // 使用相对路径，代理会自动转发到后端服务器
-        const response = await fetch('http://118.195.129.161:3004/api/scholar-search', {
+        const response = await fetch('/api/scholar-search', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -486,7 +486,7 @@ export default {
 
       try {
         // 使用相对路径，代理会自动转发到Vercel
-        const response = await fetch('http://118.195.129.161:3004/api/paper-download', {
+        const response = await fetch('/api/paper-download', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
