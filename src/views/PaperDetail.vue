@@ -57,17 +57,42 @@
                 <span>{{ papersState.isLoadingRecommendations ? '获取中...' : (papersState.recommendedPapers.length > 0 ? '获取更多文献' : '获取相关文献') }}</span>
               </button>
               
-              <!-- 顶刊顶会过滤选项 -->
+              <!-- 外部论文池状态指示器 -->
+              <div v-if="externalPoolStatus && externalPoolStatus.totalPapers > 0" 
+                   class="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded space-y-1">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-1">
+                    <svg class="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                    </svg>
+                    <span>论文池: {{ externalPoolStatus.unusedPapers }}/{{ externalPoolStatus.totalPapers }} 可用</span>
+                  </div>
+                  <button 
+                    @click="clearExternalPool"
+                    class="text-gray-400 hover:text-red-500 transition-colors ml-2"
+                    title="清空论文池"
+                  >
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+                <div class="text-gray-400 text-[10px]">
+                  关键词: {{ externalPoolStatus.currentKeywords || '无' }}
+                </div>
+              </div>
+              
+              <!-- 扩大范围选项 -->
               <div class="flex items-center justify-between px-1">
                 <label class="flex items-center text-sm text-gray-600 cursor-pointer">
                   <input 
                     type="checkbox" 
-                    v-model="filterTopVenues" 
+                    v-model="expandRange" 
                     class="form-checkbox h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
                   />
-                  <span class="ml-2">只获取顶刊顶会文献</span>
+                  <span class="ml-2">扩大范围，不限顶刊顶会文献</span>
                 </label>
-                <span class="text-xs text-gray-500">提高文献质量</span>
+                <span class="text-xs text-gray-500">包含更多文献源</span>
               </div>
             </div>
           </div>
@@ -477,7 +502,12 @@ import {
   clearAllPapers,
   clearReferences,
   setLoadingRecommendations,
-  setRecommendationError
+  setRecommendationError,
+  markPapersAsDisplayed,
+  getDisplayedPaperIds,
+  getDisplayedPaperTitles,
+  clearExternalPaperPool,
+  getExternalPoolStatus
 } from '../stores/chatStore'
 
 // 配置marked安全选项
@@ -505,8 +535,8 @@ const isTranslatingMethod = ref(false)
 // 论文内容加载状态
 const isLoadingPaperContent = ref(false)
 
-// 顶刊顶会过滤选项
-const filterTopVenues = ref(false)
+// 扩大范围选项 - 默认为false（只获取顶刊顶会）
+const expandRange = ref(false)
 
 // 关键词输入
 const searchKeywords = ref('')
@@ -515,6 +545,23 @@ const isExtractingKeywords = ref(false)
 // 论文缓存相关状态
 const isSavingToCache = ref(false)
 const paperCacheStatus = ref('') // 'saved', 'updated', ''
+
+// 外部论文池状态
+const externalPoolStatus = ref(null)
+
+// 监听外部论文池状态变化
+const updateExternalPoolStatus = () => {
+  externalPoolStatus.value = getExternalPoolStatus()
+}
+
+// 初始化时更新状态
+updateExternalPoolStatus()
+
+// 清空外部论文池
+const clearExternalPool = () => {
+  clearExternalPaperPool()
+  updateExternalPoolStatus()
+}
 
 // 手动获取论文全文和研究方法
 const fetchPaperContent = async () => {
@@ -932,11 +979,94 @@ const getRecommendedPapers = async () => {
     console.log('当前聊天历史:', chatHistory)
     console.log('用户输入的关键词:', searchKeywords.value)
 
+    // 收集已显示的论文ID和标题，避免重复推荐
+    const excludeIds = getDisplayedPaperIds()
+    const excludeTitles = getDisplayedPaperTitles()
+    
+    console.log('排除已显示的论文ID:', excludeIds)
+    console.log('排除已显示的论文标题:', excludeTitles)
+
+    // 确定当前搜索关键词（必须与后端格式化逻辑一致）
+    let currentKeywords = ''
+    if (searchKeywords.value && searchKeywords.value.trim()) {
+      currentKeywords = searchKeywords.value.trim()
+    } else {
+      // 从聊天历史提取关键词的简化版本
+      const recentMessages = chatHistory.slice(-4)
+      currentKeywords = recentMessages
+        .map(msg => msg.content)
+        .join(' ')
+        .replace(/[^\w\s\u4e00-\u9fa5]/g, ' ')
+        .split(/\s+/)
+        .filter(word => word.length > 2)
+        .slice(0, 10)
+        .join(' ')
+    }
+
+    // 检查外部论文池状态
+    const { isExternalPoolAvailable, getExternalPoolStatus, getUnusedExternalPapers } = await import('../stores/chatStore')
+    
+    // 先检查基本的论文池状态
+    const poolStatus = getExternalPoolStatus()
+    console.log('🔍 基本论文池状态:', poolStatus)
+    
+    // 检查是否有可用的未使用论文
+    const unusedPapers = getUnusedExternalPapers(5)
+    console.log('📋 可用的未使用论文数:', unusedPapers.length)
+    
+    // 检查关键词匹配（使用更宽松的匹配条件）
+    let keywordsMatch = false
+    if (poolStatus.currentKeywords && currentKeywords) {
+      const poolWords = poolStatus.currentKeywords.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2)
+      const currentWords = currentKeywords.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2)
+      
+      // 如果有任何词汇重叠，就认为匹配
+      keywordsMatch = poolWords.some(pw => currentWords.some(cw => 
+        pw.includes(cw) || cw.includes(pw) || pw === cw
+      ))
+    }
+    
+    console.log('🔑 关键词匹配检查:', {
+      poolKeywords: poolStatus.currentKeywords,
+      currentKeywords: currentKeywords,
+      match: keywordsMatch,
+      poolWords: poolStatus.currentKeywords?.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2),
+      currentWords: currentKeywords.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2)
+    })
+    
+    // 简化条件：只要有未使用的论文就优先使用论文池
+    const poolAvailable = unusedPapers.length >= 1 && poolStatus.totalPapers > 0
+    
+    console.log('🏊‍♂️ 外部论文池可用性:', {
+      available: poolAvailable,
+      keywordsMatch,
+      unusedCount: unusedPapers.length,
+      totalPapers: poolStatus.totalPapers,
+      currentKeywords,
+      poolKeywords: poolStatus.currentKeywords
+    })
+
     // 构建请求参数
     const requestBody = {
-      filter_venues: filterTopVenues.value,
-      session_id: Date.now().toString()
+      filter_venues: !expandRange.value, // 默认只获取顶刊顶会，勾选扩大范围后获取所有文献
+      session_id: Date.now().toString(),
+      exclude_ids: excludeIds, // 传递要排除的论文ID
+      exclude_titles: excludeTitles, // 传递要排除的论文标题
+      
+      // 外部论文池相关参数
+      useExternalPool: poolAvailable,
+      externalPoolData: poolAvailable ? papersState.externalPaperPool : null,
+      poolKeywords: currentKeywords
     }
+    
+    console.log('📤 发送给后端的论文池数据:', {
+      useExternalPool: requestBody.useExternalPool,
+      hasPoolData: !!requestBody.externalPoolData,
+      poolDataKeys: requestBody.externalPoolData ? Object.keys(requestBody.externalPoolData) : [],
+      poolPaperCount: requestBody.externalPoolData?.papers?.length || 0,
+      poolKeywords: requestBody.externalPoolData?.currentKeywords,
+      requestKeywords: requestBody.poolKeywords
+    })
     
     // 如果用户输入了关键词，优先使用用户输入的关键词
     if (searchKeywords.value && searchKeywords.value.trim()) {
@@ -958,7 +1088,10 @@ const getRecommendedPapers = async () => {
     })
     
     // 记录请求URL和参数（用于调试）
-    console.log('API请求参数:', requestBody);
+    console.log('API请求参数:', {
+      ...requestBody,
+      externalPoolData: requestBody.externalPoolData ? '已提供论文池数据' : '无论文池数据'
+    });
 
     if (!response.ok) {
       if (response.status === 429) {
@@ -972,6 +1105,21 @@ const getRecommendedPapers = async () => {
     
     if (!result.success) {
       throw new Error(result.error || '获取推荐失败')
+    }
+
+    // 处理外部论文池信息
+    if (result.externalPoolInfo) {
+      const { addToExternalPaperPool } = await import('../stores/chatStore')
+      
+      if (result.externalPoolInfo.used && result.externalPoolInfo.action === 'used_existing_pool') {
+        // 使用了现有论文池，无需更新
+        console.log('✅ 使用了现有外部论文池:', result.externalPoolInfo)
+      } else if (result.externalPoolInfo.pool) {
+        // 建立了新的论文池或扩展了论文池
+        const action = result.externalPoolInfo.action || 'creating_new_pool'
+        console.log(`📋 ${action === 'creating_new_pool' ? '建立新的' : action === 'expanding_pool' ? '扩展' : '更新'}外部论文池:`, result.externalPoolInfo)
+        addToExternalPaperPool(result.externalPoolInfo.pool, result.externalPoolInfo.keywords, result.externalPoolInfo)
+      }
     }
 
     // 处理推荐结果 - 使用全局状态管理
@@ -991,6 +1139,9 @@ const getRecommendedPapers = async () => {
 
       addRecommendedPapers(processedPapers)
       
+      // 标记新获取的论文为已显示
+      markPapersAsDisplayed(processedPapers)
+      
       console.log('获取到推荐文献:', processedPapers)
       console.log('累加后的文献列表:', papersState.recommendedPapers)
       console.log('总文献数量:', papersState.recommendedPapers.length)
@@ -1005,6 +1156,9 @@ const getRecommendedPapers = async () => {
       console.log('未能解析到papers，API响应:', result)
       setRecommendationError('获取推荐文献失败，请稍后重试')
     }
+
+    // 更新外部论文池状态
+    updateExternalPoolStatus()
 
   } catch (error) {
     console.error('获取推荐文献失败:', error)
