@@ -2779,18 +2779,16 @@ Please respond in the following JSON format:
       }
       
       // 对查询参数进行URL编码以确保特殊字符正确处理
-      const encodedQuery = encodeURIComponent(queryParam.trim());
       console.log('🔧 原始查询:', queryParam);
-      console.log('🔧 编码后查询:', encodedQuery);
       
       // 构建基本查询参数
-      let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${encodedQuery}&limit=${remainingCount}&fields=title,abstract,url,openAccessPdf,year,citationCount,authors,venue`;
+      let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${queryParam}&limit=${remainingCount}&fields=title,abstract,url,openAccessPdf,year,citationCount,authors,venue`;
       
       // 如果需要过滤期刊/会议，使用venue参数
       if (filter_venues) {
         // 使用原始venue名称，用逗号连接但不进行URL编码
         const venueParam = allowedVenues.join(',');
-        searchUrl += `&venue=${encodeURIComponent(venueParam)}`;
+        searchUrl += `&venue=${venueParam}`;
       }
       
       // 输出最终请求URL用于调试
