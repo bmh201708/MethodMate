@@ -678,22 +678,6 @@
         <!-- 选项标签 -->
         <div class="flex bg-gray-100 rounded-2xl p-1 mb-6">
           <button
-            @click="researchPlanMode = 'auto'"
-            :class="[
-              'flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200',
-              researchPlanMode === 'auto'
-                ? 'bg-white text-purple-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
-            ]"
-          >
-            <div class="flex items-center justify-center space-x-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-              </svg>
-              <span>智能分析</span>
-            </div>
-          </button>
-          <button
             @click="researchPlanMode = 'custom'"
             :class="[
               'flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200',
@@ -709,6 +693,36 @@
               <span>自定义主题</span>
             </div>
           </button>
+          <button
+            @click="researchPlanMode = 'auto'"
+            :class="[
+              'flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200',
+              researchPlanMode === 'auto'
+                ? 'bg-white text-purple-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            ]"
+          >
+            <div class="flex items-center justify-center space-x-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              <span>智能分析</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- 自定义主题模式 -->
+        <div v-if="researchPlanMode === 'custom'">
+          <label class="block text-sm font-medium text-gray-700 mb-3">请输入您的研究主题或问题</label>
+          <textarea
+            v-model="researchTopicInput"
+            placeholder="例如：探讨人工智能对大学生学习效果的影响研究..."
+            class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all duration-200"
+            rows="4"
+          ></textarea>
+          <p class="text-xs text-gray-500 mt-2">
+            系统将基于您输入的主题，结合参考文献生成相应的定量研究方案
+          </p>
         </div>
 
         <!-- 智能分析模式说明 -->
@@ -746,20 +760,6 @@
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- 自定义主题模式 -->
-        <div v-if="researchPlanMode === 'custom'">
-          <label class="block text-sm font-medium text-gray-700 mb-3">请输入您的研究主题或问题</label>
-          <textarea
-            v-model="researchTopicInput"
-            placeholder="例如：探讨人工智能对大学生学习效果的影响研究..."
-            class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all duration-200"
-            rows="4"
-          ></textarea>
-          <p class="text-xs text-gray-500 mt-2">
-            系统将基于您输入的主题，结合参考文献生成相应的定量研究方案
-          </p>
         </div>
 
         <!-- 参考文献状态 -->
@@ -843,7 +843,7 @@ const iteratingSection = ref('') // 当前正在迭代的部分
 const iterateSuggestion = ref('') // 用户输入的迭代建议
 const selectedPresetSuggestion = ref('') // 当前选中的预设建议
 const showResearchPlanDialogModal = ref(false) // 是否显示研究方案生成对话框
-const researchPlanMode = ref('auto') // 研究方案生成模式：'auto' 或 'custom'
+const researchPlanMode = ref('custom') // 研究方案生成模式：'auto' 或 'custom'
 const researchTopicInput = ref('') // 用户输入的研究主题
 
 const sections = [
@@ -1767,7 +1767,7 @@ const displayCompleteUpdatedPlan = (updatedSectionName) => {
 
 // 显示研究方案生成对话框
 const showResearchPlanDialog = () => {
-  researchPlanMode.value = 'auto'
+  researchPlanMode.value = 'custom'
   researchTopicInput.value = ''
   showResearchPlanDialogModal.value = true
 }
@@ -1775,7 +1775,7 @@ const showResearchPlanDialog = () => {
 // 关闭研究方案生成对话框
 const closeResearchPlanDialog = () => {
   showResearchPlanDialogModal.value = false
-  researchPlanMode.value = 'auto'
+  researchPlanMode.value = 'custom'
   researchTopicInput.value = ''
 }
 
