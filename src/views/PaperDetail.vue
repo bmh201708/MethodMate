@@ -82,6 +82,19 @@
                 </div>
               </div>
               
+              <!-- 本地缓存搜索选项 -->
+              <div class="flex items-center justify-between px-1">
+                <label class="flex items-center text-sm text-gray-600 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    v-model="useLocalCache" 
+                    class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  />
+                  <span class="ml-2">从本地缓存获取论文</span>
+                </label>
+                <span class="text-xs text-gray-500">优先使用本地高质量缓存</span>
+              </div>
+              
               <!-- 扩大范围选项 -->
               <div class="flex items-center justify-between px-1">
                 <label class="flex items-center text-sm text-gray-600 cursor-pointer">
@@ -537,6 +550,9 @@ const isLoadingPaperContent = ref(false)
 
 // 扩大范围选项 - 默认为false（只获取顶刊顶会）
 const expandRange = ref(false)
+
+// 本地缓存搜索选项 - 默认为true（优先使用本地缓存）
+const useLocalCache = ref(true)
 
 // 关键词输入
 const searchKeywords = ref('')
@@ -1052,6 +1068,7 @@ const getRecommendedPapers = async () => {
       session_id: Date.now().toString(),
       exclude_ids: excludeIds, // 传递要排除的论文ID
       exclude_titles: excludeTitles, // 传递要排除的论文标题
+      use_local_cache: useLocalCache.value, // 是否使用本地缓存搜索
       
       // 外部论文池相关参数
       useExternalPool: poolAvailable,
@@ -1087,11 +1104,14 @@ const getRecommendedPapers = async () => {
       body: JSON.stringify(requestBody)
     })
     
-    // 记录请求URL和参数（用于调试）
-    console.log('API请求参数:', {
-      ...requestBody,
-      externalPoolData: requestBody.externalPoolData ? '已提供论文池数据' : '无论文池数据'
-    });
+         // 记录请求URL和参数（用于调试）
+     console.log('📤 推荐文献API请求参数:', {
+       ...requestBody,
+       externalPoolData: requestBody.externalPoolData ? '已提供论文池数据' : '无论文池数据'
+     });
+     
+     console.log(`🔍 搜索模式: ${useLocalCache.value ? '本地缓存 + 外部搜索' : '仅外部搜索'}`);
+     console.log(`📊 文献范围: ${expandRange.value ? '扩大范围（包含非顶刊顶会）' : '仅顶刊顶会'}`);
 
     if (!response.ok) {
       if (response.status === 429) {
@@ -1142,7 +1162,14 @@ const getRecommendedPapers = async () => {
       // 标记新获取的论文为已显示
       markPapersAsDisplayed(processedPapers)
       
-      console.log('获取到推荐文献:', processedPapers)
+      console.log('📋 获取到推荐文献:', processedPapers)
+      console.log('📊 推荐统计: 缓存命中', result.cache_hits || 0, '篇, 外部获取', result.external_hits || 0, '篇')
+      console.log('⚙️ 后端确认设置: 使用本地缓存 =', result.use_local_cache)
+      
+      if (!result.use_local_cache) {
+        console.log('✅ 已按要求跳过本地缓存搜索，所有结果均来自外部API')
+      }
+      
       console.log('累加后的文献列表:', papersState.recommendedPapers)
       console.log('总文献数量:', papersState.recommendedPapers.length)
 

@@ -2559,6 +2559,7 @@ app.post('/api/semantic-recommend', async (req, res) => {
       filter_venues = false, 
       session_id = Date.now().toString(), 
       keywords = null,
+      use_local_cache = true, // 新增：是否使用本地缓存搜索（默认为true）
       useExternalPool = false, // 新增：是否使用外部论文池
       externalPoolData = null, // 新增：外部论文池数据
       poolKeywords = '' // 新增：论文池对应的关键词
@@ -2566,6 +2567,7 @@ app.post('/api/semantic-recommend', async (req, res) => {
     
     console.log('接收到的数据:', {
       hasKeywords: !!keywords,
+      use_local_cache,
       useExternalPool,
       hasPoolData: !!externalPoolData,
       poolKeywords
@@ -2804,9 +2806,14 @@ Please respond in the following JSON format:
     // 第一步：优先从本地缓存搜索
     console.log('🔍 首先从本地缓存搜索推荐论文...');
     const excludeIds = req.body.exclude_ids || []; // 从请求中获取要排除的论文ID
-    const excludeTitles = req.body.exclude_titles || []; // 从请求中获取要排除的论文标题
-    const cacheResults = await searchFromCache(formattedSearchQuery, 5, filter_venues, excludeIds);
-    console.log(`📚 本地缓存找到 ${cacheResults.length} 篇推荐论文`);
+    const excludeTitles = req.body.exclude_titles || [];     // 根据use_local_cache参数决定是否搜索本地缓存
+    let cacheResults = [];
+    if (use_local_cache) {
+      cacheResults = await searchFromCache(formattedSearchQuery, 5, filter_venues, excludeIds);
+      console.log(`📚 本地缓存找到 ${cacheResults.length} 篇推荐论文`);
+    } else {
+      console.log(`⚠️ 跳过本地缓存搜索，use_local_cache = ${use_local_cache}`);
+    }
     
     let allPapers = [];
     let needExternalSearch = true;
@@ -2841,6 +2848,10 @@ Please respond in the following JSON format:
         needExternalSearch = false;
         console.log('📚 本地缓存结果充足，无需外部搜索');
       }
+    } else {
+      // 不使用本地缓存时，始终需要外部搜索
+      needExternalSearch = true;
+      console.log('🌐 不使用本地缓存，需要外部搜索');
     }
     
     // 第二步：处理外部论文池和搜索
@@ -3170,15 +3181,19 @@ Please respond in the following JSON format:
         return b.citationCount - a.citationCount;
       });
 
-    console.log(`✅ 最终返回 ${allPapers.length} 篇推荐论文 (缓存: ${allPapers.filter(r => r.from_cache).length}, 外部: ${allPapers.filter(r => !r.from_cache).length})`);
+    const cacheHits = use_local_cache ? allPapers.filter(r => r.from_cache).length : 0;
+    const externalHits = allPapers.filter(r => !r.from_cache).length;
+    
+    console.log(`✅ 最终返回 ${allPapers.length} 篇推荐论文 (缓存: ${cacheHits}, 外部: ${externalHits}) [use_local_cache: ${use_local_cache}]`);
 
     res.json({
       success: true,
       papers: allPapers,
-      cache_hits: allPapers.filter(r => r.from_cache).length,
-      external_hits: allPapers.filter(r => !r.from_cache).length,
+      cache_hits: cacheHits,
+      external_hits: externalHits,
       total_papers: allPapers.length,
-      rawResponse: needExternalSearch ? JSON.stringify(externalSearchResult?.data || []) : '本地缓存结果',
+      use_local_cache: use_local_cache,
+      rawResponse: needExternalSearch ? JSON.stringify(externalSearchResult?.data || []) : (use_local_cache ? '本地缓存结果' : '跳过本地缓存'),
       session_id: session_id || 'default',
       
       // 新增：外部论文池信息
