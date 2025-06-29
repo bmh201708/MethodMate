@@ -1294,6 +1294,11 @@ app.get('/', (req, res) => {
   res.redirect('/test-core-api.html');
 });
 
+// 论文缓存浏览器页面路由
+app.get('/papers', (req, res) => {
+  res.redirect('/paper-cache-browser.html');
+});
+
 // 健康检查端点
 app.get('/api/health', (req, res) => {
   res.json({
@@ -4578,7 +4583,7 @@ app.post('/api/paper-cache/search', optionalAuth, async (req, res) => {
     
     // 如果需要过滤顶会顶刊
     if (filter_venues) {
-      sqlQuery += ' AND is_top_venue = TRUE';
+      sqlQuery += ' AND is_top_venue = 1';
     }
     
     // 按相关性和质量评分排序
@@ -4610,6 +4615,48 @@ app.post('/api/paper-cache/search', optionalAuth, async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: '服务器内部错误' 
+    });
+  }
+});
+
+// 获取缓存统计信息（必须在 :id 路由之前定义）
+app.get('/api/paper-cache/stats', optionalAuth, async (req, res) => {
+  try {
+    console.log('📊 开始查询论文缓存统计信息...');
+    const pool = getPool();
+
+    const [totalResults] = await pool.execute(
+      'SELECT COUNT(*) as total FROM paper_cache'
+    );
+    console.log('📋 总论文数查询结果:', totalResults[0]);
+    
+    const [topVenueResults] = await pool.execute(
+      'SELECT COUNT(*) as top_venues FROM paper_cache WHERE is_top_venue = 1'
+    );
+    console.log('🏆 顶会顶刊查询结果:', topVenueResults[0]);
+    
+    const [recentResults] = await pool.execute(
+      'SELECT COUNT(*) as recent FROM paper_cache WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)'
+    );
+    console.log('📅 最近7天查询结果:', recentResults[0]);
+
+    const statsData = {
+      success: true,
+      stats: {
+        total_papers: totalResults[0].total,
+        top_venue_papers: topVenueResults[0].top_venues,
+        recent_papers: recentResults[0].recent
+      }
+    };
+    
+    console.log('✅ 统计信息API响应:', statsData);
+    res.json(statsData);
+  } catch (error) {
+    console.error('❌ 获取缓存统计错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: '服务器内部错误',
+      details: error.message
     });
   }
 });
@@ -4683,33 +4730,110 @@ app.delete('/api/paper-cache/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// 获取缓存统计信息
-app.get('/api/paper-cache/stats', optionalAuth, async (req, res) => {
+// 获取缓存论文列表（分页）
+app.post('/api/paper-cache/list', optionalAuth, async (req, res) => {
   try {
-    const pool = getPool();
+    const { 
+      page = 1, 
+      limit = 50, 
+      sort_by = 'created_at', 
+      sort_order = 'DESC',
+      filter_top_venue = false,
+      filter_source = null
+    } = req.body;
+    
+    // 验证参数
+    const validSortFields = ['created_at', 'updated_at', 'title', 'year', 'citation_count', 'quality_score'];
+    const validSortOrders = ['ASC', 'DESC'];
+    
+    const sortField = validSortFields.includes(sort_by) ? sort_by : 'created_at';
+    const sortDirection = validSortOrders.includes(sort_order.toUpperCase()) ? sort_order.toUpperCase() : 'DESC';
+    const pageNumber = Math.max(1, parseInt(page) || 1);
+    const pageLimit = Math.min(1000, Math.max(1, parseInt(limit) || 50)); // 限制最大1000条
+    const offset = (pageNumber - 1) * pageLimit;
+    
+    console.log('分页参数:', { pageNumber, pageLimit, offset, sortField, sortDirection });
 
-    const [totalResults] = await pool.execute(
-      'SELECT COUNT(*) as total FROM paper_cache'
-    );
+    const pool = getPool();
     
-    const [topVenueResults] = await pool.execute(
-      'SELECT COUNT(*) as top_venues FROM paper_cache WHERE is_top_venue = TRUE'
-    );
+    // 构建查询条件
+    let whereClause = '';
+    let queryParams = [];
     
-    const [recentResults] = await pool.execute(
-      'SELECT COUNT(*) as recent FROM paper_cache WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)'
-    );
+    const conditions = [];
+    
+    if (filter_top_venue) {
+      conditions.push('is_top_venue = 1');
+    }
+    
+    if (filter_source && typeof filter_source === 'string') {
+      conditions.push('source = ?');
+      queryParams.push(filter_source);
+    }
+    
+    if (conditions.length > 0) {
+      whereClause = ' WHERE ' + conditions.join(' AND ');
+    }
+
+    // 获取总数
+    const countQuery = `SELECT COUNT(*) as total FROM paper_cache${whereClause}`;
+    const [countResults] = await pool.execute(countQuery, queryParams);
+    const totalCount = countResults[0].total;
+    
+    // 获取论文列表 - 注意：由于ORDER BY子句包含动态字段，不能用参数绑定，但字段已经验证过了
+    const dataQuery = `
+      SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
+             citation_count, research_method, full_text, translated_abstract, translated_method,
+             paper_id, source, is_top_venue, quality_score, download_sources, metadata,
+             created_at, updated_at
+      FROM paper_cache
+      ${whereClause}
+      ORDER BY ${sortField} ${sortDirection}
+      LIMIT ${pageLimit} OFFSET ${offset}
+    `;
+    
+    console.log('执行查询:', dataQuery);
+    console.log('查询参数:', queryParams);
+    
+    const [results] = await pool.execute(dataQuery, queryParams);
+    
+    // 处理结果，解析JSON字段
+    const papers = results.map(paper => ({
+      ...paper,
+      download_sources: paper.download_sources ? 
+        (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null,
+      metadata: paper.metadata ? 
+        (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
+      from_cache: true
+    }));
+
+    // 计算分页信息
+    const totalPages = Math.ceil(totalCount / pageLimit);
+    const hasNextPage = pageNumber < totalPages;
+    const hasPrevPage = pageNumber > 1;
+
+    console.log(`🔍 论文列表查询：第${pageNumber}页，每页${pageLimit}条，总共${totalCount}条，排序${sortField} ${sortDirection}`);
 
     res.json({
       success: true,
-      stats: {
-        total_papers: totalResults[0].total,
-        top_venue_papers: topVenueResults[0].top_venues,
-        recent_papers: recentResults[0].recent
+      papers: papers,
+      pagination: {
+        current_page: pageNumber,
+        per_page: pageLimit,
+        total_count: totalCount,
+        total_pages: totalPages,
+        has_next_page: hasNextPage,
+        has_prev_page: hasPrevPage
+      },
+      query_info: {
+        sort_by: sortField,
+        sort_order: sortDirection,
+        filter_top_venue: filter_top_venue,
+        filter_source: filter_source
       }
     });
   } catch (error) {
-    console.error('获取缓存统计错误:', error);
+    console.error('获取论文列表错误:', error);
     res.status(500).json({ 
       success: false, 
       error: '服务器内部错误' 

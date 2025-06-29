@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>论文缓存浏览器 - MethodMate</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .search-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .filter-section {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .select-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .select-group select {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        
+        .papers-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .papers-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+        
+        .papers-list {
+            max-height: 700px;
+            overflow-y: auto;
+        }
+        
+        .papers-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .papers-table th {
+            background: #f8f9fa;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .papers-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        
+        .papers-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .paper-title-cell {
+            max-width: 300px;
+            font-weight: 600;
+            color: #333;
+            line-height: 1.3;
+        }
+        
+        .paper-title-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+        }
+        
+        .authors-cell {
+            max-width: 200px;
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .authors-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .year-cell {
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .citations-cell {
+            text-align: center;
+            font-weight: 500;
+            color: #007bff;
+        }
+        
+        .venue-cell {
+            max-width: 150px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .venue-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .source-cell {
+            text-align: center;
+        }
+        
+        .date-cell {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+        }
+        
+        .tag {
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            line-height: 1.2;
+        }
+        
+        .tag-top-venue {
+            background: #28a745;
+            color: white;
+        }
+        
+        .tag-source {
+            background: #007bff;
+            color: white;
+        }
+        
+        .tag-year {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .tag-citations {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        
+        .pagination button:hover {
+            background: #e9ecef;
+        }
+        
+        .pagination button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .search-section {
+                flex-direction: column;
+            }
+            
+            .search-input {
+                min-width: auto;
+            }
+            
+            .filter-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .papers-table {
+                font-size: 12px;
+            }
+            
+            .papers-table th,
+            .papers-table td {
+                padding: 6px 4px;
+            }
+            
+            .paper-title-cell {
+                max-width: 200px;
+            }
+            
+            .authors-cell {
+                max-width: 120px;
+            }
+            
+            .venue-cell {
+                max-width: 100px;
+            }
+            
+            .tag {
+                font-size: 10px;
+                padding: 1px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 页面头部 -->
+        <div class="header">
+            <h1>📚 论文缓存浏览器</h1>
+            <p>以表格形式快速浏览数据库中缓存的论文统计信息</p>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="stats-section">
+            <div class="stat-card">
+                <div class="stat-number" id="totalPapers">-</div>
+                <div class="stat-label">总论文数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="topVenuePapers">-</div>
+                <div class="stat-label">顶会顶刊</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="recentPapers">-</div>
+                <div class="stat-label">最近7天新增</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="currentShowing">-</div>
+                <div class="stat-label">当前显示</div>
+            </div>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="controls">
+            <!-- 搜索区域 -->
+            <div class="search-section">
+                <input type="text" class="search-input" id="searchInput" placeholder="搜索论文标题或摘要...">
+                <button class="btn btn-primary" onclick="searchPapers()">🔍 搜索</button>
+                <button class="btn btn-secondary" onclick="loadAllPapers()">📋 显示全部</button>
+                <button class="btn btn-secondary" onclick="refreshStats()">🔄 刷新统计</button>
+            </div>
+            
+            <!-- 过滤器 -->
+            <div class="filter-section">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="topVenueFilter">
+                    <label for="topVenueFilter">仅顶会顶刊</label>
+                </div>
+                <div class="select-group">
+                    <label>来源:</label>
+                    <select id="sourceFilter">
+                        <option value="">全部来源</option>
+                        <option value="search">搜索</option>
+                        <option value="recommendation">推荐</option>
+                        <option value="manual">手动</option>
+                        <option value="database">数据库</option>
+                    </select>
+                </div>
+                <div class="select-group">
+                    <label>排序:</label>
+                    <select id="sortOrder">
+                        <option value="created_desc">最新创建</option>
+                        <option value="created_asc">最早创建</option>
+                        <option value="citations_desc">引用数高到低</option>
+                        <option value="citations_asc">引用数低到高</option>
+                        <option value="title_asc">标题A-Z</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 论文列表 -->
+        <div class="papers-section">
+            <div class="papers-header">
+                <h3>缓存论文统计表</h3>
+                <span id="resultCount">0 篇缓存论文</span>
+            </div>
+            <div class="papers-list" id="papersList">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    正在加载论文数据...
+                </div>
+            </div>
+            <div class="pagination" id="pagination" style="display: none;">
+                <!-- 分页按钮将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentPapers = [];
+        let currentPage = 1;
+        const papersPerPage = 20; // 表格形式可以显示更多
+        let totalPages = 1;
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadAllPapers();
+            
+            // 搜索框回车事件
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchPapers();
+                }
+            });
+            
+            // 过滤器变化事件
+            document.getElementById('topVenueFilter').addEventListener('change', applyFilters);
+            document.getElementById('sourceFilter').addEventListener('change', applyFilters);
+            document.getElementById('sortOrder').addEventListener('change', applyFilters);
+        });
+
+        // 加载统计信息
+        async function loadStats() {
+            try {
+                console.log('🔄 开始加载统计信息...');
+                const response = await fetch('/api/paper-cache/stats');
+                console.log('📊 统计API响应状态:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('📊 统计API响应数据:', data);
+                
+                if (data.success && data.stats) {
+                    document.getElementById('totalPapers').textContent = data.stats.total_papers || '0';
+                    document.getElementById('topVenuePapers').textContent = data.stats.top_venue_papers || '0';
+                    document.getElementById('recentPapers').textContent = data.stats.recent_papers || '0';
+                    console.log('✅ 统计信息更新成功');
+                } else {
+                    console.error('❌ API返回格式错误:', data);
+                    // 显示错误状态
+                    document.getElementById('totalPapers').textContent = 'Error';
+                    document.getElementById('topVenuePapers').textContent = 'Error';
+                    document.getElementById('recentPapers').textContent = 'Error';
+                }
+            } catch (error) {
+                console.error('❌ 加载统计信息失败:', error);
+                // 显示错误状态
+                document.getElementById('totalPapers').textContent = 'Error';
+                document.getElementById('topVenuePapers').textContent = 'Error';  
+                document.getElementById('recentPapers').textContent = 'Error';
+            }
+        }
+
+        // 刷新统计信息
+        function refreshStats() {
+            loadStats();
+        }
+
+        // 加载所有论文
+        async function loadAllPapers() {
+            showLoading();
+            try {
+                const response = await fetch('/api/paper-cache/list', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        page: 1,
+                        limit: 1000 // 加载更多论文用于本地过滤
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentPapers = data.papers;
+                    applyFilters();
+                } else {
+                    showError('加载论文失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('加载论文失败:', error);
+                showError('网络错误，请稍后重试');
+            }
+        }
+
+        // 搜索论文
+        async function searchPapers() {
+            const query = document.getElementById('searchInput').value.trim();
+            
+            if (!query) {
+                loadAllPapers();
+                return;
+            }
+            
+            showLoading();
+            try {
+                const response = await fetch('/api/paper-cache/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        limit: 1000
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentPapers = data.papers;
+                    applyFilters();
+                } else {
+                    showError('搜索失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('搜索失败:', error);
+                showError('搜索时发生网络错误');
+            }
+        }
+
+        // 应用过滤器和排序
+        function applyFilters() {
+            let filteredPapers = [...currentPapers];
+            
+            // 顶会顶刊过滤
+            const topVenueOnly = document.getElementById('topVenueFilter').checked;
+            if (topVenueOnly) {
+                filteredPapers = filteredPapers.filter(paper => paper.is_top_venue);
+            }
+            
+            // 来源过滤
+            const sourceFilter = document.getElementById('sourceFilter').value;
+            if (sourceFilter) {
+                filteredPapers = filteredPapers.filter(paper => paper.source === sourceFilter);
+            }
+            
+            // 排序
+            const sortOrder = document.getElementById('sortOrder').value;
+            filteredPapers.sort((a, b) => {
+                switch (sortOrder) {
+                    case 'created_desc':
+                        return new Date(b.created_at) - new Date(a.created_at);
+                    case 'created_asc':
+                        return new Date(a.created_at) - new Date(b.created_at);
+                    case 'citations_desc':
+                        return (b.citation_count || 0) - (a.citation_count || 0);
+                    case 'citations_asc':
+                        return (a.citation_count || 0) - (b.citation_count || 0);
+                    case 'title_asc':
+                        return (a.title || '').localeCompare(b.title || '');
+                    default:
+                        return 0;
+                }
+            });
+            
+            displayPapers(filteredPapers);
+        }
+
+        // 显示论文列表
+        function displayPapers(papers) {
+            const papersList = document.getElementById('papersList');
+            const resultCount = document.getElementById('resultCount');
+            const currentShowing = document.getElementById('currentShowing');
+            
+            // 更新计数
+            resultCount.textContent = `${papers.length} 篇缓存论文`;
+            currentShowing.textContent = papers.length;
+            
+            if (papers.length === 0) {
+                papersList.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <h3>暂无论文数据</h3>
+                        <p>当前条件下没有找到缓存的论文，请尝试调整搜索条件或过滤器</p>
+                    </div>
+                `;
+                document.getElementById('pagination').style.display = 'none';
+                return;
+            }
+            
+            // 计算分页
+            totalPages = Math.ceil(papers.length / papersPerPage);
+            if (currentPage > totalPages) currentPage = 1;
+            
+            const startIndex = (currentPage - 1) * papersPerPage;
+            const endIndex = startIndex + papersPerPage;
+            const paginatedPapers = papers.slice(startIndex, endIndex);
+            
+            // 渲染论文表格
+            papersList.innerHTML = `
+                <table class="papers-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%">标题</th>
+                            <th style="width: 25%">作者</th>
+                            <th style="width: 8%">年份</th>
+                            <th style="width: 8%">引用</th>
+                            <th style="width: 15%">期刊/会议</th>
+                            <th style="width: 6%">来源</th>
+                            <th style="width: 3%">级别</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${paginatedPapers.map(paper => `
+                            <tr>
+                                <td class="paper-title-cell">
+                                    <div class="paper-title-text" title="${escapeHtml(paper.title || '无标题')}">
+                                        ${escapeHtml(paper.title || '无标题')}
+                                    </div>
+                                </td>
+                                <td class="authors-cell">
+                                    <div class="authors-text" title="${escapeHtml(paper.authors || '')}">
+                                        ${escapeHtml(paper.authors || '未知作者')}
+                                    </div>
+                                </td>
+                                <td class="year-cell">
+                                    ${paper.year || '-'}
+                                </td>
+                                <td class="citations-cell">
+                                    ${paper.citation_count || 0}
+                                </td>
+                                <td class="venue-cell">
+                                    <div class="venue-text" title="${escapeHtml(paper.journal || paper.venue || '')}">
+                                        ${escapeHtml(paper.journal || paper.venue || '-')}
+                                    </div>
+                                </td>
+                                <td class="source-cell">
+                                    <span class="tag tag-source">${getSourceLabel(paper.source)}</span>
+                                </td>
+                                <td style="text-align: center;">
+                                    ${paper.is_top_venue ? '<span class="tag tag-top-venue">顶级</span>' : '<span style="color: #999;">-</span>'}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            // 渲染分页
+            renderPagination();
+        }
+
+        // 渲染分页
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.style.display = 'none';
+                return;
+            }
+            
+            pagination.style.display = 'flex';
+            
+            let paginationHTML = '';
+            
+            // 上一页按钮
+            paginationHTML += `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹ 上一页</button>`;
+            
+            // 页码按钮
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            if (startPage > 1) {
+                paginationHTML += `<button onclick="goToPage(1)">1</button>`;
+                if (startPage > 2) {
+                    paginationHTML += `<span>...</span>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `<button onclick="goToPage(${i})" ${i === currentPage ? 'class="active"' : ''}>${i}</button>`;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHTML += `<span>...</span>`;
+                }
+                paginationHTML += `<button onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            }
+            
+            // 下一页按钮
+            paginationHTML += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页 ›</button>`;
+            
+            pagination.innerHTML = paginationHTML;
+        }
+
+        // 跳转到指定页面
+        function goToPage(page) {
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            applyFilters();
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('papersList').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    正在加载论文数据...
+                </div>
+            `;
+            document.getElementById('pagination').style.display = 'none';
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            document.getElementById('papersList').innerHTML = `
+                <div class="error">
+                    ❌ ${escapeHtml(message)}
+                </div>
+            `;
+            document.getElementById('pagination').style.display = 'none';
+        }
+
+        // 获取来源标签
+        function getSourceLabel(source) {
+            const sourceLabels = {
+                'search': '搜索',
+                'recommendation': '推荐',
+                'manual': '手动',
+                'database': '数据库'
+            };
+            return sourceLabels[source] || source || '未知';
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html> 
