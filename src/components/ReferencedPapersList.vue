@@ -472,7 +472,11 @@ const fetchPaperContent = async () => {
   try {
     console.log('手动获取论文内容:', selectedPaper.value.title)
     
-    const response = await fetch('/api/paper/get-full-content', {
+    const { getApiBaseUrl } = await import('../config/environment.js')
+    const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
+    console.log('📤 获取论文内容API请求URL:', getContentApiUrl)
+    
+    const response = await fetch(getContentApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -542,7 +546,11 @@ const tryGenerateMethodSummary = async () => {
   try {
     console.log('使用备用方法生成研究方法概要:', selectedPaper.value.title)
     
-    const response = await fetch('/api/paper/generate-method-summary', {
+    const { getApiBaseUrl } = await import('../config/environment.js')
+    const generateSummaryApiUrl = `${getApiBaseUrl()}/paper/generate-method-summary`
+    console.log('📤 生成方法概要API请求URL:', generateSummaryApiUrl)
+    
+    const response = await fetch(generateSummaryApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -944,7 +952,11 @@ const savePaperToCache = async (paper) => {
       }
     }
 
-          const response = await fetch('/api/paper-cache/save', {
+    const { getApiBaseUrl } = await import('../config/environment.js')
+    const saveApiUrl = `${getApiBaseUrl()}/paper-cache/save`
+    console.log('📤 保存论文缓存API请求URL:', saveApiUrl)
+    
+    const response = await fetch(saveApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

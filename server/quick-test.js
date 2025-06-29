@@ -3,7 +3,7 @@ const require = createRequire(import.meta.url);
 const fetch = require('node-fetch');
 
 // 快速连通性测试脚本
-const BASE_URL = 'http://118.195.129.161:3002';
+const BASE_URL = 'http://1.13.253.97:3002';
 
 async function quickTest() {
   console.log('🔍 MethodMate 快速连通性测试');

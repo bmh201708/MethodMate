@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // 测试配置
-const BASE_URL = 'http://118.195.129.161:3002';
+const BASE_URL = 'http://1.13.253.97:3002';
 const TEST_TIMEOUT = 30000; // 30秒超时
 
 // 颜色输出函数

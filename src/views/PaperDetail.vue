@@ -590,7 +590,11 @@ const fetchPaperContent = async () => {
   try {
     console.log('手动获取论文内容:', papersState.selectedPaper.title)
     
-            const response = await fetch('/api/paper/get-full-content', {
+    const { getApiBaseUrl } = await import('../config/environment.js')
+    const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
+    console.log('📤 获取论文内容API请求URL:', getContentApiUrl)
+    
+    const response = await fetch(getContentApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -660,7 +664,11 @@ const tryGenerateMethodSummary = async () => {
     return false
   }
 
-              const response = await fetch('/api/paper/generate-method-summary', {
+  const { getApiBaseUrl } = await import('../config/environment.js')
+  const generateSummaryApiUrl = `${getApiBaseUrl()}/paper/generate-method-summary`
+  console.log('📤 生成方法概要API请求URL:', generateSummaryApiUrl)
+  
+  const response = await fetch(generateSummaryApiUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -948,7 +956,11 @@ const extractKeywordsFromChat = async () => {
       return
     }
     
-    const response = await fetch('/api/extract-keywords', {
+    const { getApiBaseUrl } = await import('../config/environment.js')
+    const extractApiUrl = `${getApiBaseUrl()}/extract-keywords`
+    console.log('📤 提取关键词API请求URL:', extractApiUrl)
+    
+    const response = await fetch(extractApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1095,8 +1107,12 @@ const getRecommendedPapers = async () => {
       console.log('使用聊天历史进行搜索')
     }
 
-    // 调用推荐API（通过Vue开发服务器代理）
-    const response = await fetch('/api/semantic-recommend', {
+    // 调用推荐API（使用环境配置）
+    const { getApiBaseUrl } = await import('../config/environment.js')
+    const apiUrl = `${getApiBaseUrl()}/semantic-recommend`
+    console.log('📤 文献推荐API请求URL:', apiUrl)
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1235,7 +1251,11 @@ const savePaperToCache = async (paper) => {
       }
     }
 
-          const response = await fetch('/api/paper-cache/save', {
+    const { getApiBaseUrl } = await import('../config/environment.js')
+    const saveApiUrl = `${getApiBaseUrl()}/paper-cache/save`
+    console.log('📤 保存论文API请求URL:', saveApiUrl)
+    
+    const response = await fetch(saveApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1278,7 +1298,11 @@ const savePaperToCache = async (paper) => {
 // 检查论文是否已缓存
 const checkPaperCache = async (paper) => {
   try {
-          const response = await fetch('/api/paper-cache/check', {
+    const { getApiBaseUrl } = await import('../config/environment.js')
+    const checkApiUrl = `${getApiBaseUrl()}/paper-cache/check`
+    console.log('📤 检查论文缓存API请求URL:', checkApiUrl)
+    
+    const response = await fetch(checkApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

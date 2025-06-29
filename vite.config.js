@@ -17,7 +17,7 @@ export default defineConfig({
       '/api': {
         target: process.env.USE_REMOTE_BACKEND === 'false' 
           ? 'http://localhost:3004'  // 本地后端服务器
-          : 'http://118.195.129.161:3004',  // 远程后端服务器
+          : 'http://1.13.253.97:3004',  // 远程后端服务器
         changeOrigin: true,
         secure: false,  // 本地开发时不需要secure
         rewrite: (path) => path,

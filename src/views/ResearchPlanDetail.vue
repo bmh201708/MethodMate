@@ -1854,7 +1854,11 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
         // 如果没有研究方法但有全文，尝试获取研究方法
         else if (paper.fullText) {
           try {
-            const response = await fetch('/api/paper/generate-method-summary', {
+                         const { getApiBaseUrl } = await import('../config/environment.js')
+             const generateSummaryApiUrl = `${getApiBaseUrl()}/paper/generate-method-summary`
+             console.log('📤 生成方法概要API请求URL:', generateSummaryApiUrl)
+             
+             const response = await fetch(generateSummaryApiUrl, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -1880,7 +1884,11 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
         // 如果既没有研究方法也没有全文，尝试获取全文和研究方法
         else {
           try {
-            const response = await fetch('/api/paper/get-full-content', {
+                         const { getApiBaseUrl } = await import('../config/environment.js')
+             const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
+             console.log('📤 获取论文内容API请求URL:', getContentApiUrl)
+             
+             const response = await fetch(getContentApiUrl, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -1907,7 +1915,11 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
                 // 如果没有获取到研究方法但有全文，尝试生成研究方法概要
                 else if (paper.fullText) {
                   try {
-                    const methodResponse = await fetch('/api/paper/generate-method-summary', {
+                                         const { getApiBaseUrl } = await import('../config/environment.js')
+                     const methodSummaryApiUrl = `${getApiBaseUrl()}/paper/generate-method-summary`
+                     console.log('📤 生成方法概要API请求URL:', methodSummaryApiUrl)
+                     
+                     const methodResponse = await fetch(methodSummaryApiUrl, {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
@@ -2559,7 +2571,11 @@ const queryStatisticalMethod = async () => {
   try {
     console.log('🔍 查询统计方法:', statisticalMethodQuery.value.trim())
     
-          const response = await fetch('/api/query-statistical-method', {
+              const { getApiBaseUrl } = await import('../config/environment.js')
+    const queryMethodApiUrl = `${getApiBaseUrl()}/query-statistical-method`
+    console.log('📤 查询统计方法API请求URL:', queryMethodApiUrl)
+    
+    const response = await fetch(queryMethodApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -2662,7 +2678,11 @@ const generateSourceIntroduction = async () => {
       } else {
         // 如果没有研究方法总结，尝试从缓存中获取
         try {
-          const response = await fetch('/api/paper/get-cached-method', {
+                    const { getApiBaseUrl } = await import('../config/environment.js')
+          const getCachedMethodApiUrl = `${getApiBaseUrl()}/paper/get-cached-method`
+          console.log('📤 获取缓存方法API请求URL:', getCachedMethodApiUrl)
+          
+          const response = await fetch(getCachedMethodApiUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -2734,16 +2754,20 @@ ${conversationContext.researchContext}`
     console.log('来源介绍生成包含用户需求:', conversationContext.hasUserRequirements)
     
     // 调用Coze API
-    const response = await fetch('/api/coze-chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: prompt,
-        conversation_id: `source_intro_${activeSection.value}_${Date.now()}`
+         const { getApiBaseUrl } = await import('../config/environment.js')
+     const cozeChatApiUrl = `${getApiBaseUrl()}/coze-chat`
+     console.log('📤 Coze聊天API请求URL:', cozeChatApiUrl)
+     
+     const response = await fetch(cozeChatApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: prompt,
+          conversation_id: `source_intro_${activeSection.value}_${Date.now()}`
+        })
       })
-    })
     
     if (!response.ok) {
       throw new Error('生成来源介绍失败，请稍后重试')
@@ -2829,16 +2853,20 @@ ${conversationContext.researchContext}`
     console.log('方法介绍生成包含用户需求:', conversationContext.hasUserRequirements)
     
     // 调用Coze API
-    const response = await fetch('/api/coze-chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: prompt,
-        conversation_id: `method_intro_${Date.now()}`
+         const { getApiBaseUrl } = await import('../config/environment.js')
+     const cozeChatApiUrl = `${getApiBaseUrl()}/coze-chat`
+     console.log('📤 Coze聊天API请求URL:', cozeChatApiUrl)
+     
+     const response = await fetch(cozeChatApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: prompt,
+          conversation_id: `method_intro_${Date.now()}`
+        })
       })
-    })
     
     if (!response.ok) {
       throw new Error('生成方法介绍失败，请稍后重试')

@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 // 测试配置
-const BASE_URL = 'http://118.195.129.161:3002';
+const BASE_URL = 'http://1.13.253.97:3002';
 
 // 颜色输出
 const colors = {

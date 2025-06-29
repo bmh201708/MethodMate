@@ -41,7 +41,7 @@ initServer();
 // CORS配置 - 支持生产环境
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://method-mate.vercel.app', 'https://methodmate.vercel.app','http://118.195.129.161','http://118.195.129.161:3002'] 
+    ? ['https://method-mate.vercel.app', 'http://1.13.253.97:3004','http://1.13.253.97','http://1.13.253.97:3002', 'https://1.13.253.97:3004', 'https://1.13.253.97'] 
     : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -1062,7 +1062,9 @@ app.use(express.json({ limit: '50mb', parameterLimit: 50000 }));
 app.use(express.urlencoded({ limit: '50mb', extended: true, parameterLimit: 50000 }));
 app.use(express.text({ limit: '50mb' }));
 app.use(express.raw({ limit: '50mb' }));
-app.use(express.static(join(__dirname, '..', 'public')));
+// 静态文件服务
+app.use(express.static(join(__dirname, '..', 'public')));  // 开发测试文件
+app.use(express.static(join(__dirname, '..', 'dist')));    // 前端构建文件
 
 // JWT认证中间件
 const authenticateToken = (req, res, next) => {
@@ -4911,6 +4913,17 @@ app.get('/api/proxy-image', async (req, res) => {
       error: '获取图片时发生错误' 
     });
   }
+});
+
+// 特定页面路由
+app.get('/papers', (req, res) => {
+  console.log('📄 访问论文缓存浏览器页面');
+  res.sendFile(join(__dirname, '..', 'public', 'paper-cache-browser.html'), (err) => {
+    if (err) {
+      console.error('发送paper-cache-browser.html失败:', err);
+      res.status(404).send('页面未找到');
+    }
+  });
 });
 
 // 启动服务器

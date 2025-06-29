@@ -246,7 +246,7 @@ proxy: {
   '/api': {
     target: process.env.USE_REMOTE_BACKEND === 'false' 
       ? 'http://localhost:3002'     // 本地后端
-      : 'http://118.195.129.161:3002',  // 远程后端
+      : 'http://1.13.253.97:3002',  // 远程后端
     changeOrigin: true,
     secure: false
   }

@@ -289,6 +289,32 @@
             color: #212529;
         }
         
+        /* 删除按钮样式 */
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+        
+        .btn-delete:active {
+            transform: translateY(0);
+        }
+        
+        .action-cell {
+            text-align: center;
+            width: 60px;
+        }
+        
         .loading {
             text-align: center;
             padding: 40px;
@@ -407,6 +433,65 @@
                 padding: 1px 4px;
             }
         }
+        
+        /* 认证相关样式 */
+        .auth-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-align: left;
+        }
+        
+        .login-form {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        
+        .login-form h3 {
+            margin-bottom: 15px;
+            color: white;
+        }
+        
+        .login-form input {
+            width: 100%;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        
+        .btn-auth {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-auth:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-info {
+            text-align: center;
+            color: white;
+        }
+        
+        .user-info span {
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .error-message {
+            color: #ffcccc;
+            font-size: 14px;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -415,6 +500,22 @@
         <div class="header">
             <h1>📚 论文缓存浏览器</h1>
             <p>以表格形式快速浏览数据库中缓存的论文统计信息</p>
+            
+            <!-- 认证状态区域 -->
+            <div class="auth-section">
+                <div id="loginForm" class="login-form">
+                    <h3>管理员登录</h3>
+                    <input type="text" id="loginEmail" placeholder="用户名或邮箱" required>
+                    <input type="password" id="loginPassword" placeholder="密码" required>
+                    <button onclick="login()" class="btn-auth">登录</button>
+                    <div id="loginError" class="error-message"></div>
+                </div>
+                
+                <div id="userInfo" class="user-info" style="display: none;">
+                    <span id="userEmail"></span>
+                    <button onclick="logout()" class="btn-auth">退出登录</button>
+                </div>
+            </div>
         </div>
 
         <!-- 统计信息 -->
@@ -503,6 +604,9 @@
 
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
+            // 检查登录状态
+            checkAuthStatus();
+            
             loadStats();
             loadAllPapers();
             
@@ -510,6 +614,13 @@
             document.getElementById('searchInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     searchPapers();
+                }
+            });
+            
+            // 登录表单回车事件
+            document.getElementById('loginPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    login();
                 }
             });
             
@@ -699,13 +810,14 @@
                 <table class="papers-table">
                     <thead>
                         <tr>
-                            <th style="width: 35%">标题</th>
-                            <th style="width: 25%">作者</th>
-                            <th style="width: 8%">年份</th>
-                            <th style="width: 8%">引用</th>
-                            <th style="width: 15%">期刊/会议</th>
+                            <th style="width: 32%">标题</th>
+                            <th style="width: 22%">作者</th>
+                            <th style="width: 7%">年份</th>
+                            <th style="width: 7%">引用</th>
+                            <th style="width: 14%">期刊/会议</th>
                             <th style="width: 6%">来源</th>
-                            <th style="width: 3%">级别</th>
+                            <th style="width: 6%">级别</th>
+                            <th style="width: 6%">操作</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -737,6 +849,11 @@
                                 </td>
                                 <td style="text-align: center;">
                                     ${paper.is_top_venue ? '<span class="tag tag-top-venue">顶级</span>' : '<span style="color: #999;">-</span>'}
+                                </td>
+                                <td class="action-cell">
+                                    <button class="btn-delete" onclick="deletePaper(${paper.id}, '${escapeHtml(paper.title || '').replace(/'/g, '\\\'')}')" title="删除论文">
+                                        🗑️
+                                    </button>
                                 </td>
                             </tr>
                         `).join('')}
@@ -841,6 +958,177 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // 删除论文
+        async function deletePaper(paperId, paperTitle) {
+            // 检查是否已登录
+            const token = getAuthToken();
+            if (!token) {
+                alert('请先登录再执行删除操作');
+                return;
+            }
+
+            // 确认对话框
+            const confirmMessage = `确定要删除以下论文吗？\n\n"${paperTitle}"\n\n此操作不可撤销！`;
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            try {
+                console.log(`🗑️ 开始删除论文: ID=${paperId}, 标题="${paperTitle}"`);
+                
+                const response = await fetch(`/api/paper-cache/${paperId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    console.log('✅ 论文删除成功');
+                    
+                    // 显示成功消息
+                    alert('论文删除成功！');
+                    
+                    // 从当前论文列表中移除已删除的论文
+                    currentPapers = currentPapers.filter(paper => paper.id !== paperId);
+                    
+                    // 重新应用过滤器和分页
+                    applyFilters();
+                    
+                    // 刷新统计信息
+                    loadStats();
+                    
+                } else {
+                    console.error('❌ 删除论文失败:', data);
+                    if (response.status === 401) {
+                        alert('登录状态已过期，请重新登录');
+                        logout();
+                    } else {
+                        alert('删除失败: ' + (data.error || '未知错误'));
+                    }
+                }
+
+            } catch (error) {
+                console.error('❌ 删除论文时发生错误:', error);
+                alert('删除失败: 网络错误，请稍后重试');
+            }
+        }
+
+        // 认证相关函数
+        function getAuthToken() {
+            return localStorage.getItem('methodmate_token');
+        }
+
+        function setAuthToken(token) {
+            localStorage.setItem('methodmate_token', token);
+        }
+
+        function removeAuthToken() {
+            localStorage.removeItem('methodmate_token');
+        }
+
+        function getUserInfo() {
+            const userInfo = localStorage.getItem('methodmate_user');
+            return userInfo ? JSON.parse(userInfo) : null;
+        }
+
+        function setUserInfo(user) {
+            localStorage.setItem('methodmate_user', JSON.stringify(user));
+        }
+
+        function removeUserInfo() {
+            localStorage.removeItem('methodmate_user');
+        }
+
+        // 检查认证状态
+        function checkAuthStatus() {
+            const token = getAuthToken();
+            const user = getUserInfo();
+            
+            if (token && user) {
+                showUserInfo(user);
+            } else {
+                showLoginForm();
+            }
+        }
+
+        // 显示登录表单
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'none';
+        }
+
+        // 显示用户信息
+        function showUserInfo(user) {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('userEmail').textContent = user.email || '已登录用户';
+        }
+
+        // 登录
+        async function login() {
+            const username = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            // 清除之前的错误信息
+            errorDiv.textContent = '';
+            
+            if (!username || !password) {
+                errorDiv.textContent = '请输入用户名/邮箱和密码';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // 保存认证信息
+                    setAuthToken(data.token);
+                    setUserInfo(data.user);
+                    
+                    // 显示用户信息
+                    showUserInfo(data.user);
+                    
+                    console.log('✅ 登录成功');
+                } else {
+                    errorDiv.textContent = data.error || '登录失败';
+                }
+
+            } catch (error) {
+                console.error('❌ 登录错误:', error);
+                errorDiv.textContent = '网络错误，请稍后重试';
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            removeAuthToken();
+            removeUserInfo();
+            showLoginForm();
+            
+            // 清空表单
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginError').textContent = '';
+            
+            console.log('✅ 已退出登录');
         }
     </script>
 </body>

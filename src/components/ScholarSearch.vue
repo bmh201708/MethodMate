@@ -439,8 +439,12 @@ export default {
         // 这样可以避免获取过多不相关的论文
         const requestedCount = Math.min(parseInt(this.numResults), 50) // 最多50篇
 
-        // 使用相对路径，通过Vite代理自动转发到配置的后端服务器
-        const response = await fetch('/api/scholar-search', {
+        // 使用环境配置的API地址
+        const { getApiBaseUrl } = await import('../config/environment.js')
+        const searchApiUrl = `${getApiBaseUrl()}/scholar-search`
+        console.log('📤 学者搜索API请求URL:', searchApiUrl)
+        
+        const response = await fetch(searchApiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -493,8 +497,12 @@ export default {
       paper.downloadMessage = ''
 
       try {
-        // 使用相对路径，通过Vite代理自动转发到配置的后端服务器
-        const response = await fetch('/api/paper-download', {
+        // 使用环境配置的API地址
+        const { getApiBaseUrl } = await import('../config/environment.js')
+        const downloadApiUrl = `${getApiBaseUrl()}/paper-download`
+        console.log('📤 论文下载API请求URL:', downloadApiUrl)
+        
+        const response = await fetch(downloadApiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
