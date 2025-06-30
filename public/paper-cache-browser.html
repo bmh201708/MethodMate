@@ -310,10 +310,7 @@
             transform: translateY(0);
         }
         
-        .action-cell {
-            text-align: center;
-            width: 60px;
-        }
+
         
         .loading {
             text-align: center;
@@ -431,7 +428,24 @@
             .tag {
                 font-size: 10px;
                 padding: 1px 4px;
-            }
+                         }
+         }
+        
+        /* 辅助样式 */
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+        
+        .text-sm {
+            font-size: 0.875rem;
+        }
+        
+        .text-gray-500 {
+            color: #6b7280;
+        }
+        
+        .ml-4 {
+            margin-left: 1rem;
         }
         
         /* 认证相关样式 */
@@ -581,6 +595,180 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        /* 全文查看编辑模态框样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.5em;
+            color: #333;
+            flex: 1;
+        }
+        
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .modal-body {
+            padding: 25px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .modal-footer {
+            padding: 15px 25px;
+            border-top: 1px solid #eee;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .paper-title-display {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .full-text-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            min-height: 300px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .full-text-editor {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+        
+        .full-text-editor:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .btn-view-method {
+            background: #f0f9ff;
+            color: #0369a1;
+            border: none;
+            padding: 4px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-view-method:hover {
+            background: #e0f2fe;
+            transform: translateY(-1px);
+        }
+        
+        .action-cell {
+            text-align: center;
+            width: 8%;
+        }
+        
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        
+        @media (max-width: 768px) {
+            .modal-content {
+                margin: 10px;
+                max-height: 95vh;
+            }
+            
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 15px;
+            }
+            
+            .full-text-display,
+            .full-text-editor {
+                min-height: 200px;
+                font-size: 13px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -636,6 +824,7 @@
                 <button class="btn btn-secondary" onclick="loadAllPapers()">📋 显示全部</button>
                 <button class="btn btn-secondary" onclick="refreshStats()">🔄 刷新统计</button>
                 <button class="btn btn-success toggle-add-paper" onclick="toggleAddPaperForm()">➕ 添加论文</button>
+                <a href="/papers" target="_blank" class="btn btn-secondary" title="在新窗口中打开">🔄 刷新页面</a>
             </div>
             
             <!-- 过滤器 -->
@@ -724,6 +913,11 @@
                     <textarea id="paperMethod" name="research_method" placeholder="请描述论文的研究方法..."></textarea>
                 </div>
                 
+                <div class="form-group full-width">
+                    <label for="paperFullText">论文全文</label>
+                    <textarea id="paperFullText" name="full_text" placeholder="请输入论文全文内容..." style="min-height: 150px;"></textarea>
+                </div>
+                
                 <div class="form-actions">
                     <button type="button" class="btn btn-cancel" onclick="cancelAddPaper()">取消</button>
                     <button type="submit" class="btn btn-success">保存论文</button>
@@ -749,12 +943,51 @@
         </div>
     </div>
 
+    <!-- 研究方法查看/编辑模态框 -->
+    <div id="researchMethodModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">论文研究方法</h3>
+                <button onclick="closeResearchMethodModal()" class="btn-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <label class="form-label">论文标题:</label>
+                    <div id="paperTitleDisplay" class="paper-title-display"></div>
+                </div>
+                <div class="mb-4">
+                                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                         <label for="researchMethodContent" class="form-label">研究方法:</label>
+                         <div style="display: flex; gap: 8px;">
+                             <button id="editBtn" onclick="toggleEdit()" class="btn btn-secondary btn-sm">编辑</button>
+                             <button id="saveBtn" onclick="saveResearchMethod()" class="btn btn-success btn-sm" style="display: none;">保存</button>
+                             <button id="cancelBtn" onclick="cancelEdit()" class="btn btn-cancel btn-sm" style="display: none;">取消</button>
+                         </div>
+                     </div>
+                    <div id="researchMethodDisplay" class="full-text-display">
+                        <!-- 只读显示区域 -->
+                    </div>
+                    <textarea id="researchMethodEditor" class="full-text-editor" style="display: none;" placeholder="请输入论文研究方法内容..."></textarea>
+                </div>
+                <div class="text-sm text-gray-500 mb-4">
+                    <span id="characterCount">字符数: 0</span>
+                    <span class="ml-4">最后更新: <span id="lastUpdated">-</span></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeResearchMethodModal()" class="btn btn-secondary">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 全局变量
         let currentPapers = [];
         let currentPage = 1;
         const papersPerPage = 20; // 表格形式可以显示更多
         let totalPages = 1;
+        let currentEditingPaper = null;
+        let originalResearchMethod = '';
 
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
@@ -785,6 +1018,28 @@
             
             // 添加论文表单提交事件
             document.getElementById('addPaperForm').addEventListener('submit', handleAddPaper);
+            
+            // 研究方法编辑器字符数监听
+            document.getElementById('researchMethodEditor').addEventListener('input', function() {
+                updateCharacterCount(this.value);
+            });
+            
+            // ESC键关闭模态框
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('researchMethodModal');
+                    if (modal.style.display === 'flex') {
+                        closeResearchMethodModal();
+                    }
+                }
+            });
+            
+            // 点击模态框背景关闭
+            document.getElementById('researchMethodModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeResearchMethodModal();
+                }
+            });
         });
 
         // 加载统计信息
@@ -967,14 +1222,14 @@
                 <table class="papers-table">
                     <thead>
                         <tr>
-                            <th style="width: 32%">标题</th>
-                            <th style="width: 22%">作者</th>
-                            <th style="width: 7%">年份</th>
-                            <th style="width: 7%">引用</th>
-                            <th style="width: 14%">期刊/会议</th>
+                            <th style="width: 30%">标题</th>
+                            <th style="width: 20%">作者</th>
+                            <th style="width: 6%">年份</th>
+                            <th style="width: 6%">引用</th>
+                            <th style="width: 12%">期刊/会议</th>
                             <th style="width: 6%">来源</th>
                             <th style="width: 6%">级别</th>
-                            <th style="width: 6%">操作</th>
+                            <th style="width: 8%">操作</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1008,9 +1263,19 @@
                                     ${paper.is_top_venue ? '<span class="tag tag-top-venue">顶级</span>' : '<span style="color: #999;">-</span>'}
                                 </td>
                                 <td class="action-cell">
-                                    <button class="btn-delete" onclick="deletePaper(${paper.id}, '${escapeHtml(paper.title || '').replace(/'/g, '\\\'')}')" title="删除论文">
-                                        🗑️
-                                    </button>
+                                    <div class="action-buttons">
+                                                                <button 
+                            class="btn-view-method" 
+                            onclick="viewResearchMethod(${paper.id}, '${escapeHtml(paper.title || '').replace(/'/g, '\\\'')}')" 
+                            title="${paper.research_method && paper.research_method.trim() ? '查看研究方法 (已有内容)' : '查看研究方法 (暂无内容)'}"
+                            style="${paper.research_method && paper.research_method.trim() ? 'background: #10b981; color: white;' : ''}"
+                        >
+                            🔬
+                        </button>
+                                        <button class="btn-delete" onclick="deletePaper(${paper.id}, '${escapeHtml(paper.title || '').replace(/'/g, '\\\'')}')" title="删除论文">
+                                            🗑️
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         `).join('')}
@@ -1334,6 +1599,7 @@
                 is_top_venue: formData.get('is_top_venue') === 'true',
                 abstract: formData.get('abstract').trim() || null,
                 research_method: formData.get('research_method').trim() || null,
+                full_text: formData.get('full_text').trim() || null,
                 source: 'manual' // 标记为手动添加
             };
 
@@ -1384,6 +1650,209 @@
                 console.error('❌ 添加论文时发生错误:', error);
                 alert('添加失败: 网络错误，请稍后重试');
             }
+        }
+
+        // 查看论文研究方法
+        async function viewResearchMethod(paperId, paperTitle) {
+            try {
+                console.log(`🔬 查看论文研究方法: ID=${paperId}, 标题="${paperTitle}"`);
+                
+                // 显示加载状态
+                showResearchMethodModal();
+                document.getElementById('paperTitleDisplay').textContent = paperTitle;
+                document.getElementById('researchMethodDisplay').innerHTML = '<div class="loading"><div class="loading-spinner"></div>正在加载研究方法...</div>';
+                
+                // 获取论文详情
+                const response = await fetch(`/api/paper-cache/${paperId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`获取论文详情失败: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success && result.paper) {
+                    const paper = result.paper;
+                    currentEditingPaper = paper;
+                    originalResearchMethod = paper.research_method || '';
+                    
+                    // 更新模态框内容
+                    document.getElementById('paperTitleDisplay').textContent = paper.title || paperTitle;
+                    document.getElementById('researchMethodDisplay').textContent = paper.research_method || '暂无研究方法内容';
+                    document.getElementById('researchMethodEditor').value = paper.research_method || '';
+                    
+                    // 更新字符数
+                    updateCharacterCount(paper.research_method || '');
+                    
+                    // 更新最后更新时间
+                    const lastUpdated = paper.updated_at ? new Date(paper.updated_at).toLocaleString('zh-CN') : '未知';
+                    document.getElementById('lastUpdated').textContent = lastUpdated;
+                    
+                    // 重置编辑状态
+                    resetEditState();
+                    
+                } else {
+                    throw new Error(result.error || '获取论文详情失败');
+                }
+                
+            } catch (error) {
+                console.error('查看论文研究方法失败:', error);
+                document.getElementById('researchMethodDisplay').innerHTML = `<div style="color: red;">加载失败: ${error.message}</div>`;
+            }
+        }
+        
+        // 显示研究方法模态框
+        function showResearchMethodModal() {
+            document.getElementById('researchMethodModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // 阻止背景滚动
+        }
+        
+        // 关闭研究方法模态框
+        function closeResearchMethodModal() {
+            document.getElementById('researchMethodModal').style.display = 'none';
+            document.body.style.overflow = 'auto'; // 恢复背景滚动
+            currentEditingPaper = null;
+            originalResearchMethod = '';
+            resetEditState();
+        }
+        
+        // 切换编辑模式
+        function toggleEdit() {
+            const displayDiv = document.getElementById('researchMethodDisplay');
+            const editorTextarea = document.getElementById('researchMethodEditor');
+            const editBtn = document.getElementById('editBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            
+            // 切换到编辑模式
+            displayDiv.style.display = 'none';
+            editorTextarea.style.display = 'block';
+            editBtn.style.display = 'none';
+            saveBtn.style.display = 'inline-block';
+            cancelBtn.style.display = 'inline-block';
+            
+            // 聚焦到编辑器
+            editorTextarea.focus();
+            
+            // 监听文本变化
+            editorTextarea.oninput = function() {
+                updateCharacterCount(this.value);
+            };
+        }
+        
+        // 取消编辑
+        function cancelEdit() {
+            // 恢复原始内容
+            document.getElementById('researchMethodEditor').value = originalResearchMethod;
+            resetEditState();
+        }
+        
+        // 重置编辑状态
+        function resetEditState() {
+            const displayDiv = document.getElementById('researchMethodDisplay');
+            const editorTextarea = document.getElementById('researchMethodEditor');
+            const editBtn = document.getElementById('editBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            
+            displayDiv.style.display = 'block';
+            editorTextarea.style.display = 'none';
+            editBtn.style.display = 'inline-block';
+            saveBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            
+            // 移除事件监听
+            editorTextarea.oninput = null;
+        }
+        
+        // 保存研究方法
+        async function saveResearchMethod() {
+            if (!currentEditingPaper) {
+                alert('无法保存：未找到当前编辑的论文');
+                return;
+            }
+            
+            const token = getAuthToken();
+            if (!token) {
+                alert('请先登录再执行保存操作');
+                return;
+            }
+            
+            const newResearchMethod = document.getElementById('researchMethodEditor').value;
+            
+            // 检查是否有变化
+            if (newResearchMethod === originalResearchMethod) {
+                alert('内容没有变化');
+                resetEditState();
+                return;
+            }
+            
+            try {
+                console.log('💾 保存论文研究方法:', currentEditingPaper.title);
+                
+                // 显示保存状态
+                const saveBtn = document.getElementById('saveBtn');
+                const originalText = saveBtn.textContent;
+                saveBtn.textContent = '保存中...';
+                saveBtn.disabled = true;
+                
+                // 准备更新数据
+                const updateData = {
+                    ...currentEditingPaper,
+                    research_method: newResearchMethod
+                };
+                
+                // 发送更新请求
+                const response = await fetch('/api/paper-cache/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                if (!response.ok) {
+                    const errorResult = await response.json().catch(() => ({}));
+                    throw new Error(errorResult.error || `保存失败: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log('✅ 论文研究方法保存成功');
+                    
+                    // 更新显示内容
+                    document.getElementById('researchMethodDisplay').textContent = newResearchMethod || '暂无研究方法内容';
+                    originalResearchMethod = newResearchMethod;
+                    
+                    // 更新最后更新时间
+                    document.getElementById('lastUpdated').textContent = new Date().toLocaleString('zh-CN');
+                    
+                    // 重置编辑状态
+                    resetEditState();
+                    
+                    alert('论文研究方法保存成功！');
+                    
+                } else {
+                    throw new Error(result.error || '保存失败');
+                }
+                
+            } catch (error) {
+                console.error('保存论文研究方法失败:', error);
+                alert('保存失败: ' + error.message);
+            } finally {
+                // 恢复按钮状态
+                const saveBtn = document.getElementById('saveBtn');
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+        
+        // 更新字符数显示
+        function updateCharacterCount(text) {
+            const count = text ? text.length : 0;
+            document.getElementById('characterCount').textContent = `字符数: ${count.toLocaleString()}`;
         }
     </script>
 </body>
