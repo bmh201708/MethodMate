@@ -2242,8 +2242,10 @@ const fallbackSearch = async (query, limit = 10, filter_venues = false, excludeI
     
     return results.map(paper => ({
       ...paper,
-      download_sources: paper.download_sources ? JSON.parse(paper.download_sources) : null,
-      metadata: paper.metadata ? JSON.parse(paper.metadata) : null,
+      download_sources: paper.download_sources ? 
+        (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null,
+      metadata: paper.metadata ? 
+        (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
       relevance_score: 0.6
     }));
     
@@ -4595,11 +4597,13 @@ app.post('/api/paper-cache/search', optionalAuth, async (req, res) => {
 
     const [results] = await pool.execute(sqlQuery, params);
     
-    // 处理结果，解析JSON字段
+    // 处理结果，安全解析JSON字段
     const papers = results.map(paper => ({
       ...paper,
-      download_sources: paper.download_sources ? JSON.parse(paper.download_sources) : null,
-      metadata: paper.metadata ? JSON.parse(paper.metadata) : null,
+      download_sources: paper.download_sources ? 
+        (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null,
+      metadata: paper.metadata ? 
+        (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
       from_cache: true
     }));
 
@@ -4683,9 +4687,11 @@ app.get('/api/paper-cache/:id', optionalAuth, async (req, res) => {
 
     const paper = results[0];
     
-    // 解析JSON字段
-    paper.download_sources = paper.download_sources ? JSON.parse(paper.download_sources) : null;
-    paper.metadata = paper.metadata ? JSON.parse(paper.metadata) : null;
+    // 安全解析JSON字段
+    paper.download_sources = paper.download_sources ? 
+      (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null;
+    paper.metadata = paper.metadata ? 
+      (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null;
     paper.from_cache = true;
 
     res.json({
