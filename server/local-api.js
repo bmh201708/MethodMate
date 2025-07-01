@@ -1771,8 +1771,8 @@ app.post('/api/scholar-search', async (req, res) => {
     
     // 首先从本地缓存搜索
     console.log('🔍 首先从本地缓存搜索...');
-    const excludeIds = req.body.exclude_ids || []; // 从请求中获取要排除的论文ID
-    const excludeTitles = req.body.exclude_titles || []; // 从请求中获取要排除的论文标题
+    const excludeIds = []; // Scholar Search API不使用全局论文ID排除逻辑
+    const excludeTitles = []; // Scholar Search API不使用全局论文标题排除逻辑
     const cacheResults = await searchFromCache(query, num_results, filter_venues, excludeIds);
     console.log(`📚 本地缓存找到 ${cacheResults.length} 篇论文`);
     
