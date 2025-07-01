@@ -3464,10 +3464,12 @@ app.post('/api/paper/get-full-content', async (req, res) => {
         console.log('📝 开始提取研究方法...');
         researchMethod = await extractResearchMethod(fullText);
         
-        // 如果成功提取到研究方法，并且是从数据库获取的论文，更新数据库
-        if (researchMethod && fromCache && paperData) {
+        // 如果成功提取到研究方法，并且数据库中有此论文记录，更新数据库
+        // 注意：不再检查fromCache，只要数据库中有记录就应该允许更新
+        if (researchMethod && paperData) {
           try {
             await saveOrUpdatePaperResearchMethod(title, doi, researchMethod, paperData);
+            console.log('✅ 成功更新研究方法到数据库（论文已存在）');
           } catch (updateError) {
             console.warn('⚠️ 更新研究方法到数据库失败:', updateError.message);
           }
