@@ -1941,16 +1941,15 @@ app.post('/api/scholar-search', async (req, res) => {
             };
           });
 
-          // 合并结果，去重（基于标题）
+          // 合并结果，去重（基于标题）- 只比较本地搜索结果和外部API结果
           const existingTitles = new Set([
-            ...allResults.map(r => r.title.toLowerCase()),  // 本次搜索的缓存结果
-            ...excludeTitles.map(t => t.toLowerCase())      // 全局已显示的论文标题
+            ...allResults.map(r => r.title.toLowerCase())  // 仅本次搜索的缓存结果
           ]);
           const newResults = externalResults.filter(r => 
             r.title && !existingTitles.has(r.title.toLowerCase())
           );
           
-          console.log(`🔍 外部搜索去重：排除了 ${externalResults.length - newResults.length} 篇重复论文`);
+          console.log(`🔍 外部搜索去重：排除了 ${externalResults.length - newResults.length} 篇与本地缓存重复的论文`);
           
           allResults = allResults.concat(newResults);
           console.log(`🌐 外部搜索新增 ${newResults.length} 篇论文`);
@@ -3001,7 +3000,7 @@ Please respond in the following JSON format:
     // 第一步：优先从本地缓存搜索
     console.log('🔍 首先从本地缓存搜索推荐论文...');
     const excludeIds = req.body.exclude_ids || []; // 从请求中获取要排除的论文ID
-    const excludeTitles = req.body.exclude_titles || [];     // 根据use_local_cache参数决定是否搜索本地缓存
+    const excludeTitles = []; // 推荐API不使用全局论文标题排除逻辑
     let cacheResults = [];
     if (use_local_cache) {
       cacheResults = await searchFromCache(formattedSearchQuery, 5, filter_venues, excludeIds);
@@ -3090,10 +3089,9 @@ Please respond in the following JSON format:
         
         console.log('✅ 满足论文池使用条件，检查现有外部论文池，池中论文数:', externalPoolData.papers.length);
         
-        // 从论文池中筛选未显示的论文
+        // 从论文池中筛选未显示的论文 - 只比较本地搜索结果
         const existingTitles = new Set([
-          ...allPapers.map(r => r.title.toLowerCase()),  // 本次搜索的缓存结果
-          ...excludeTitles.map(t => t.toLowerCase())      // 全局已显示的论文标题
+          ...allPapers.map(r => r.title.toLowerCase())  // 仅本次搜索的缓存结果
         ]);
         
         const unusedPoolPapers = externalPoolData.papers.filter(paper => 
@@ -3303,16 +3301,15 @@ Please respond in the following JSON format:
            const action = externalPoolInfo?.action || 'creating_new_pool';
            console.log(`🏊‍♂️ ${action === 'creating_new_pool' ? '建立新的' : '扩展'}外部论文池，总共获取 ${externalResults.length} 篇论文`);
 
-           // 去重（基于标题）- 排除已显示的论文
+           // 去重（基于标题）- 只比较本地搜索结果和外部API结果
            const existingTitles = new Set([
-             ...allPapers.map(r => r.title.toLowerCase()),  // 本次搜索的缓存结果  
-             ...excludeTitles.map(t => t.toLowerCase())     // 全局已显示的论文标题
+             ...allPapers.map(r => r.title.toLowerCase())  // 仅本次搜索的缓存结果
            ]);
            const newResults = externalResults.filter(r => 
              r.title && !existingTitles.has(r.title.toLowerCase())
            );
            
-           console.log(`🔍 外部搜索去重：排除了 ${externalResults.length - newResults.length} 篇重复论文`);
+           console.log(`🔍 外部搜索去重：排除了 ${externalResults.length - newResults.length} 篇与本地缓存重复的论文`);
            
            // 如果正在扩展论文池且有现有论文池，需要合并
            let finalPool = newResults;
