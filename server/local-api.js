@@ -1313,6 +1313,166 @@ app.get('/api/health', (req, res) => {
 });
 
 // 从CORE API获取论文全文，添加重试机制和请求间隔
+// 优先从数据库获取论文全文，如果数据库中没有则从CORE API获取
+const getFullTextFromDatabaseFirst = async (title, doi = null, retries = 3, delay = 1000) => {
+  try {
+    console.log(`开始获取论文全文，标题: "${title}"${doi ? `，DOI: "${doi}"` : ''}`);
+    
+    // 第1步：优先从数据库中搜索论文全文
+    console.log('🔍 第1步：尝试从数据库获取论文全文...');
+    const cachedPaper = await searchPaperInDatabase(title, doi);
+    
+    if (cachedPaper && cachedPaper.full_text) {
+      console.log('✅ 从数据库成功获取论文全文');
+      return {
+        fullText: cachedPaper.full_text,
+        researchMethod: cachedPaper.research_method || null,
+        fromCache: true,
+        paperData: cachedPaper
+      };
+    } else if (cachedPaper) {
+      console.log('📄 数据库中找到论文但无全文，尝试从CORE API获取');
+    } else {
+      console.log('📄 数据库中未找到论文，尝试从CORE API获取');
+    }
+    
+    // 第2步：从CORE API获取全文
+    console.log('🌐 第2步：尝试从CORE API获取论文全文...');
+    const fullText = await getFullTextFromCore(title, doi, retries, delay);
+    
+    if (fullText) {
+      console.log('✅ 从CORE API成功获取论文全文');
+      
+      // 第3步：只有在数据库中已存在此论文时，才更新全文到数据库
+      if (cachedPaper) {
+        try {
+          await saveOrUpdatePaperFullText(title, doi, fullText, cachedPaper);
+        } catch (saveError) {
+          console.warn('⚠️ 保存全文到数据库失败，但不影响返回结果:', saveError.message);
+        }
+      } else {
+        console.log('📄 按照业务逻辑，不为新论文创建数据库记录');
+      }
+      
+      return {
+        fullText: fullText,
+        researchMethod: null,
+        fromCache: false,
+        paperData: cachedPaper
+      };
+    }
+    
+    console.log('❌ 未能获取到论文全文');
+    return null;
+  } catch (error) {
+    console.error('获取论文全文过程中发生错误:', error);
+    return null;
+  }
+};
+
+// 在数据库中搜索论文
+const searchPaperInDatabase = async (title, doi = null) => {
+  try {
+    const pool = getPool();
+    let query, params;
+    
+    if (doi) {
+      // 如果有DOI，优先使用DOI搜索（更精确）
+      query = `
+        SELECT * FROM paper_cache 
+        WHERE doi = ? OR title = ?
+        ORDER BY CASE 
+          WHEN doi = ? THEN 1 
+          WHEN title = ? THEN 2 
+          ELSE 3 
+        END
+        LIMIT 1
+      `;
+      params = [doi, title, doi, title];
+    } else {
+      // 如果没有DOI，只用标题搜索
+      query = `
+        SELECT * FROM paper_cache 
+        WHERE title = ?
+        LIMIT 1
+      `;
+      params = [title];
+    }
+    
+    const [results] = await pool.execute(query, params);
+    
+    if (results.length > 0) {
+      const paper = results[0];
+      console.log(`🔍 数据库搜索成功：${paper.title}，${paper.full_text ? '有全文' : '无全文'}，${paper.research_method ? '有研究方法' : '无研究方法'}`);
+      return paper;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('数据库搜索论文时出错:', error);
+    return null;
+  }
+};
+
+// 保存或更新论文全文到数据库（仅更新已存在的论文）
+const saveOrUpdatePaperFullText = async (title, doi, fullText, existingPaper = null) => {
+  try {
+    const pool = getPool();
+    
+    if (existingPaper) {
+      // 只更新现有论文的全文
+      console.log('📝 更新现有论文的全文...');
+      const [result] = await pool.execute(
+        `UPDATE paper_cache SET 
+         full_text = ?, 
+         updated_at = CURRENT_TIMESTAMP 
+         WHERE id = ?`,
+        [fullText, existingPaper.id]
+      );
+      
+      if (result.affectedRows > 0) {
+        console.log('✅ 成功更新论文全文到数据库');
+      }
+    } else {
+      // 数据库中没有此论文，按照新逻辑不创建新记录
+      console.log('📄 数据库中未找到此论文，按照业务逻辑不创建新记录');
+    }
+  } catch (error) {
+    console.error('更新论文全文到数据库失败:', error);
+    throw error;
+  }
+};
+
+// 保存或更新论文研究方法到数据库（仅更新已存在的论文）
+const saveOrUpdatePaperResearchMethod = async (title, doi, researchMethod, existingPaper = null) => {
+  try {
+    const pool = getPool();
+    
+    if (existingPaper) {
+      // 只更新现有论文的研究方法
+      console.log('📝 更新现有论文的研究方法...');
+      const [result] = await pool.execute(
+        `UPDATE paper_cache SET 
+         research_method = ?, 
+         updated_at = CURRENT_TIMESTAMP 
+         WHERE id = ?`,
+        [researchMethod, existingPaper.id]
+      );
+      
+      if (result.affectedRows > 0) {
+        console.log('✅ 成功更新论文研究方法到数据库');
+      }
+    } else {
+      // 数据库中没有此论文，按照新逻辑不创建新记录
+      console.log('📄 数据库中未找到此论文，按照业务逻辑不创建新记录');
+    }
+  } catch (error) {
+    console.error('更新论文研究方法到数据库失败:', error);
+    throw error;
+  }
+};
+
+// 保持原有的CORE API获取函数作为后备方案
 const getFullTextFromCore = async (title, doi = null, retries = 3, delay = 1000) => {
   try {
     console.log(`正在从CORE API获取论文全文，标题: "${title}"${doi ? `，DOI: "${doi}"` : ''}，剩余重试次数: ${retries}`);
@@ -1553,19 +1713,29 @@ const parseSemanticResponse = async (papers) => {
         // 标记为正在加载
         parsedPapers[paperIndex].isLoadingFullText = true;
         
-        // 异步获取全文，传递DOI信息
+        // 异步获取全文，优先从数据库，传递DOI信息
         const doi = paper.externalIds?.DOI || null;
-        const fullText = await getFullTextFromCore(paper.title, doi, 3, 1000);
+        const result = await getFullTextFromDatabaseFirst(paper.title, doi, 3, 1000);
         
-        if (fullText) {
-          console.log(`成功获取论文全文，开始提取研究方法: "${paper.title}"`);
-          parsedPapers[paperIndex].fullText = fullText;
+        if (result) {
+          const { fullText, researchMethod, fromCache } = result;
           
-          // 提取研究方法
-          const researchMethod = await extractResearchMethod(fullText);
-          if (researchMethod) {
-            console.log(`成功提取研究方法: "${paper.title}"`);
-            parsedPapers[paperIndex].researchMethod = researchMethod;
+          if (fullText) {
+            console.log(`成功获取论文全文${fromCache ? '（来自数据库）' : '（来自CORE API）'}: "${paper.title}"`);
+            parsedPapers[paperIndex].fullText = fullText;
+            
+            // 如果已有研究方法，直接使用
+            if (researchMethod) {
+              console.log(`获取到现有研究方法: "${paper.title}"`);
+              parsedPapers[paperIndex].researchMethod = researchMethod;
+            } else {
+              // 提取研究方法
+              const extractedMethod = await extractResearchMethod(fullText);
+              if (extractedMethod) {
+                console.log(`成功提取研究方法: "${paper.title}"`);
+                parsedPapers[paperIndex].researchMethod = extractedMethod;
+              }
+            }
           }
         }
       } catch (error) {
@@ -2410,12 +2580,22 @@ app.post('/api/paper/get-cached-method', async (req, res) => {
 
     console.log('获取缓存的研究方法，标题:', title);
     
-    // 这里可以实现缓存逻辑，目前直接尝试获取
-    const fullText = await getFullTextFromCore(title, doi, 1, 500); // 减少重试次数和延迟
+    // 优先从数据库获取，如果没有则从CORE API获取
+    const result = await getFullTextFromDatabaseFirst(title, doi, 1, 500); // 减少重试次数和延迟
     let methodSummary = null;
     
-    if (fullText) {
-      methodSummary = await extractResearchMethod(fullText);
+    if (result) {
+      const { fullText, researchMethod, fromCache } = result;
+      
+      if (researchMethod) {
+        // 如果数据库中已有研究方法，直接使用
+        methodSummary = researchMethod;
+        console.log(`使用缓存的研究方法: ${title}`);
+      } else if (fullText) {
+        // 如果只有全文，提取研究方法
+        methodSummary = await extractResearchMethod(fullText);
+        console.log(`从${fromCache ? '数据库' : 'CORE API'}获取全文并提取研究方法: ${title}`);
+      }
     }
     
     res.json({
@@ -3258,23 +3438,62 @@ app.post('/api/paper/get-full-content', async (req, res) => {
 
     console.log('开始获取论文全文和研究方法，标题:', title, doi ? `，DOI: ${doi}` : '');
     
-    // 获取全文，传递DOI参数
-    const fullText = await getFullTextFromCore(title, doi, 3, 1000);
-    let researchMethod = null;
+    // 优先从数据库获取全文，如果没有则从CORE API获取
+    const result = await getFullTextFromDatabaseFirst(title, doi, 3, 1000);
     
-    if (fullText) {
-      // 如果成功获取全文，尝试提取研究方法
-      researchMethod = await extractResearchMethod(fullText);
+    if (result) {
+      let { fullText, researchMethod, fromCache, paperData } = result;
+      
+      // 如果从数据库获取成功且已有研究方法，直接返回
+      if (fromCache && researchMethod) {
+        console.log('✅ 从数据库获取到完整信息（含研究方法）');
+        res.json({
+          success: true,
+          title: title,
+          doi: doi,
+          fullText: fullText,
+          researchMethod: researchMethod,
+          hasContent: true,
+          fromCache: true
+        });
+        return;
+      }
+      
+      // 如果没有研究方法，尝试提取
+      if (fullText && !researchMethod) {
+        console.log('📝 开始提取研究方法...');
+        researchMethod = await extractResearchMethod(fullText);
+        
+        // 如果成功提取到研究方法，并且是从数据库获取的论文，更新数据库
+        if (researchMethod && fromCache && paperData) {
+          try {
+            await saveOrUpdatePaperResearchMethod(title, doi, researchMethod, paperData);
+          } catch (updateError) {
+            console.warn('⚠️ 更新研究方法到数据库失败:', updateError.message);
+          }
+        }
+      }
+      
+      res.json({
+        success: true,
+        title: title,
+        doi: doi,
+        fullText: fullText,
+        researchMethod: researchMethod,
+        hasContent: true,
+        fromCache: fromCache
+      });
+    } else {
+      res.json({
+        success: false,
+        title: title,
+        doi: doi,
+        fullText: null,
+        researchMethod: null,
+        hasContent: false,
+        error: '未能获取到论文全文'
+      });
     }
-    
-    res.json({
-      success: true,
-      title: title,
-      doi: doi,
-      fullText: fullText,
-      researchMethod: researchMethod,
-      hasContent: !!fullText
-    });
   } catch (error) {
     console.error('获取论文内容错误:', error);
     
@@ -3352,16 +3571,32 @@ app.post('/api/test-core', async (req, res) => {
       return res.status(400).json({ error: '需要提供论文标题' });
     }
 
-    console.log('测试CORE API，搜索标题:', title, doi ? `，DOI: ${doi}` : '');
-    const fullText = await getFullTextFromCore(title, doi);
+    console.log('测试获取论文全文（优先数据库）：', title, doi ? `，DOI: ${doi}` : '');
+    const result = await getFullTextFromDatabaseFirst(title, doi);
     
-    res.json({
-      success: true,
-      title: title,
-      doi: doi,
-      fullText: fullText,
-      hasContent: !!fullText
-    });
+    if (result) {
+      const { fullText, researchMethod, fromCache } = result;
+      res.json({
+        success: true,
+        title: title,
+        doi: doi,
+        fullText: fullText,
+        researchMethod: researchMethod,
+        hasContent: !!fullText,
+        fromCache: fromCache
+      });
+    } else {
+      res.json({
+        success: false,
+        title: title,
+        doi: doi,
+        fullText: null,
+        researchMethod: null,
+        hasContent: false,
+        fromCache: false,
+        error: '未能获取到论文全文'
+      });
+    }
   } catch (error) {
     console.error('CORE API测试错误:', error);
     res.status(500).json({ 

@@ -2151,8 +2151,16 @@
                 return;
             }
             
+            // 获取提交按钮并保存原始文本
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
             try {
                 console.log('💾 开始保存论文编辑...');
+                
+                // 显示保存状态
+                submitBtn.textContent = '保存中...';
+                submitBtn.disabled = true;
                 
                 // 收集表单数据
                 const formData = new FormData(form);
@@ -2177,12 +2185,6 @@
                     full_text: formData.get('full_text')
                 };
                 
-                // 显示保存状态
-                const submitBtn = form.querySelector('button[type="submit"]');
-                const originalText = submitBtn.textContent;
-                submitBtn.textContent = '保存中...';
-                submitBtn.disabled = true;
-                
                 // 发送更新请求
                 const response = await fetch('/api/paper-cache/save', {
                     method: 'POST',
@@ -2203,6 +2205,10 @@
                 if (result.success) {
                     console.log('✅ 论文编辑保存成功');
                     
+                    // 先恢复按钮状态
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    
                     alert('论文信息保存成功！');
                     
                     // 关闭模态框
@@ -2218,13 +2224,10 @@
             } catch (error) {
                 console.error('保存论文编辑失败:', error);
                 alert('保存失败: ' + error.message);
-            } finally {
+                
                 // 恢复按钮状态
-                const submitBtn = form.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                }
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
             }
         }
 
