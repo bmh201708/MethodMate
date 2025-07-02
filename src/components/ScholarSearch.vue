@@ -307,6 +307,7 @@
 </template>
 
 <script>
+import { onMounted } from 'vue'
 import { 
   papersState,
   toggleReference, 
@@ -319,7 +320,8 @@ import {
   clearSearchResults,
   markPapersAsDisplayed,
   getDisplayedPaperIds,
-  getDisplayedPaperTitles
+  getDisplayedPaperTitles,
+  clearDisplayedPapers
 } from '@/stores/chatStore'
 
 export default {
@@ -336,6 +338,10 @@ export default {
     if (this.lastSearchQuery) {
       this.searchQuery = this.lastSearchQuery
     }
+    
+    // 清空已显示论文记录，确保搜索时重新开始去重
+    clearDisplayedPapers()
+    console.log('🔍 搜索页面加载时已清空已显示论文记录，重新开始搜索去重')
   },
   computed: {
     // 使用全局状态

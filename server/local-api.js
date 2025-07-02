@@ -3236,7 +3236,11 @@ Please respond in the following JSON format:
           }
         } catch (fetchError) {
           console.error('Semantic Scholar API请求失败:', fetchError);
-          throw fetchError;
+          // 不抛出错误，继续使用已有的本地缓存结果
+          console.log('⚠️ 外部搜索失败，将使用已有的本地缓存结果');
+          if (externalPoolInfo) {
+            externalPoolInfo.error = `外部搜索失败: ${fetchError.message}`;
+          }
         }
 
         // 解析响应
@@ -3248,11 +3252,15 @@ Please respond in the following JSON format:
           );
         } catch (jsonError) {
           console.error('解析Semantic Scholar API响应失败:', jsonError);
-          throw jsonError;
+          // 不抛出错误，继续使用已有的本地缓存结果
+          console.log('⚠️ 解析外部搜索响应失败，将使用已有的本地缓存结果');
+          if (externalPoolInfo) {
+            externalPoolInfo.error = `解析响应失败: ${jsonError.message}`;
+          }
         }
 
                  // 处理外部搜索结果并建立/扩展论文池
-         if (externalSearchResult.data && externalSearchResult.data.length > 0) {
+         if (externalSearchResult && externalSearchResult.data && externalSearchResult.data.length > 0) {
            const externalResults = externalSearchResult.data.map(paper => {
              const venue = paper.venue || '';
              

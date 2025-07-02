@@ -614,6 +614,22 @@ export const removePaper = (index) => {
     papersState.referencedPapersList = papersState.referencedPapersList.filter(p => p.id !== paperToRemove.id)
   }
   
+  // 【新增】从已显示记录中移除删除的论文
+  if (paperToRemove) {
+    // 如果有缓存ID，从已显示缓存ID记录中移除
+    if (paperToRemove.cache_id) {
+      papersState.displayedPapers.delete(paperToRemove.cache_id)
+      papersState.sessionDisplayedPapers.delete(paperToRemove.cache_id)
+    }
+    
+    // 从已显示标题记录中移除
+    if (paperToRemove.title) {
+      papersState.displayedPaperTitles.delete(paperToRemove.title.toLowerCase())
+    }
+    
+    console.log(`已从已显示记录中移除论文: ${paperToRemove.title}`)
+  }
+  
   papersState.recommendedPapers.splice(index, 1)
 }
 
@@ -622,6 +638,11 @@ export const clearAllPapers = () => {
   papersState.selectedPaper = null
   papersState.referencedPapers.clear()
   papersState.referencedPapersList = []
+  
+  // 【新增】清空已显示论文记录
+  clearDisplayedPapers()
+  
+  console.log('🧹 已清空所有论文列表和已显示记录')
 }
 
 export const clearReferences = async () => {
@@ -643,10 +664,22 @@ export const clearReferences = async () => {
     }
   }
   
+  // 【新增】从已显示记录中移除所有参考文献
+  papersState.referencedPapersList.forEach(paper => {
+    if (paper.cache_id) {
+      papersState.displayedPapers.delete(paper.cache_id)
+      papersState.sessionDisplayedPapers.delete(paper.cache_id)
+    }
+    
+    if (paper.title) {
+      papersState.displayedPaperTitles.delete(paper.title.toLowerCase())
+    }
+  })
+  
   // 清空前端状态
   papersState.referencedPapers.clear()
   papersState.referencedPapersList = []
-  console.log('已清空所有引用文献')
+  console.log('🧹 已清空所有引用文献和相关已显示记录')
 }
 
 export const removePaperFromReferences = async (paper) => {
@@ -662,6 +695,16 @@ export const removePaperFromReferences = async (paper) => {
   if (index > -1) {
     const referencedPaper = papersState.referencedPapersList[index]
     papersState.referencedPapersList.splice(index, 1)
+    
+    // 【新增】从已显示记录中移除删除的参考文献
+    if (referencedPaper.cache_id) {
+      papersState.displayedPapers.delete(referencedPaper.cache_id)
+      papersState.sessionDisplayedPapers.delete(referencedPaper.cache_id)
+    }
+    
+    if (referencedPaper.title) {
+      papersState.displayedPaperTitles.delete(referencedPaper.title.toLowerCase())
+    }
     
     // 如果用户已登录且论文有数据库ID，从数据库删除
     if (isUserAuthenticated() && referencedPaper.databaseId) {
@@ -713,7 +756,11 @@ export const clearSearchResults = () => {
   papersState.searchResults = []
   papersState.lastSearchQuery = ''
   papersState.searchError = null
-  console.log('清空搜索结果')
+  
+  // 【新增】清空已显示论文记录，允许重新搜索相同论文
+  clearDisplayedPapers()
+  
+  console.log('🧹 已清空搜索结果和已显示记录，可重新搜索')
 }
 
 // 发送消息的方法
