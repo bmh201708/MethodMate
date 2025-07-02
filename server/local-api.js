@@ -596,24 +596,35 @@ const processTextInChunks = async (text, retries = 3) => {
     
     console.log(`✅ 成功处理 ${results.length}/${chunks.length} 个文本块，文本块编号: [${successfulChunks.join(', ')}]`);
     
-    // 合并所有结果
-    const combinedResult = results.join('\n\n--- 分段提取结果合并 ---\n\n');
-    console.log(`📋 合并结果长度: ${combinedResult.length} 字符`);
+    // 智能合并所有结果
+    console.log(`📋 开始智能合并 ${results.length} 个分段提取结果...`);
     
-    // 如果合并后的结果过长，生成简洁摘要
-    if (combinedResult.length > MAX_CHUNK_LENGTH * 1.5) {
-      console.log(`⚠️ 合并结果过长(${combinedResult.length}字符)，生成简洁摘要...`);
-      const summary = await generateMethodSummary(combinedResult);
-      if (summary) {
-        console.log(`✅ 摘要生成成功，长度: ${summary.length} 字符`);
-        return summary;
-      } else {
-        console.log('⚠️ 摘要生成失败，返回原始合并结果的前半部分');
-        return combinedResult.substring(0, MAX_CHUNK_LENGTH) + '\n\n[内容过长，已截断]';
+    const intelligentMergedResult = await intelligentMergeResults(results);
+    
+    if (intelligentMergedResult) {
+      console.log(`✅ 智能合并成功，长度: ${intelligentMergedResult.length} 字符`);
+      return intelligentMergedResult;
+    } else {
+      console.log('⚠️ 智能合并失败，使用简单合并作为备用');
+      // 备用方案：简单合并
+      const combinedResult = results.join('\n\n--- 分段提取结果合并 ---\n\n');
+      console.log(`📋 简单合并结果长度: ${combinedResult.length} 字符`);
+      
+      // 如果合并后的结果过长，生成简洁摘要
+      if (combinedResult.length > MAX_CHUNK_LENGTH * 1.5) {
+        console.log(`⚠️ 合并结果过长(${combinedResult.length}字符)，生成简洁摘要...`);
+        const summary = await generateMethodSummary(combinedResult);
+        if (summary) {
+          console.log(`✅ 摘要生成成功，长度: ${summary.length} 字符`);
+          return summary;
+        } else {
+          console.log('⚠️ 摘要生成失败，返回原始合并结果的前半部分');
+          return combinedResult.substring(0, MAX_CHUNK_LENGTH) + '\n\n[内容过长，已截断]';
+        }
       }
+      
+      return combinedResult;
     }
-    
-    return combinedResult;
   } catch (error) {
     console.error('❌ 分段处理文本时出错:', error);
     return null;
@@ -968,6 +979,139 @@ const locateMethodSection = (fullText) => {
     
   } catch (error) {
     console.error('定位方法部分时出错:', error);
+    return null;
+  }
+};
+
+// 智能合并多个分段提取结果的函数
+const intelligentMergeResults = async (results, retries = 3) => {
+  try {
+    if (!results || !Array.isArray(results) || results.length === 0) {
+      console.log('⚠️ 没有有效的分段结果需要合并');
+      return null;
+    }
+
+    if (results.length === 1) {
+      console.log('📋 只有一个分段结果，无需合并');
+      return results[0];
+    }
+
+    console.log(`🔄 开始智能合并 ${results.length} 个分段提取结果...`);
+
+    // 构建合并提示词
+    const mergePrompt = `你是一位研究方法专家。我有 ${results.length} 个从同一篇学术论文的不同部分提取的研究方法片段，请将它们智能合并成一个完整、连贯的研究方法总结。
+
+**要求：**
+1. 严格按照以下四部分框架输出最终结果
+2. 合并时去除重复内容，整合相关信息
+3. 保持信息的准确性和完整性
+4. 如果某个框架部分在所有片段中都没有信息，输出"未明确说明"
+5. 不要添加任何问候语、交流性语言或解释性说明
+6. 直接输出合并后的内容，不要包含"合并结果"等前缀
+
+**最终输出格式：**
+## 研究假设
+[合并整理后的研究假设内容]
+
+## 实验设计  
+[合并整理后的实验设计内容]
+
+## 数据分析
+[合并整理后的数据分析方法]
+
+## 结果呈现
+[合并整理后的结果呈现方式]
+
+**待合并的研究方法片段：**
+
+${results.map((result, index) => `
+=== 片段 ${index + 1} ===
+${result}
+`).join('\n')}
+
+请智能合并这些片段，生成统一的研究方法总结。`;
+
+    console.log('📤 发送智能合并请求到Coze API...');
+    const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${COZE_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        bot_id: COZE_BOT_ID,
+        user: COZE_USER_ID,
+        query: mergePrompt,
+        stream: false,
+        conversation_id: `merge_method_${Date.now()}`
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Coze API responded with status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    let mergedText = '';
+    
+    if (result.messages && Array.isArray(result.messages)) {
+      const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
+      if (answerMessages.length > 0) {
+        mergedText = answerMessages[0].content;
+      }
+    } else if (result.answer) {
+      mergedText = result.answer;
+    }
+
+    if (mergedText.toLowerCase().includes("i'm sorry") || 
+        mergedText.toLowerCase().includes("cannot assist") ||
+        mergedText.toLowerCase().includes("can't assist") ||
+        mergedText.toLowerCase().includes("抱歉") ||
+        mergedText.toLowerCase().includes("无法协助")) {
+      console.log('Coze拒绝响应智能合并请求');
+      return null;
+    }
+
+    if (!mergedText) {
+      throw new Error('未能从Coze响应中获取合并结果');
+    }
+
+    // 清理响应内容，移除不必要的前缀和后缀
+    mergedText = mergedText
+      .replace(/^(以下是合并结果|合并结果如下|智能合并结果|最终合并结果)[：:：]?\s*/i, '')
+      .replace(/^(Here is the merged result:|The merged result is:|Final merged result:)/i, '')
+      .replace(/希望这个合并结果.*$/i, '')
+      .replace(/如有.*问题.*请.*$/i, '')
+      .replace(/以上是.*合并.*结果.*$/i, '')
+      .trim();
+
+    // 验证是否包含四部分框架的基本结构
+    const hasFrameworkStructure = mergedText.includes('## 研究假设') || 
+                                 mergedText.includes('## 实验设计') || 
+                                 mergedText.includes('## 数据分析') || 
+                                 mergedText.includes('## 结果呈现');
+
+    if (!hasFrameworkStructure && mergedText.length > 50) {
+      console.log('⚠️ 智能合并响应未按照框架格式，但内容有效，保留原始内容');
+    }
+
+    // 验证合并结果的质量
+    if (mergedText.length < results.join('').length * 0.3) {
+      console.log('⚠️ 合并结果明显过短，可能信息丢失严重，建议使用备用方案');
+      return null;
+    }
+
+    console.log(`✅ 智能合并成功，原始片段总长度: ${results.join('').length}，合并后长度: ${mergedText.length}`);
+    return mergedText;
+
+  } catch (error) {
+    if (retries > 0) {
+      console.log(`❌ 智能合并失败，${error.message}，剩余重试次数: ${retries - 1}`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return intelligentMergeResults(results, retries - 1);
+    }
+    console.error('❌ 智能合并最终失败:', error);
     return null;
   }
 };
