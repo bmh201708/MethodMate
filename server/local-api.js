@@ -232,20 +232,32 @@ const extractResearchMethod = async (fullText, retries = 3) => {
 // 处理完整文本块
 const processFullText = async (text, retries = 3) => {
   try {
-    const prompt = `You are a research methodology expert. Your task is to identify and extract the methodology section from this academic paper.
+    const prompt = `你是一位研究方法专家。请从以下学术论文中提炼研究方法，按照固定的四部分框架整理输出。
 
-Look for sections that describe:
-1. Research design or methodology
-2. Data collection methods
-3. Analysis procedures
-4. Experimental setup
+**要求：**
+1. 严格按照以下四部分框架输出
+2. 只提炼和精炼原文的定量研究方法内容
+3. 不要添加任何问候语、交流性语言或解释性说明
+4. 如果某部分在原文中没有明确内容，该部分输出"未明确说明"
+5. 直接输出内容，不要包含"以下是提炼结果"等前缀
 
-Simply locate and extract these sections from the text. If you find them, return the relevant text passages. If you don't find explicit methodology sections, return null.
+**输出格式：**
+## 研究假设
+[从原文中提炼的研究假设内容]
 
-Paper text:
+## 实验设计  
+[从原文中提炼的实验设计内容]
+
+## 数据分析
+[从原文中提炼的数据分析方法]
+
+## 结果呈现
+[从原文中提炼的结果呈现方式]
+
+**论文文本：**
 ${text}
 
-Remember: Just extract and return the relevant text. No need to analyze, summarize, or modify it.`;
+请严格按照上述格式提炼研究方法。`;
 
     console.log('使用Coze API提取研究方法...');
     const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
@@ -282,7 +294,9 @@ Remember: Just extract and return the relevant text. No need to analyze, summari
 
     if (methodText.toLowerCase().includes("i'm sorry") || 
         methodText.toLowerCase().includes("cannot assist") ||
-        methodText.toLowerCase().includes("can't assist")) {
+        methodText.toLowerCase().includes("can't assist") ||
+        methodText.toLowerCase().includes("抱歉") ||
+        methodText.toLowerCase().includes("无法协助")) {
       console.log('Coze拒绝响应，尝试使用备用方法');
       return await generateMethodSummary(text);
     }
@@ -291,9 +305,24 @@ Remember: Just extract and return the relevant text. No need to analyze, summari
       throw new Error('未能从Coze响应中提取研究方法');
     }
 
+    // 清理响应内容，移除不必要的前缀和后缀
     methodText = methodText
+      .replace(/^(以下是提炼结果|研究方法提炼结果|根据论文内容提炼如下|提炼的研究方法如下)[：:：]?\s*/i, '')
       .replace(/^(Here is the research methodology section:|I've extracted the research methodology section:|The research methodology section is as follows:)/i, '')
+      .replace(/希望这个提炼结果.*$/i, '')
+      .replace(/如有.*问题.*请.*$/i, '')
+      .replace(/以上是.*研究方法.*$/i, '')
       .trim();
+
+    // 验证是否包含四部分框架的基本结构
+    const hasFrameworkStructure = methodText.includes('## 研究假设') || 
+                                 methodText.includes('## 实验设计') || 
+                                 methodText.includes('## 数据分析') || 
+                                 methodText.includes('## 结果呈现');
+
+    if (!hasFrameworkStructure && methodText.length > 50) {
+      console.log('响应未按照框架格式，但内容有效，保留原始内容');
+    }
 
     return methodText;
   } catch (error) {
@@ -603,8 +632,11 @@ const locateMethodSection = (fullText) => {
       'research methodology', 'data collection', 'procedure', 'experimental setup',
       'research approach', 'study design', 'research procedure', 'materials and methods',
       'data analysis', 'statistical analysis', 'statistical method', 'analytical approach',
+      'hypothesis', 'hypotheses', 'research questions', 'research objectives',
+      'experimental procedure', 'data processing', 'statistical approach',
       '方法', '研究方法', '实验方法', '实验设计', '研究设计', '数据收集', '实验程序',
-      '数据分析', '统计分析', '统计方法', '分析方法'
+      '数据分析', '统计分析', '统计方法', '分析方法', '研究假设', '实验假设',
+      '研究问题', '研究目标', '实验流程', '数据处理', '统计策略'
     ];
     
     // 定义方法相关的关键词（用于段落内容检测）
@@ -614,9 +646,15 @@ const locateMethodSection = (fullText) => {
       'statistical analysis', 'research design', 'study design', 'method',
       'quantitative', 'qualitative', 'experimental', 'control group', 'treatment',
       'variable', 'hypothesis', 'regression', 'correlation', 'anova', 't-test',
+      'randomized', 'factorial design', 'repeated measures', 'between-subjects',
+      'within-subjects', 'power analysis', 'effect size', 'significance level',
+      'null hypothesis', 'alternative hypothesis', 'independent variable', 'dependent variable',
+      'spss', 'r software', 'stata', 'reliability', 'validity', 'cronbach alpha',
       '参与者', '程序', '测量', '分析', '收集数据', '样本', '实验', '调查', '访谈',
       '问卷', '观察', '统计分析', '研究设计', '研究方法', '定量', '定性', '实验组',
-      '对照组', '变量', '假设', '回归', '相关', '方差分析', 't检验'
+      '对照组', '变量', '假设', '回归', '相关', '方差分析', 't检验',
+      '随机化', '因子设计', '重复测量', '组间', '组内', '效力分析', '效应量',
+      '显著性水平', '零假设', '备择假设', '自变量', '因变量', '信度', '效度'
     ];
     
     // 改进的段落分割策略：支持多种分割模式
@@ -941,18 +979,32 @@ const generateMethodSummary = async (fullText) => {
       return null;
     }
 
-    const prompt = `As a research assistant, help me understand the methodology used in this paper. 
-Please read the text and create a brief summary of the research methods used.
-Focus on identifying:
-- The type of research (e.g., experimental, survey, case study)
-- Data collection methods
-- Analysis approaches
-- Key methodological steps
+    const prompt = `你是一位研究方法专家。请从以下学术论文中提炼研究方法，按照固定的四部分框架整理输出。
 
-Text:
+**要求：**
+1. 严格按照以下四部分框架输出
+2. 只提炼和精炼原文的定量研究方法内容
+3. 不要添加任何问候语、交流性语言或解释性说明
+4. 如果某部分在原文中没有明确内容，该部分输出"未明确说明"
+5. 直接输出内容，不要包含"以下是提炼结果"等前缀
+
+**输出格式：**
+## 研究假设
+[从原文中提炼的研究假设内容]
+
+## 实验设计  
+[从原文中提炼的实验设计内容]
+
+## 数据分析
+[从原文中提炼的数据分析方法]
+
+## 结果呈现
+[从原文中提炼的结果呈现方式]
+
+**论文文本：**
 ${fullText}
 
-Please provide a concise summary of the methodology.`;
+请严格按照上述格式提炼研究方法。`;
 
     console.log('使用备用方法生成研究方法概要...');
     const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
@@ -990,11 +1042,32 @@ Please provide a concise summary of the methodology.`;
     if (!summaryText || 
         summaryText.toLowerCase().includes("i'm sorry") || 
         summaryText.toLowerCase().includes("cannot assist") ||
-        summaryText.toLowerCase().includes("can't assist")) {
+        summaryText.toLowerCase().includes("can't assist") ||
+        summaryText.toLowerCase().includes("抱歉") ||
+        summaryText.toLowerCase().includes("无法协助")) {
       return null;
     }
 
-    return summaryText.trim();
+    // 清理响应内容，移除不必要的前缀和后缀
+    summaryText = summaryText
+      .replace(/^(以下是提炼结果|研究方法提炼结果|根据论文内容提炼如下|提炼的研究方法如下)[：:：]?\s*/i, '')
+      .replace(/^(Here is the research methodology section:|I've extracted the research methodology section:|The research methodology section is as follows:)/i, '')
+      .replace(/希望这个提炼结果.*$/i, '')
+      .replace(/如有.*问题.*请.*$/i, '')
+      .replace(/以上是.*研究方法.*$/i, '')
+      .trim();
+
+    // 验证是否包含四部分框架的基本结构
+    const hasFrameworkStructure = summaryText.includes('## 研究假设') || 
+                                 summaryText.includes('## 实验设计') || 
+                                 summaryText.includes('## 数据分析') || 
+                                 summaryText.includes('## 结果呈现');
+
+    if (!hasFrameworkStructure && summaryText.length > 50) {
+      console.log('备用方法响应未按照框架格式，但内容有效，保留原始内容');
+    }
+
+    return summaryText;
   } catch (error) {
     console.error('生成研究方法概要失败:', error);
     return null;
