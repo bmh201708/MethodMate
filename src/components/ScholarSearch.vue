@@ -317,11 +317,7 @@ import {
   setSearchLoading,
   setSearchError,
   updateSearchFilters,
-  clearSearchResults,
-  markPapersAsDisplayed,
-  getDisplayedPaperIds,
-  getDisplayedPaperTitles,
-  clearDisplayedPapers
+  clearSearchResults
 } from '@/stores/chatStore'
 
 export default {
@@ -338,10 +334,6 @@ export default {
     if (this.lastSearchQuery) {
       this.searchQuery = this.lastSearchQuery
     }
-    
-    // 清空已显示论文记录，确保搜索时重新开始去重
-    clearDisplayedPapers()
-    console.log('🔍 搜索页面加载时已清空已显示论文记录，重新开始搜索去重')
   },
   computed: {
     // 使用全局状态
@@ -431,12 +423,8 @@ export default {
       setSearchError(null)
 
       try {
-        // 收集已显示的论文ID和标题，避免重复搜索
-        const excludeIds = getDisplayedPaperIds()
-        const excludeTitles = getDisplayedPaperTitles()
-        
-        console.log('排除已显示的论文ID:', excludeIds)
-        console.log('排除已显示的论文标题:', excludeTitles)
+        // 搜索功能不需要去重，每次搜索都是新的结果
+        console.log('📝 开始新的学术搜索，不使用去重逻辑')
 
         // 检查搜索论文池状态（搜索功能使用独立的论文池逻辑）
         const currentSearchQuery = this.searchQuery.trim()
@@ -458,9 +446,7 @@ export default {
           body: JSON.stringify({
             query: currentSearchQuery,
             num_results: requestedCount,
-            filter_venues: !this.filterTopVenues, // 默认只获取顶会顶刊，勾选扩大范围后获取所有文献
-            exclude_ids: excludeIds, // 传递要排除的论文ID
-            exclude_titles: excludeTitles // 传递要排除的论文标题
+            filter_venues: !this.filterTopVenues // 默认只获取顶会顶刊，勾选扩大范围后获取所有文献
           })
         })
 
@@ -478,9 +464,6 @@ export default {
           
           // 保存到全局状态
           setSearchResults(processedResults, this.searchQuery)
-          
-          // 标记新搜索的论文为已显示
-          markPapersAsDisplayed(processedResults)
           
           console.log('搜索结果已保存到全局状态:', processedResults)
           console.log(`📊 搜索统计: 缓存命中 ${data.cache_hits || 0} 篇, 外部获取 ${data.external_hits || 0} 篇`)

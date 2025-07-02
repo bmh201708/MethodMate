@@ -1771,9 +1771,8 @@ app.post('/api/scholar-search', async (req, res) => {
     
     // 首先从本地缓存搜索
     console.log('🔍 首先从本地缓存搜索...');
-    const excludeIds = req.body.exclude_ids || []; // 从请求中获取要排除的论文ID
-    const excludeTitles = req.body.exclude_titles || []; // 从请求中获取要排除的论文标题
-    const cacheResults = await searchFromCache(query, num_results, filter_venues, excludeIds);
+    // Scholar Search 不需要去重，每次搜索都是新的结果
+    const cacheResults = await searchFromCache(query, num_results, filter_venues, []);
     console.log(`📚 本地缓存找到 ${cacheResults.length} 篇论文`);
     
     let allResults = [];
@@ -1941,16 +1940,15 @@ app.post('/api/scholar-search', async (req, res) => {
             };
           });
 
-          // 合并结果，去重（基于标题）- 比较本地搜索结果、外部API结果和全局已显示论文
+          // 合并结果，去重（基于标题）- 只比较本次搜索的本地缓存结果，不考虑全局已显示论文
           const existingTitles = new Set([
-            ...allResults.map(r => r.title.toLowerCase()),  // 本次搜索的缓存结果
-            ...excludeTitles.map(t => t.toLowerCase())       // 全局已显示的论文标题
+            ...allResults.map(r => r.title.toLowerCase())  // 仅本次搜索的缓存结果
           ]);
           const newResults = externalResults.filter(r => 
             r.title && !existingTitles.has(r.title.toLowerCase())
           );
           
-          console.log(`🔍 外部搜索去重：排除了 ${externalResults.length - newResults.length} 篇重复论文（与本地缓存或已显示论文重复）`);
+          console.log(`🔍 外部搜索去重：排除了 ${externalResults.length - newResults.length} 篇与本地缓存重复的论文`);
           
           allResults = allResults.concat(newResults);
           console.log(`🌐 外部搜索新增 ${newResults.length} 篇论文`);
