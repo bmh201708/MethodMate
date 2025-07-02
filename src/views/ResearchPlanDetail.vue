@@ -3,11 +3,11 @@
     <main class="flex-1 max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="grid grid-cols-12 gap-8">
         <!-- 左侧聊天框 -->
-        <div class="col-span-5 h-[calc(100vh-8rem)]">
+        <div class="col-span-5 h-[calc(100vh-10rem)]">
           <ChatBox ref="chatBoxRef" pageContext="research-plan" />
           
           <!-- 生成研究方案按钮 -->
-          <div class="mt-4">
+          <div class="mt-1">
             <button
               @click="showResearchPlanDialog"
               :disabled="isGenerating"

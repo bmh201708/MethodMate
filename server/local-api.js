@@ -2509,11 +2509,13 @@ const parseKeywordsFromCozeResponse = (reply) => {
       try {
         const jsonData = JSON.parse(jsonStr);
         if (jsonData.keywords && Array.isArray(jsonData.keywords)) {
-          // 使用逗号分隔关键词，保留短语结构
+          // 只取前1-2个关键词，确保是英文，并使用逗号分隔
           const keywords = jsonData.keywords
             .filter(kw => kw && typeof kw === 'string' && kw.trim().length > 0)
+            .filter(kw => /^[a-zA-Z\s\-]+$/.test(kw.trim())) // 只保留英文关键词（包含空格和连字符）
+            .slice(0, 2) // 只取前2个关键词
             .join(','); // 使用逗号而不是空格
-          console.log('从JSON中提取的关键词(逗号分隔):', keywords);
+          console.log('从JSON中提取的关键词(逗号分隔,1-2个英文):', keywords);
           return keywords;
         }
       } catch (jsonError) {
@@ -2526,8 +2528,13 @@ const parseKeywordsFromCozeResponse = (reply) => {
                           reply.match(/keywords[:：]\s*([^\n]+)/i) ||
                           reply.match(/key\s*words[:：]\s*([^\n]+)/i);
     if (keywordsMatch && keywordsMatch[1]) {
-      const textKeywords = keywordsMatch[1].trim();
-      console.log('从文本中提取的关键词:', textKeywords);
+      const textKeywords = keywordsMatch[1].trim()
+        .split(/[,，]/) // 按逗号分隔
+        .map(kw => kw.trim())
+        .filter(kw => kw.length > 0 && /^[a-zA-Z\s\-]+$/.test(kw)) // 只保留英文关键词
+        .slice(0, 2) // 只取前2个关键词
+        .join(',');
+      console.log('从文本中提取的关键词(1-2个英文):', textKeywords);
       return textKeywords;
     }
     
@@ -2536,9 +2543,10 @@ const parseKeywordsFromCozeResponse = (reply) => {
     if (listMatches && listMatches.length > 0) {
       const listKeywords = listMatches
         .map(item => item.replace(/^\d+\.\s*/, '').trim())
-        .filter(kw => kw.length > 0)
-        .join(' ');
-      console.log('从列表中提取的关键词:', listKeywords);
+        .filter(kw => kw.length > 0 && /^[a-zA-Z\s\-]+$/.test(kw)) // 只保留英文关键词
+        .slice(0, 2) // 只取前2个关键词
+        .join(',');
+      console.log('从列表中提取的关键词(1-2个英文):', listKeywords);
       return listKeywords;
     }
     
@@ -2547,11 +2555,11 @@ const parseKeywordsFromCozeResponse = (reply) => {
       .replace(/[^\w\s]/g, ' ')
       .split(/\s+/)
       .filter(word => word.length > 3 && /^[a-zA-Z]+$/.test(word)) // 只保留纯英文且长度>3的词
-      .slice(0, 10)
-      .join(' ');
+      .slice(0, 2) // 只取前2个关键词
+      .join(','); // 使用逗号分隔
     
     if (words.length > 0) {
-      console.log('从文本中提取的英文单词作为关键词:', words);
+      console.log('从文本中提取的英文单词作为关键词(1-2个):', words);
       return words;
     }
     
@@ -2617,13 +2625,14 @@ app.post('/api/extract-keywords', async (req, res) => {
     console.log('关键词提取API被调用');
     
     // 构建关键词提取消息
-    let messageContent = `Please analyze the following text and extract 2-3 key academic search terms. 
-Focus on specific technical terms, methodologies, and core concepts.
+    let messageContent = `Please analyze the following text and extract 1-2 key academic search terms in English. 
+Focus on the most important and specific technical terms, methodologies, and core concepts.
+The keywords MUST be in English only.
 
 Please respond in the following JSON format:
 \`\`\`json
 {
-  "keywords": ["keyword1", "keyword2", "keyword3"]
+  "keywords": ["keyword1", "keyword2"]
 }
 \`\`\`
 
@@ -2790,13 +2799,14 @@ app.post('/api/semantic-recommend', async (req, res) => {
       console.log('从聊天历史中提取关键词');
       
       // 构建关键词提取消息
-      let messageContent = `Please analyze the following text and extract 2-3 key academic search terms. 
-Focus on specific technical terms, methodologies, and core concepts.
+      let messageContent = `Please analyze the following text and extract 1-2 key academic search terms in English. 
+Focus on the most important and specific technical terms, methodologies, and core concepts.
+The keywords MUST be in English only.
 
 Please respond in the following JSON format:
 \`\`\`json
 {
-  "keywords": ["keyword1", "keyword2", "keyword3"]
+  "keywords": ["keyword1", "keyword2"]
 }
 \`\`\`
 
