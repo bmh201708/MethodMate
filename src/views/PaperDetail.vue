@@ -497,7 +497,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ChatBox from '../components/ChatBox.vue'
 import { marked } from 'marked'
@@ -520,7 +520,8 @@ import {
   getDisplayedPaperIds,
   getDisplayedPaperTitles,
   clearExternalPaperPool,
-  getExternalPoolStatus
+  getExternalPoolStatus,
+  clearDisplayedPapers
 } from '../stores/chatStore'
 
 // 配置marked安全选项
@@ -572,6 +573,13 @@ const updateExternalPoolStatus = () => {
 
 // 初始化时更新状态
 updateExternalPoolStatus()
+
+// 页面加载时清空已显示论文记录，确保重新开始推荐
+onMounted(() => {
+  clearDisplayedPapers()
+  updateExternalPoolStatus()
+  console.log('🔄 页面加载时已清空已显示论文记录，重新开始推荐')
+})
 
 // 清空外部论文池
 const clearExternalPool = () => {
