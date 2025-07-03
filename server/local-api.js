@@ -232,20 +232,32 @@ const extractResearchMethod = async (fullText, retries = 3) => {
 // 处理完整文本块
 const processFullText = async (text, retries = 3) => {
   try {
-    const prompt = `You are a research methodology expert. Your task is to identify and extract the methodology section from this academic paper.
+    const prompt = `你是一位研究方法专家。请从以下学术论文中提炼研究方法，按照固定的四部分框架整理输出。
 
-Look for sections that describe:
-1. Research design or methodology
-2. Data collection methods
-3. Analysis procedures
-4. Experimental setup
+**要求：**
+1. 严格按照以下四部分框架输出
+2. 只提炼和精炼原文的定量研究方法内容
+3. 不要添加任何问候语、交流性语言或解释性说明
+4. 如果某部分在原文中没有明确内容，该部分输出"未明确说明"
+5. 直接输出内容，不要包含"以下是提炼结果"等前缀
 
-Simply locate and extract these sections from the text. If you find them, return the relevant text passages. If you don't find explicit methodology sections, return null.
+**输出格式：**
+## 研究假设
+[从原文中提炼的研究假设内容]
 
-Paper text:
+## 实验设计  
+[从原文中提炼的实验设计内容]
+
+## 数据分析
+[从原文中提炼的数据分析方法]
+
+## 结果呈现
+[从原文中提炼的结果呈现方式]
+
+**论文文本：**
 ${text}
 
-Remember: Just extract and return the relevant text. No need to analyze, summarize, or modify it.`;
+请严格按照上述格式提炼研究方法。`;
 
     console.log('使用Coze API提取研究方法...');
     const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
@@ -282,7 +294,9 @@ Remember: Just extract and return the relevant text. No need to analyze, summari
 
     if (methodText.toLowerCase().includes("i'm sorry") || 
         methodText.toLowerCase().includes("cannot assist") ||
-        methodText.toLowerCase().includes("can't assist")) {
+        methodText.toLowerCase().includes("can't assist") ||
+        methodText.toLowerCase().includes("抱歉") ||
+        methodText.toLowerCase().includes("无法协助")) {
       console.log('Coze拒绝响应，尝试使用备用方法');
       return await generateMethodSummary(text);
     }
@@ -291,9 +305,24 @@ Remember: Just extract and return the relevant text. No need to analyze, summari
       throw new Error('未能从Coze响应中提取研究方法');
     }
 
+    // 清理响应内容，移除不必要的前缀和后缀
     methodText = methodText
+      .replace(/^(以下是提炼结果|研究方法提炼结果|根据论文内容提炼如下|提炼的研究方法如下)[：:：]?\s*/i, '')
       .replace(/^(Here is the research methodology section:|I've extracted the research methodology section:|The research methodology section is as follows:)/i, '')
+      .replace(/希望这个提炼结果.*$/i, '')
+      .replace(/如有.*问题.*请.*$/i, '')
+      .replace(/以上是.*研究方法.*$/i, '')
       .trim();
+
+    // 验证是否包含四部分框架的基本结构
+    const hasFrameworkStructure = methodText.includes('## 研究假设') || 
+                                 methodText.includes('## 实验设计') || 
+                                 methodText.includes('## 数据分析') || 
+                                 methodText.includes('## 结果呈现');
+
+    if (!hasFrameworkStructure && methodText.length > 50) {
+      console.log('响应未按照框架格式，但内容有效，保留原始内容');
+    }
 
     return methodText;
   } catch (error) {
@@ -567,24 +596,35 @@ const processTextInChunks = async (text, retries = 3) => {
     
     console.log(`✅ 成功处理 ${results.length}/${chunks.length} 个文本块，文本块编号: [${successfulChunks.join(', ')}]`);
     
-    // 合并所有结果
-    const combinedResult = results.join('\n\n--- 分段提取结果合并 ---\n\n');
-    console.log(`📋 合并结果长度: ${combinedResult.length} 字符`);
+    // 智能合并所有结果
+    console.log(`📋 开始智能合并 ${results.length} 个分段提取结果...`);
     
-    // 如果合并后的结果过长，生成简洁摘要
-    if (combinedResult.length > MAX_CHUNK_LENGTH * 1.5) {
-      console.log(`⚠️ 合并结果过长(${combinedResult.length}字符)，生成简洁摘要...`);
-      const summary = await generateMethodSummary(combinedResult);
-      if (summary) {
-        console.log(`✅ 摘要生成成功，长度: ${summary.length} 字符`);
-        return summary;
-      } else {
-        console.log('⚠️ 摘要生成失败，返回原始合并结果的前半部分');
-        return combinedResult.substring(0, MAX_CHUNK_LENGTH) + '\n\n[内容过长，已截断]';
+    const intelligentMergedResult = await intelligentMergeResults(results);
+    
+    if (intelligentMergedResult) {
+      console.log(`✅ 智能合并成功，长度: ${intelligentMergedResult.length} 字符`);
+      return intelligentMergedResult;
+    } else {
+      console.log('⚠️ 智能合并失败，使用简单合并作为备用');
+      // 备用方案：简单合并
+      const combinedResult = results.join('\n\n--- 分段提取结果合并 ---\n\n');
+      console.log(`📋 简单合并结果长度: ${combinedResult.length} 字符`);
+      
+      // 如果合并后的结果过长，生成简洁摘要
+      if (combinedResult.length > MAX_CHUNK_LENGTH * 1.5) {
+        console.log(`⚠️ 合并结果过长(${combinedResult.length}字符)，生成简洁摘要...`);
+        const summary = await generateMethodSummary(combinedResult);
+        if (summary) {
+          console.log(`✅ 摘要生成成功，长度: ${summary.length} 字符`);
+          return summary;
+        } else {
+          console.log('⚠️ 摘要生成失败，返回原始合并结果的前半部分');
+          return combinedResult.substring(0, MAX_CHUNK_LENGTH) + '\n\n[内容过长，已截断]';
+        }
       }
+      
+      return combinedResult;
     }
-    
-    return combinedResult;
   } catch (error) {
     console.error('❌ 分段处理文本时出错:', error);
     return null;
@@ -603,8 +643,11 @@ const locateMethodSection = (fullText) => {
       'research methodology', 'data collection', 'procedure', 'experimental setup',
       'research approach', 'study design', 'research procedure', 'materials and methods',
       'data analysis', 'statistical analysis', 'statistical method', 'analytical approach',
+      'hypothesis', 'hypotheses', 'research questions', 'research objectives',
+      'experimental procedure', 'data processing', 'statistical approach',
       '方法', '研究方法', '实验方法', '实验设计', '研究设计', '数据收集', '实验程序',
-      '数据分析', '统计分析', '统计方法', '分析方法'
+      '数据分析', '统计分析', '统计方法', '分析方法', '研究假设', '实验假设',
+      '研究问题', '研究目标', '实验流程', '数据处理', '统计策略'
     ];
     
     // 定义方法相关的关键词（用于段落内容检测）
@@ -614,9 +657,15 @@ const locateMethodSection = (fullText) => {
       'statistical analysis', 'research design', 'study design', 'method',
       'quantitative', 'qualitative', 'experimental', 'control group', 'treatment',
       'variable', 'hypothesis', 'regression', 'correlation', 'anova', 't-test',
+      'randomized', 'factorial design', 'repeated measures', 'between-subjects',
+      'within-subjects', 'power analysis', 'effect size', 'significance level',
+      'null hypothesis', 'alternative hypothesis', 'independent variable', 'dependent variable',
+      'spss', 'r software', 'stata', 'reliability', 'validity', 'cronbach alpha',
       '参与者', '程序', '测量', '分析', '收集数据', '样本', '实验', '调查', '访谈',
       '问卷', '观察', '统计分析', '研究设计', '研究方法', '定量', '定性', '实验组',
-      '对照组', '变量', '假设', '回归', '相关', '方差分析', 't检验'
+      '对照组', '变量', '假设', '回归', '相关', '方差分析', 't检验',
+      '随机化', '因子设计', '重复测量', '组间', '组内', '效力分析', '效应量',
+      '显著性水平', '零假设', '备择假设', '自变量', '因变量', '信度', '效度'
     ];
     
     // 改进的段落分割策略：支持多种分割模式
@@ -934,6 +983,139 @@ const locateMethodSection = (fullText) => {
   }
 };
 
+// 智能合并多个分段提取结果的函数
+const intelligentMergeResults = async (results, retries = 3) => {
+  try {
+    if (!results || !Array.isArray(results) || results.length === 0) {
+      console.log('⚠️ 没有有效的分段结果需要合并');
+      return null;
+    }
+
+    if (results.length === 1) {
+      console.log('📋 只有一个分段结果，无需合并');
+      return results[0];
+    }
+
+    console.log(`🔄 开始智能合并 ${results.length} 个分段提取结果...`);
+
+    // 构建合并提示词
+    const mergePrompt = `你是一位研究方法专家。我有 ${results.length} 个从同一篇学术论文的不同部分提取的研究方法片段，请将它们智能合并成一个完整、连贯的研究方法总结。
+
+**要求：**
+1. 严格按照以下四部分框架输出最终结果
+2. 合并时去除重复内容，整合相关信息
+3. 保持信息的准确性和完整性
+4. 如果某个框架部分在所有片段中都没有信息，输出"未明确说明"
+5. 不要添加任何问候语、交流性语言或解释性说明
+6. 直接输出合并后的内容，不要包含"合并结果"等前缀
+
+**最终输出格式：**
+## 研究假设
+[合并整理后的研究假设内容]
+
+## 实验设计  
+[合并整理后的实验设计内容]
+
+## 数据分析
+[合并整理后的数据分析方法]
+
+## 结果呈现
+[合并整理后的结果呈现方式]
+
+**待合并的研究方法片段：**
+
+${results.map((result, index) => `
+=== 片段 ${index + 1} ===
+${result}
+`).join('\n')}
+
+请智能合并这些片段，生成统一的研究方法总结。`;
+
+    console.log('📤 发送智能合并请求到Coze API...');
+    const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${COZE_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        bot_id: COZE_BOT_ID,
+        user: COZE_USER_ID,
+        query: mergePrompt,
+        stream: false,
+        conversation_id: `merge_method_${Date.now()}`
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Coze API responded with status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    let mergedText = '';
+    
+    if (result.messages && Array.isArray(result.messages)) {
+      const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
+      if (answerMessages.length > 0) {
+        mergedText = answerMessages[0].content;
+      }
+    } else if (result.answer) {
+      mergedText = result.answer;
+    }
+
+    if (mergedText.toLowerCase().includes("i'm sorry") || 
+        mergedText.toLowerCase().includes("cannot assist") ||
+        mergedText.toLowerCase().includes("can't assist") ||
+        mergedText.toLowerCase().includes("抱歉") ||
+        mergedText.toLowerCase().includes("无法协助")) {
+      console.log('Coze拒绝响应智能合并请求');
+      return null;
+    }
+
+    if (!mergedText) {
+      throw new Error('未能从Coze响应中获取合并结果');
+    }
+
+    // 清理响应内容，移除不必要的前缀和后缀
+    mergedText = mergedText
+      .replace(/^(以下是合并结果|合并结果如下|智能合并结果|最终合并结果)[：:：]?\s*/i, '')
+      .replace(/^(Here is the merged result:|The merged result is:|Final merged result:)/i, '')
+      .replace(/希望这个合并结果.*$/i, '')
+      .replace(/如有.*问题.*请.*$/i, '')
+      .replace(/以上是.*合并.*结果.*$/i, '')
+      .trim();
+
+    // 验证是否包含四部分框架的基本结构
+    const hasFrameworkStructure = mergedText.includes('## 研究假设') || 
+                                 mergedText.includes('## 实验设计') || 
+                                 mergedText.includes('## 数据分析') || 
+                                 mergedText.includes('## 结果呈现');
+
+    if (!hasFrameworkStructure && mergedText.length > 50) {
+      console.log('⚠️ 智能合并响应未按照框架格式，但内容有效，保留原始内容');
+    }
+
+    // 验证合并结果的质量
+    if (mergedText.length < results.join('').length * 0.3) {
+      console.log('⚠️ 合并结果明显过短，可能信息丢失严重，建议使用备用方案');
+      return null;
+    }
+
+    console.log(`✅ 智能合并成功，原始片段总长度: ${results.join('').length}，合并后长度: ${mergedText.length}`);
+    return mergedText;
+
+  } catch (error) {
+    if (retries > 0) {
+      console.log(`❌ 智能合并失败，${error.message}，剩余重试次数: ${retries - 1}`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return intelligentMergeResults(results, retries - 1);
+    }
+    console.error('❌ 智能合并最终失败:', error);
+    return null;
+  }
+};
+
 // 备用的研究方法生成函数
 const generateMethodSummary = async (fullText) => {
   try {
@@ -941,18 +1123,32 @@ const generateMethodSummary = async (fullText) => {
       return null;
     }
 
-    const prompt = `As a research assistant, help me understand the methodology used in this paper. 
-Please read the text and create a brief summary of the research methods used.
-Focus on identifying:
-- The type of research (e.g., experimental, survey, case study)
-- Data collection methods
-- Analysis approaches
-- Key methodological steps
+    const prompt = `你是一位研究方法专家。请从以下学术论文中提炼研究方法，按照固定的四部分框架整理输出。
 
-Text:
+**要求：**
+1. 严格按照以下四部分框架输出
+2. 只提炼和精炼原文的定量研究方法内容
+3. 不要添加任何问候语、交流性语言或解释性说明
+4. 如果某部分在原文中没有明确内容，该部分输出"未明确说明"
+5. 直接输出内容，不要包含"以下是提炼结果"等前缀
+
+**输出格式：**
+## 研究假设
+[从原文中提炼的研究假设内容]
+
+## 实验设计  
+[从原文中提炼的实验设计内容]
+
+## 数据分析
+[从原文中提炼的数据分析方法]
+
+## 结果呈现
+[从原文中提炼的结果呈现方式]
+
+**论文文本：**
 ${fullText}
 
-Please provide a concise summary of the methodology.`;
+请严格按照上述格式提炼研究方法。`;
 
     console.log('使用备用方法生成研究方法概要...');
     const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
@@ -990,11 +1186,32 @@ Please provide a concise summary of the methodology.`;
     if (!summaryText || 
         summaryText.toLowerCase().includes("i'm sorry") || 
         summaryText.toLowerCase().includes("cannot assist") ||
-        summaryText.toLowerCase().includes("can't assist")) {
+        summaryText.toLowerCase().includes("can't assist") ||
+        summaryText.toLowerCase().includes("抱歉") ||
+        summaryText.toLowerCase().includes("无法协助")) {
       return null;
     }
 
-    return summaryText.trim();
+    // 清理响应内容，移除不必要的前缀和后缀
+    summaryText = summaryText
+      .replace(/^(以下是提炼结果|研究方法提炼结果|根据论文内容提炼如下|提炼的研究方法如下)[：:：]?\s*/i, '')
+      .replace(/^(Here is the research methodology section:|I've extracted the research methodology section:|The research methodology section is as follows:)/i, '')
+      .replace(/希望这个提炼结果.*$/i, '')
+      .replace(/如有.*问题.*请.*$/i, '')
+      .replace(/以上是.*研究方法.*$/i, '')
+      .trim();
+
+    // 验证是否包含四部分框架的基本结构
+    const hasFrameworkStructure = summaryText.includes('## 研究假设') || 
+                                 summaryText.includes('## 实验设计') || 
+                                 summaryText.includes('## 数据分析') || 
+                                 summaryText.includes('## 结果呈现');
+
+    if (!hasFrameworkStructure && summaryText.length > 50) {
+      console.log('备用方法响应未按照框架格式，但内容有效，保留原始内容');
+    }
+
+    return summaryText;
   } catch (error) {
     console.error('生成研究方法概要失败:', error);
     return null;

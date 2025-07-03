@@ -313,15 +313,15 @@
                       </span>
                       <button 
                         v-if="papersState.selectedPaper.researchMethod"
-                        @click="retryExtractMethod"
+                        @click="reanalyzeResearchMethod"
                         class="text-orange-500 hover:text-orange-600 text-sm flex items-center"
                         :disabled="isLoadingPaperContent"
-                        title="重新提取研究方法"
+                        title="重新分析研究方法"
                       >
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
-                        重试
+                        重新分析
                       </button>
                       <button 
                         v-if="papersState.selectedPaper.researchMethod"
@@ -587,6 +587,138 @@ const clearExternalPool = () => {
   updateExternalPoolStatus()
 }
 
+// 重新分析研究方法
+const reanalyzeResearchMethod = async () => {
+  if (!papersState.selectedPaper || !papersState.selectedPaper.title) {
+    return
+  }
+  
+  isLoadingPaperContent.value = true
+  
+  try {
+    console.log('重新分析研究方法:', papersState.selectedPaper.title)
+    
+    // 第一步：清空数据库中的研究方法，强制重新分析
+    console.log('🗑️ 清空数据库中的研究方法...')
+    
+    const { getApiBaseUrl } = await import('../config/environment.js')
+    const saveApiUrl = `${getApiBaseUrl()}/paper-cache/save`
+    
+    // 准备清空研究方法的数据
+    const clearMethodData = {
+      title: papersState.selectedPaper.title,
+      authors: Array.isArray(papersState.selectedPaper.authors) ? papersState.selectedPaper.authors.join(', ') : (papersState.selectedPaper.authors || ''),
+      abstract: papersState.selectedPaper.abstract || '',
+      doi: papersState.selectedPaper.doi || '',
+      url: papersState.selectedPaper.url || papersState.selectedPaper.scholar_url || '',
+      download_url: papersState.selectedPaper.downloadUrl || papersState.selectedPaper.pdf_url || '',
+      year: papersState.selectedPaper.year ? parseInt(papersState.selectedPaper.year) : null,
+      journal: papersState.selectedPaper.journal || '',
+      venue: papersState.selectedPaper.venue || papersState.selectedPaper.journal || '',
+      citation_count: papersState.selectedPaper.citationCount || papersState.selectedPaper.citations || 0,
+      research_method: '', // 清空研究方法
+      full_text: papersState.selectedPaper.fullText || papersState.selectedPaper.full_text || '',
+      translated_abstract: translatedAbstract.value || papersState.selectedPaper.translated_abstract || '',
+      translated_method: '', // 同时清空翻译的研究方法
+      paper_id: papersState.selectedPaper.paper_id || papersState.selectedPaper.id || '',
+      source: 'recommendation',
+      is_top_venue: papersState.selectedPaper.isTopVenue || false
+    }
+    
+    const clearResponse = await fetch(saveApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(clearMethodData)
+    })
+    
+    if (!clearResponse.ok) {
+      console.warn('清空数据库研究方法失败，但继续进行重新分析')
+    } else {
+      console.log('✅ 成功清空数据库中的研究方法')
+    }
+    
+    // 第二步：清除前端状态
+    papersState.selectedPaper.researchMethod = null
+    showMethodTranslation.value = false
+    translatedMethod.value = ''
+    
+    // 同时更新推荐论文列表中的对应论文
+    const paperIndex = papersState.recommendedPapers.findIndex(
+      paper => paper.title === papersState.selectedPaper.title
+    )
+    if (paperIndex !== -1) {
+      papersState.recommendedPapers[paperIndex].researchMethod = null
+    }
+    
+    // 第三步：重新获取论文内容
+    console.log('🔄 重新获取论文内容和研究方法...')
+    
+    const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
+    console.log('📤 重新分析-获取论文内容API请求URL:', getContentApiUrl)
+    
+    const response = await fetch(getContentApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: papersState.selectedPaper.title,
+        doi: papersState.selectedPaper.doi || null
+      })
+    })
+    
+    if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error('请求过于频繁，请稍后再试。');
+      }
+      const errorResult = await response.json().catch(() => ({}));
+      throw new Error(errorResult.error || `API响应错误: ${response.status}`);
+    }
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      // 更新选中论文的全文
+      if (result.fullText) {
+        papersState.selectedPaper.fullText = result.fullText
+      }
+      
+      // 更新研究方法
+      if (result.researchMethod) {
+        papersState.selectedPaper.researchMethod = result.researchMethod
+        showFullText.value = true // 自动展开研究方法
+        console.log('✅ 重新分析成功，获取到新的研究方法')
+      } else {
+        console.log('⚠️ 重新分析完成，但未获取到研究方法')
+      }
+      
+      // 同时更新推荐论文列表中的对应论文
+      const paperIndex = papersState.recommendedPapers.findIndex(
+        paper => paper.title === papersState.selectedPaper.title
+      )
+      
+      if (paperIndex !== -1) {
+        if (result.fullText) {
+          papersState.recommendedPapers[paperIndex].fullText = result.fullText
+        }
+        if (result.researchMethod) {
+          papersState.recommendedPapers[paperIndex].researchMethod = result.researchMethod
+        }
+      }
+    } else {
+      throw new Error(result.error || '重新获取论文内容失败');
+    }
+    
+  } catch (error) {
+    console.error('重新分析研究方法出错:', error)
+    alert('重新分析研究方法出错: ' + error.message)
+  } finally {
+    isLoadingPaperContent.value = false
+  }
+}
+
 // 手动获取论文全文和研究方法
 const fetchPaperContent = async () => {
   if (!papersState.selectedPaper || !papersState.selectedPaper.title) {
@@ -595,8 +727,12 @@ const fetchPaperContent = async () => {
   
   isLoadingPaperContent.value = true
   
+  // 重置研究方法翻译状态
+  showMethodTranslation.value = false
+  translatedMethod.value = ''
+  
   try {
-    console.log('手动获取论文内容:', papersState.selectedPaper.title)
+    console.log('获取论文内容:', papersState.selectedPaper.title)
     
     const { getApiBaseUrl } = await import('../config/environment.js')
     const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
@@ -636,10 +772,6 @@ const fetchPaperContent = async () => {
         // 重置研究方法翻译状态
         showMethodTranslation.value = false
         translatedMethod.value = ''
-      } else if (papersState.selectedPaper.fullText) {
-        // 如果没有获取到研究方法但有全文，尝试使用备用方法
-        console.log('未获取到研究方法，尝试使用备用方法生成概要')
-        await tryGenerateMethodSummary()
       }
       
       // 同时更新推荐论文列表中的对应论文
@@ -666,59 +798,7 @@ const fetchPaperContent = async () => {
   }
 }
 
-// 尝试使用备用方法生成研究方法概要
-const tryGenerateMethodSummary = async () => {
-  if (!papersState.selectedPaper || !papersState.selectedPaper.fullText) {
-    return false
-  }
 
-  const { getApiBaseUrl } = await import('../config/environment.js')
-  const generateSummaryApiUrl = `${getApiBaseUrl()}/paper/generate-method-summary`
-  console.log('📤 生成方法概要API请求URL:', generateSummaryApiUrl)
-  
-  const response = await fetch(generateSummaryApiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      title: papersState.selectedPaper.title,
-      fullText: papersState.selectedPaper.fullText
-    })
-  })
-    
-  if (!response.ok) {
-    if (response.status === 429) {
-      throw new Error('请求过于频繁，请稍后再试。');
-    }
-    const errorResult = await response.json().catch(() => ({}));
-    throw new Error(errorResult.error || `生成概要失败: ${response.status}`);
-  }
-    
-  const result = await response.json()
-    
-  if (result.success && result.methodSummary) {
-    // 更新选中论文的研究方法
-    papersState.selectedPaper.researchMethod = result.methodSummary
-    showFullText.value = true // 自动展开研究方法
-    // 重置研究方法翻译状态
-    showMethodTranslation.value = false
-    translatedMethod.value = ''
-      
-    // 同时更新推荐论文列表中的对应论文
-    const paperIndex = papersState.recommendedPapers.findIndex(
-      paper => paper.title === papersState.selectedPaper.title
-    )
-      
-    if (paperIndex !== -1) {
-      papersState.recommendedPapers[paperIndex].researchMethod = result.methodSummary
-    }
-      
-    return true
-  } else {
-    throw new Error(result.error || '备用方法生成研究方法概要失败');
-  }
-}
 
 // 配置marked支持LaTeX数学公式
 marked.use(markedKatex({
@@ -743,35 +823,7 @@ const toggleFullText = () => {
   showFullText.value = !showFullText.value
 }
 
-// 重新提取研究方法
-const retryExtractMethod = async () => {
-  if (!papersState.selectedPaper || !papersState.selectedPaper.fullText) {
-    alert('无法重新提取研究方法：论文全文不可用')
-    return
-  }
-  
-  isLoadingPaperContent.value = true
-  
-  try {
-    console.log('重新提取研究方法:', papersState.selectedPaper.title)
-    
-    // 重置研究方法翻译状态
-    showMethodTranslation.value = false
-    translatedMethod.value = ''
-    
-    // 直接使用备用方法生成研究方法概要
-    const success = await tryGenerateMethodSummary()
-    
-    if (!success) {
-      alert('重新提取研究方法失败，请稍后再试')
-    }
-  } catch (error) {
-    console.error('重新提取研究方法出错:', error)
-    alert('重新提取研究方法出错: ' + error.message)
-  } finally {
-    isLoadingPaperContent.value = false
-  }
-}
+
 
 const selectRecommendedPaper = (paper) => {
   selectPaper(paper)
