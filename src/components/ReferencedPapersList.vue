@@ -676,32 +676,48 @@ const translateAbstract = async (abstractText) => {
   isTranslating.value = true
   
   try {
-    console.log('开始翻译摘要:', abstractText)
+    console.log('🔤 开始翻译摘要:', abstractText)
     
-    // 构建翻译消息
-    const translateMessage = `请将以下英文摘要翻译成中文，保持学术性和准确性：\n\n${abstractText}`
+    // 调用后端翻译API
+    const { getApiBaseUrl } = await import('../config/environment.js')
+    const translateApiUrl = `${getApiBaseUrl()}/translate`
+    console.log('📤 调用翻译API:', translateApiUrl)
     
-    // 静默发送到coze agent
-    const translatedResult = await sendSilentMessageToCoze(translateMessage, chatState.messages)
+    const response = await fetch(translateApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text: abstractText,
+        from: 'en',
+        to: 'zh-CN'
+      })
+    })
     
-    console.log('翻译结果:', translatedResult)
+    if (!response.ok) {
+      const errorResult = await response.json().catch(() => ({}));
+      throw new Error(errorResult.error || `翻译失败，状态码: ${response.status}`);
+    }
     
-    // 清理翻译结果，移除可能的提示词或额外说明
-    let translatedText = translatedResult
-      .replace(/^翻译结果?[：:]?\s*/i, '')
-      .replace(/^中文翻译[：:]?\s*/i, '')
-      .replace(/^以下是翻译[：:]?\s*/i, '')
-      .replace(/^翻译[：:]?\s*/i, '')
-      .trim()
+    const result = await response.json()
+    console.log('📥 翻译API响应:', result)
     
-    if (translatedText && translatedText.length > 10) {
+    if (!result.success || !result.translated) {
+      throw new Error('翻译API返回无效结果')
+    }
+    
+    const translatedText = result.translated.trim()
+    
+    if (translatedText && translatedText.length > 5) {
+      console.log('✅ 摘要翻译成功')
       return translatedText
     } else {
       throw new Error('翻译结果为空或过短')
     }
     
   } catch (error) {
-    console.error('翻译摘要失败:', error)
+    console.error('❌ 翻译摘要失败:', error)
     throw error
   } finally {
     isTranslating.value = false
@@ -743,32 +759,48 @@ const translateMethod = async (methodText) => {
   }
   
   try {
-    console.log('开始翻译研究方法')
+    console.log('🔤 开始翻译研究方法')
     
-    // 构建翻译消息
-    const translateMessage = `请将以下英文研究方法翻译成中文，保持学术性和准确性，保留原始的Markdown格式：\n\n${methodText}`
+    // 调用后端翻译API
+    const { getApiBaseUrl } = await import('../config/environment.js')
+    const translateApiUrl = `${getApiBaseUrl()}/translate`
+    console.log('📤 调用翻译API:', translateApiUrl)
     
-    // 静默发送到coze agent
-    const translatedResult = await sendSilentMessageToCoze(translateMessage, chatState.messages)
+    const response = await fetch(translateApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text: methodText,
+        from: 'en',
+        to: 'zh-CN'
+      })
+    })
     
-    console.log('研究方法翻译结果:', translatedResult)
+    if (!response.ok) {
+      const errorResult = await response.json().catch(() => ({}));
+      throw new Error(errorResult.error || `翻译失败，状态码: ${response.status}`);
+    }
     
-    // 清理翻译结果，移除可能的提示词或额外说明
-    let translatedText = translatedResult
-      .replace(/^翻译结果?[：:]?\s*/i, '')
-      .replace(/^中文翻译[：:]?\s*/i, '')
-      .replace(/^以下是翻译[：:]?\s*/i, '')
-      .replace(/^翻译[：:]?\s*/i, '')
-      .trim()
+    const result = await response.json()
+    console.log('📥 翻译API响应:', result)
     
-    if (translatedText && translatedText.length > 10) {
+    if (!result.success || !result.translated) {
+      throw new Error('翻译API返回无效结果')
+    }
+    
+    const translatedText = result.translated.trim()
+    
+    if (translatedText && translatedText.length > 5) {
+      console.log('✅ 研究方法翻译成功')
       return translatedText
     } else {
       throw new Error('翻译结果为空或过短')
     }
     
   } catch (error) {
-    console.error('翻译研究方法失败:', error)
+    console.error('❌ 翻译研究方法失败:', error)
     throw error
   }
 }

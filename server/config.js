@@ -91,6 +91,17 @@ export const getCozeConfig = () => {
 };
 
 /**
+ * 获取有道翻译API配置
+ */
+export const getYoudaoConfig = () => {
+  return {
+    appKey: process.env.YOUDAO_APP_KEY || '1f3536d0d3dce4f8',
+    appSecret: process.env.YOUDAO_APP_SECRET || 'i9qjyoHVJ3hv0n3Fu2LDzSxs23PWbIUL',
+    apiUrl: process.env.YOUDAO_API_URL || 'https://openapi.youdao.com/api'
+  };
+};
+
+/**
  * 获取其他API配置
  */
 export const getOtherAPIConfig = () => {
@@ -109,5 +120,6 @@ export default {
   getJWTConfig,
   getServerConfig,
   getCozeConfig,
+  getYoudaoConfig,
   getOtherAPIConfig
 }; 

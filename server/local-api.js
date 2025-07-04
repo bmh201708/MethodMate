@@ -63,53 +63,82 @@ const COZE_BOT_ID = process.env.COZE_BOT_ID || '7513529977745915905';
 const COZE_BOT_ID_Reference = process.env.COZE_BOT_ID_Reference || '7511024998740754448';  
 const COZE_USER_ID = process.env.COZE_USER_ID || '7505301221562023954';
 
-// 检查Coze API是否可用
-let COZE_API_AVAILABLE = true;
+// 检查有道翻译API是否可用
+let YOUDAO_API_AVAILABLE = true;
 
-// 测试Coze API连接
-const testCozeAPI = async () => {
+// 导入有道翻译配置
+const YOUDAO_APP_KEY = process.env.YOUDAO_APP_KEY || '1f3536d0d3dce4f8';
+const YOUDAO_APP_SECRET = process.env.YOUDAO_APP_SECRET || 'i9qjyoHVJ3hv0n3Fu2LDzSxs23PWbIUL';
+const YOUDAO_API_URL = 'https://openapi.youdao.com/api';
+
+// 测试有道翻译API连接
+const testYoudaoAPI = async () => {
   try {
-    const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+    const crypto = await import('crypto');
+    
+    const testText = 'test';
+    const salt = Date.now().toString();
+    const curtime = Math.round(Date.now() / 1000).toString();
+    
+    // 计算签名
+    const truncate = (q) => {
+      const len = q.length;
+      if (len <= 20) return q;
+      return q.substring(0, 10) + len + q.substring(len - 10, len);
+    };
+    
+    const input = truncate(testText);
+    const str = YOUDAO_APP_KEY + input + salt + curtime + YOUDAO_APP_SECRET;
+    const sign = crypto.default.createHash('sha256').update(str).digest('hex');
+
+    const params = new URLSearchParams({
+      q: testText,
+      appKey: YOUDAO_APP_KEY,
+      salt: salt,
+      from: 'en',
+      to: 'zh-CHS',
+      sign: sign,
+      signType: 'v3',
+      curtime: curtime
+    });
+
+    const response = await fetch(YOUDAO_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${COZE_API_KEY}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: JSON.stringify({
-        bot_id: COZE_BOT_ID,
-        user: COZE_USER_ID,
-        query: 'test',
-        stream: false,
-        conversation_id: `test_${Date.now()}`
-      })
+      body: params
     });
 
     const result = await response.json();
-    if (result.code && result.code !== 0) {
-      console.warn('Coze API不可用，将使用备用方法:', result.msg);
-      COZE_API_AVAILABLE = false;
+    if (result.errorCode && result.errorCode !== '0') {
+      console.warn('有道翻译API不可用，将使用备用方法:', result.errorCode);
+      YOUDAO_API_AVAILABLE = false;
       return false;
     }
     
-    console.log('Coze API连接正常');
-    COZE_API_AVAILABLE = true;
+    console.log('有道翻译API连接正常');
+    YOUDAO_API_AVAILABLE = true;
     return true;
   } catch (error) {
-    console.warn('Coze API连接失败，将使用备用方法:', error.message);
-    COZE_API_AVAILABLE = false;
+    console.warn('有道翻译API连接失败，将使用备用方法:', error.message);
+    YOUDAO_API_AVAILABLE = false;
     return false;
   }
 };
 
 // 启动时测试API
-testCozeAPI();
+testYoudaoAPI();
 
 // 设置环境变量，确保其他模块可以访问
 process.env.COZE_API_KEY = COZE_API_KEY;
 process.env.COZE_API_URL = COZE_API_URL;
 process.env.COZE_BOT_ID = COZE_BOT_ID;
 process.env.COZE_USER_ID = COZE_USER_ID;
+
+// 设置有道翻译API环境变量
+process.env.YOUDAO_APP_KEY = YOUDAO_APP_KEY;
+process.env.YOUDAO_APP_SECRET = YOUDAO_APP_SECRET;
 
 // 导入翻译服务
 import translate, { translateWithGoogleUnofficial } from './translate-service.js';
@@ -135,18 +164,18 @@ const translateToEnglish = async (text, retries = 3) => {
 
     console.log('准备翻译文本:', cleanedText);
 
-    // 如果Coze API不可用，使用备用方法
-    if (!COZE_API_AVAILABLE) {
-      console.log('Coze API不可用，使用备用翻译方法');
+    // 如果有道翻译API不可用，使用备用方法
+    if (!YOUDAO_API_AVAILABLE) {
+      console.log('有道翻译API不可用，使用备用翻译方法');
       return cleanedText; // 暂时返回原文，或者可以使用其他翻译服务
     }
 
     try {
-      console.log('使用Coze API翻译...');
+      console.log('使用有道翻译API翻译...');
       const translatedText = await translateWithCoze(cleanedText, 'zh-CN', 'en');
       
       if (!translatedText || translatedText.length < 5) {
-        throw new Error('Coze返回的翻译结果为空或过短');
+        throw new Error('有道翻译返回的翻译结果为空或过短');
       }
       
       // 清理翻译结果，移除可能的提示词或额外说明
@@ -4026,6 +4055,60 @@ app.post('/api/query-statistical-method', async (req, res) => {
           errorMessage = `上游服务错误: ${apiStatus}`;
         }
       }
+    }
+
+    res.status(statusCode).json({ 
+      success: false,
+      error: errorMessage
+    });
+  }
+});
+
+// 翻译API端点 - 使用有道翻译API
+app.post('/api/translate', async (req, res) => {
+  try {
+    const { text, from = 'en', to = 'zh-CN' } = req.body;
+    
+    if (!text || !text.trim()) {
+      return res.status(400).json({ 
+        success: false,
+        error: '需要提供要翻译的文本内容' 
+      });
+    }
+
+    console.log('🔤 翻译API被调用');
+    console.log('📝 原文:', text.length > 100 ? text.substring(0, 100) + '...' : text);
+    console.log('🔄 翻译方向:', `${from} => ${to}`);
+    console.log('🌐 使用有道翻译API进行翻译...');
+    
+    // 使用有道翻译API进行翻译
+    const translatedText = await translateWithCoze(text, from, to);
+    
+    console.log('✅ 翻译成功');
+    console.log('📝 译文:', translatedText.length > 100 ? translatedText.substring(0, 100) + '...' : translatedText);
+
+    res.json({
+      success: true,
+      original: text,
+      translated: translatedText,
+      from: from,
+      to: to
+    });
+  } catch (error) {
+    console.error('❌ 翻译API错误:', error);
+    
+    let statusCode = 500;
+    let errorMessage = error.message;
+
+    // 处理有道翻译API特定错误
+    if (error.message && error.message.includes('有道翻译API错误')) {
+      statusCode = 502; // Bad Gateway
+    } else if (error.message && error.message.includes('频率受限')) {
+      statusCode = 429; // Too Many Requests
+      errorMessage = '翻译请求过于频繁，请稍后再试';
+    } else if (error.message && error.message.includes('密钥')) {
+      statusCode = 401; // Unauthorized
+      errorMessage = '翻译服务配置错误';
     }
 
     res.status(statusCode).json({ 
