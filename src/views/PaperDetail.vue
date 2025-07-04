@@ -218,7 +218,7 @@
 
         <!-- 右侧文献详情 -->
         <div class="col-span-5">
-          <div class="bg-white rounded-xl shadow-sm p-8">
+          <div class="paper-detail-container bg-white rounded-xl shadow-sm p-8 max-h-[95vh] overflow-y-auto">
             <div v-if="papersState.selectedPaper">
               <div class="flex justify-between items-start mb-6">
                 <h2 class="text-2xl font-bold text-gray-900 flex-1">{{ papersState.selectedPaper.title }}</h2>
@@ -1405,6 +1405,37 @@ const checkPaperCache = async (paper) => {
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* 专门为右侧文献详情容器的滚动条样式 */
+.paper-detail-container {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #e2e8f0;
+}
+
+.paper-detail-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.paper-detail-container::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 5px;
+  margin: 5px 0;
+}
+
+.paper-detail-container::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 5px;
+  border: 2px solid #e2e8f0;
+  background-clip: content-box;
+}
+
+.paper-detail-container::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+.paper-detail-container::-webkit-scrollbar-thumb:active {
+  background: #475569;
 }
 
 /* 添加按钮悬停效果 */

@@ -89,7 +89,7 @@
 
       <!-- 右侧文献详情 -->
       <div class="col-span-7">
-        <div class="bg-white rounded-lg shadow-sm p-6 min-h-[80vh]">
+        <div class="paper-detail-scroll bg-white rounded-lg shadow-sm p-6 max-h-[80vh] overflow-y-auto">
           <div v-if="selectedPaper">
             <!-- 标题和操作按钮 -->
             <div class="flex justify-between items-start mb-6">
@@ -1055,22 +1055,64 @@ const savePaperToCache = async (paper) => {
 }
 
 /* 滚动条样式 */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
 .overflow-y-auto::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-track {
   background: #f1f5f9;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 3px;
+  border-radius: 4px;
+  border: 1px solid #f1f5f9;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* 强制显示滚动条 */
+.overflow-y-auto::-webkit-scrollbar-corner {
+  background: #f1f5f9;
+}
+
+/* 专门为右侧文献详情区域的滚动条样式 */
+.paper-detail-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #e2e8f0;
+}
+
+.paper-detail-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.paper-detail-scroll::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 5px;
+  margin: 5px 0;
+}
+
+.paper-detail-scroll::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 5px;
+  border: 2px solid #e2e8f0;
+  background-clip: content-box;
+}
+
+.paper-detail-scroll::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+.paper-detail-scroll::-webkit-scrollbar-thumb:active {
+  background: #475569;
 }
 
 /* 响应式设计 */
