@@ -141,18 +141,33 @@
               <div v-html="renderMarkdown(getDisplayContent(message))"></div>
             </div>
             
-            <!-- 研究方案查看按钮（右上角） -->
+            <!-- 研究方案相关按钮（右上角） -->
             <div v-if="message.type === 'assistant' && !message.isError && message.isComplete && isResearchPlan(getOriginalContent(message))"
-                 class="absolute top-2 right-2">
+                 class="absolute top-2 right-2 flex items-center space-x-2">
+              
+              <!-- 查看对比按钮 -->
+              <button 
+                v-if="isIterationMessage(message.id) || true"
+                @click="handleViewComparison(message)"
+                class="flex items-center space-x-1 px-1.5 py-1 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors border border-blue-200 bg-white/80 backdrop-blur-sm"
+                title="查看方案迭代对比"
+              >
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <span>对比</span>
+              </button>
+              
+              <!-- 在右侧查看按钮 -->
               <button 
                 @click="handleViewInRightPanel(message)"
-                class="flex items-center space-x-1 px-2 py-1 text-xs text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors border border-green-200 bg-white/80 backdrop-blur-sm"
+                class="flex items-center space-x-1 px-1.5 py-1 text-xs text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors border border-green-200 bg-white/80 backdrop-blur-sm"
                 title="将研究方案显示在右侧面板"
               >
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                <span>在右侧查看</span>
+                <span>右侧查看</span>
               </button>
             </div>
             
@@ -227,17 +242,25 @@
       @close="showOptimizeDialog = false"
       @replace="handleOptimizeReplace"
     />
+    
+    <!-- 方案对比弹窗 -->
+    <PlanComparisonDialog 
+      :show="showComparisonDialog" 
+      :comparisonData="currentComparisonData"
+      @close="handleCloseComparison"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, watch, nextTick, onMounted, computed } from 'vue'
-import { chatState, sendMessage, conversationAPI, clearMessages, updateCurrentPlan } from '../stores/chatStore'
+import { chatState, sendMessage, conversationAPI, clearMessages, updateCurrentPlan, getIterationComparison, isIterationMessage } from '../stores/chatStore'
 import { useUserStore } from '../stores/userStore.js'
 import { sendSilentMessageToCoze } from '../services/cozeApi'
 import LoadingDots from './LoadingDots.vue'
 import ConversationGuide from './ConversationGuide.vue'
 import PromptOptimizeDialog from './PromptOptimizeDialog.vue'
+import PlanComparisonDialog from './PlanComparisonDialog.vue'
 import { marked } from 'marked'
 
 // 接收页面上下文的props
@@ -251,6 +274,8 @@ const props = defineProps({
 const newMessage = ref('')
 const chatContainer = ref(null)
 const showOptimizeDialog = ref(false)
+const showComparisonDialog = ref(false)
+const currentComparisonData = ref(null)
 
 // 用户状态
 const userStore = useUserStore()
@@ -773,6 +798,77 @@ const handleViewInRightPanel = (message) => {
     alert('解析研究方案失败，请检查方案格式是否正确。')
   }
 }
+
+// 处理"查看对比"按钮点击
+const handleViewComparison = (message) => {
+  console.log('查看对比，消息ID:', message.id)
+  
+  // 获取这个消息对应的迭代对比数据
+  let comparisonData = getIterationComparison(message.id)
+  
+  // 如果没有实际的迭代数据，创建模拟数据用于演示
+  if (!comparisonData) {
+    console.log('没有找到实际迭代数据，创建模拟数据用于演示')
+    
+    // 创建模拟的迭代前数据
+    const mockBeforeData = {
+      title: "初始研究方案",
+      researchQuestions: "初始研究问题",
+      methodology: "初始研究方法",
+      hypotheses: [
+        "H1: 用户对产品的满意度会影响购买意愿",
+        "H2: 价格敏感度在不同年龄组之间存在差异"
+      ],
+      experimentalDesign: "采用2x2实验设计，包含两个自变量：价格水平（高价/低价）和产品类型（功能型/享乐型）。通过控制实验条件，测量用户的购买意愿和满意度评分。",
+      analysisMethod: "使用SPSS进行数据分析，包括描述性统计、方差分析(ANOVA)和回归分析。",
+      expectedResults: "预期发现价格和产品类型对购买意愿的交互作用显著。",
+      timestamp: new Date(Date.now() - 60000).toISOString()
+    }
+    
+    // 创建模拟的迭代后数据
+    const mockAfterData = {
+      title: "优化后研究方案",
+      researchQuestions: "优化的研究问题",
+      methodology: "改进的研究方法",
+      hypotheses: [
+        "H1: 用户对产品的满意度会正向影响购买意愿，且这种影响在高价格条件下更为显著",
+        "H2: 价格敏感度在不同年龄组之间存在显著差异，年轻用户更关注价格因素",
+        "H3: 产品类型调节价格与购买意愿的关系"
+      ],
+      experimentalDesign: "采用2x2x2三因素实验设计，新增年龄组变量（年轻组18-35岁/成熟组36-55岁）。通过在线实验平台进行随机分组，每组不少于30人。实验材料包括产品图片、价格信息和详细描述。",
+      analysisMethod: "使用SPSS和R Studio进行混合效应模型分析，包括描述性统计、多因素方差分析(MANOVA)、回归分析和中介效应检验。采用Bootstrap方法进行置信区间估计。",
+      expectedResults: "预期发现价格、产品类型和年龄组之间的三重交互作用。年轻用户对价格更敏感，功能型产品的价格效应更明显。",
+      timestamp: new Date().toISOString()
+    }
+    
+    // 创建模拟的对比数据
+    comparisonData = {
+      before: mockBeforeData,
+      after: mockAfterData,
+      section: null,
+      suggestion: "请优化研究方案，增加更多的研究假设，完善实验设计的细节，并提升数据分析的深度。",
+      timestamp: new Date().toISOString(),
+      isDemoData: true // 标记为演示数据
+    }
+  }
+  
+  if (comparisonData) {
+    console.log('显示对比数据:', comparisonData)
+    currentComparisonData.value = comparisonData
+    showComparisonDialog.value = true
+  } else {
+    console.log('无法创建对比数据')
+    alert('暂无可对比的数据，请确保此消息是迭代后的方案。')
+  }
+}
+
+// 关闭对比弹窗
+const handleCloseComparison = () => {
+  showComparisonDialog.value = false
+  currentComparisonData.value = null
+}
+
+
 
 // markdown渲染函数
 const renderMarkdown = (content) => {

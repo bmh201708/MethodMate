@@ -401,7 +401,20 @@ export const currentPlanState = reactive({
     design: '',
     analysis: '',
     results: ''
-  }
+  },
+  // 迭代相关数据
+  lastUpdated: null, // 最后更新时间
+  iterationHistory: [] // 迭代历史记录
+})
+
+// 迭代前方案状态存储
+export const iterationState = reactive({
+  beforeIteration: null, // 存储迭代前的方案状态
+  afterIteration: null, // 存储迭代后的方案状态
+  iterationSection: null, // 当前迭代的部分
+  iterationSuggestion: null, // 迭代建议
+  hasComparison: false, // 是否可以进行对比
+  lastIterationMessageId: null // 最后一次迭代消息的ID
 })
 
 // 推荐文献相关方法
@@ -1529,6 +1542,117 @@ export const getExternalPoolStatus = () => {
     isEmpty: papersState.externalPaperPool.isPoolEmpty,
     lastFetchTime: papersState.externalPaperPool.lastFetchTime
   }
+}
+
+// 迭代状态管理方法
+export const storeIterationSnapshot = (section = null, suggestion = null) => {
+  console.log('存储迭代快照，迭代部分:', section)
+  
+  // 深拷贝当前方案状态
+  const snapshot = {
+    title: currentPlanState.title,
+    researchQuestions: currentPlanState.researchQuestions,
+    methodology: currentPlanState.methodology,
+    dataCollection: currentPlanState.dataCollection,
+    analysisMethod: currentPlanState.analysisMethod,
+    hypotheses: [...(currentPlanState.hypotheses || [])],
+    experimentalDesign: currentPlanState.experimentalDesign,
+    expectedResults: currentPlanState.expectedResults,
+    isGenerated: currentPlanState.isGenerated,
+    timestamp: new Date().toISOString()
+  }
+  
+  iterationState.beforeIteration = snapshot
+  iterationState.iterationSection = section
+  iterationState.iterationSuggestion = suggestion
+  iterationState.hasComparison = false
+  
+  console.log('迭代前快照已存储:', snapshot)
+}
+
+export const completeIteration = (messageId) => {
+  console.log('完成迭代，消息ID:', messageId)
+  
+  if (iterationState.beforeIteration) {
+    // 存储迭代后的状态
+    const afterSnapshot = {
+      title: currentPlanState.title,
+      researchQuestions: currentPlanState.researchQuestions,
+      methodology: currentPlanState.methodology,
+      dataCollection: currentPlanState.dataCollection,
+      analysisMethod: currentPlanState.analysisMethod,
+      hypotheses: [...(currentPlanState.hypotheses || [])],
+      experimentalDesign: currentPlanState.experimentalDesign,
+      expectedResults: currentPlanState.expectedResults,
+      isGenerated: currentPlanState.isGenerated,
+      timestamp: new Date().toISOString()
+    }
+    
+    iterationState.afterIteration = afterSnapshot
+    iterationState.hasComparison = true
+    iterationState.lastIterationMessageId = messageId
+    
+    // 添加到迭代历史
+    const iterationRecord = {
+      id: Date.now(),
+      section: iterationState.iterationSection,
+      suggestion: iterationState.iterationSuggestion,
+      before: iterationState.beforeIteration,
+      after: afterSnapshot,
+      timestamp: new Date().toISOString(),
+      messageId: messageId
+    }
+    
+    currentPlanState.iterationHistory.push(iterationRecord)
+    currentPlanState.lastUpdated = new Date().toISOString()
+    
+    console.log('迭代完成，对比数据已准备好')
+  }
+}
+
+export const clearIterationState = () => {
+  iterationState.beforeIteration = null
+  iterationState.afterIteration = null
+  iterationState.iterationSection = null
+  iterationState.iterationSuggestion = null
+  iterationState.hasComparison = false
+  iterationState.lastIterationMessageId = null
+}
+
+export const getIterationComparison = (messageId = null) => {
+  // 如果指定了消息ID，尝试从历史记录中查找
+  if (messageId) {
+    const iterationRecord = currentPlanState.iterationHistory.find(
+      record => record.messageId === messageId
+    )
+    if (iterationRecord) {
+      return {
+        before: iterationRecord.before,
+        after: iterationRecord.after,
+        section: iterationRecord.section,
+        suggestion: iterationRecord.suggestion,
+        timestamp: iterationRecord.timestamp
+      }
+    }
+  }
+  
+  // 返回当前迭代状态
+  if (iterationState.hasComparison) {
+    return {
+      before: iterationState.beforeIteration,
+      after: iterationState.afterIteration,
+      section: iterationState.iterationSection,
+      suggestion: iterationState.iterationSuggestion,
+      timestamp: new Date().toISOString()
+    }
+  }
+  
+  return null
+}
+
+export const isIterationMessage = (messageId) => {
+  return iterationState.lastIterationMessageId === messageId ||
+         currentPlanState.iterationHistory.some(record => record.messageId === messageId)
 }
 
 // 在开发环境中暴露调试函数

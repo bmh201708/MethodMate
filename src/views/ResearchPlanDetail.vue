@@ -813,7 +813,7 @@ import { ref, watch, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ChatBox from '../components/ChatBox.vue'
 import { sendMessage, chatState } from '../stores/chatStore'
-import { papersState, addHistoryPlan, historyState, clearCurrentViewingPlan, currentPlanState, updateCurrentPlan, applyPlanAsCurrentPlan, updateSourceIntroduction, getSourceIntroduction, clearSourceIntroductions } from '../stores/chatStore'
+import { papersState, addHistoryPlan, historyState, clearCurrentViewingPlan, currentPlanState, updateCurrentPlan, applyPlanAsCurrentPlan, updateSourceIntroduction, getSourceIntroduction, clearSourceIntroductions, storeIterationSnapshot, completeIteration } from '../stores/chatStore'
 import { marked } from 'marked'
 import markedKatex from 'marked-katex-extension'
 import 'katex/dist/katex.min.css'
@@ -1471,6 +1471,15 @@ const parseResearchPlanResponse = (content) => {
       // 显示成功提示
       console.log('成功解析并更新研究方案')
       
+      // 如果是迭代状态，完成迭代对比数据准备
+      if (isIterating.value) {
+        const latestMessage = chatState.messages[chatState.messages.length - 1]
+        if (latestMessage && latestMessage.type === 'assistant') {
+          console.log('完成迭代，消息ID:', latestMessage.id)
+          completeIteration(latestMessage.id)
+        }
+      }
+      
       // 使用Vue的nextTick确保DOM更新完成后再显示提示
       setTimeout(() => {
         if (isIterating.value) {
@@ -1668,6 +1677,15 @@ const parseSectionIterationResponse = (content, section) => {
       activeSection.value = section
       
       console.log(`成功更新${sectionName}部分`)
+      
+      // 如果是迭代状态，完成迭代对比数据准备
+      if (isIterating.value) {
+        const latestMessage = chatState.messages[chatState.messages.length - 1]
+        if (latestMessage && latestMessage.type === 'assistant') {
+          console.log('完成部分迭代，消息ID:', latestMessage.id)
+          completeIteration(latestMessage.id)
+        }
+      }
       
       // 显示成功提示
       setTimeout(() => {
@@ -1996,16 +2014,16 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
 请基于我提供的研究内容和目的，以及我选择的参考文献中的定量研究部分，构建一份人机交互（HCI）领域的高质量定量研究方案。方案需结构完整、逻辑严谨、内容具体，避免泛泛而谈或堆砌无效信息。包括以下部分：
 ● 研究假设：简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
 ● 实验设计：详述实验方案，包括被试特征（如年龄、背景、样本量等）、分组方式、实验流程及任务设置。确保所有参数具体明确，不使用模糊表述（如“若干”、“约xx人”），采用分段或分点详述，不使用表格。
-● 数据采集与分析：说明采集哪些用户数据（如行为日志、生理数据、主观评分等），以及如何采集。匹配每项数据类型，明确采用的统计分析方法（如t检验、ANOVA、回归等），并解释其与假设的对应关系。采用分段或分点详述，不使用表格。
-● 结果预期与呈现：构思可能的分析结果及与假设的关系。指出适合呈现各类结果的图表形式（如箱线图、交互效应图等），并说明图表与结论之间的映射关系。采用分段或分点详述，不使用表格。
+● 数据分析：说明采集哪些用户数据（如行为日志、生理数据、主观评分等），以及如何采集。匹配每项数据类型，明确采用的统计分析方法（如t检验、ANOVA、回归等），并解释其与假设的对应关系。采用分段或分点详述，不使用表格。
+● 结果呈现：构思可能的分析结果及与假设的关系。指出适合呈现各类结果的图表形式（如箱线图、交互效应图等），并说明图表与结论之间的映射关系。采用分段或分点详述，不使用表格。
 要求： 所有内容需围绕输入研究构建，信息准确、精炼、无冗余。如输入不完整，可合理假设，但需标明前提。`
     } else {
       message += `
 请基于对话内容，以及我选择的参考文献中的定量研究部分，构建一份人机交互（HCI）领域的高质量定量研究方案。方案需结构完整、逻辑严谨、内容具体，避免泛泛而谈或堆砌无效信息。包括以下部分：
 ● 研究假设：简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
 ● 实验设计：详述实验方案，包括被试特征（如年龄、背景、样本量等）、分组方式、实验流程及任务设置。确保所有参数具体明确，不使用模糊表述（如“若干”、“约xx人”），采用分段或分点详述，不使用表格。
-● 数据采集与分析：说明采集哪些用户数据（如行为日志、生理数据、主观评分等），以及如何采集。匹配每项数据类型，明确采用的统计分析方法（如t检验、ANOVA、回归等），并解释其与假设的对应关系。采用分段或分点详述，不使用表格。
-● 结果预期与呈现：构思可能的分析结果及与假设的关系。指出适合呈现各类结果的图表形式（如箱线图、交互效应图等），并说明图表与结论之间的映射关系。采用分段或分点详述，不使用表格。
+● 数据分析：说明采集哪些用户数据（如行为日志、生理数据、主观评分等），以及如何采集。匹配每项数据类型，明确采用的统计分析方法（如t检验、ANOVA、回归等），并解释其与假设的对应关系。采用分段或分点详述，不使用表格。
+● 结果呈现：构思可能的分析结果及与假设的关系。指出适合呈现各类结果的图表形式（如箱线图、交互效应图等），并说明图表与结论之间的映射关系。采用分段或分点详述，不使用表格。
 要求： 所有内容需围绕输入研究构建，信息准确、精炼、无冗余。如输入不完整，可合理假设，但需标明前提。`
     }
     
@@ -2386,6 +2404,9 @@ const iteratePlanWithSuggestion = async (suggestion) => {
     isIterating.value = true
     
     console.log('开始迭代完整方案，建议:', suggestion)
+    
+    // 存储迭代前的方案快照
+    storeIterationSnapshot('full', suggestion)
 
     // 提取对话历史中的用户需求
     const conversationContext = extractConversationContext()
@@ -2456,6 +2477,9 @@ const iterateSectionPlan = async (section, suggestion) => {
     isIterating.value = true
     
     console.log(`开始迭代${section}部分，建议:`, suggestion)
+    
+    // 存储迭代前的方案快照
+    storeIterationSnapshot(section, suggestion)
     
     // 获取部分名称和内容
     const sectionName = getSectionNameInChinese(section)
