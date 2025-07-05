@@ -200,38 +200,98 @@
       <!-- 对话引导 -->
       <ConversationGuide @sendPrompt="handlePromptMessage" />
 
-      <!-- 输入框 -->
-      <div class="flex items-center space-x-2">
-        <div class="relative flex-1">
-          <input
-            v-model="newMessage"
-            type="text"
-            placeholder="请输入您的问题..."
-            class="w-full rounded-lg border border-gray-300 px-4 py-2 pr-16 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            @keyup.enter="handleSendMessage"
-            :disabled="chatState.isLoading"
-          />
-          <!-- 润色提示词按钮 -->
-          <button
-            @click="handleShowOptimizeDialog"
-            :disabled="!newMessage.trim() || chatState.isLoading"
-            class="absolute right-2 top-1/2 transform -translate-y-1/2 px-2 py-1 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-            title="润色提示词"
-          >
-            <!-- 魔法棒图标 -->
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-            <span class="text-xs font-medium">润色</span>
-          </button>
-        </div>
-        <button
-          @click="handleSendMessage"
-          class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="chatState.isLoading"
+      <!-- 悬浮输入框 -->
+      <div class="fixed bottom-4 left-4 z-50">
+        <!-- 收起状态：圆形按钮 -->
+        <div v-if="!isInputExpanded" 
+             @click="expandInput"
+             class="w-14 h-14 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
         >
-          发送
-        </button>
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.013 8.013 0 01-7-4c0-4.418 3.582-8 8-8s8 3.582 8 8z"/>
+          </svg>
+        </div>
+
+        <!-- 展开状态：完整输入框 -->
+        <div v-else 
+             class="bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 min-w-80 max-w-md transition-all duration-300 transform"
+             :class="{ 'animate-scale-in': isInputExpanded }"
+        >
+          <!-- 头部 -->
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full"></div>
+              <h3 class="text-sm font-medium text-gray-900">AI助手</h3>
+            </div>
+            <button 
+              @click="collapseInput"
+              class="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- 输入区域 -->
+          <div class="space-y-3">
+            <div class="relative">
+              <textarea
+                v-model="newMessage"
+                placeholder="请输入您的问题..."
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                rows="3"
+                @keyup.enter.ctrl="handleSendMessage"
+                @keyup.enter.exact="handleSendMessage"
+                :disabled="chatState.isLoading"
+              />
+              <!-- 润色按钮 -->
+              <button
+                @click="handleShowOptimizeDialog"
+                :disabled="!newMessage.trim() || chatState.isLoading"
+                class="absolute right-2 top-2 p-1.5 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="润色提示词"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- 按钮组 -->
+            <div class="flex items-center justify-between">
+              <button
+                @click="handleShowOptimizeDialog"
+                :disabled="!newMessage.trim() || chatState.isLoading"
+                class="flex items-center space-x-1 px-3 py-1.5 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                <span>润色</span>
+              </button>
+              
+              <button
+                @click="handleSendMessage"
+                :disabled="chatState.isLoading || !newMessage.trim()"
+                class="flex items-center space-x-1 px-4 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg v-if="chatState.isLoading" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                </svg>
+                <span>{{ chatState.isLoading ? '发送中...' : '发送' }}</span>
+              </button>
+            </div>
+
+            <!-- 快捷提示 -->
+            <div class="text-xs text-gray-500 text-center">
+              按 Ctrl+Enter 快速发送
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -276,6 +336,7 @@ const chatContainer = ref(null)
 const showOptimizeDialog = ref(false)
 const showComparisonDialog = ref(false)
 const currentComparisonData = ref(null)
+const isInputExpanded = ref(false)
 
 // 用户状态
 const userStore = useUserStore()
@@ -1104,6 +1165,9 @@ const handleSendMessage = async () => {
   // 传递页面上下文给sendMessage方法
   await sendMessage(message, props.pageContext)
   
+  // 发送消息后自动收起输入框
+  collapseInput()
+  
   // 自动滚动到底部
   nextTick(() => {
     if (chatContainer.value) {
@@ -1120,9 +1184,37 @@ watch(() => chatState.messages.length, () => {
     }
   })
 })
+
+// 展开悬浮输入框
+const expandInput = () => {
+  isInputExpanded.value = true
+}
+
+// 收起悬浮输入框
+const collapseInput = () => {
+  isInputExpanded.value = false
+}
+
+
 </script>
 
 <style scoped>
+/* 悬浮输入框样式 */
+@keyframes scale-in {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out;
+}
+
 /* 自定义滚动条样式 */
 .overflow-y-auto::-webkit-scrollbar {
   width: 6px;

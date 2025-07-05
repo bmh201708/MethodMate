@@ -50,7 +50,7 @@
         </div>
 
         <!-- 研究方案详情 -->
-        <div class="col-span-7">
+        <div class="col-span-7 h-[calc(100vh-10rem)] overflow-y-auto custom-scrollbar">
           <!-- 
             右侧显示的是当前方案：
             - 如果用户生成了AI方案，显示AI生成的内容
@@ -3072,6 +3072,33 @@ const confirmIterate = async () => {
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* 研究方案详情区域的自定义滚动条样式 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin: 8px 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #a855f7 0%, #8b5cf6 100%);
+  border-radius: 4px;
+  border: 2px solid #f8f9fa;
+  transition: all 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #9333ea 0%, #7c3aed 100%);
+  border-color: #f3f4f6;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, #7c3aed 0%, #6d28d9 100%);
 }
 
 /* Markdown样式增强 */
