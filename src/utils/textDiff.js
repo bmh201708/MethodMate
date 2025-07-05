@@ -1,18 +1,39 @@
 // 文本差异对比工具
 // 基于最长公共子序列算法实现文本差异检测
 
+// 判断文本是否只包含空格或换行符
+function isWhitespaceOnly(text) {
+  if (!text) return true
+  return /^\s*$/.test(text)
+}
+
+// 过滤掉只包含空格或换行符的差异项
+function filterMeaningfulDiffs(diffs) {
+  return diffs.filter(item => {
+    // 保留 unchanged 类型的项
+    if (item.type === 'unchanged') return true
+    
+    // 过滤掉只包含空格或换行符的 added 和 removed 项
+    if (item.type === 'added' || item.type === 'removed') {
+      return !isWhitespaceOnly(item.text)
+    }
+    
+    return true
+  })
+}
+
 // 计算两个文本的差异
 export function computeTextDiff(oldText, newText) {
   if (!oldText && !newText) return []
-  if (!oldText) return [{ type: 'added', text: newText }]
-  if (!newText) return [{ type: 'removed', text: oldText }]
+  if (!oldText) return isWhitespaceOnly(newText) ? [] : [{ type: 'added', text: newText }]
+  if (!newText) return isWhitespaceOnly(oldText) ? [] : [{ type: 'removed', text: oldText }]
 
   // 按行分割文本进行比较
   const oldLines = oldText.split('\n')
   const newLines = newText.split('\n')
   
   const diff = computeLineDiff(oldLines, newLines)
-  return diff
+  return filterMeaningfulDiffs(diff)
 }
 
 // 计算行级别的差异
@@ -100,29 +121,97 @@ function longestCommonSubsequence(arr1, arr2) {
 
 // 将差异转换为HTML
 export function diffToHtml(diff) {
-  return diff.map(item => {
+  // 过滤掉只包含空格或换行符的差异
+  const filteredDiff = filterMeaningfulDiffs(diff)
+  
+  // 合并连续的未修改内容
+  const mergedDiff = mergeUnchangedSections(filteredDiff)
+  
+  return mergedDiff.map(item => {
     const text = item.text || ''
+    const escapedText = escapeHtml(text)
     
     switch (item.type) {
       case 'added':
         return `<div class="diff-added p-2 my-1 rounded-lg bg-green-50 border-l-4 border-green-400">
           <span class="text-green-800 font-medium text-sm">+ 新增：</span>
-          <div class="text-green-700 mt-1 whitespace-pre-wrap">${text}</div>
+          <div class="text-green-700 mt-1 whitespace-pre-wrap">${escapedText}</div>
         </div>`
       case 'removed':
         return `<div class="diff-removed p-2 my-1 rounded-lg bg-red-50 border-l-4 border-red-400">
           <span class="text-red-800 font-medium text-sm">- 删除：</span>
-          <div class="text-red-700 mt-1 whitespace-pre-wrap line-through">${text}</div>
+          <div class="text-red-700 mt-1 whitespace-pre-wrap line-through">${escapedText}</div>
         </div>`
       case 'unchanged':
         return `<div class="diff-unchanged p-2 my-1 rounded-lg bg-gray-50 border-l-4 border-gray-300">
           <span class="text-gray-600 font-medium text-sm">未修改：</span>
-          <div class="text-gray-700 mt-1 whitespace-pre-wrap">${text}</div>
+          <div class="text-gray-700 mt-1 whitespace-pre-wrap">${escapedText}</div>
+        </div>`
+      case 'unchanged-merged':
+        return `<div class="diff-unchanged-merged p-2 my-1 rounded-lg bg-gray-50 border-l-4 border-gray-300">
+          <button class="unchanged-toggle w-full text-left flex items-center justify-between text-gray-600 font-medium text-sm hover:text-gray-800 transition-colors" 
+                  onclick="toggleUnchangedSection(this)">
+            <span>未修改：${item.lineCount} 行内容</span>
+            <svg class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+          <div class="unchanged-content hidden text-gray-700 mt-2 whitespace-pre-wrap border-t border-gray-200 pt-2">${escapedText}</div>
         </div>`
       default:
-        return `<div class="whitespace-pre-wrap">${text}</div>`
+        return `<div class="whitespace-pre-wrap">${escapedText}</div>`
     }
   }).join('')
+}
+
+// 合并连续的未修改内容
+function mergeUnchangedSections(diffs) {
+  const merged = []
+  let currentUnchanged = []
+  
+  for (let i = 0; i < diffs.length; i++) {
+    const item = diffs[i]
+    
+    if (item.type === 'unchanged') {
+      currentUnchanged.push(item)
+    } else {
+      // 处理累积的未修改内容
+      if (currentUnchanged.length > 0) {
+        if (currentUnchanged.length >= 3) {
+          // 合并多行未修改内容
+          const mergedText = currentUnchanged.map(u => u.text).join('\n')
+          merged.push({
+            type: 'unchanged-merged',
+            text: mergedText,
+            lineCount: currentUnchanged.length
+          })
+        } else {
+          // 少于3行的未修改内容保持原样
+          merged.push(...currentUnchanged)
+        }
+        currentUnchanged = []
+      }
+      
+      // 添加当前的修改项
+      merged.push(item)
+    }
+  }
+  
+  // 处理最后剩余的未修改内容
+  if (currentUnchanged.length > 0) {
+    if (currentUnchanged.length >= 3) {
+      const mergedText = currentUnchanged.map(u => u.text).join('\n')
+      merged.push({
+        type: 'unchanged-merged',
+        text: mergedText,
+        lineCount: currentUnchanged.length
+      })
+    } else {
+      merged.push(...currentUnchanged)
+    }
+  }
+  
+  return merged
 }
 
 // 计算字段级别的差异
@@ -200,8 +289,8 @@ export function getDiffStats(diffs) {
 // 计算简单的词级别差异（用于短文本）
 export function computeWordDiff(oldText, newText) {
   if (!oldText && !newText) return []
-  if (!oldText) return [{ type: 'added', text: newText }]
-  if (!newText) return [{ type: 'removed', text: oldText }]
+  if (!oldText) return isWhitespaceOnly(newText) ? [] : [{ type: 'added', text: newText }]
+  if (!newText) return isWhitespaceOnly(oldText) ? [] : [{ type: 'removed', text: oldText }]
 
   const oldWords = oldText.split(/(\s+)/)
   const newWords = newText.split(/(\s+)/)
@@ -246,12 +335,15 @@ export function computeWordDiff(oldText, newText) {
     }
   }
   
-  return diff
+  return filterMeaningfulDiffs(diff)
 }
 
 // 将词级别差异转换为HTML
 export function wordDiffToHtml(diff) {
-  return diff.map(item => {
+  // 过滤掉只包含空格的差异
+  const filteredDiff = filterMeaningfulDiffs(diff)
+  
+  return filteredDiff.map(item => {
     const escapedText = escapeHtml(item.text)
     
     switch (item.type) {

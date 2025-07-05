@@ -182,7 +182,7 @@
 </template>
 
 <script setup>
-import { computed, defineProps, defineEmits } from 'vue'
+import { computed, defineProps, defineEmits, onMounted } from 'vue'
 import { computeFieldDiff, diffToHtml, getDiffStats } from '../utils/textDiff'
 import { marked } from 'marked'
 
@@ -279,6 +279,38 @@ const renderMarkdown = (content) => {
 const closeDialog = () => {
   emit('close')
 }
+
+// 切换未修改内容的展开/折叠状态
+const toggleUnchangedSection = (event) => {
+  const button = event.currentTarget
+  const content = button.parentElement.querySelector('.unchanged-content')
+  const icon = button.querySelector('svg')
+  
+  if (content.classList.contains('hidden')) {
+    content.classList.remove('hidden')
+    icon.style.transform = 'rotate(180deg)'
+  } else {
+    content.classList.add('hidden')
+    icon.style.transform = 'rotate(0deg)'
+  }
+}
+
+// 在mounted阶段添加全局函数以支持HTML中的onclick调用
+onMounted(() => {
+  // 为HTML中的onclick调用提供全局函数
+  window.toggleUnchangedSection = (button) => {
+    const content = button.parentElement.querySelector('.unchanged-content')
+    const icon = button.querySelector('svg')
+    
+    if (content.classList.contains('hidden')) {
+      content.classList.remove('hidden')
+      icon.style.transform = 'rotate(180deg)'
+    } else {
+      content.classList.add('hidden')
+      icon.style.transform = 'rotate(0deg)'
+    }
+  }
+})
 </script>
 
 <style scoped>
@@ -318,6 +350,44 @@ const closeDialog = () => {
   background-color: rgb(249 250 251) !important;
   border-left: 4px solid rgb(156 163 175) !important;
   margin: 0.25rem 0 !important;
+}
+
+:deep(.diff-unchanged-merged) {
+  background-color: rgb(249 250 251) !important;
+  border-left: 4px solid rgb(156 163 175) !important;
+  margin: 0.25rem 0 !important;
+}
+
+:deep(.unchanged-toggle) {
+  transition: all 0.2s ease;
+}
+
+:deep(.unchanged-toggle:hover) {
+  background-color: rgb(243 244 246) !important;
+}
+
+:deep(.unchanged-content) {
+  max-height: 300px;
+  overflow-y: auto;
+  transition: all 0.3s ease;
+}
+
+:deep(.unchanged-content::-webkit-scrollbar) {
+  width: 4px;
+}
+
+:deep(.unchanged-content::-webkit-scrollbar-track) {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+:deep(.unchanged-content::-webkit-scrollbar-thumb) {
+  background: #c5c5c5;
+  border-radius: 2px;
+}
+
+:deep(.unchanged-content::-webkit-scrollbar-thumb:hover) {
+  background: #a8a8a8;
 }
 
 :deep(.line-through) {
