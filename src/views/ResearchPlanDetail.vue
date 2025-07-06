@@ -541,18 +541,6 @@
                         >
                           测试：单样本t检验
                         </button>
-                        <button
-                          @click="testMarkdownRender"
-                          class="px-3 py-1 text-sm bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
-                        >
-                          测试渲染器
-                        </button>
-                        <button
-                          @click="() => { console.log('当前统计方法结果:', statisticalMethodResult); console.log('渲染结果:', renderedStatisticalMethodResult); }"
-                          class="px-3 py-1 text-sm bg-yellow-100 text-yellow-600 rounded hover:bg-yellow-200 transition-colors"
-                        >
-                          调试信息
-                        </button>
                       </div>
                       
                       <!-- 查询结果 -->
@@ -1013,17 +1001,6 @@ const safeMarkdownRender = (text) => {
     console.error('Markdown渲染错误:', error)
     return text || '' // 如果渲染失败，返回原始文本
   }
-}
-
-// 测试markdown渲染的函数
-const testMarkdownRender = () => {
-  const testMarkdown = `测试LaTeX公式：![img](https://cdn.nlark.com/yuque/__latex/97175e519d61d550ce1d0327b2f7999f.svg) 和普通文本。`
-  console.log('=== 测试Markdown渲染 ===')
-  console.log('输入:', testMarkdown)
-  const rendered = safeMarkdownRender(testMarkdown)
-  console.log('输出:', rendered)
-  console.log('========================')
-  return rendered
 }
 
 // Markdown渲染计算属性
