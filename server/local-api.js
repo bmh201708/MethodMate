@@ -5301,6 +5301,214 @@ app.get('/api/paper-cache/:id', optionalAuth, async (req, res) => {
   }
 });
 
+// 以HTML格式查看缓存的论文内容
+app.get('/api/paper-cache/:id/view', optionalAuth, async (req, res) => {
+  try {
+    const paperId = req.params.id;
+    const pool = getPool();
+
+    const [results] = await pool.execute(
+      `SELECT * FROM paper_cache WHERE id = ?`,
+      [paperId]
+    );
+
+    if (results.length === 0) {
+      return res.status(404).send(`
+        <html>
+          <head><title>论文未找到</title><meta charset="utf-8"></head>
+          <body style="font-family: Arial, sans-serif; margin: 40px; color: #333;">
+            <h1>论文未找到</h1>
+            <p>请求的论文不存在或已被删除。</p>
+            <a href="javascript:history.back()">返回上一页</a>
+          </body>
+        </html>
+      `);
+    }
+
+    const paper = results[0];
+    
+    // 构建HTML内容
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${paper.title || '论文详情'}</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 20px;
+              background-color: #f9f9f9;
+            }
+            .paper-container {
+              background: white;
+              padding: 30px;
+              border-radius: 8px;
+              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            .paper-title {
+              color: #2563eb;
+              font-size: 24px;
+              margin-bottom: 20px;
+              border-bottom: 2px solid #e5e7eb;
+              padding-bottom: 10px;
+            }
+            .meta-info {
+              background: #f3f4f6;
+              padding: 15px;
+              border-radius: 6px;
+              margin-bottom: 25px;
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 10px;
+            }
+            .meta-item {
+              font-size: 14px;
+            }
+            .meta-label {
+              font-weight: 600;
+              color: #374151;
+            }
+            .section {
+              margin-bottom: 30px;
+            }
+            .section-title {
+              color: #1f2937;
+              font-size: 18px;
+              font-weight: 600;
+              margin-bottom: 15px;
+              border-left: 4px solid #2563eb;
+              padding-left: 15px;
+            }
+            .content {
+              text-align: justify;
+              white-space: pre-wrap;
+              background: #fafafa;
+              padding: 20px;
+              border-radius: 6px;
+              border: 1px solid #e5e7eb;
+            }
+            .badge {
+              display: inline-block;
+              background: #10b981;
+              color: white;
+              padding: 4px 8px;
+              border-radius: 4px;
+              font-size: 12px;
+              font-weight: 500;
+            }
+            .back-button {
+              display: inline-block;
+              background: #6b7280;
+              color: white;
+              padding: 8px 16px;
+              text-decoration: none;
+              border-radius: 6px;
+              margin-bottom: 20px;
+            }
+            .back-button:hover {
+              background: #4b5563;
+            }
+          </style>
+        </head>
+        <body>
+          <a href="javascript:history.back()" class="back-button">← 返回上一页</a>
+          
+          <div class="paper-container">
+            <div class="badge">本地缓存内容</div>
+            
+            <h1 class="paper-title">${paper.title || '无标题'}</h1>
+            
+            <div class="meta-info">
+              <div class="meta-item">
+                <span class="meta-label">作者:</span> ${paper.authors || '未知'}
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">年份:</span> ${paper.year || '未知'}
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">期刊:</span> ${paper.journal || paper.venue || '未知'}
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">引用次数:</span> ${paper.citation_count || 0}
+              </div>
+              ${paper.doi ? `<div class="meta-item"><span class="meta-label">DOI:</span> ${paper.doi}</div>` : ''}
+              <div class="meta-item">
+                <span class="meta-label">缓存时间:</span> ${new Date(paper.created_at).toLocaleDateString('zh-CN')}
+              </div>
+            </div>
+
+            ${paper.abstract ? `
+              <div class="section">
+                <h2 class="section-title">摘要</h2>
+                <div class="content">${paper.abstract}</div>
+              </div>
+            ` : ''}
+
+            ${paper.translated_abstract ? `
+              <div class="section">
+                <h2 class="section-title">摘要翻译</h2>
+                <div class="content">${paper.translated_abstract}</div>
+              </div>
+            ` : ''}
+
+            ${paper.research_method ? `
+              <div class="section">
+                <h2 class="section-title">研究方法</h2>
+                <div class="content">${paper.research_method}</div>
+              </div>
+            ` : ''}
+
+            ${paper.translated_method ? `
+              <div class="section">
+                <h2 class="section-title">研究方法翻译</h2>
+                <div class="content">${paper.translated_method}</div>
+              </div>
+            ` : ''}
+
+            ${paper.full_text ? `
+              <div class="section">
+                <h2 class="section-title">全文内容</h2>
+                <div class="content">${paper.full_text.substring(0, 10000)}${paper.full_text.length > 10000 ? '...\n\n[内容过长，已截断显示前10000字符]' : ''}</div>
+              </div>
+            ` : ''}
+
+            ${paper.url ? `
+              <div class="section">
+                <h2 class="section-title">原文链接</h2>
+                <a href="${paper.url}" target="_blank" style="color: #2563eb; text-decoration: none;">
+                  ${paper.url}
+                </a>
+              </div>
+            ` : ''}
+          </div>
+        </body>
+      </html>
+    `;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(htmlContent);
+    
+  } catch (error) {
+    console.error('查看缓存论文内容错误:', error);
+    res.status(500).send(`
+      <html>
+        <head><title>服务器错误</title><meta charset="utf-8"></head>
+        <body style="font-family: Arial, sans-serif; margin: 40px; color: #333;">
+          <h1>服务器错误</h1>
+          <p>获取论文内容时发生错误，请稍后重试。</p>
+          <a href="javascript:history.back()">返回上一页</a>
+        </body>
+      </html>
+    `);
+  }
+});
+
 // 删除缓存的论文
 app.delete('/api/paper-cache/:id', authenticateToken, async (req, res) => {
   try {
@@ -5524,6 +5732,155 @@ app.get('/papers', (req, res) => {
       res.status(404).send('页面未找到');
     }
   });
+});
+
+// 论文下载链接获取API端点
+app.post('/api/paper-download', async (req, res) => {
+  try {
+    const { paper_url, doi, title } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ 
+        success: false,
+        error: '需要提供论文标题' 
+      });
+    }
+
+    console.log('开始获取论文下载链接，标题:', title);
+    console.log('Semantic Scholar URL:', paper_url);
+    console.log('DOI:', doi);
+    
+    let downloadSources = [];
+    let message = '';
+    
+    // 1. 如果有DOI，尝试构造常见的下载链接
+    if (doi) {
+      downloadSources.push({
+        source: 'CrossRef DOI',
+        url: `https://doi.org/${doi}`,
+        free: false
+      });
+      
+      // 尝试arXiv
+      if (doi.includes('arxiv') || title.toLowerCase().includes('arxiv')) {
+        const arxivMatch = doi.match(/arxiv[\.:](\d+\.\d+)/i) || title.match(/arxiv[\.:\s]+(\d+\.\d+)/i);
+        if (arxivMatch) {
+          downloadSources.push({
+            source: 'arXiv',
+            url: `https://arxiv.org/pdf/${arxivMatch[1]}.pdf`,
+            free: true
+          });
+        }
+      }
+    }
+    
+    // 2. 检查是否有本地缓存的内容（而不是外部链接）
+    try {
+      const cachedPaper = await searchPaperInDatabase(title, doi);
+      if (cachedPaper && cachedPaper.full_text) {
+        // 如果有缓存的全文内容，提供查看缓存内容的链接
+        downloadSources.push({
+          source: '本地缓存内容',
+          url: `/api/paper-cache/${cachedPaper.id}/view`, // 指向HTML查看端点
+          free: true,
+          type: 'cached_content' // 标记为缓存内容类型
+        });
+      }
+      // 注意：不再使用cachedPaper.download_url，因为那是外部链接
+    } catch (error) {
+      console.warn('查询本地缓存失败:', error.message);
+    }
+    
+    // 3. 尝试从CORE API获取下载链接
+    try {
+      let coreResults = [];
+      
+      // 先尝试DOI搜索
+      if (doi) {
+        coreResults = await searchCoreByDOI(doi);
+      }
+      
+      // 如果DOI搜索无结果，再尝试标题搜索
+      if (coreResults.length === 0) {
+        coreResults = await searchCoreByTitle(title);
+      }
+      
+      // 处理CORE API结果
+      for (const paper of coreResults.slice(0, 3)) { // 最多取前3个结果
+        if (paper.downloadUrl) {
+          downloadSources.push({
+            source: 'CORE',
+            url: paper.downloadUrl,
+            free: true
+          });
+        }
+        if (paper.repositories && paper.repositories.length > 0) {
+          for (const repo of paper.repositories.slice(0, 2)) {
+            if (repo.url) {
+              downloadSources.push({
+                source: repo.name || 'Repository',
+                url: repo.url,
+                free: true
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('CORE API查询失败:', error.message);
+    }
+    
+    // 4. 添加常见的学术搜索引擎链接
+    const encodedTitle = encodeURIComponent(title);
+    
+    downloadSources.push({
+      source: 'Google Scholar',
+      url: `https://scholar.google.com/scholar?q=${encodedTitle}`,
+      free: false
+    });
+    
+    downloadSources.push({
+      source: 'Semantic Scholar',
+      url: paper_url || `https://www.semanticscholar.org/search?q=${encodedTitle}`,
+      free: false
+    });
+    
+    downloadSources.push({
+      source: 'ResearchGate',
+      url: `https://www.researchgate.net/search?q=${encodedTitle}`,
+      free: false
+    });
+    
+    // 5. 去重并设置消息
+    const uniqueSources = downloadSources.filter((source, index, self) => 
+      index === self.findIndex(s => s.url === source.url)
+    );
+    
+    const freeCount = uniqueSources.filter(s => s.free).length;
+    const totalCount = uniqueSources.length;
+    
+    if (freeCount > 0) {
+      message = `找到 ${totalCount} 个下载源，其中 ${freeCount} 个可能免费获取`;
+    } else {
+      message = `找到 ${totalCount} 个搜索链接，建议通过机构访问或联系作者获取`;
+    }
+    
+    res.json({
+      success: true,
+      download_sources: uniqueSources,
+      message: message,
+      title: title,
+      total_sources: totalCount,
+      free_sources: freeCount
+    });
+    
+  } catch (error) {
+    console.error('获取论文下载链接错误:', error);
+    res.status(500).json({ 
+      success: false,
+      error: '获取下载链接失败: ' + error.message
+    });
+  }
 });
 
 // 启动服务器
