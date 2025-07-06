@@ -1,155 +1,403 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col">
-    <main class="flex-1 max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="grid grid-cols-12 gap-8">
-        <!-- 左侧聊天框 -->
-        <div class="col-span-4">
-          <ChatBox />
-        </div>
+    <div class="min-h-screen bg-gray-50 flex flex-col">
+        <main class="flex-1 max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-12 gap-8">
+                <!-- 左侧历史方案列表 -->
+                <div class="col-span-5 h-[calc(100vh-10rem)] overflow-y-auto custom-scrollbar">
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-6">历史方案列表</h2>
 
-        <!-- 右侧历史方案列表 -->
-        <div class="col-span-8">
-          <!-- 加载状态 -->
-          <div v-if="isLoading" class="bg-white rounded-lg shadow-sm p-12 text-center">
-            <div class="mb-6">
-              <svg class="animate-spin mx-auto h-12 w-12 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">正在加载历史方案...</h3>
-            <p class="text-gray-500">请稍候，正在从数据库获取您的研究方案</p>
-          </div>
+                        <!-- 加载状态 -->
+                        <div v-if="isLoading" class="text-center py-12">
+                            <div class="mb-6">
+                                <svg class="animate-spin mx-auto h-12 w-12 text-purple-600" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">正在加载历史方案...</h3>
+                            <p class="text-gray-500">请稍候，正在从数据库获取您的研究方案</p>
+                        </div>
 
-          <!-- 顶部操作按钮 -->
-          <div v-else-if="historyState.historyPlans.length > 0" class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-semibold text-gray-900">
-              共 {{ historyState.historyPlans.length }} 个历史方案
-            </h2>
-            <button 
-              @click="confirmClearAll"
-              class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              清除所有方案
-            </button>
-          </div>
-          
-          <div v-if="!isLoading && historyState.historyPlans.length > 0" class="space-y-4">
-            <div v-for="plan in historyState.historyPlans" :key="plan.id" 
-                 class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-              <div class="p-6 cursor-pointer" @click="viewPlan(plan)">
-                <div class="flex justify-between items-start">
-                  <div class="space-y-2 flex-1">
-                    <h3 class="text-lg font-semibold text-gray-900">{{ plan.title }}</h3>
-                    <p class="text-gray-600 line-clamp-2">{{ plan.description }}</p>
-                    <div class="flex items-center space-x-4 text-sm text-gray-500">
-                      <span>创建时间：{{ plan.createdAt }}</span>
-                      <span>作者：{{ plan.author }}</span>
+                        <!-- 顶部操作按钮 -->
+                        <div v-else-if="historyState.historyPlans.length > 0"
+                            class="flex justify-between items-center mb-6">
+                            <p class="text-sm text-gray-600">
+                                共 {{ historyState.historyPlans.length }} 个历史方案
+                            </p>
+                            <button @click="confirmClearAll"
+                                class="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm">
+                                清除所有
+                            </button>
+                        </div>
+
+                        <div v-if="!isLoading && historyState.historyPlans.length > 0" class="space-y-3">
+                            <div v-for="plan in historyState.historyPlans" :key="plan.id"
+                                class="border border-gray-200 rounded-lg hover:shadow-md transition-all cursor-pointer"
+                                :class="[selectedPlan && selectedPlan.id === plan.id ? 'bg-purple-50 border-purple-200' : 'bg-white hover:bg-gray-50']"
+                                @click="selectPlan(plan)">
+                                <div class="p-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h3 class="text-sm font-semibold text-gray-900 line-clamp-2">{{ plan.title }}
+                                        </h3>
+                                        <div class="flex items-center space-x-2 ml-2">
+                                            <span v-if="historyState.currentAppliedPlanId === plan.id"
+                                                class="px-2 py-1 bg-green-100 text-green-600 rounded-full text-xs font-medium">
+                                                应用中
+                                            </span>
+                                            <span v-else
+                                                class="px-2 py-1 bg-purple-100 text-purple-600 rounded-full text-xs">
+                                                {{ plan.status }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p class="text-gray-600 text-sm line-clamp-2 mb-2">{{ plan.description }}</p>
+                                    <div class="flex items-center justify-between text-xs text-gray-500">
+                                        <span>{{ plan.createdAt }}</span>
+                                        <span>{{ plan.author }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 操作按钮区域 -->
+                                <div
+                                    class="px-4 py-2 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+                                    <button @click.stop="applyPlan(plan)"
+                                        class="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs">
+                                        应用方案
+                                    </button>
+                                    <button @click.stop="confirmDelete(plan)"
+                                        class="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-xs">
+                                        删除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 空状态 -->
+                        <div v-else-if="!isLoading" class="text-center py-12">
+                            <div class="mb-6">
+                                <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">暂无历史方案</h3>
+                            <p class="text-gray-500 mb-6">
+                                您还没有生成过任何研究方案。请前往研究方案页面开始创建您的第一个方案。
+                            </p>
+
+                            <!-- 调试信息区域 -->
+                            <div v-if="!userStore.isAuthenticated"
+                                class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd"
+                                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                    <span class="text-yellow-800 font-medium">您尚未登录</span>
+                                </div>
+                                <p class="text-yellow-700 mt-2">
+                                    历史方案功能需要登录后使用。请先登录您的账户。
+                                </p>
+                                <button @click="router.push('/login')"
+                                    class="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors">
+                                    立即登录
+                                </button>
+                            </div>
+
+                            <!-- 开发者调试信息 -->
+                            <div v-if="isDev && debugInfo.errorMessage"
+                                class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-left">
+                                <h4 class="text-red-800 font-medium mb-2">调试信息:</h4>
+                                <ul class="text-red-700 text-sm space-y-1">
+                                    <li>用户已登录: {{ debugInfo.userAuthenticated ? '是' : '否' }}</li>
+                                    <li>方案数量: {{ debugInfo.planCount }}</li>
+                                    <li v-if="debugInfo.errorMessage">错误信息: {{ debugInfo.errorMessage }}</li>
+                                    <li v-if="debugInfo.apiResponse">API响应: {{ debugInfo.apiResponse }}</li>
+                                </ul>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                                <button @click="router.push('/research-plan')"
+                                    class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                                    开始创建方案
+                                </button>
+                                <button @click="refreshData"
+                                    class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                                    刷新数据
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                  </div>
-                  <div class="flex items-center space-x-2 ml-4">
-                    <span v-if="historyState.currentAppliedPlanId === plan.id" 
-                          class="px-3 py-1 bg-green-100 text-green-600 rounded-full text-sm font-medium">
-                      应用中
-                    </span>
-                    <span v-else 
-                          class="px-3 py-1 bg-purple-100 text-purple-600 rounded-full text-sm">
-                      {{ plan.status }}
-                    </span>
-                  </div>
                 </div>
-              </div>
-              
-              <!-- 操作按钮区域 -->
-              <div class="px-6 py-3 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
-                <button 
-                  @click="viewPlan(plan)"
-                  class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
-                >
-                  查看详情
-                </button>
-                <button 
-                  @click.stop="confirmDelete(plan)"
-                  class="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm"
-                >
-                  删除
-                </button>
-              </div>
+
+                <!-- 右侧方案详情 -->
+                <div class="col-span-7 h-[calc(100vh-10rem)] overflow-y-auto custom-scrollbar">
+                    <div v-if="selectedPlan" class="bg-white rounded-xl shadow-sm p-8">
+                        <div class="space-y-8">
+                            <!-- 方案导航按钮 -->
+                            <div class="flex space-x-4 mb-8">
+                                <button v-for="section in sections" :key="section.id"
+                                    @click="activeSection = section.id"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors" :class="[
+                                        activeSection === section.id
+                                            ? 'bg-purple-100 text-purple-700'
+                                            : 'text-gray-600 hover:bg-gray-100'
+                                    ]">
+                                    {{ section.name }}
+                                </button>
+                            </div>
+
+                            <!-- 完整方案 -->
+                            <div v-if="activeSection === 'full'">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h2 class="text-2xl font-bold text-gray-900">{{ selectedPlan.title }}</h2>
+                                    <div class="flex space-x-2">
+                                        <button @click="applyPlan(selectedPlan)"
+                                            class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                                            应用此方案
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="space-y-6">
+                                    <div
+                                        v-if="selectedPlan.fullPlan.hypotheses && selectedPlan.fullPlan.hypotheses.length > 0">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">研究假设</h3>
+                                        <div class="space-y-2">
+                                            <div v-for="(hypothesis, index) in selectedPlan.fullPlan.hypotheses"
+                                                :key="index" class="p-4 bg-gray-50 rounded-lg">
+                                                <div class="text-gray-900 prose prose-sm max-w-none"
+                                                    v-html="safeMarkdownRender(hypothesis)"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div v-if="selectedPlan.fullPlan.experimentalDesign">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">实验设计</h3>
+                                        <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                                            v-html="safeMarkdownRender(selectedPlan.fullPlan.experimentalDesign)"></div>
+                                    </div>
+
+                                    <div v-if="selectedPlan.fullPlan.analysisMethod">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">数据分析</h3>
+                                        <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                                            v-html="safeMarkdownRender(selectedPlan.fullPlan.analysisMethod)"></div>
+                                    </div>
+
+                                    <div v-if="selectedPlan.fullPlan.expectedResults">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">结果呈现</h3>
+                                        <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                                            v-html="safeMarkdownRender(selectedPlan.fullPlan.expectedResults)"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 研究假设部分 -->
+                            <div v-if="activeSection === 'hypothesis'">
+                                <h2 class="text-2xl font-bold text-gray-900 mb-6">研究假设</h2>
+                                <div v-if="selectedPlan.fullPlan.hypotheses && selectedPlan.fullPlan.hypotheses.length > 0"
+                                    class="space-y-4">
+                                    <div v-for="(hypothesis, index) in selectedPlan.fullPlan.hypotheses" :key="index"
+                                        class="p-4 bg-gray-50 rounded-lg">
+                                        <div class="text-gray-900 prose prose-sm max-w-none"
+                                            v-html="safeMarkdownRender(hypothesis)"></div>
+                                    </div>
+                                </div>
+                                <div v-else class="text-center py-12">
+                                    <div class="mb-4">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-gray-500">该方案暂无研究假设内容</p>
+                                </div>
+                            </div>
+
+                            <!-- 实验设计部分 -->
+                            <div v-if="activeSection === 'design'">
+                                <h2 class="text-2xl font-bold text-gray-900 mb-6">实验设计</h2>
+                                <div v-if="selectedPlan.fullPlan.experimentalDesign" class="space-y-6">
+                                    <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                                        v-html="safeMarkdownRender(selectedPlan.fullPlan.experimentalDesign)"></div>
+                                </div>
+                                <div v-else class="text-center py-12">
+                                    <div class="mb-4">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-gray-500">该方案暂无实验设计内容</p>
+                                </div>
+                            </div>
+
+                            <!-- 数据分析部分 -->
+                            <div v-if="activeSection === 'analysis'">
+                                <h2 class="text-2xl font-bold text-gray-900 mb-6">数据分析</h2>
+                                <div v-if="selectedPlan.fullPlan.analysisMethod" class="space-y-6">
+                                    <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                                        v-html="safeMarkdownRender(selectedPlan.fullPlan.analysisMethod)"></div>
+                                </div>
+                                <div v-else class="text-center py-12">
+                                    <div class="mb-4">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-gray-500">该方案暂无数据分析内容</p>
+                                </div>
+                            </div>
+
+                            <!-- 结果呈现部分 -->
+                            <div v-if="activeSection === 'results'">
+                                <h2 class="text-2xl font-bold text-gray-900 mb-6">结果呈现</h2>
+                                <div v-if="selectedPlan.fullPlan.expectedResults" class="space-y-6">
+                                    <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                                        v-html="safeMarkdownRender(selectedPlan.fullPlan.expectedResults)"></div>
+                                </div>
+                                <div v-else class="text-center py-12">
+                                    <div class="mb-4">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                                d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-gray-500">该方案暂无结果呈现内容</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 未选择方案时的提示 -->
+                    <div v-else class="bg-white rounded-xl shadow-sm p-8 text-center">
+                        <div class="mb-6">
+                            <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">请选择一个方案查看详情</h3>
+                        <p class="text-gray-500">
+                            点击左侧列表中的任一方案，即可在此处查看完整的方案内容和详细信息。
+                        </p>
+                    </div>
+                </div>
             </div>
-          </div>
-          
-          <!-- 空状态 -->
-          <div v-else-if="!isLoading" class="bg-white rounded-lg shadow-sm p-12 text-center">
-            <div class="mb-6">
-              <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-              </svg>
-            </div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">暂无历史方案</h3>
-            <p class="text-gray-500 mb-6">
-              您还没有生成过任何研究方案。请前往研究方案页面开始创建您的第一个方案。
-            </p>
-            
-            <!-- 调试信息区域 -->
-            <div v-if="!userStore.isAuthenticated" class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div class="flex items-center">
-                <svg class="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                </svg>
-                <span class="text-yellow-800 font-medium">您尚未登录</span>
-              </div>
-              <p class="text-yellow-700 mt-2">
-                历史方案功能需要登录后使用。请先登录您的账户。
-              </p>
-              <button 
-                @click="router.push('/login')"
-                class="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
-              >
-                立即登录
-              </button>
-            </div>
-            
-            <!-- 开发者调试信息 -->
-            <div v-if="isDev && debugInfo.errorMessage" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-left">
-              <h4 class="text-red-800 font-medium mb-2">调试信息:</h4>
-              <ul class="text-red-700 text-sm space-y-1">
-                <li>用户已登录: {{ debugInfo.userAuthenticated ? '是' : '否' }}</li>
-                <li>方案数量: {{ debugInfo.planCount }}</li>
-                <li v-if="debugInfo.errorMessage">错误信息: {{ debugInfo.errorMessage }}</li>
-                <li v-if="debugInfo.apiResponse">API响应: {{ debugInfo.apiResponse }}</li>
-              </ul>
-            </div>
-            
-            <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
-              <button 
-                @click="router.push('/research-plan')"
-                class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                开始创建方案
-              </button>
-              <button 
-                @click="refreshData"
-                class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                刷新数据
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
+        </main>
+    </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import ChatBox from '../components/ChatBox.vue'
-import { historyState, removeHistoryPlan, clearHistoryPlans, setCurrentViewingPlan, papersState, loadUserData } from '../stores/chatStore'
+import { historyState, removeHistoryPlan, clearHistoryPlans, setCurrentViewingPlan, papersState, loadUserData, applyPlanAsCurrentPlan } from '../stores/chatStore'
 import { useUserStore } from '../stores/userStore.js'
+import { marked } from 'marked'
+import markedKatex from 'marked-katex-extension'
+import 'katex/dist/katex.min.css'
 
 const router = useRouter()
 const userStore = useUserStore()
 const isLoading = ref(false)
+const selectedPlan = ref(null)
+const activeSection = ref('full')
+
+// 方案导航部分
+const sections = [
+    { id: 'full', name: '完整方案' },
+    { id: 'hypothesis', name: '研究假设' },
+    { id: 'design', name: '实验设计' },
+    { id: 'analysis', name: '数据分析' },
+    { id: 'results', name: '结果呈现' }
+]
+
+// 配置marked选项，支持LaTeX数学公式
+marked.use(markedKatex({
+    throwOnError: false,
+    displayMode: false,
+    output: 'html'
+}))
+
+// 自定义渲染器
+const renderer = new marked.Renderer()
+
+// 自定义图片渲染
+renderer.image = function (href, title, text) {
+    const cleanHref = href.trim()
+    if (!cleanHref) {
+        return `<span style="color: #ef4444;">[图片URL为空]</span>`
+    }
+
+    const titleAttr = title ? ` title="${title}"` : ''
+    const altAttr = text ? ` alt="${text || 'LaTeX公式'}"` : ' alt="LaTeX公式"'
+
+    const isExternalImage = cleanHref.startsWith('http://') || cleanHref.startsWith('https://')
+    const isLatexImage = cleanHref.includes('yuque/__latex')
+
+    let finalHref = cleanHref
+    if (isExternalImage && (isLatexImage || cleanHref.includes('cdn.nlark.com'))) {
+        finalHref = `/api/proxy-image?url=${encodeURIComponent(cleanHref)}`
+    }
+
+    let className, styles
+    if (isLatexImage) {
+        const isDisplayMode = cleanHref.includes('displaystyle') ||
+            cleanHref.includes('%5Cdisplaystyle') ||
+            cleanHref.includes('\\begin{') ||
+            cleanHref.includes('%5Cbegin') ||
+            cleanHref.includes('align') ||
+            cleanHref.includes('equation') ||
+            cleanHref.includes('$$') ||
+            (text && (text.includes('$$') || text.length > 50))
+
+        className = isDisplayMode ? 'latex-formula-display' : 'latex-formula-inline'
+        styles = isDisplayMode
+            ? 'display: block; margin: 0.5rem auto; max-width: 100%; max-height: 8em; border: none; background: transparent;'
+            : 'display: inline-block; margin: 0 2px; vertical-align: middle; max-height: 1.5em; border: none; background: transparent;'
+    } else {
+        className = 'markdown-image'
+        styles = 'max-width: 100%; height: auto; margin: 0.5rem 0; border-radius: 0.25rem;'
+    }
+
+    const referrerPolicy = isLatexImage ? ' referrerpolicy="no-referrer"' : ''
+
+    const onError = isExternalImage && (isLatexImage || cleanHref.includes('cdn.nlark.com'))
+        ? `this.src='${cleanHref}'; this.referrerPolicy='no-referrer';`
+        : `this.style.display='block'; this.style.background='#f9f9f9'; this.style.padding='20px'; this.style.border='1px dashed #ccc'; this.textContent='图片加载失败';`
+
+    return `<img src="${finalHref}" class="${className}" style="${styles}" ${titleAttr}${altAttr}${referrerPolicy} onerror="${onError}" />`
+}
+
+marked.setOptions({
+    breaks: true,
+    gfm: true,
+    headerIds: false,
+    mangle: false,
+    pedantic: false,
+    sanitize: false,
+    renderer: renderer
+})
+
+// 安全的markdown渲染函数
+const safeMarkdownRender = (text) => {
+    try {
+        if (!text) return ''
+        return marked(text)
+    } catch (error) {
+        console.error('Markdown渲染错误:', error)
+        return text || ''
+    }
+}
 
 // 开发环境检测
 const isDev = import.meta.env.DEV
@@ -159,121 +407,264 @@ const referencedCount = computed(() => papersState.referencedPapers.size)
 
 // 页面加载时主动加载数据
 onMounted(async () => {
-  await refreshData()
+    await refreshData()
 })
 
 // 添加调试状态
 const debugInfo = ref({
-  userAuthenticated: false,
-  apiResponse: null,
-  errorMessage: null,
-  planCount: 0
+    userAuthenticated: false,
+    apiResponse: null,
+    errorMessage: null,
+    planCount: 0
 })
+
+// 选择方案
+const selectPlan = (plan) => {
+    selectedPlan.value = plan
+    activeSection.value = 'full'
+    console.log('选择方案:', plan.title)
+}
+
+// 应用方案
+const applyPlan = (plan) => {
+    if (confirm(`确定要应用方案"${plan.title}"吗？这将替换当前的研究方案。`)) {
+        // 应用方案到当前方案
+        applyPlanAsCurrentPlan(
+            plan.fullPlan,
+            plan.id,
+            plan.sourceIntroductions || {}
+        )
+
+        console.log('应用方案:', plan.title)
+        alert('方案已成功应用！您可以前往研究方案页面查看。')
+
+        // 可选：跳转到研究方案页面
+        router.push('/research-plan')
+    }
+}
 
 // 刷新数据
 const refreshData = async () => {
-  if (isLoading.value) return // 防止重复加载
-  
-  isLoading.value = true
-  try {
-    console.log('历史方案页面：开始刷新数据')
-    
-    // 更新调试信息
-    debugInfo.value.userAuthenticated = userStore.isAuthenticated
-    debugInfo.value.errorMessage = null
-    
-    console.log('用户认证状态:', userStore.isAuthenticated)
-    
-    if (userStore.isAuthenticated) {
-      // 如果用户已登录，加载用户数据
-      await loadUserData()
-      debugInfo.value.planCount = historyState.historyPlans.length
-      debugInfo.value.apiResponse = `成功加载 ${historyState.historyPlans.length} 个方案`
-      console.log('数据加载完成，历史方案数量:', historyState.historyPlans.length)
-    } else {
-      debugInfo.value.errorMessage = '用户未登录，请先登录后查看历史方案'
-      console.log('用户未登录，跳过数据加载')
-    }
-  } catch (error) {
-    console.error('加载历史方案数据失败:', error)
-    debugInfo.value.errorMessage = `加载失败: ${error.message}`
-    debugInfo.value.apiResponse = error.message
-    // 可以在这里添加错误提示给用户
-  } finally {
-    isLoading.value = false
-  }
-}
+    if (isLoading.value) return // 防止重复加载
 
-// 查看方案详情
-const viewPlan = (plan) => {
-  // 设置当前查看的方案
-  setCurrentViewingPlan(plan)
-  // 跳转到研究方案页面
-  router.push('/research-plan')
+    isLoading.value = true
+    try {
+        console.log('历史方案页面：开始刷新数据')
+
+        // 更新调试信息
+        debugInfo.value.userAuthenticated = userStore.isAuthenticated
+        debugInfo.value.errorMessage = null
+
+        console.log('用户认证状态:', userStore.isAuthenticated)
+
+        if (userStore.isAuthenticated) {
+            // 如果用户已登录，加载用户数据
+            await loadUserData()
+            debugInfo.value.planCount = historyState.historyPlans.length
+            debugInfo.value.apiResponse = `成功加载 ${historyState.historyPlans.length} 个方案`
+            console.log('数据加载完成，历史方案数量:', historyState.historyPlans.length)
+        } else {
+            debugInfo.value.errorMessage = '用户未登录，请先登录后查看历史方案'
+            console.log('用户未登录，跳过数据加载')
+        }
+    } catch (error) {
+        console.error('加载历史方案数据失败:', error)
+        debugInfo.value.errorMessage = `加载失败: ${error.message}`
+        debugInfo.value.apiResponse = error.message
+        // 可以在这里添加错误提示给用户
+    } finally {
+        isLoading.value = false
+    }
 }
 
 // 确认删除单个方案
 const confirmDelete = (plan) => {
-  if (confirm(`确定要删除方案"${plan.title}"吗？`)) {
-    removeHistoryPlan(plan.id)
-  }
+    if (confirm(`确定要删除方案"${plan.title}"吗？`)) {
+        removeHistoryPlan(plan.id)
+        // 如果删除的是当前选中的方案，清空选中状态
+        if (selectedPlan.value && selectedPlan.value.id === plan.id) {
+            selectedPlan.value = null
+        }
+    }
 }
 
 // 确认清除所有方案
 const confirmClearAll = async () => {
-  const planCount = historyState.historyPlans.length
-  if (confirm(`确定要清除所有 ${planCount} 个历史方案吗？此操作不可撤销。`)) {
-    try {
-      isLoading.value = true
-      console.log('开始清除所有历史方案...')
-      
-      await clearHistoryPlans()
-      
-      console.log('所有历史方案清除完成')
-      alert('所有历史方案已成功清除！')
-      
-      // 刷新调试信息
-      debugInfo.value.planCount = 0
-      debugInfo.value.apiResponse = '所有方案已清除'
-      debugInfo.value.errorMessage = null
-      
-    } catch (error) {
-      console.error('清除历史方案失败:', error)
-      alert(`清除历史方案时发生错误：${error.message}`)
-      
-      // 更新调试信息
-      debugInfo.value.errorMessage = `清除失败: ${error.message}`
-      
-    } finally {
-      isLoading.value = false
+    const planCount = historyState.historyPlans.length
+    if (confirm(`确定要清除所有 ${planCount} 个历史方案吗？此操作不可撤销。`)) {
+        try {
+            isLoading.value = true
+            console.log('开始清除所有历史方案...')
+
+            await clearHistoryPlans()
+
+            console.log('所有历史方案清除完成')
+            alert('所有历史方案已成功清除！')
+
+            // 清空当前选中的方案
+            selectedPlan.value = null
+
+            // 刷新调试信息
+            debugInfo.value.planCount = 0
+            debugInfo.value.apiResponse = '所有方案已清除'
+            debugInfo.value.errorMessage = null
+
+        } catch (error) {
+            console.error('清除历史方案失败:', error)
+            alert(`清除历史方案时发生错误：${error.message}`)
+
+            // 更新调试信息
+            debugInfo.value.errorMessage = `清除失败: ${error.message}`
+
+        } finally {
+            isLoading.value = false
+        }
     }
-  }
 }
 </script>
 
 <style scoped>
-.overflow-y-auto::-webkit-scrollbar {
-  width: 6px;
+/* 自定义滚动条样式 */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
 }
 
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f8f9fa;
+    border-radius: 4px;
+    margin: 8px 0;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #c5c5c5;
-  border-radius: 3px;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #a855f7 0%, #8b5cf6 100%);
+    border-radius: 4px;
+    border: 2px solid #f8f9fa;
+    transition: all 0.2s ease;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #9333ea 0%, #7c3aed 100%);
+    border-color: #f3f4f6;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, #7c3aed 0%, #6d28d9 100%);
 }
 
 .line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
-</style> 
+
+/* Markdown样式增强 */
+.prose {
+    color: inherit !important;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+    color: inherit !important;
+    margin-top: 1rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.prose p {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+    line-height: 1.6 !important;
+}
+
+.prose ul,
+.prose ol {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+    padding-left: 1.5rem !important;
+}
+
+.prose li {
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.prose strong {
+    font-weight: 600 !important;
+}
+
+.prose em {
+    font-style: italic !important;
+}
+
+.prose code {
+    background-color: #f3f4f6 !important;
+    padding: 0.125rem 0.25rem !important;
+    border-radius: 0.25rem !important;
+    font-size: 0.875em !important;
+}
+
+.prose blockquote {
+    border-left: 4px solid #e5e7eb !important;
+    padding-left: 1rem !important;
+    margin: 1rem 0 !important;
+    color: #6b7280 !important;
+}
+
+/* 图片样式 */
+.prose img {
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 0.5rem 0 !important;
+    border-radius: 0.25rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* LaTeX公式图片样式 - 行内公式 */
+.prose img[src*="yuque/__latex"],
+.prose .latex-formula,
+.prose .latex-formula-inline {
+    display: inline-block !important;
+    margin: 0 2px !important;
+    vertical-align: middle !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    max-height: 1.5em !important;
+    border: none !important;
+}
+
+/* LaTeX公式图片样式 - 行间公式 */
+.prose .latex-formula-display {
+    display: block !important;
+    margin: 0.75rem auto !important;
+    text-align: center !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    max-height: 10em !important;
+    max-width: 100% !important;
+    height: auto !important;
+    border: none !important;
+    padding: 0.25rem 0 !important;
+}
+
+/* 普通markdown图片样式 */
+.prose .markdown-image {
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 0.5rem 0 !important;
+    border-radius: 0.25rem !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 确保所有图片都能正确加载 */
+.prose img {
+    display: inline-block !important;
+    max-width: 100% !important;
+    height: auto !important;
+}
+</style>
