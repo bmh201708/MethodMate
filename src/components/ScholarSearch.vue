@@ -245,29 +245,29 @@
             </button>
 
             <span
-              v-if="paper.relevanceLevel"
+              v-if="getRelevanceLevel(paper.relevance_score)"
               class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium"
               :class="{
-                'bg-green-100 text-green-700': paper.relevanceLevel === 'high',
-                'bg-yellow-100 text-yellow-700': paper.relevanceLevel === 'medium',
-                'bg-orange-100 text-orange-700': paper.relevanceLevel === 'low',
-                'bg-red-100 text-red-700': paper.relevanceLevel === 'very-low'
+                'bg-green-100 text-green-700': getRelevanceLevel(paper.relevance_score) === 'high',
+                'bg-yellow-100 text-yellow-700': getRelevanceLevel(paper.relevance_score) === 'medium',
+                'bg-orange-100 text-orange-700': getRelevanceLevel(paper.relevance_score) === 'low',
+                'bg-red-100 text-red-700': getRelevanceLevel(paper.relevance_score) === 'very-low'
               }"
             >
               <div class="flex items-center space-x-1">
                 <div 
                   class="w-2 h-2 rounded-full"
                   :class="{
-                    'bg-green-500': paper.relevanceLevel === 'high',
-                    'bg-yellow-500': paper.relevanceLevel === 'medium',
-                    'bg-orange-500': paper.relevanceLevel === 'low',
-                    'bg-red-500': paper.relevanceLevel === 'very-low'
+                    'bg-green-500': getRelevanceLevel(paper.relevance_score) === 'high',
+                    'bg-yellow-500': getRelevanceLevel(paper.relevance_score) === 'medium',
+                    'bg-orange-500': getRelevanceLevel(paper.relevance_score) === 'low',
+                    'bg-red-500': getRelevanceLevel(paper.relevance_score) === 'very-low'
                   }"
                 ></div>
                 <span>
-                  {{ paper.relevanceLevel === 'high' ? '高相关性' : 
-                     paper.relevanceLevel === 'medium' ? '中等相关性' : 
-                     paper.relevanceLevel === 'low' ? '低相关性' : '极低相关性' }}
+                  {{ getRelevanceLevel(paper.relevance_score) === 'high' ? '高相关性' : 
+                     getRelevanceLevel(paper.relevance_score) === 'medium' ? '中等相关性' : 
+                     getRelevanceLevel(paper.relevance_score) === 'low' ? '低相关性' : '极低相关性' }}
                 </span>
               </div>
             </span>
@@ -470,14 +470,14 @@ export default {
         const data = await response.json()
 
         if (data.success) {
-          // 确保每个结果都有isTopVenue属性和唯一ID，并添加相关性等级
+          // 确保每个结果都有isTopVenue属性和唯一ID，保留原始的relevance_score
           const processedResults = data.results.map((result, index) => ({
             ...result,
             id: result.title, // 使用标题作为唯一ID
             downloadSources: null,
             downloadMessage: '',
-            isTopVenue: result.isTopVenue || false, // 确保isTopVenue属性存在
-            relevanceLevel: this.getRelevanceLevel(result.relevance_score || 0) // 添加相关性等级
+            isTopVenue: result.isTopVenue || false // 确保isTopVenue属性存在
+            // 保留原始的relevance_score，不设置relevanceLevel
           }))
           
           // 保存到全局状态

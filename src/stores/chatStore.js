@@ -458,7 +458,7 @@ export const toggleReference = async (paper) => {
     const referencedPaper = {
       ...paper,
       referencedAt: new Date().toISOString(),
-      source: paper.batchIndex ? 'recommendation' : 'search', // 标记来源
+      source: paper.source || 'recommendation', // 标记来源
       databaseId: null // 数据库ID，稍后会更新
     }
     

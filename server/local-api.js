@@ -2171,9 +2171,21 @@ app.post('/api/scholar-search', async (req, res) => {
                      venueLower.endsWith(` ${allowedLower}`);
             });
             
-            // 基于搜索结果位置计算相关性分数 (第1篇=0.95, 第2篇=0.93, 依此类推)
-            const baseScore = 0.95 - (index * 0.02);
-            const relevanceScore = Math.max(0.7, baseScore); // 最低不低于0.7
+            // 基于搜索结果位置计算相关性分数 - 分层设定
+            let relevanceScore;
+            if (index < 10) {
+              // 前10篇：高相关性 (0.95-0.8)
+              relevanceScore = 0.95 - (index * 0.015); // 每篇递减0.015，第10篇约0.815
+            } else if (index < 20) {
+              // 第11-20篇：中等相关性 (0.75-0.6)  
+              relevanceScore = 0.75 - ((index - 10) * 0.015); // 第11篇0.735，第20篇约0.6
+            } else if (index < 30) {
+              // 第21-30篇：低相关性 (0.55-0.4)
+              relevanceScore = 0.55 - ((index - 20) * 0.015); // 第21篇0.535，第30篇约0.4
+            } else {
+              // 第31篇以后：极低相关性 (0.35-0.2)
+              relevanceScore = Math.max(0.2, 0.35 - ((index - 30) * 0.01));
+            }
             
             return {
               title: paper.title || '',
@@ -3292,7 +3304,8 @@ Please respond in the following JSON format:
         cache_id: paper.id,
         translated_abstract: paper.translated_abstract,
         translated_method: paper.translated_method,
-        source: 'cache'
+        source: 'cache',
+        relevance_score: Math.max(0.95, paper.relevance_score || 0.95) // 本地缓存推荐文献高相关性
       }));
       
       allPapers = formattedCacheResults;
@@ -3520,7 +3533,7 @@ Please respond in the following JSON format:
 
                  // 处理外部搜索结果并建立/扩展论文池
          if (externalSearchResult && externalSearchResult.data && externalSearchResult.data.length > 0) {
-           const externalResults = externalSearchResult.data.map(paper => {
+           const externalResults = externalSearchResult.data.map((paper, index) => {
              const venue = paper.venue || '';
              
              // 判断是否是顶会顶刊
@@ -3550,6 +3563,22 @@ Please respond in the following JSON format:
                       venueLower.endsWith(` ${allowedLower}`);
              });
              
+             // 基于搜索结果位置计算相关性分数 - 分层设定
+             let relevanceScore;
+             if (index < 10) {
+               // 前10篇：高相关性 (0.95-0.8)
+               relevanceScore = 0.95 - (index * 0.015); // 每篇递减0.015，第10篇约0.815
+             } else if (index < 20) {
+               // 第11-20篇：中等相关性 (0.75-0.6)  
+               relevanceScore = 0.75 - ((index - 10) * 0.015); // 第11篇0.735，第20篇约0.6
+             } else if (index < 30) {
+               // 第21-30篇：低相关性 (0.55-0.4)
+               relevanceScore = 0.55 - ((index - 20) * 0.015); // 第21篇0.535，第30篇约0.4
+             } else {
+               // 第31篇以后：极低相关性 (0.35-0.2)
+               relevanceScore = Math.max(0.2, 0.35 - ((index - 30) * 0.01));
+             }
+             
              return {
                id: `external_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
                title: paper.title || '',
@@ -3563,7 +3592,8 @@ Please respond in the following JSON format:
                researchMethod: null,
                isTopVenue: isTopVenue,
                from_cache: false,
-               source: 'external'
+               source: 'external',
+               relevance_score: relevanceScore // 添加基于位置的相关性分数
              };
            });
 

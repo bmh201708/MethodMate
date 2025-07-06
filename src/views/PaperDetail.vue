@@ -145,7 +145,34 @@
                   </div>
                   <div class="text-xs text-gray-500 mb-2">
                     <span class="px-2 py-1 bg-blue-100 text-blue-600 rounded-full">AI推荐</span>
-                    <span class="ml-2 text-gray-400">第{{ paper.batchIndex || Math.floor(index / 3) + 1 }}次获取</span>
+                    <!-- 相关性显示 -->
+                    <span
+                      v-if="getRelevanceLevel(paper)"
+                      class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ml-2"
+                      :class="{
+                        'bg-green-100 text-green-700': getRelevanceLevel(paper) === 'high',
+                        'bg-yellow-100 text-yellow-700': getRelevanceLevel(paper) === 'medium',
+                        'bg-orange-100 text-orange-700': getRelevanceLevel(paper) === 'low',
+                        'bg-red-100 text-red-700': getRelevanceLevel(paper) === 'very-low'
+                      }"
+                    >
+                      <div class="flex items-center space-x-1">
+                        <div 
+                          class="w-2 h-2 rounded-full"
+                          :class="{
+                            'bg-green-500': getRelevanceLevel(paper) === 'high',
+                            'bg-yellow-500': getRelevanceLevel(paper) === 'medium',
+                            'bg-orange-500': getRelevanceLevel(paper) === 'low',
+                            'bg-red-500': getRelevanceLevel(paper) === 'very-low'
+                          }"
+                        ></div>
+                        <span>
+                          {{ getRelevanceLevel(paper) === 'high' ? '高相关性' : 
+                             getRelevanceLevel(paper) === 'medium' ? '中等相关性' : 
+                             getRelevanceLevel(paper) === 'low' ? '低相关性' : '极低相关性' }}
+                        </span>
+                      </div>
+                    </span>
                   </div>
                   <p class="text-sm text-gray-600 mb-3 line-clamp-2">
                     {{ paper.abstract }}
@@ -252,6 +279,40 @@
                   </span>
                   <span v-if="papersState.selectedPaper.citationCount !== undefined" class="mr-4">
                     <span class="font-medium">被引用次数：</span>{{ papersState.selectedPaper.citationCount }}
+                  </span>
+                </div>
+                
+                <!-- 相关性显示 -->
+                <div v-if="getRelevanceLevel(papersState.selectedPaper)" class="mb-4">
+                  <span class="text-sm font-medium text-gray-700 mr-2">相关性：</span>
+                  <span
+                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                    :class="{
+                      'bg-green-100 text-green-700': getRelevanceLevel(papersState.selectedPaper) === 'high',
+                      'bg-yellow-100 text-yellow-700': getRelevanceLevel(papersState.selectedPaper) === 'medium',
+                      'bg-orange-100 text-orange-700': getRelevanceLevel(papersState.selectedPaper) === 'low',
+                      'bg-red-100 text-red-700': getRelevanceLevel(papersState.selectedPaper) === 'very-low'
+                    }"
+                  >
+                    <div class="flex items-center space-x-2">
+                      <div 
+                        class="w-2 h-2 rounded-full"
+                        :class="{
+                          'bg-green-500': getRelevanceLevel(papersState.selectedPaper) === 'high',
+                          'bg-yellow-500': getRelevanceLevel(papersState.selectedPaper) === 'medium',
+                          'bg-orange-500': getRelevanceLevel(papersState.selectedPaper) === 'low',
+                          'bg-red-500': getRelevanceLevel(papersState.selectedPaper) === 'very-low'
+                        }"
+                      ></div>
+                      <span>
+                        {{ getRelevanceLevel(papersState.selectedPaper) === 'high' ? '高相关性' : 
+                           getRelevanceLevel(papersState.selectedPaper) === 'medium' ? '中等相关性' : 
+                           getRelevanceLevel(papersState.selectedPaper) === 'low' ? '低相关性' : '极低相关性' }}
+                      </span>
+                      <span v-if="papersState.selectedPaper.relevance_score" class="text-xs opacity-75">
+                        ({{ (papersState.selectedPaper.relevance_score * 100).toFixed(0) }}%)
+                      </span>
+                    </div>
                   </span>
                 </div>
                 
@@ -1237,8 +1298,7 @@ const getRecommendedPapers = async () => {
         translatedMethod: paper.translatedMethod || paper.translated_method || null,
         authors: paper.authors || '未知作者',
         year: paper.year || null,
-        citationCount: paper.citationCount || 0,
-        batchIndex: Math.floor(papersState.recommendedPapers.length / 3) + 1
+        citationCount: paper.citationCount || 0
       }));
 
       addRecommendedPapers(processedPapers)
@@ -1313,7 +1373,6 @@ const savePaperToCache = async (paper) => {
       is_top_venue: paper.isTopVenue || false,
       download_sources: paper.downloadSources || null,
       metadata: {
-        batchIndex: paper.batchIndex,
         from_cache: paper.from_cache || false,
         saved_at: new Date().toISOString()
       }
@@ -1389,6 +1448,21 @@ const checkPaperCache = async (paper) => {
     console.error('检查论文缓存失败:', error)
   }
   return false
+}
+
+// 根据相关性分数确定相关性等级（与ScholarSearch.vue保持一致）
+const getRelevanceLevel = (paper) => {
+  // 优先使用paper对象的relevance_score字段
+  const score = paper.relevance_score
+  if (score !== undefined && score !== null) {
+    if (score >= 0.8) return 'high'      // 高相关性：绿色
+    if (score >= 0.6) return 'medium'    // 中等相关性：黄色  
+    if (score >= 0.4) return 'low'       // 低相关性：橙色
+    return 'very-low'                    // 极低相关性：红色
+  }
+  
+  // 如果没有relevance_score，返回null（不显示相关性标签）
+  return null
 }
 </script>
 
