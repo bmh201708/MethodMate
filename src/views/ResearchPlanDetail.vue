@@ -509,7 +509,7 @@
                   </div>
 
                   <!-- 统计方法查询内容 -->
-                  <div v-if="analysisSubSection === 'query'" class="space-y-6">
+                  <div v-if="analysisSubSection === 'query'" class="space-y-6" id="statistical-method-query">
                     <div class="bg-gray-50 p-6 rounded-lg">
                       <h3 class="text-lg font-semibold text-gray-900 mb-4">统计方法查询</h3>
                       <div class="flex space-x-4">
@@ -797,7 +797,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import ChatBox from '../components/ChatBox.vue'
 import { sendMessage, chatState } from '../stores/chatStore'
@@ -833,6 +833,71 @@ const selectedPresetSuggestion = ref('') // 当前选中的预设建议
 const showResearchPlanDialogModal = ref(false) // 是否显示研究方案生成对话框
 const researchPlanMode = ref('custom') // 研究方案生成模式：'auto' 或 'custom'
 const researchTopicInput = ref('') // 用户输入的研究主题
+
+// 统计方法名称列表
+const statisticalMethods = [
+  't检验', 'T检验', 't-test', 'T-test', '双侧t检验', '单样本t检验', '独立样本t检验', '配对样本t检验',
+  '方差分析', 'ANOVA', 'anova', '单因素方差分析', '双因素方差分析', '重复测量方差分析', '多元方差分析',
+  '回归分析', '线性回归', '多元回归', '逻辑回归', '回归', '多项式回归', '分层回归',
+  '相关分析', '皮尔逊相关', 'Pearson相关', 'Spearman相关', '相关性分析', '偏相关分析',
+  '卡方检验', 'χ²检验', 'Chi-square检验', 'chi-square', '卡方拟合优度检验', '卡方独立性检验',
+  'Mann-Whitney U检验', 'Mann-Whitney检验', 'U检验', 'Mann-Whitney U',
+  'Wilcoxon检验', 'Wilcoxon符号秩检验', 'Wilcoxon秩和检验', 'Wilcoxon',
+  'Kruskal-Wallis检验', 'Kruskal-Wallis', 'K-W检验',
+  '描述性统计', '推论统计', '统计检验', '假设检验', '参数检验', '非参数检验',
+  '效应量', 'Cohen\'s d', 'eta平方', 'eta²', 'η²', '偏eta平方',
+  '置信区间', '显著性检验', '显著性水平', 'p值', 'P值', 'α水平', 'α值',
+  '正态性检验', 'Shapiro-Wilk检验', 'Kolmogorov-Smirnov检验', 'K-S检验',
+  '方差齐性检验', 'Levene检验', 'Bartlett检验',
+  '多重比较', 'Bonferroni校正', 'Tukey检验', 'LSD检验', 'Scheffé检验'
+]
+
+// 自动跳转到统计方法查询并执行查询
+const jumpToStatisticalMethodQuery = async (methodName) => {
+  try {
+    console.log('跳转到统计方法查询:', methodName)
+    
+    // 切换到数据分析部分
+    activeSection.value = 'analysis'
+    
+    // 切换到统计方法查询子部分
+    analysisSubSection.value = 'query'
+    
+    // 设置查询内容
+    statisticalMethodQuery.value = decodeURIComponent(methodName)
+    
+    // 等待DOM更新
+    await nextTick()
+    
+    // 执行查询
+    await queryStatisticalMethod()
+    
+    // 滚动到统计方法查询输入框
+    setTimeout(() => {
+      // 首先尝试滚动到输入框
+      const inputElement = document.querySelector('#statistical-method-query input[type="text"]')
+      if (inputElement) {
+        inputElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        // 给输入框添加焦点效果
+        inputElement.focus()
+        setTimeout(() => {
+          inputElement.blur()
+        }, 1000)
+      } else {
+        // 如果找不到输入框，滚动到查询区域顶部
+        const queryElement = document.querySelector('#statistical-method-query')
+        if (queryElement) {
+          queryElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }
+    }, 100)
+    
+  } catch (error) {
+    console.error('跳转到统计方法查询失败:', error)
+    alert('跳转失败，请手动切换到统计方法查询')
+  }
+}
+
 
 const sections = [
   { id: 'full', name: '完整方案' },
@@ -980,17 +1045,88 @@ marked.setOptions({
   renderer: renderer // 使用自定义渲染器
 })
 
+// 添加一个后处理函数来处理统计方法链接
+const postProcessStatisticalLinks = (html) => {
+  if (!html || typeof html !== 'string') {
+    console.warn('postProcessStatisticalLinks: 输入无效', html)
+    return html || ''
+  }
+  
+  try {
+    let processedHtml = html
+    console.log('开始处理统计方法链接，原始HTML长度:', html.length)
+    
+    // 为每个统计方法名称添加链接
+    statisticalMethods.forEach(method => {
+      try {
+        // 简单的字符串替换，避免复杂的正则表达式
+        if (processedHtml.includes(method)) {
+          console.log(`发现统计方法: ${method}`)
+          
+          // 检查是否已经在链接内
+          const methodIndex = processedHtml.indexOf(method)
+          if (methodIndex !== -1) {
+            const beforeMethod = processedHtml.substring(0, methodIndex)
+            const lastOpenTag = beforeMethod.lastIndexOf('<a ')
+            const lastCloseTag = beforeMethod.lastIndexOf('</a>')
+            
+            // 如果在链接标签内，跳过
+            if (lastOpenTag > lastCloseTag) {
+              console.log(`跳过已在链接内的方法: ${method}`)
+              return
+            }
+            
+            // 创建链接
+            const encodedMethod = encodeURIComponent(method)
+            const linkHtml = `<a href="javascript:void(0)" onclick="handleStatisticalMethodClick('${encodedMethod}')" style="color: #3b82f6; text-decoration: underline; cursor: pointer;" title="点击查询统计方法详情">${method}</a>`
+            
+            // 只替换第一个匹配项
+            processedHtml = processedHtml.replace(method, linkHtml)
+            console.log(`成功为方法添加链接: ${method}`)
+          }
+        }
+      } catch (methodError) {
+        console.error('处理统计方法时出错:', methodError, { method })
+        // 继续处理其他方法
+      }
+    })
+    
+    console.log('统计方法链接处理完成，最终HTML长度:', processedHtml.length)
+    return processedHtml
+  } catch (error) {
+    console.error('统计方法链接后处理出错:', error)
+    return html // 如果处理失败，返回原始HTML
+  }
+}
+
 // 安全的markdown渲染函数
-const safeMarkdownRender = (text) => {
+const safeMarkdownRender = (text, enableStatisticalLinks = false) => {
   try {
     if (!text) return ''
     
     console.log('开始渲染markdown，文本长度:', text.length)
     console.log('前100字符:', text.substring(0, 100))
     
-    const result = marked(text)
+    // 首先进行标准的Markdown渲染
+    let result
+    try {
+      result = marked.parse(text)
+      console.log('使用marked.parse()成功')
+    } catch (parseError) {
+      console.warn('marked.parse()失败，尝试使用marked():', parseError)
+      result = marked(text)
+      console.log('使用marked()成功')
+    }
+    
     console.log('Markdown渲染完成，结果长度:', result.length)
     console.log('渲染结果前200字符:', result.substring(0, 200))
+    
+    // 如果启用统计方法链接，则在HTML渲染后处理
+    if (enableStatisticalLinks) {
+      console.log('开始后处理统计方法链接')
+      result = postProcessStatisticalLinks(result)
+      console.log('统计方法链接后处理完成，最终长度:', result.length)
+    }
     
     // 检查是否包含图片标签
     const imgCount = (result.match(/<img/g) || []).length
@@ -999,7 +1135,15 @@ const safeMarkdownRender = (text) => {
     return result
   } catch (error) {
     console.error('Markdown渲染错误:', error)
-    return text || '' // 如果渲染失败，返回原始文本
+    console.error('错误堆栈:', error.stack)
+    return `<div style="color: red; padding: 10px; border: 1px solid red; border-radius: 4px;">
+      <strong>Markdown渲染错误:</strong><br>
+      ${error.message}<br>
+      <details>
+        <summary>原始文本</summary>
+        <pre>${text}</pre>
+      </details>
+    </div>`
   }
 }
 
@@ -1012,11 +1156,27 @@ const renderedHypotheses = computed(() => {
 })
 
 const renderedExperimentalDesign = computed(() => {
-  return currentPlanState.experimentalDesign ? safeMarkdownRender(currentPlanState.experimentalDesign) : ''
+  console.log('计算renderedExperimentalDesign，experimentalDesign:', currentPlanState.experimentalDesign)
+  if (!currentPlanState.experimentalDesign) {
+    console.log('experimentalDesign为空，返回空字符串')
+    return ''
+  }
+  console.log('开始渲染experimentalDesign')
+  const result = safeMarkdownRender(currentPlanState.experimentalDesign)
+  console.log('experimentalDesign渲染完成，结果长度:', result.length)
+  return result
 })
 
 const renderedAnalysisMethod = computed(() => {
-  return currentPlanState.analysisMethod ? safeMarkdownRender(currentPlanState.analysisMethod) : ''
+  console.log('计算renderedAnalysisMethod，analysisMethod:', currentPlanState.analysisMethod)
+  if (!currentPlanState.analysisMethod) {
+    console.log('analysisMethod为空，返回空字符串')
+    return ''
+  }
+  console.log('开始渲染analysisMethod，启用统计方法链接')
+  const result = safeMarkdownRender(currentPlanState.analysisMethod, true)
+  console.log('analysisMethod渲染完成，结果长度:', result.length)
+  return result
 })
 
 const renderedExpectedResults = computed(() => {
@@ -1727,7 +1887,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
       message += `
 请基于我提供的研究内容和目的，以及我选择的参考文献中的定量研究部分，构建一份人机交互（HCI）领域的高质量定量研究方案。方案需结构完整、逻辑严谨、内容具体，避免泛泛而谈或堆砌无效信息。包括以下部分：
 ● 研究假设：简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
-● 实验设计：详述实验方案，包括被试特征（如年龄、背景、样本量等）、分组方式、实验流程及任务设置。确保所有参数具体明确，不使用模糊表述（如“若干”、“约xx人”），采用分段或分点详述，不使用表格。
+● 实验设计：详述实验方案，包括被试特征（如年龄、背景、样本量等）、分组方式、实验流程及任务设置。确保所有参数具体明确，不使用模糊表述（如"若干"、"约xx人"），采用分段或分点详述，不使用表格。
 ● 数据分析：说明采集哪些用户数据（如行为日志、生理数据、主观评分等），以及如何采集。匹配每项数据类型，明确采用的统计分析方法（如t检验、ANOVA、回归等），并解释其与假设的对应关系。采用分段或分点详述，不使用表格。
 ● 结果呈现：构思可能的分析结果及与假设的关系。指出适合呈现各类结果的图表形式（如箱线图、交互效应图等），并说明图表与结论之间的映射关系。采用分段或分点详述，不使用表格。
 要求： 所有内容需围绕输入研究构建，信息准确、精炼、无冗余。如输入不完整，可合理假设，但需标明前提。`
@@ -1735,7 +1895,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
       message += `
 请基于对话内容，以及我选择的参考文献中的定量研究部分，构建一份人机交互（HCI）领域的高质量定量研究方案。方案需结构完整、逻辑严谨、内容具体，避免泛泛而谈或堆砌无效信息。包括以下部分：
 ● 研究假设：简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
-● 实验设计：详述实验方案，包括被试特征（如年龄、背景、样本量等）、分组方式、实验流程及任务设置。确保所有参数具体明确，不使用模糊表述（如“若干”、“约xx人”），采用分段或分点详述，不使用表格。
+● 实验设计：详述实验方案，包括被试特征（如年龄、背景、样本量等）、分组方式、实验流程及任务设置。确保所有参数具体明确，不使用模糊表述（如"若干"、"约xx人"），采用分段或分点详述，不使用表格。
 ● 数据分析：说明采集哪些用户数据（如行为日志、生理数据、主观评分等），以及如何采集。匹配每项数据类型，明确采用的统计分析方法（如t检验、ANOVA、回归等），并解释其与假设的对应关系。采用分段或分点详述，不使用表格。
 ● 结果呈现：构思可能的分析结果及与假设的关系。指出适合呈现各类结果的图表形式（如箱线图、交互效应图等），并说明图表与结论之间的映射关系。采用分段或分点详述，不使用表格。
 要求： 所有内容需围绕输入研究构建，信息准确、精炼、无冗余。如输入不完整，可合理假设，但需标明前提。`
@@ -2049,15 +2209,77 @@ const extractConversationContext = () => {
 
 // 页面加载时检查是否有历史方案要显示
 onMounted(() => {
-  // 测试markdown渲染功能
-  console.log('🧪 开始测试markdown渲染功能')
-  testMarkdownRender()
+  console.log('🧪 ResearchPlanDetail组件已挂载')
+  
+  // 将统计方法点击处理函数暴露到全局window对象
+  if (typeof window !== 'undefined') {
+    console.log('🔍 jumpToStatisticalMethodQuery函数类型:', typeof jumpToStatisticalMethodQuery)
+    
+    // 创建一个全局处理函数
+    window.handleStatisticalMethodClick = async (encodedMethodName) => {
+      try {
+        console.log('🔍 处理统计方法点击:', encodedMethodName)
+        await jumpToStatisticalMethodQuery(encodedMethodName)
+      } catch (error) {
+        console.error('处理统计方法点击失败:', error)
+        alert('跳转失败，请稍后重试')
+      }
+    }
+    
+    // 保持原有的全局函数
+    window.jumpToStatisticalMethodQuery = jumpToStatisticalMethodQuery
+    
+    console.log('✅ 统计方法处理函数已暴露到全局')
+    console.log('🔍 验证全局函数:', typeof window.handleStatisticalMethodClick)
+    
+    // 测试函数是否可以调用
+    setTimeout(() => {
+      console.log('🧪 测试全局函数是否可用:', typeof window.handleStatisticalMethodClick)
+    }, 1000)
+  }
   
   if (historyState.currentViewingPlan) {
     // 延迟一点再加载，确保当前方案数据已经初始化完成
     setTimeout(() => {
       loadHistoryPlan(historyState.currentViewingPlan)
     }, 100)
+  }
+  
+  // 测试基础Markdown渲染
+  console.log('=== 测试基础Markdown渲染 ===')
+  const basicTest = `**粗体文本**和*斜体文本*`
+  console.log('基础测试:', basicTest)
+  const basicResult = safeMarkdownRender(basicTest, false)
+  console.log('基础渲染结果:', basicResult)
+  
+  // 测试统计方法链接
+  console.log('=== 测试统计方法链接 ===')
+  const methodTest = `我们使用t检验和方差分析进行数据分析。`
+  console.log('方法测试:', methodTest)
+  const methodResult = safeMarkdownRender(methodTest, true)
+  console.log('方法渲染结果:', methodResult)
+  console.log('=== 测试完成 ===')
+  
+  // 检查当前方案状态
+  console.log('当前方案状态:', {
+    isGenerated: currentPlanState.isGenerated,
+    hasAnalysisMethod: !!currentPlanState.analysisMethod,
+    analysisMethodLength: currentPlanState.analysisMethod?.length || 0,
+    analysisMethodPreview: currentPlanState.analysisMethod?.substring(0, 100) + '...'
+  })
+})
+
+// 组件卸载时清理全局函数
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    if (window.jumpToStatisticalMethodQuery) {
+      delete window.jumpToStatisticalMethodQuery
+      console.log('🧹 已清理全局函数 jumpToStatisticalMethodQuery')
+    }
+    if (window.handleStatisticalMethodClick) {
+      delete window.handleStatisticalMethodClick
+      console.log('🧹 已清理全局函数 handleStatisticalMethodClick')
+    }
   }
 })
 
