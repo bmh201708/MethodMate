@@ -177,6 +177,15 @@
                   <p class="text-sm text-gray-600 mb-3 line-clamp-2">
                     {{ paper.abstract }}
                   </p>
+                  <div class="text-xs text-gray-500 mb-2">
+                    <span v-if="paper.authors" class="mr-2">
+                      <span class="font-medium">作者：</span>{{ Array.isArray(paper.authors) ? paper.authors.slice(0, 2).join(', ') + (paper.authors.length > 2 ? ' 等' : '') : paper.authors }}
+                    </span>
+                    <span v-if="paper.year" class="mr-2">{{ paper.year }}</span>
+                    <span v-if="paper.journal || paper.venue" class="mr-2">
+                      <span class="font-medium">期刊：</span>{{ paper.journal || paper.venue }}
+                    </span>
+                  </div>
                   <div class="mt-3 flex justify-between items-center">
                     <span class="text-xs text-gray-500">点击查看详情</span>
                     <div class="flex space-x-2">
@@ -272,10 +281,13 @@
                 <!-- 作者和年份信息 -->
                 <div class="mb-4 text-sm text-gray-500">
                   <span v-if="papersState.selectedPaper.authors" class="mr-4">
-                    <span class="font-medium">作者：</span>{{ papersState.selectedPaper.authors }}
+                    <span class="font-medium">作者：</span>{{ Array.isArray(papersState.selectedPaper.authors) ? papersState.selectedPaper.authors.join(', ') : papersState.selectedPaper.authors }}
                   </span>
                   <span v-if="papersState.selectedPaper.year" class="mr-4">
                     <span class="font-medium">发表年份：</span>{{ papersState.selectedPaper.year }}
+                  </span>
+                  <span v-if="papersState.selectedPaper.journal || papersState.selectedPaper.venue" class="mr-4">
+                    <span class="font-medium">期刊：</span>{{ papersState.selectedPaper.journal || papersState.selectedPaper.venue }}
                   </span>
                   <span v-if="papersState.selectedPaper.citationCount !== undefined" class="mr-4">
                     <span class="font-medium">被引用次数：</span>{{ papersState.selectedPaper.citationCount }}
