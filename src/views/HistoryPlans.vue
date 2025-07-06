@@ -1,10 +1,10 @@
 <template>
     <div class="min-h-screen bg-gray-50 flex flex-col">
         <main class="flex-1 max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="grid grid-cols-12 gap-8">
-                <!-- 左侧历史方案列表 -->
-                <div class="col-span-5 h-[calc(100vh-10rem)] overflow-y-auto custom-scrollbar">
-                    <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex gap-8">
+                        <!-- 左侧历史方案列表 -->
+        <div class="w-96 h-[calc(100vh-10rem)] overflow-y-auto custom-scrollbar flex-shrink-0">
+          <div class="bg-white rounded-xl shadow-sm p-6">
                         <h2 class="text-xl font-semibold text-gray-900 mb-6">历史方案列表</h2>
 
                         <!-- 加载状态 -->
@@ -134,10 +134,10 @@
                     </div>
                 </div>
 
-                <!-- 右侧方案详情 -->
-                <div class="col-span-7 h-[calc(100vh-10rem)] overflow-y-auto custom-scrollbar">
-                    <div v-if="selectedPlan" class="bg-white rounded-xl shadow-sm p-8">
-                        <div class="space-y-8">
+                                <!-- 右侧方案详情 -->
+        <div class="h-[calc(100vh-10rem)] overflow-y-auto custom-scrollbar" style="width: 800px;">
+          <div v-if="selectedPlan" class="bg-white rounded-xl shadow-sm p-8">
+                                                    <div class="space-y-8">
                             <!-- 方案导航按钮 -->
                             <div class="flex space-x-4 mb-8">
                                 <button v-for="section in sections" :key="section.id"
@@ -169,7 +169,7 @@
                                         <div class="space-y-2">
                                             <div v-for="(hypothesis, index) in selectedPlan.fullPlan.hypotheses"
                                                 :key="index" class="p-4 bg-gray-50 rounded-lg">
-                                                <div class="text-gray-900 prose prose-sm max-w-none"
+                                                <div class="text-gray-900 prose prose-sm"
                                                     v-html="safeMarkdownRender(hypothesis)"></div>
                                             </div>
                                         </div>
@@ -177,32 +177,32 @@
 
                                     <div v-if="selectedPlan.fullPlan.experimentalDesign">
                                         <h3 class="text-lg font-semibold text-gray-900 mb-3">实验设计</h3>
-                                        <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                                        <div class="text-gray-600 leading-relaxed prose prose-sm"
                                             v-html="safeMarkdownRender(selectedPlan.fullPlan.experimentalDesign)"></div>
                                     </div>
 
                                     <div v-if="selectedPlan.fullPlan.analysisMethod">
                                         <h3 class="text-lg font-semibold text-gray-900 mb-3">数据分析</h3>
-                                        <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                                        <div class="text-gray-600 leading-relaxed prose prose-sm"
                                             v-html="safeMarkdownRender(selectedPlan.fullPlan.analysisMethod)"></div>
                                     </div>
 
                                     <div v-if="selectedPlan.fullPlan.expectedResults">
                                         <h3 class="text-lg font-semibold text-gray-900 mb-3">结果呈现</h3>
-                                        <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                                        <div class="text-gray-600 leading-relaxed prose prose-sm"
                                             v-html="safeMarkdownRender(selectedPlan.fullPlan.expectedResults)"></div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- 研究假设部分 -->
-                            <div v-if="activeSection === 'hypothesis'">
+                            <div v-if="activeSection === 'hypothesis'" class="w-full">
                                 <h2 class="text-2xl font-bold text-gray-900 mb-6">研究假设</h2>
                                 <div v-if="selectedPlan.fullPlan.hypotheses && selectedPlan.fullPlan.hypotheses.length > 0"
-                                    class="space-y-4">
+                                    class="space-y-4 w-full">
                                     <div v-for="(hypothesis, index) in selectedPlan.fullPlan.hypotheses" :key="index"
                                         class="p-4 bg-gray-50 rounded-lg">
-                                        <div class="text-gray-900 prose prose-sm max-w-none"
+                                        <div class="text-gray-900 prose prose-sm"
                                             v-html="safeMarkdownRender(hypothesis)"></div>
                                     </div>
                                 </div>
@@ -219,10 +219,10 @@
                             </div>
 
                             <!-- 实验设计部分 -->
-                            <div v-if="activeSection === 'design'">
+                            <div v-if="activeSection === 'design'" class="w-full">
                                 <h2 class="text-2xl font-bold text-gray-900 mb-6">实验设计</h2>
-                                <div v-if="selectedPlan.fullPlan.experimentalDesign" class="space-y-6">
-                                    <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                                <div v-if="selectedPlan.fullPlan.experimentalDesign" class="space-y-6 w-full">
+                                    <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none w-full min-w-[600px]"
                                         v-html="safeMarkdownRender(selectedPlan.fullPlan.experimentalDesign)"></div>
                                 </div>
                                 <div v-else class="text-center py-12">
@@ -238,10 +238,10 @@
                             </div>
 
                             <!-- 数据分析部分 -->
-                            <div v-if="activeSection === 'analysis'">
+                            <div v-if="activeSection === 'analysis'" class="w-full">
                                 <h2 class="text-2xl font-bold text-gray-900 mb-6">数据分析</h2>
-                                <div v-if="selectedPlan.fullPlan.analysisMethod" class="space-y-6">
-                                    <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                                <div v-if="selectedPlan.fullPlan.analysisMethod" class="space-y-6 w-full">
+                                    <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none w-full min-w-[600px]"
                                         v-html="safeMarkdownRender(selectedPlan.fullPlan.analysisMethod)"></div>
                                 </div>
                                 <div v-else class="text-center py-12">
@@ -257,10 +257,10 @@
                             </div>
 
                             <!-- 结果呈现部分 -->
-                            <div v-if="activeSection === 'results'">
+                            <div v-if="activeSection === 'results'" class="w-full">
                                 <h2 class="text-2xl font-bold text-gray-900 mb-6">结果呈现</h2>
-                                <div v-if="selectedPlan.fullPlan.expectedResults" class="space-y-6">
-                                    <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                                <div v-if="selectedPlan.fullPlan.expectedResults" class="space-y-6 w-full">
+                                    <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none w-full min-w-[600px]"
                                         v-html="safeMarkdownRender(selectedPlan.fullPlan.expectedResults)"></div>
                                 </div>
                                 <div v-else class="text-center py-12">
@@ -277,8 +277,8 @@
                         </div>
                     </div>
 
-                    <!-- 未选择方案时的提示 -->
-                    <div v-else class="bg-white rounded-xl shadow-sm p-8 text-center">
+                              <!-- 未选择方案时的提示 -->
+          <div v-else class="bg-white rounded-xl shadow-sm p-8 text-center w-full">
                         <div class="mb-6">
                             <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
