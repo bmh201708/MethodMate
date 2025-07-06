@@ -2004,7 +2004,7 @@ app.post('/api/scholar-search', async (req, res) => {
   console.log('Scholar Search API被调用');
   
   try {
-    const { query, num_results = 10, filter_venues = false } = req.body;
+    const { query, num_results = 10, external_search_count = null, filter_venues = false } = req.body;
     
     if (!query) {
       return res.status(400).json({ 
@@ -2036,7 +2036,7 @@ app.post('/api/scholar-search', async (req, res) => {
         pdf_url: paper.download_url || null,
         scholar_url: paper.url || '',
         doi: paper.doi || '',
-        relevance_score: paper.relevance_score || 0.9,
+        relevance_score: Math.max(0.9, paper.relevance_score || 0.9), // 本地缓存最低0.9分
         isTopVenue: paper.is_top_venue || false,
         from_cache: true,
         cache_id: paper.id,
@@ -2063,8 +2063,9 @@ app.post('/api/scholar-search', async (req, res) => {
     
     // 如果本地结果不足，继续外部搜索
     if (needExternalSearch) {
-      const remainingCount = Math.max(0, num_results - allResults.length);
-      console.log(`🌐 本地结果不足，继续外部搜索 ${remainingCount} 篇论文...`);
+      // 使用external_search_count参数，如果没有指定则使用num_results
+      const externalSearchCount = external_search_count || num_results;
+      console.log(`🌐 外部搜索 ${externalSearchCount} 篇论文 (本地已有 ${allResults.length} 篇)...`);
       
       // 检测是否包含中文，如果包含则翻译
       let searchQuery = query;
@@ -2109,7 +2110,7 @@ app.post('/api/scholar-search', async (req, res) => {
       // 构建 Semantic Scholar API 请求
       const fields = 'title,authors,abstract,year,citationCount,venue,url,openAccessPdf,externalIds';
       
-      let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${searchQuery}&limit=${remainingCount}&fields=${fields}`;
+      let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${searchQuery}&limit=${externalSearchCount}&fields=${fields}`;
       
       // 如果需要过滤期刊/会议，使用venue参数
       if (filter_venues) {
@@ -2140,7 +2141,7 @@ app.post('/api/scholar-search', async (req, res) => {
         
         // 处理外部搜索结果
         if (searchData.data && searchData.data.length > 0) {
-          const externalResults = searchData.data.map(paper => {
+          const externalResults = searchData.data.map((paper, index) => {
             const venue = paper.venue || '';
             
             // 判断是否是顶会顶刊
@@ -2170,6 +2171,10 @@ app.post('/api/scholar-search', async (req, res) => {
                      venueLower.endsWith(` ${allowedLower}`);
             });
             
+            // 基于搜索结果位置计算相关性分数 (第1篇=0.95, 第2篇=0.93, 依此类推)
+            const baseScore = 0.95 - (index * 0.02);
+            const relevanceScore = Math.max(0.7, baseScore); // 最低不低于0.7
+            
             return {
               title: paper.title || '',
               authors: paper.authors?.map(author => author.name) || [],
@@ -2180,7 +2185,7 @@ app.post('/api/scholar-search', async (req, res) => {
               pdf_url: paper.openAccessPdf?.url || null,
               scholar_url: paper.url || '',
               doi: paper.externalIds?.DOI || '',
-              relevance_score: 0.9,
+              relevance_score: relevanceScore,
               isTopVenue: isTopVenue,
               from_cache: false
             };
@@ -2205,16 +2210,16 @@ app.post('/api/scholar-search', async (req, res) => {
       }
     }
 
-    // 限制结果数量并排序
+    // 排序并限制结果数量
     allResults = allResults
-      .slice(0, num_results)
       .sort((a, b) => {
         // 优先显示缓存结果，然后按相关性和引用次数排序
         if (a.from_cache && !b.from_cache) return -1;
         if (!a.from_cache && b.from_cache) return 1;
         if (a.relevance_score !== b.relevance_score) return b.relevance_score - a.relevance_score;
         return b.citations - a.citations;
-      });
+      })
+      .slice(0, num_results);
 
     console.log(`✅ 最终返回 ${allResults.length} 篇论文 (缓存: ${allResults.filter(r => r.from_cache).length}, 外部: ${allResults.filter(r => !r.from_cache).length})`);
 
@@ -2406,7 +2411,7 @@ const searchFromCache = async (query, limit = 10, filter_venues = false, exclude
           metadata: paper.metadata ? 
             (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
           matched_strategy: 'fulltext',
-          relevance_score: paper.relevance_score || 1.0
+          relevance_score: Math.max(0.95, paper.relevance_score || 0.95) // 全文搜索最低0.95分
         }));
         
         if (results.length >= limit) {
@@ -2483,7 +2488,7 @@ const searchFromCache = async (query, limit = 10, filter_venues = false, exclude
           metadata: paper.metadata ? 
             (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
           matched_strategy: 'semantic_expansion',
-          relevance_score: 0.8
+          relevance_score: 0.9 // 提高语义匹配分数
         }));
         
         results = results.concat(processedExpanded);
@@ -2552,7 +2557,7 @@ const searchFromCache = async (query, limit = 10, filter_venues = false, exclude
           metadata: paper.metadata ? 
             (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
           matched_strategy: 'basic_keywords',
-          relevance_score: 0.6
+          relevance_score: 0.85 // 提高基础关键词匹配分数
         }));
         
         results = results.concat(processedBasic);
@@ -2666,7 +2671,7 @@ const fallbackSearch = async (query, limit = 10, filter_venues = false, excludeI
         (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null,
       metadata: paper.metadata ? 
         (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
-      relevance_score: 0.6
+      relevance_score: 0.8 // 提高备用搜索分数
     }));
     
   } catch (error) {
@@ -2721,7 +2726,7 @@ const getLatestPapers = async (limit = 10, filter_venues = false, excludeIds = [
         (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null,
       metadata: paper.metadata ? 
         (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
-      relevance_score: 0.3
+      relevance_score: 0.7 // 提高最新论文分数
     }));
     
   } catch (error) {

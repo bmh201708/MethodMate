@@ -1231,21 +1231,21 @@ const waitForResponse = (timeoutMs = 30000) => {
     
     const checkForResponse = () => {
       const latestAssistantMessage = chatState.messages
-        .filter(msg => msg.type === 'assistant' && msg.isComplete && !msg.isError)
-        .pop()
-      
+    .filter(msg => msg.type === 'assistant' && msg.isComplete && !msg.isError)
+    .pop()
+  
       if (latestAssistantMessage && latestAssistantMessage.id > lastMessageIdBeforeGenerate.value) {
         console.log('收到新的助手消息，ID:', latestAssistantMessage.id)
         resolve(latestAssistantMessage)
-        return
-      }
-      
+      return
+    }
+    
       // 检查是否超时
       if (Date.now() - startTime > timeoutMs) {
         reject(new Error('等待AI响应超时'))
-        return
-      }
-      
+      return
+    }
+    
       // 继续等待
       setTimeout(checkForResponse, checkInterval)
     }
@@ -1685,7 +1685,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
     .pop()
   lastMessageIdBeforeGenerate.value = latestMessage ? latestMessage.id : 0
   
-      // 清除之前的解析记录，确保新生成的方案能被解析
+  // 清除之前的解析记录，确保新生成的方案能被解析
     // 已移除：lastProcessedMessageId.value = null // 不再需要
   
   // 保存当前生成的信息，用于后续标题生成
