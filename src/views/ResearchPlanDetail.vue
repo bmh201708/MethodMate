@@ -509,7 +509,7 @@
                   </div>
 
                   <!-- 统计方法查询内容 -->
-                  <div v-if="analysisSubSection === 'query'" class="space-y-6">
+                  <div v-if="analysisSubSection === 'query'" class="space-y-6" id="statistical-method-query">
                     <div class="bg-gray-50 p-6 rounded-lg">
                       <h3 class="text-lg font-semibold text-gray-900 mb-4">统计方法查询</h3>
                       <div class="flex space-x-4">
@@ -540,18 +540,6 @@
                           class="px-3 py-1 text-sm bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
                         >
                           测试：单样本t检验
-                        </button>
-                        <button
-                          @click="testMarkdownRender"
-                          class="px-3 py-1 text-sm bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
-                        >
-                          测试渲染器
-                        </button>
-                        <button
-                          @click="() => { console.log('当前统计方法结果:', statisticalMethodResult); console.log('渲染结果:', renderedStatisticalMethodResult); }"
-                          class="px-3 py-1 text-sm bg-yellow-100 text-yellow-600 rounded hover:bg-yellow-200 transition-colors"
-                        >
-                          调试信息
                         </button>
                       </div>
                       
@@ -809,11 +797,11 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import ChatBox from '../components/ChatBox.vue'
 import { sendMessage, chatState } from '../stores/chatStore'
-import { papersState, addHistoryPlan, historyState, clearCurrentViewingPlan, currentPlanState, updateCurrentPlan, applyPlanAsCurrentPlan, updateSourceIntroduction, getSourceIntroduction, clearSourceIntroductions, storeIterationSnapshot, completeIteration } from '../stores/chatStore'
+import { papersState, addHistoryPlan, historyState, clearCurrentViewingPlan, currentPlanState, updateCurrentPlan, applyPlanAsCurrentPlan, updateSourceIntroduction, getSourceIntroduction, clearSourceIntroductions, storeIterationSnapshot } from '../stores/chatStore'
 import { marked } from 'marked'
 import markedKatex from 'marked-katex-extension'
 import 'katex/dist/katex.min.css'
@@ -826,7 +814,7 @@ const isGenerating = ref(false)
 const lastMessageIdBeforeGenerate = ref(null) // 记录开始生成前的最后一条消息ID
 const isViewingHistoryPlan = ref(false) // 是否正在查看历史方案
 const originalPlan = ref(null) // 保存原始方案数据
-const lastProcessedMessageId = ref(null) // 记录最后处理的消息ID，防止重复解析
+// 已移除：const lastProcessedMessageId = ref(null) // 不再需要，因为已改为明确的解析触发机制
 const isEvaluating = ref(false) // 是否正在评估方案
 const isIterating = ref(false) // 是否正在迭代方案
 const statisticalMethodQuery = ref('') // 统计方法查询输入
@@ -845,6 +833,71 @@ const selectedPresetSuggestion = ref('') // 当前选中的预设建议
 const showResearchPlanDialogModal = ref(false) // 是否显示研究方案生成对话框
 const researchPlanMode = ref('custom') // 研究方案生成模式：'auto' 或 'custom'
 const researchTopicInput = ref('') // 用户输入的研究主题
+
+// 统计方法名称列表
+const statisticalMethods = [
+  't检验', 'T检验', 't-test', 'T-test', '双侧t检验', '单样本t检验', '独立样本t检验', '配对样本t检验',
+  '方差分析', 'ANOVA', 'anova', '单因素方差分析', '双因素方差分析', '重复测量方差分析', '多元方差分析',
+  '回归分析', '线性回归', '多元回归', '逻辑回归', '回归', '多项式回归', '分层回归',
+  '相关分析', '皮尔逊相关', 'Pearson相关', 'Spearman相关', '相关性分析', '偏相关分析',
+  '卡方检验', 'χ²检验', 'Chi-square检验', 'chi-square', '卡方拟合优度检验', '卡方独立性检验',
+  'Mann-Whitney U检验', 'Mann-Whitney检验', 'U检验', 'Mann-Whitney U',
+  'Wilcoxon检验', 'Wilcoxon符号秩检验', 'Wilcoxon秩和检验', 'Wilcoxon',
+  'Kruskal-Wallis检验', 'Kruskal-Wallis', 'K-W检验',
+  '描述性统计', '推论统计', '统计检验', '假设检验', '参数检验', '非参数检验',
+  '效应量', 'Cohen\'s d', 'eta平方', 'eta²', 'η²', '偏eta平方',
+  '置信区间', '显著性检验', '显著性水平', 'p值', 'P值', 'α水平', 'α值',
+  '正态性检验', 'Shapiro-Wilk检验', 'Kolmogorov-Smirnov检验', 'K-S检验',
+  '方差齐性检验', 'Levene检验', 'Bartlett检验',
+  '多重比较', 'Bonferroni校正', 'Tukey检验', 'LSD检验', 'Scheffé检验'
+]
+
+// 自动跳转到统计方法查询并执行查询
+const jumpToStatisticalMethodQuery = async (methodName) => {
+  try {
+    console.log('跳转到统计方法查询:', methodName)
+    
+    // 切换到数据分析部分
+    activeSection.value = 'analysis'
+    
+    // 切换到统计方法查询子部分
+    analysisSubSection.value = 'query'
+    
+    // 设置查询内容
+    statisticalMethodQuery.value = decodeURIComponent(methodName)
+    
+    // 等待DOM更新
+    await nextTick()
+    
+    // 执行查询
+    await queryStatisticalMethod()
+    
+    // 滚动到统计方法查询输入框
+    setTimeout(() => {
+      // 首先尝试滚动到输入框
+      const inputElement = document.querySelector('#statistical-method-query input[type="text"]')
+      if (inputElement) {
+        inputElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        // 给输入框添加焦点效果
+        inputElement.focus()
+        setTimeout(() => {
+          inputElement.blur()
+        }, 1000)
+      } else {
+        // 如果找不到输入框，滚动到查询区域顶部
+        const queryElement = document.querySelector('#statistical-method-query')
+        if (queryElement) {
+          queryElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }
+    }, 100)
+    
+  } catch (error) {
+    console.error('跳转到统计方法查询失败:', error)
+    alert('跳转失败，请手动切换到统计方法查询')
+  }
+}
+
 
 const sections = [
   { id: 'full', name: '完整方案' },
@@ -992,17 +1045,88 @@ marked.setOptions({
   renderer: renderer // 使用自定义渲染器
 })
 
+// 添加一个后处理函数来处理统计方法链接
+const postProcessStatisticalLinks = (html) => {
+  if (!html || typeof html !== 'string') {
+    console.warn('postProcessStatisticalLinks: 输入无效', html)
+    return html || ''
+  }
+  
+  try {
+    let processedHtml = html
+    console.log('开始处理统计方法链接，原始HTML长度:', html.length)
+    
+    // 为每个统计方法名称添加链接
+    statisticalMethods.forEach(method => {
+      try {
+        // 简单的字符串替换，避免复杂的正则表达式
+        if (processedHtml.includes(method)) {
+          console.log(`发现统计方法: ${method}`)
+          
+          // 检查是否已经在链接内
+          const methodIndex = processedHtml.indexOf(method)
+          if (methodIndex !== -1) {
+            const beforeMethod = processedHtml.substring(0, methodIndex)
+            const lastOpenTag = beforeMethod.lastIndexOf('<a ')
+            const lastCloseTag = beforeMethod.lastIndexOf('</a>')
+            
+            // 如果在链接标签内，跳过
+            if (lastOpenTag > lastCloseTag) {
+              console.log(`跳过已在链接内的方法: ${method}`)
+              return
+            }
+            
+            // 创建链接
+            const encodedMethod = encodeURIComponent(method)
+            const linkHtml = `<a href="javascript:void(0)" onclick="handleStatisticalMethodClick('${encodedMethod}')" style="color: #3b82f6; text-decoration: underline; cursor: pointer;" title="点击查询统计方法详情">${method}</a>`
+            
+            // 只替换第一个匹配项
+            processedHtml = processedHtml.replace(method, linkHtml)
+            console.log(`成功为方法添加链接: ${method}`)
+          }
+        }
+      } catch (methodError) {
+        console.error('处理统计方法时出错:', methodError, { method })
+        // 继续处理其他方法
+      }
+    })
+    
+    console.log('统计方法链接处理完成，最终HTML长度:', processedHtml.length)
+    return processedHtml
+  } catch (error) {
+    console.error('统计方法链接后处理出错:', error)
+    return html // 如果处理失败，返回原始HTML
+  }
+}
+
 // 安全的markdown渲染函数
-const safeMarkdownRender = (text) => {
+const safeMarkdownRender = (text, enableStatisticalLinks = false) => {
   try {
     if (!text) return ''
     
     console.log('开始渲染markdown，文本长度:', text.length)
     console.log('前100字符:', text.substring(0, 100))
     
-    const result = marked(text)
+    // 首先进行标准的Markdown渲染
+    let result
+    try {
+      result = marked.parse(text)
+      console.log('使用marked.parse()成功')
+    } catch (parseError) {
+      console.warn('marked.parse()失败，尝试使用marked():', parseError)
+      result = marked(text)
+      console.log('使用marked()成功')
+    }
+    
     console.log('Markdown渲染完成，结果长度:', result.length)
     console.log('渲染结果前200字符:', result.substring(0, 200))
+    
+    // 如果启用统计方法链接，则在HTML渲染后处理
+    if (enableStatisticalLinks) {
+      console.log('开始后处理统计方法链接')
+      result = postProcessStatisticalLinks(result)
+      console.log('统计方法链接后处理完成，最终长度:', result.length)
+    }
     
     // 检查是否包含图片标签
     const imgCount = (result.match(/<img/g) || []).length
@@ -1011,19 +1135,16 @@ const safeMarkdownRender = (text) => {
     return result
   } catch (error) {
     console.error('Markdown渲染错误:', error)
-    return text || '' // 如果渲染失败，返回原始文本
+    console.error('错误堆栈:', error.stack)
+    return `<div style="color: red; padding: 10px; border: 1px solid red; border-radius: 4px;">
+      <strong>Markdown渲染错误:</strong><br>
+      ${error.message}<br>
+      <details>
+        <summary>原始文本</summary>
+        <pre>${text}</pre>
+      </details>
+    </div>`
   }
-}
-
-// 测试markdown渲染的函数
-const testMarkdownRender = () => {
-  const testMarkdown = `测试LaTeX公式：![img](https://cdn.nlark.com/yuque/__latex/97175e519d61d550ce1d0327b2f7999f.svg) 和普通文本。`
-  console.log('=== 测试Markdown渲染 ===')
-  console.log('输入:', testMarkdown)
-  const rendered = safeMarkdownRender(testMarkdown)
-  console.log('输出:', rendered)
-  console.log('========================')
-  return rendered
 }
 
 // Markdown渲染计算属性
@@ -1035,11 +1156,27 @@ const renderedHypotheses = computed(() => {
 })
 
 const renderedExperimentalDesign = computed(() => {
-  return currentPlanState.experimentalDesign ? safeMarkdownRender(currentPlanState.experimentalDesign) : ''
+  console.log('计算renderedExperimentalDesign，experimentalDesign:', currentPlanState.experimentalDesign)
+  if (!currentPlanState.experimentalDesign) {
+    console.log('experimentalDesign为空，返回空字符串')
+    return ''
+  }
+  console.log('开始渲染experimentalDesign')
+  const result = safeMarkdownRender(currentPlanState.experimentalDesign)
+  console.log('experimentalDesign渲染完成，结果长度:', result.length)
+  return result
 })
 
 const renderedAnalysisMethod = computed(() => {
-  return currentPlanState.analysisMethod ? safeMarkdownRender(currentPlanState.analysisMethod) : ''
+  console.log('计算renderedAnalysisMethod，analysisMethod:', currentPlanState.analysisMethod)
+  if (!currentPlanState.analysisMethod) {
+    console.log('analysisMethod为空，返回空字符串')
+    return ''
+  }
+  console.log('开始渲染analysisMethod，启用统计方法链接')
+  const result = safeMarkdownRender(currentPlanState.analysisMethod, true)
+  console.log('analysisMethod渲染完成，结果长度:', result.length)
+  return result
 })
 
 const renderedExpectedResults = computed(() => {
@@ -1086,187 +1223,118 @@ watch(() => analysisSubSection.value, (newSubSection) => {
 
 // 注释：移除自动生成来源介绍功能，改为手动生成
 
-// 监听聊天消息，解析研究方案
-watch(() => chatState.messages, (newMessages, oldMessages) => {
-  // 获取最新的助手消息
-  const latestAssistantMessage = newMessages
+// 等待特定响应的函数
+const waitForResponse = (timeoutMs = 30000) => {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now()
+    const checkInterval = 1000 // 每秒检查一次
+    
+    const checkForResponse = () => {
+      const latestAssistantMessage = chatState.messages
     .filter(msg => msg.type === 'assistant' && msg.isComplete && !msg.isError)
     .pop()
   
-  if (latestAssistantMessage) {
-    // 简化重复处理检查：只检查消息ID
-    if (lastProcessedMessageId.value === latestAssistantMessage.id) {
+      if (latestAssistantMessage && latestAssistantMessage.id > lastMessageIdBeforeGenerate.value) {
+        console.log('收到新的助手消息，ID:', latestAssistantMessage.id)
+        resolve(latestAssistantMessage)
       return
     }
     
-    const content = latestAssistantMessage.content
-    
-    // 检查是否包含研究方案Markdown格式
-    const hasResearchPlanMarkdown = content.includes('研究假设') || 
-                                   content.includes('实验设计') || 
-                                   content.includes('数据分析') ||
-                                   content.includes('结果呈现') ||
-                                   (content.includes('#') && (content.includes('假设') || content.includes('设计') || content.includes('分析')))
-    
-    // 检查是否是评估消息（包括整体评估和部分评估）
-    const isEvaluationMessage = content.includes('逻辑性') && 
-                               content.includes('合理性') && 
-                               content.includes('可行性')
-    
-    // 如果是评估消息，重置评估状态并跳过方案解析
-    if (isEvaluationMessage) {
-      console.log('检测到评估消息，重置评估状态')
-      isEvaluating.value = false
-      isEvaluatingSection.value = false
-      evaluatingSection.value = ''
+      // 检查是否超时
+      if (Date.now() - startTime > timeoutMs) {
+        reject(new Error('等待AI响应超时'))
       return
     }
     
-    // 如果正在评估状态（整体或部分），跳过方案解析
-    if (isEvaluating.value || isEvaluatingSection.value) {
-      console.log('处于评估状态，跳过方案解析')
-      return
+      // 继续等待
+      setTimeout(checkForResponse, checkInterval)
     }
     
-    // 如果正在生成状态或迭代状态，按原有逻辑处理
-    if (isGenerating.value || isIterating.value) {
-      // 检查消息ID，只处理在生成开始之后的新消息
-      if (lastMessageIdBeforeGenerate.value && latestAssistantMessage.id <= lastMessageIdBeforeGenerate.value) {
-        console.log('跳过生成开始前的旧消息，消息ID:', latestAssistantMessage.id, '生成前最后消息ID:', lastMessageIdBeforeGenerate.value)
-        return
-      }
-      
-      console.log('收到新的助手消息（生成/迭代状态），尝试解析:', content.substring(0, 200))
-      console.log('消息ID:', latestAssistantMessage.id, '生成前最后消息ID:', lastMessageIdBeforeGenerate.value)
-      
-      // 检查是否是部分迭代响应
-      const isPartialIteration = isIterating.value && iteratingSection.value && iteratingSection.value !== 'full'
-      
-      if (isPartialIteration) {
-        // 处理部分迭代响应 - 现在AI返回完整方案，使用完整方案解析
-        console.log(`检测到${iteratingSection.value}部分的迭代响应，尝试解析完整方案`)
-        
-        // 检查是否包含研究方案内容
-        const hasResearchContent = hasResearchPlanMarkdown || 
-                                  (content.includes('研究') || content.includes('方案') || content.includes('实验'))
-        
-        if (hasResearchContent) {
-          const wasSuccessfullyParsed = parseResearchPlanResponse(content)
-          
-          if (wasSuccessfullyParsed) {
-            lastProcessedMessageId.value = latestAssistantMessage.id
-            console.log(`成功解析${iteratingSection.value}部分迭代的完整方案，标记消息为已处理，ID:`, latestAssistantMessage.id)
-            
-            // 显示完整方案（延迟一下以确保状态更新完成）
-            const updatedSection = getSectionNameInChinese(iteratingSection.value)
-            setTimeout(() => {
-              displayCompleteUpdatedPlan(updatedSection)
-            }, 1000)
-            
-            // 成功解析后重置状态
-            isIterating.value = false
-            iteratingSection.value = ''
-          }
-        }
-        return
-      }
-      
-      // 检查消息是否包含研究方案相关内容
-      const hasResearchContent = hasResearchPlanMarkdown || 
-                                (content.includes('研究') || content.includes('方案') || content.includes('实验'))
-      
-      // 如果是问候语或者非研究方案消息，继续等待
-      if (!hasResearchContent && (content.includes('你好') || content.includes('助手') || content.length < 100)) {
-        console.log('收到问候语，继续等待研究方案消息...')
-        // 设置一个较长的超时，如果30秒内没有收到方案消息则重置状态
-        setTimeout(() => {
-          if (isGenerating.value || isIterating.value) {
-            console.log('等待研究方案消息超时，重置生成状态')
-            isGenerating.value = false
-            isIterating.value = false
-            iteratingSection.value = ''
-          }
-        }, 30000)
-        return
-      }
-      
-      // 尝试解析研究方案
-      const wasSuccessfullyParsed = parseResearchPlanResponse(content)
-      
-      // 根据解析结果处理状态
-      if (wasSuccessfullyParsed) {
-        lastProcessedMessageId.value = latestAssistantMessage.id
-        console.log('成功解析方案，标记消息为已处理，ID:', latestAssistantMessage.id)
-        // 成功解析后重置状态
-        isGenerating.value = false
-        isIterating.value = false
-        iteratingSection.value = ''
-      } else if (hasResearchContent) {
-        console.log('包含研究内容但解析失败，重置生成状态')
-        isGenerating.value = false
-        isIterating.value = false
-        iteratingSection.value = ''
-      }
-    }
-    // 如果不是生成状态，但检测到研究方案Markdown格式，也要解析
-    else if (hasResearchPlanMarkdown) {
-      console.log('检测到普通聊天中的研究方案回复，尝试解析:', content.substring(0, 200))
-      
-      // 检查是否为新消息，避免重复解析
-      const messageId = latestAssistantMessage.id
-      
-      if (lastProcessedMessageId.value === messageId) {
-        return
-      }
-      
-      const wasSuccessfullyParsed = parseResearchPlanResponse(content)
-      
-      if (wasSuccessfullyParsed) {
-        // 记录已解析的消息ID
-        lastProcessedMessageId.value = messageId
-        console.log('成功解析普通聊天中的研究方案，消息ID:', messageId)
-      }
-    }
-  }
-}, { deep: true })
+    checkForResponse()
+  })
+}
 
-// 解析智能体返回的研究方案Markdown
-const parseResearchPlanResponse = (content) => {
+// 自动保存到历史方案
+const saveToHistoryPlans = async (context = {}) => {
   try {
-    console.log('解析智能体回复，长度:', content.length, '前500字符:', content.substring(0, 500))
+    console.log('开始保存方案到历史记录，上下文:', context)
     
-    // 预检查：跳过普通问候语和不包含研究方案的消息
-    if (!content || typeof content !== 'string') {
-      console.log('消息内容为空或非字符串，跳过解析')
-      return false
+    // 构建方案数据
+    const planData = {
+      title: currentPlanState.title,
+      researchQuestions: currentPlanState.researchQuestions,
+      methodology: currentPlanState.methodology,
+      hypotheses: currentPlanState.hypotheses,
+      experimentalDesign: currentPlanState.experimentalDesign,
+      analysisMethod: currentPlanState.analysisMethod,
+      expectedResults: currentPlanState.expectedResults,
+      timeline: currentPlanState.timeline || '',
+      isGenerated: true,
+      isIterated: context.isIteration || false
     }
     
-    // 检查是否包含研究方案相关的关键词（更宽泛的匹配）
-    const hasPlanKeyword = content.includes('研究假设') || 
-                          content.includes('实验设计') || 
-                          content.includes('数据分析') ||
-                          content.includes('结果呈现') ||
-                          content.includes('#研究假设') ||
-                          content.includes('#实验设计') ||
-                          content.includes('#数据分析') ||
-                          content.includes('#结果呈现') ||
-                          (content.includes('# 研究假设')) ||
-                          (content.includes('# 实验设计')) ||
-                          (content.includes('# 数据分析')) ||
-                          (content.includes('# 结果呈现')) ||
-                          (content.includes('假设') && content.includes('实验')) ||
-                          (content.includes('设计') && content.includes('方案')) ||
-                          (content.includes('分析') && content.includes('方法'))
+    // 构建保存上下文
+    const saveContext = {
+      referencedPapers: Array.from(papersState.referencedPapersList).map(paper => ({
+        title: paper.title,
+        authors: paper.authors,
+        year: paper.year,
+        source: paper.source
+      })),
+      userRequirements: extractConversationContext().userRequirements || '',
+      ...context, // 合并传入的上下文
+      saveTime: new Date().toISOString()
+    }
     
-    // 如果是简单的问候语或不包含研究方案相关内容，跳过解析
-    if (!hasPlanKeyword && (
-      content.includes('你好') || 
-      content.includes('助手') || 
-      content.includes('帮助') ||
-      content.length < 50  // 太短的消息通常是问候语
-    )) {
-      console.log('检测到问候语或无关消息，跳过解析:', content.substring(0, 100))
-      return false
+    // 根据是否是迭代，设置不同的标题后缀
+    if (context.isIteration) {
+      if (context.iterationType === 'complete') {
+        planData.title = `${planData.title} - 完整迭代版本`
+      } else if (context.iterationType === 'partial') {
+        planData.title = `${planData.title} - ${context.iteratedSectionName}迭代版本`
+      }
+    }
+    
+    console.log('准备保存的方案数据:', {
+      title: planData.title,
+      isIterated: planData.isIterated,
+      iterationType: context.iterationType
+    })
+    
+    await addHistoryPlan(planData, saveContext)
+    console.log('成功保存方案到历史记录')
+    
+  } catch (error) {
+    console.error('保存方案到历史记录失败:', error)
+    // 不抛出错误，避免影响主流程
+  }
+}
+
+// 解析智能体返回的研究方案Markdown（严格模式）
+const parseResearchPlanResponse = async (content, context = {}) => {
+  try {
+    console.log('开始解析研究方案，内容长度:', content.length)
+    
+    if (!content || typeof content !== 'string') {
+      throw new Error('AI响应内容为空或格式无效')
+    }
+    
+    // 严格检查是否包含必要的研究方案结构
+    const requiredSections = ['研究假设', '实验设计', '数据分析', '结果呈现']
+    const missingSections = []
+    
+    for (const section of requiredSections) {
+      const hasSection = content.includes(section) || 
+                        content.includes(`#${section}`) ||
+                        content.includes(`# ${section}`)
+      
+      if (!hasSection) {
+        missingSections.push(section)
+      }
+    }
+    
+    if (missingSections.length > 0) {
+      throw new Error(`AI响应缺少必要的研究方案部分：${missingSections.join('、')}。请确保响应包含完整的研究方案格式。`)
     }
     
     // 使用更简单且准确的解析方法
@@ -1433,10 +1501,13 @@ const parseResearchPlanResponse = (content) => {
     
     // 更新基本信息
     const timestamp = new Date().toLocaleString('zh-CN')
-    currentPlanState.title = `基于AI智能体生成的定量研究方案`
+    const generatedTitle = generatePlanTitle()
+    currentPlanState.title = generatedTitle
     currentPlanState.researchQuestions = 'AI生成的研究方案'
     currentPlanState.methodology = `基于参考文献生成的研究方法 (生成时间: ${timestamp})`
     currentPlanState.dataCollection = '根据研究设计制定的数据收集方案'
+    
+    console.log('生成的方案标题:', generatedTitle)
     
     // 初始化完整方案部分的来源介绍
     currentPlanState.full = {
@@ -1471,239 +1542,21 @@ const parseResearchPlanResponse = (content) => {
       // 显示成功提示
       console.log('成功解析并更新研究方案')
       
-      // 如果是迭代状态，完成迭代对比数据准备
-      if (isIterating.value) {
-        const latestMessage = chatState.messages[chatState.messages.length - 1]
-        if (latestMessage && latestMessage.type === 'assistant') {
-          console.log('完成迭代，消息ID:', latestMessage.id)
-          completeIteration(latestMessage.id)
-        }
-      }
-      
-      // 使用Vue的nextTick确保DOM更新完成后再显示提示
-      setTimeout(() => {
-        if (isIterating.value) {
-          // 迭代状态下的提示
-          if (updatedFields >= 3) {
-            alert('方案迭代成功！已优化研究假设、实验设计、数据分析和结果呈现四个完整部分。')
-          } else if (updatedFields >= 2) {
-            alert(`方案迭代成功！已优化 ${updatedFields} 个部分，请查看各个板块的内容。`)
-          } else {
-            alert('方案迭代成功！请查看右侧内容。')
-          }
-          
-          // 为完整方案迭代显示完整的更新后方案
-          setTimeout(() => {
-            displayCompleteUpdatedPlan('完整方案')
-          }, 1000)
-        } else if (isGenerating.value) {
-          // 生成状态下的提示
-          if (updatedFields >= 3) {
-            alert('研究方案生成成功！已包含研究假设、实验设计、数据分析和结果呈现四个完整部分。PDF文件可在聊天框中下载。')
-          } else if (updatedFields >= 2) {
-            alert(`研究方案生成成功！已包含 ${updatedFields} 个部分，请查看各个板块的内容。PDF文件可在聊天框中下载。`)
-          } else {
-            alert('研究方案已生成，请查看右侧内容。PDF文件可在聊天框中下载。')
-          }
-        }
-      }, 500)
-      
-      // 生成成功后，将方案添加到历史方案中
-      if (isGenerating.value) {
-        // 准备方案数据，用于添加到历史记录
-        const planData = {
-          title: currentPlanState.title,
-          researchQuestions: currentPlanState.researchQuestions,
-          methodology: currentPlanState.methodology,
-          hypotheses: currentPlanState.hypotheses,
-          experimentalDesign: currentPlanState.experimentalDesign,
-          analysisMethod: currentPlanState.analysisMethod,
-          expectedResults: currentPlanState.expectedResults,
-          timeline: currentPlanState.timeline || '',
-          isGenerated: true
-        }
-        
-        // 准备生成上下文，包含参考文献信息
-        const generationContext = {
-          referencedPapers: Array.from(papersState.referencedPapersList).map(paper => ({
-            title: paper.title,
-            authors: paper.authors,
-            year: paper.year,
-            source: paper.source
-          })),
-          generateTime: new Date().toISOString(),
-          userRequirements: extractConversationContext().userRequirements || ''
-        }
-        
-        console.log('准备添加研究方案到历史记录')
-        
-        // 延迟添加，确保UI更新完成
-        setTimeout(async () => {
-          try {
-            await addHistoryPlan(planData, generationContext)
-            console.log('成功添加研究方案到历史记录')
-          } catch (error) {
-            console.error('添加研究方案到历史记录失败:', error)
-          }
-        }, 1000)
-      }
+      // 自动保存到历史方案
+      await saveToHistoryPlans(context)
       
       return true // 成功解析并更新了研究方案
     } else {
-      console.log('未更新任何字段，解析失败')
-      return false
+      throw new Error('解析失败：未能从AI响应中提取到有效的研究方案内容。请检查AI响应格式是否正确。')
     }
   } catch (error) {
-    console.error('解析研究方案时出现意外错误:', error)
-    console.log('原始内容:', content)
-    return false
+    console.error('解析研究方案时出现错误:', error)
+    console.log('原始内容:', content.substring(0, 500))
+    throw error // 重新抛出错误，让调用者处理
   }
 }
 
-// 解析部分迭代响应
-const parseSectionIterationResponse = (content, section) => {
-  try {
-    console.log(`解析${section}部分的迭代响应，长度:`, content.length, '前500字符:', content.substring(0, 500))
-    
-    // 预检查：跳过普通问候语和不包含研究方案的消息
-    if (!content || typeof content !== 'string') {
-      console.log('消息内容为空或非字符串，跳过解析')
-      return false
-    }
-    
-    const sectionName = getSectionNameInChinese(section)
-    
-    // 检查是否包含相关部分的内容
-    const hasTargetSection = content.includes(sectionName) || 
-                            content.includes(`#${sectionName}`) ||
-                            content.includes(`# ${sectionName}`)
-    
-    if (!hasTargetSection) {
-      console.log(`未找到${sectionName}部分的内容，跳过解析`)
-      return false
-    }
-    
-    // 提取目标部分的内容
-    let extractedContent = ''
-    
-    // 尝试多种提取模式
-    const patterns = [
-      // Markdown标题格式: #研究假设 或 # 研究假设
-      new RegExp(`(?:#+\\s*${sectionName}[：:\\s]*)\\n?([\\s\\S]*?)(?=\\n#+\\s*(?:研究假设|实验设计|数据分析|结果呈现)|$)`, 'i'),
-      // 传统冒号格式：研究假设：
-      new RegExp(`${sectionName}[：:\\s]*\\n?([\\s\\S]*?)(?=\\n\\s*(?:研究假设|实验设计|数据分析|结果呈现|$))`, 'i'),
-      // 直接提取（如果只有一个部分的内容）
-      new RegExp(`([\\s\\S]*)`, 'i')
-    ]
-    
-    for (const pattern of patterns) {
-      const match = content.match(pattern)
-      if (match && match[1] && match[1].trim()) {
-        extractedContent = match[1].trim()
-        console.log(`使用模式提取到${sectionName}内容:`, extractedContent.substring(0, 200) + '...')
-        break
-      }
-    }
-    
-    if (!extractedContent) {
-      console.log(`未能提取到${sectionName}部分的有效内容`)
-      return false
-    }
-    
-    // 清理内容：移除多余的标题标记和格式
-    extractedContent = extractedContent
-      .replace(/^#+\s*[\u4e00-\u9fa5]+[：:]\s*/g, '') // 移除开头的markdown标题
-      .replace(/^[\u4e00-\u9fa5]+[：:]\s*/g, '') // 移除开头的冒号标题
-      .trim()
-    
-    if (!extractedContent || extractedContent.length < 10) {
-      console.log(`${sectionName}部分内容太短或为空，不进行更新`)
-      return false
-    }
-    
-    console.log(`准备更新${sectionName}部分，新内容长度:`, extractedContent.length)
-    
-    // 根据部分类型更新对应的状态
-    let updatedFields = 0
-    
-    switch (section) {
-      case 'hypothesis':
-        // 处理研究假设（支持多个假设）
-        const hypothesesArray = extractedContent.split(/\n(?=H\d+[:：]|假设\d+[:：]|\d+[\.、]|[•·]\s*)/).filter(h => h.trim())
-        if (hypothesesArray.length > 1) {
-          currentPlanState.hypotheses = hypothesesArray.map(h => h.trim())
-    } else {
-          currentPlanState.hypotheses = [extractedContent]
-        }
-        console.log('更新研究假设:', currentPlanState.hypotheses)
-        updatedFields++
-        break
-        
-      case 'design':
-        currentPlanState.experimentalDesign = extractedContent
-        console.log('更新实验设计:', extractedContent.substring(0, 100) + '...')
-        updatedFields++
-        break
-        
-      case 'analysis':
-        currentPlanState.analysisMethod = extractedContent
-        console.log('更新数据分析:', extractedContent.substring(0, 100) + '...')
-        updatedFields++
-        break
-        
-      case 'results':
-        currentPlanState.expectedResults = extractedContent
-        console.log('更新结果呈现:', extractedContent.substring(0, 100) + '...')
-        updatedFields++
-        break
-        
-      default:
-        console.log('未知的部分类型:', section)
-      return false
-    }
-    
-    if (updatedFields > 0) {
-      // 更新时间戳
-      currentPlanState.lastUpdated = new Date().toISOString()
-      
-      // 强制更新响应式状态
-      const forceUpdate = {
-        ...currentPlanState,
-        _timestamp: Date.now()
-      }
-      Object.assign(currentPlanState, forceUpdate)
-      
-      // 切换到对应的部分视图
-      activeSection.value = section
-      
-      console.log(`成功更新${sectionName}部分`)
-      
-      // 如果是迭代状态，完成迭代对比数据准备
-      if (isIterating.value) {
-        const latestMessage = chatState.messages[chatState.messages.length - 1]
-        if (latestMessage && latestMessage.type === 'assistant') {
-          console.log('完成部分迭代，消息ID:', latestMessage.id)
-          completeIteration(latestMessage.id)
-        }
-      }
-      
-      // 显示成功提示
-      setTimeout(() => {
-        alert(`${sectionName}部分迭代成功！已根据您的建议完成优化。`)
-      }, 500)
-      
-      return true
-    } else {
-      console.log(`${sectionName}部分解析失败，未更新任何字段`)
-      return false
-    }
-    
-  } catch (error) {
-    console.error(`解析${section}部分迭代响应时出现错误:`, error)
-    console.log('原始内容:', content)
-    return false
-  }
-}
+// 已移除：parseSectionIterationResponse 函数 - 不再需要，因为现在使用统一的解析机制
 
 // 在聊天框中显示完整的更新后方案
 const displayCompleteUpdatedPlan = (updatedSectionName) => {
@@ -1795,6 +1648,13 @@ const closeResearchPlanDialog = () => {
   showResearchPlanDialogModal.value = false
   researchPlanMode.value = 'custom'
   researchTopicInput.value = ''
+  
+  // 重置生成信息
+  currentGenerationInfo.value = {
+    mode: 'auto',
+    customTopic: '',
+    timestamp: null
+  }
 }
 
 // 确认生成研究方案
@@ -1810,6 +1670,13 @@ const confirmGenerateResearchPlan = async () => {
   await generateResearchPlan(currentMode, currentTopic)
 }
 
+// 当前生成方案的信息（用于标题生成）
+const currentGenerationInfo = ref({
+  mode: 'auto',
+  customTopic: '',
+  timestamp: null
+})
+
 // 生成定量研究方案（修改为支持模式和主题参数）
 const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
   // 记录当前最新的消息ID
@@ -1819,7 +1686,14 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
   lastMessageIdBeforeGenerate.value = latestMessage ? latestMessage.id : 0
   
   // 清除之前的解析记录，确保新生成的方案能被解析
-  lastProcessedMessageId.value = null
+    // 已移除：lastProcessedMessageId.value = null // 不再需要
+  
+  // 保存当前生成的信息，用于后续标题生成
+  currentGenerationInfo.value = {
+    mode: mode,
+    customTopic: customTopic.trim(),
+    timestamp: new Date().toISOString()
+  }
   
   isGenerating.value = true
   
@@ -2013,7 +1887,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
       message += `
 请基于我提供的研究内容和目的，以及我选择的参考文献中的定量研究部分，构建一份人机交互（HCI）领域的高质量定量研究方案。方案需结构完整、逻辑严谨、内容具体，避免泛泛而谈或堆砌无效信息。包括以下部分：
 ● 研究假设：简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
-● 实验设计：详述实验方案，包括被试特征（如年龄、背景、样本量等）、分组方式、实验流程及任务设置。确保所有参数具体明确，不使用模糊表述（如“若干”、“约xx人”），采用分段或分点详述，不使用表格。
+● 实验设计：详述实验方案，包括被试特征（如年龄、背景、样本量等）、分组方式、实验流程及任务设置。确保所有参数具体明确，不使用模糊表述（如"若干"、"约xx人"），采用分段或分点详述，不使用表格。
 ● 数据分析：说明采集哪些用户数据（如行为日志、生理数据、主观评分等），以及如何采集。匹配每项数据类型，明确采用的统计分析方法（如t检验、ANOVA、回归等），并解释其与假设的对应关系。采用分段或分点详述，不使用表格。
 ● 结果呈现：构思可能的分析结果及与假设的关系。指出适合呈现各类结果的图表形式（如箱线图、交互效应图等），并说明图表与结论之间的映射关系。采用分段或分点详述，不使用表格。
 要求： 所有内容需围绕输入研究构建，信息准确、精炼、无冗余。如输入不完整，可合理假设，但需标明前提。`
@@ -2021,7 +1895,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
       message += `
 请基于对话内容，以及我选择的参考文献中的定量研究部分，构建一份人机交互（HCI）领域的高质量定量研究方案。方案需结构完整、逻辑严谨、内容具体，避免泛泛而谈或堆砌无效信息。包括以下部分：
 ● 研究假设：简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
-● 实验设计：详述实验方案，包括被试特征（如年龄、背景、样本量等）、分组方式、实验流程及任务设置。确保所有参数具体明确，不使用模糊表述（如“若干”、“约xx人”），采用分段或分点详述，不使用表格。
+● 实验设计：详述实验方案，包括被试特征（如年龄、背景、样本量等）、分组方式、实验流程及任务设置。确保所有参数具体明确，不使用模糊表述（如"若干"、"约xx人"），采用分段或分点详述，不使用表格。
 ● 数据分析：说明采集哪些用户数据（如行为日志、生理数据、主观评分等），以及如何采集。匹配每项数据类型，明确采用的统计分析方法（如t检验、ANOVA、回归等），并解释其与假设的对应关系。采用分段或分点详述，不使用表格。
 ● 结果呈现：构思可能的分析结果及与假设的关系。指出适合呈现各类结果的图表形式（如箱线图、交互效应图等），并说明图表与结论之间的映射关系。采用分段或分点详述，不使用表格。
 要求： 所有内容需围绕输入研究构建，信息准确、精炼、无冗余。如输入不完整，可合理假设，但需标明前提。`
@@ -2035,11 +1909,209 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
     // 发送消息到chatbox
     await sendMessage(message)
     
+    // 等待AI响应
+    console.log('等待AI响应...')
+    const response = await waitForResponse()
+    
+    // 解析AI响应
+    console.log('收到AI响应，开始解析...')
+    
+    // 准备生成上下文
+    const generationContext = {
+      isIteration: false,
+      generateTime: new Date().toISOString(),
+      mode: mode,
+      customTopic: customTopic
+    }
+    
+    await parseResearchPlanResponse(response.content, generationContext)
+    
+    // 解析成功，显示成功提示
+    alert('研究方案生成成功！已包含研究假设、实验设计、数据分析和结果呈现四个完整部分。')
+    
   } catch (error) {
     console.error('生成研究方案失败:', error)
+    alert(`生成研究方案失败：${error.message}`)
+  } finally {
     isGenerating.value = false
   }
-  // 注意：不在这里重置isGenerating，让解析成功时再重置，避免过早重置导致解析逻辑失效
+}
+
+// 生成智能的方案标题
+const generatePlanTitle = () => {
+  const generationInfo = currentGenerationInfo.value
+  console.log('开始生成方案标题，生成信息:', generationInfo)
+  
+  // 如果是自定义主题模式且有具体主题，直接使用
+  if (generationInfo.mode === 'custom' && generationInfo.customTopic) {
+    console.log('使用自定义主题模式，原始主题:', generationInfo.customTopic)
+    // 清理主题，移除多余的词汇，保持简洁
+    let cleanedTopic = generationInfo.customTopic
+      .replace(/^(探讨|研究|分析|调查|实验|测试|评估|关于)+/g, '') // 移除开头的动词
+      .replace(/(的影响|的关系|的效果|的作用|研究|分析|实验|方案|设计)+$/g, '') // 移除结尾的研究词汇
+      .replace(/请帮我|请|帮我|我想要|我希望|能否|可以|如何|怎样/g, '') // 移除请求性词汇
+      .replace(/\s+/g, ' ') // 合并多个空格
+      .trim()
+    
+    // 如果清理后太短，使用原始主题
+    if (cleanedTopic.length < 3) {
+      cleanedTopic = generationInfo.customTopic.trim()
+    }
+    
+    // 限制长度，过长则截断，保持在合理范围内
+    if (cleanedTopic.length > 35) {
+      // 尝试在词语边界截断
+      const truncated = cleanedTopic.substring(0, 35)
+      const lastSpace = truncated.lastIndexOf(' ')
+      const lastChineseChar = truncated.search(/[\u4e00-\u9fa5][，。！？]?$/)
+      
+      if (lastSpace > 20) {
+        cleanedTopic = truncated.substring(0, lastSpace) + '...'
+      } else if (lastChineseChar > 20) {
+        cleanedTopic = truncated.substring(0, lastChineseChar + 1) + '...'
+      } else {
+        cleanedTopic = truncated + '...'
+      }
+    }
+    
+    // 确保标题不为空
+    if (!cleanedTopic || cleanedTopic === '...') {
+      cleanedTopic = '用户自定义研究方案'
+    }
+    
+    console.log('自定义主题清理后的标题:', cleanedTopic)
+    return cleanedTopic
+  }
+  
+  // 智能分析模式：从对话历史中提取关键主题
+  if (generationInfo.mode === 'auto') {
+    console.log('使用智能分析模式生成标题')
+    const conversationContext = extractConversationContext()
+    
+    if (conversationContext.hasUserRequirements) {
+      console.log('从用户需求中提取关键词，需求内容:', conversationContext.userRequirements)
+      // 从用户需求中提取关键词来生成标题
+      const requirements = conversationContext.userRequirements
+      
+      // 提取研究主题关键词
+      const topicKeywords = []
+      
+             // 常见的研究主题模式
+       const patterns = [
+         /(?:探讨|研究|分析|调查|实验|测试|评估)([^。！？\n]{3,25}?)(?:的影响|的关系|的效果|的作用|研究|分析|实验|$)/g,
+         /([^。！？\n]{3,15}?)(?:对|与)([^。！？\n]{3,15}?)(?:的影响|的关系|的效果|的作用)/g,
+         /(?:关于|针对|面向|基于)([^。！？\n]{3,20}?)(?:的|进行|研究|分析)/g,
+         /([A-Za-z\u4e00-\u9fa5]{3,20}?)(?:系统|平台|工具|方法|技术|设计|界面|交互|应用|效果)/g,
+         /(?:提高|改善|优化|增强)([^。！？\n]{3,20}?)(?:的|效果|性能|体验)/g,
+         /([^。！？\n]{3,20}?)(?:在|中的)([^。！？\n]{3,20}?)(?:应用|使用|效果)/g
+       ]
+      
+      for (const pattern of patterns) {
+        let match
+        while ((match = pattern.exec(requirements)) !== null) {
+          if (match[1] && match[1].trim().length > 2) {
+            topicKeywords.push(match[1].trim())
+          }
+          if (match[2] && match[2].trim().length > 2) {
+            topicKeywords.push(match[2].trim())
+          }
+        }
+      }
+      
+             // 去重并选择最有意义的关键词
+       const uniqueKeywords = [...new Set(topicKeywords)]
+         .filter(keyword => 
+           keyword.length > 2 && 
+           keyword.length < 20 &&
+           !keyword.includes('用户') && 
+           !keyword.includes('我们') &&
+           !keyword.includes('他们') &&
+           !keyword.includes('这个') &&
+           !keyword.includes('那个') &&
+           !keyword.includes('什么') &&
+           !keyword.includes('如何') &&
+           !keyword.includes('怎么')
+         )
+         .slice(0, 3)
+       
+       if (uniqueKeywords.length > 0) {
+         // 清理关键词，移除多余词汇
+         const cleanedKeywords = uniqueKeywords.map(kw => 
+           kw.replace(/^(对|与|的|在|中|和)/, '').replace(/(的|效果|影响|关系)$/, '').trim()
+         ).filter(kw => kw.length > 1)
+         
+         if (cleanedKeywords.length > 0) {
+           // 组合关键词生成标题
+           let title = cleanedKeywords.join('与')
+           if (title.length > 25) {
+             title = cleanedKeywords[0]
+           }
+           // 如果标题不包含"研究"相关词汇，则添加
+                       if (!title.includes('研究') && !title.includes('分析') && !title.includes('评估')) {
+              title += '研究'
+            }
+            console.log('智能分析模式生成的标题:', title)
+            return title
+          }
+        }
+    }
+    
+         // 如果提取失败，检查是否有参考文献相关的主题
+     const referencedPapers = Array.from(papersState.referencedPapersList)
+     if (referencedPapers.length > 0) {
+       console.log('尝试从参考文献中提取主题，文献数量:', referencedPapers.length)
+      // 从参考文献标题中提取共同主题
+      const paperTitles = referencedPapers.map(paper => paper.title).join(' ')
+      
+      // 提取高频关键词
+      const commonKeywords = []
+      const keywordPatterns = [
+        /([A-Za-z]+(?:\s+[A-Za-z]+){0,2})/g, // 英文关键词
+        /([\u4e00-\u9fa5]{2,8})/g // 中文关键词
+      ]
+      
+      for (const pattern of keywordPatterns) {
+        let match
+        while ((match = pattern.exec(paperTitles)) !== null) {
+          const keyword = match[1].trim()
+          if (keyword.length > 2 && 
+              !keyword.includes('study') && 
+              !keyword.includes('research') &&
+              !keyword.includes('analysis')) {
+            commonKeywords.push(keyword)
+          }
+        }
+      }
+      
+      // 统计词频并选择最高频的词
+      const keywordCount = {}
+      commonKeywords.forEach(keyword => {
+        keywordCount[keyword] = (keywordCount[keyword] || 0) + 1
+      })
+      
+      const sortedKeywords = Object.entries(keywordCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 2)
+        .map(entry => entry[0])
+      
+             if (sortedKeywords.length > 0) {
+         let title = sortedKeywords.join('与')
+         if (title.length > 25) {
+           title = sortedKeywords[0]
+         }
+         const finalTitle = title + '研究'
+         console.log('从参考文献生成的标题:', finalTitle)
+         return finalTitle
+       }
+    }
+  }
+  
+  // 默认标题（包含时间戳以便区分）
+  const now = new Date()
+  const timeStr = `${now.getMonth() + 1}月${now.getDate()}日`
+  const defaultTitle = `定量研究方案-${timeStr}`
+  console.log('使用默认标题:', defaultTitle)
+  return defaultTitle
 }
 
 // 提取对话历史中的用户需求和上下文
@@ -2137,15 +2209,77 @@ const extractConversationContext = () => {
 
 // 页面加载时检查是否有历史方案要显示
 onMounted(() => {
-  // 测试markdown渲染功能
-  console.log('🧪 开始测试markdown渲染功能')
-  testMarkdownRender()
+  console.log('🧪 ResearchPlanDetail组件已挂载')
+  
+  // 将统计方法点击处理函数暴露到全局window对象
+  if (typeof window !== 'undefined') {
+    console.log('🔍 jumpToStatisticalMethodQuery函数类型:', typeof jumpToStatisticalMethodQuery)
+    
+    // 创建一个全局处理函数
+    window.handleStatisticalMethodClick = async (encodedMethodName) => {
+      try {
+        console.log('🔍 处理统计方法点击:', encodedMethodName)
+        await jumpToStatisticalMethodQuery(encodedMethodName)
+      } catch (error) {
+        console.error('处理统计方法点击失败:', error)
+        alert('跳转失败，请稍后重试')
+      }
+    }
+    
+    // 保持原有的全局函数
+    window.jumpToStatisticalMethodQuery = jumpToStatisticalMethodQuery
+    
+    console.log('✅ 统计方法处理函数已暴露到全局')
+    console.log('🔍 验证全局函数:', typeof window.handleStatisticalMethodClick)
+    
+    // 测试函数是否可以调用
+    setTimeout(() => {
+      console.log('🧪 测试全局函数是否可用:', typeof window.handleStatisticalMethodClick)
+    }, 1000)
+  }
   
   if (historyState.currentViewingPlan) {
     // 延迟一点再加载，确保当前方案数据已经初始化完成
     setTimeout(() => {
       loadHistoryPlan(historyState.currentViewingPlan)
     }, 100)
+  }
+  
+  // 测试基础Markdown渲染
+  console.log('=== 测试基础Markdown渲染 ===')
+  const basicTest = `**粗体文本**和*斜体文本*`
+  console.log('基础测试:', basicTest)
+  const basicResult = safeMarkdownRender(basicTest, false)
+  console.log('基础渲染结果:', basicResult)
+  
+  // 测试统计方法链接
+  console.log('=== 测试统计方法链接 ===')
+  const methodTest = `我们使用t检验和方差分析进行数据分析。`
+  console.log('方法测试:', methodTest)
+  const methodResult = safeMarkdownRender(methodTest, true)
+  console.log('方法渲染结果:', methodResult)
+  console.log('=== 测试完成 ===')
+  
+  // 检查当前方案状态
+  console.log('当前方案状态:', {
+    isGenerated: currentPlanState.isGenerated,
+    hasAnalysisMethod: !!currentPlanState.analysisMethod,
+    analysisMethodLength: currentPlanState.analysisMethod?.length || 0,
+    analysisMethodPreview: currentPlanState.analysisMethod?.substring(0, 100) + '...'
+  })
+})
+
+// 组件卸载时清理全局函数
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    if (window.jumpToStatisticalMethodQuery) {
+      delete window.jumpToStatisticalMethodQuery
+      console.log('🧹 已清理全局函数 jumpToStatisticalMethodQuery')
+    }
+    if (window.handleStatisticalMethodClick) {
+      delete window.handleStatisticalMethodClick
+      console.log('🧹 已清理全局函数 handleStatisticalMethodClick')
+    }
   }
 })
 
@@ -2460,13 +2594,33 @@ ${conversationContext.researchContext}
     
     // 发送消息到对话
     await sendMessage(iterationPrompt)
+    
+    // 等待AI响应
+    console.log('等待AI响应...')
+    const response = await waitForResponse()
+    
+    // 解析AI响应
+    console.log('收到AI响应，开始解析...')
+    
+    // 准备迭代上下文
+    const iterationContext = {
+      isIteration: true,
+      iterationType: 'complete',
+      iterationSuggestion: suggestion,
+      iterateTime: new Date().toISOString()
+    }
+    
+    await parseResearchPlanResponse(response.content, iterationContext)
+    
+    // 解析成功，显示成功提示
+    alert('方案迭代成功！已根据您的建议优化了完整的研究方案。')
 
   } catch (error) {
     console.error('迭代方案失败:', error)
-    alert('迭代方案失败，请重试')
+    alert(`迭代方案失败：${error.message}`)
+  } finally {
     isIterating.value = false
   }
-  // 注意：不在这里重置isIterating，让解析成功时再重置，避免过早重置导致解析逻辑失效
 }
 
 // 带建议的部分迭代
@@ -2570,14 +2724,32 @@ ${conversationContext.researchContext}`
     // 发送消息到对话
     await sendMessage(iterationPrompt)
     
-    // 显示提示消息
-    setTimeout(() => {
-      alert(`${sectionName}部分迭代请求已发送，请等待AI助手生成优化内容。`)
-    }, 500)
+    // 等待AI响应
+    console.log('等待AI响应...')
+    const response = await waitForResponse()
+    
+    // 解析AI响应
+    console.log('收到AI响应，开始解析...')
+    
+    // 准备迭代上下文
+    const iterationContext = {
+      isIteration: true,
+      iterationType: 'partial',
+      iterationSuggestion: suggestion,
+      iteratedSection: section,
+      iteratedSectionName: sectionName,
+      iterateTime: new Date().toISOString()
+    }
+    
+    await parseResearchPlanResponse(response.content, iterationContext)
+    
+    // 解析成功，显示成功提示
+    alert(`${sectionName}部分迭代成功！已根据您的建议优化了该部分内容。`)
     
   } catch (error) {
     console.error(`迭代${section}部分失败:`, error)
-    alert(`迭代失败，请重试`)
+    alert(`迭代失败：${error.message}`)
+  } finally {
     isIterating.value = false
   }
 }

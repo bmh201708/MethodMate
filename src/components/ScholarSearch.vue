@@ -245,10 +245,31 @@
             </button>
 
             <span
-              v-if="paper.relevance_score"
-              class="inline-flex items-center px-3 py-2 bg-yellow-100 text-yellow-700 rounded-md text-sm"
+              v-if="getRelevanceLevel(paper.relevance_score)"
+              class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium"
+              :class="{
+                'bg-green-100 text-green-700': getRelevanceLevel(paper.relevance_score) === 'high',
+                'bg-yellow-100 text-yellow-700': getRelevanceLevel(paper.relevance_score) === 'medium',
+                'bg-orange-100 text-orange-700': getRelevanceLevel(paper.relevance_score) === 'low',
+                'bg-red-100 text-red-700': getRelevanceLevel(paper.relevance_score) === 'very-low'
+              }"
             >
-              相关性: {{ Math.round(paper.relevance_score * 100) }}%
+              <div class="flex items-center space-x-1">
+                <div 
+                  class="w-2 h-2 rounded-full"
+                  :class="{
+                    'bg-green-500': getRelevanceLevel(paper.relevance_score) === 'high',
+                    'bg-yellow-500': getRelevanceLevel(paper.relevance_score) === 'medium',
+                    'bg-orange-500': getRelevanceLevel(paper.relevance_score) === 'low',
+                    'bg-red-500': getRelevanceLevel(paper.relevance_score) === 'very-low'
+                  }"
+                ></div>
+                <span>
+                  {{ getRelevanceLevel(paper.relevance_score) === 'high' ? '高相关性' : 
+                     getRelevanceLevel(paper.relevance_score) === 'medium' ? '中等相关性' : 
+                     getRelevanceLevel(paper.relevance_score) === 'low' ? '低相关性' : '极低相关性' }}
+                </span>
+              </div>
             </span>
           </div>
 
@@ -423,15 +444,10 @@ export default {
       setSearchError(null)
 
       try {
-        // 搜索功能不需要去重，每次搜索都是新的结果
-        console.log('📝 开始新的学术搜索，不使用去重逻辑')
-
-        // 检查搜索论文池状态（搜索功能使用独立的论文池逻辑）
         const currentSearchQuery = this.searchQuery.trim()
+        const requestedCount = parseInt(this.numResults)
         
-        // 对于搜索功能，我们一次性获取用户要求的数量，而不是固定的50篇
-        // 这样可以避免获取过多不相关的论文
-        const requestedCount = Math.min(parseInt(this.numResults), 50) // 最多50篇
+        console.log(`📝 开始新的学术搜索，目标数量: ${requestedCount}篇`)
 
         // 使用环境配置的API地址
         const { getApiBaseUrl } = await import('../config/environment.js')
@@ -445,7 +461,8 @@ export default {
           },
           body: JSON.stringify({
             query: currentSearchQuery,
-            num_results: requestedCount,
+            num_results: requestedCount, // 用户要求的最终数量
+            external_search_count: requestedCount, // 外部始终搜索用户要求的数量
             filter_venues: !this.filterTopVenues // 默认只获取顶会顶刊，勾选扩大范围后获取所有文献
           })
         })
@@ -453,20 +470,21 @@ export default {
         const data = await response.json()
 
         if (data.success) {
-          // 确保每个结果都有isTopVenue属性和唯一ID
+          // 确保每个结果都有isTopVenue属性和唯一ID，保留原始的relevance_score
           const processedResults = data.results.map((result, index) => ({
             ...result,
             id: result.title, // 使用标题作为唯一ID
             downloadSources: null,
             downloadMessage: '',
             isTopVenue: result.isTopVenue || false // 确保isTopVenue属性存在
+            // 保留原始的relevance_score，不设置relevanceLevel
           }))
           
           // 保存到全局状态
           setSearchResults(processedResults, this.searchQuery)
           
           console.log('搜索结果已保存到全局状态:', processedResults)
-          console.log(`📊 搜索统计: 缓存命中 ${data.cache_hits || 0} 篇, 外部获取 ${data.external_hits || 0} 篇`)
+          console.log(`📊 搜索统计: 本地缓存 ${data.cache_hits || 0} 篇, 外部获取 ${data.external_hits || 0} 篇, 最终展示 ${processedResults.length} 篇`)
         } else {
           setSearchError(data.error || '搜索失败，请重试')
           setSearchResults([], this.searchQuery)
@@ -478,6 +496,14 @@ export default {
       } finally {
         setSearchLoading(false)
       }
+    },
+    
+    // 根据相关性分数确定相关性等级
+    getRelevanceLevel(score) {
+      if (score >= 0.8) return 'high'      // 高相关性：绿色
+      if (score >= 0.6) return 'medium'    // 中等相关性：黄色  
+      if (score >= 0.4) return 'low'       // 低相关性：橙色
+      return 'very-low'                    // 极低相关性：红色
     },
 
     async findDownloadSources(paper, index) {
