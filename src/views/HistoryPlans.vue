@@ -62,10 +62,31 @@
                                 <!-- 操作按钮区域 -->
                                 <div
                                     class="px-4 py-2 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
-                                    <button @click.stop="applyPlan(plan)"
-                                        class="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs">
-                                        应用方案
-                                    </button>
+                                    <div class="flex space-x-2">
+                                        <button @click.stop="applyPlan(plan)"
+                                            class="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs">
+                                            应用方案
+                                        </button>
+                                        <button @click.stop="downloadPDF(plan)"
+                                            :disabled="isGeneratingPDF"
+                                            class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1">
+                                            <svg v-if="isGeneratingPDF" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            </svg>
+                                            <span>PDF</span>
+                                        </button>
+                                        <button @click.stop="downloadTXT(plan)"
+                                            class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs flex items-center space-x-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            </svg>
+                                            <span>TXT</span>
+                                        </button>
+                                    </div>
                                     <button @click.stop="confirmDelete(plan)"
                                         class="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-xs">
                                         删除
@@ -156,6 +177,25 @@
                                 <div class="flex justify-between items-center mb-6">
                                     <h2 class="text-2xl font-bold text-gray-900">{{ selectedPlan.title }}</h2>
                                     <div class="flex space-x-2">
+                                        <button @click="downloadPDF(selectedPlan)"
+                                            :disabled="isGeneratingPDF"
+                                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2">
+                                            <svg v-if="isGeneratingPDF" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            </svg>
+                                            <span>{{ isGeneratingPDF ? '生成中...' : '下载PDF' }}</span>
+                                        </button>
+                                        <button @click="downloadTXT(selectedPlan)"
+                                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            </svg>
+                                            <span>导出TXT</span>
+                                        </button>
                                         <button @click="applyPlan(selectedPlan)"
                                             class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
                                             应用此方案
@@ -305,12 +345,14 @@ import { useUserStore } from '../stores/userStore.js'
 import { marked } from 'marked'
 import markedKatex from 'marked-katex-extension'
 import 'katex/dist/katex.min.css'
+import html2pdf from 'html2pdf.js'
 
 const router = useRouter()
 const userStore = useUserStore()
 const isLoading = ref(false)
 const selectedPlan = ref(null)
 const activeSection = ref('full')
+const isGeneratingPDF = ref(false)
 
 // 方案导航部分
 const sections = [
@@ -519,6 +561,348 @@ const confirmClearAll = async () => {
         } finally {
             isLoading.value = false
         }
+    }
+}
+
+// 下载TXT功能
+const downloadTXT = async (plan) => {
+    if (!plan) return
+    
+    try {
+        console.log('开始生成TXT文件:', plan.title)
+        
+        // 创建内容字符串
+        let content = `
+研究方案：${plan.title || '未命名方案'}
+
+基本信息：
+- 创建时间：${plan.createdAt || '未知'}
+- 作者：${plan.author || '未知'}
+- 状态：${plan.status || '未知'}
+`
+
+        // 添加方案内容
+        if (plan.fullPlan) {
+            if (plan.fullPlan.hypotheses && plan.fullPlan.hypotheses.length > 0) {
+                content += '\n研究假设：\n'
+                plan.fullPlan.hypotheses.forEach((hypothesis, index) => {
+                    content += `${index + 1}. ${hypothesis}\n`
+                })
+            }
+            
+            if (plan.fullPlan.experimentalDesign) {
+                content += '\n实验设计：\n' + plan.fullPlan.experimentalDesign + '\n'
+            }
+            
+            if (plan.fullPlan.analysisMethod) {
+                content += '\n数据分析：\n' + plan.fullPlan.analysisMethod + '\n'
+            }
+            
+            if (plan.fullPlan.expectedResults) {
+                content += '\n结果呈现：\n' + plan.fullPlan.expectedResults + '\n'
+            }
+        } else {
+            content += '\n注意：此方案暂无详细内容。\n'
+        }
+        
+        content += `\n\n此文档由 MethodMate 系统生成\n生成时间：${new Date().toLocaleString('zh-CN')}`
+        
+        // 创建Blob并下载
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${(plan.title || '研究方案').replace(/[<>:"/\\|?*]/g, '_')}.txt`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+        
+        console.log('TXT文件生成完成')
+        alert('研究方案已导出为文本文件！')
+        
+    } catch (error) {
+        console.error('TXT文件生成失败:', error)
+        alert(`TXT文件生成失败：${error.message}`)
+    }
+}
+
+// 下载PDF功能
+const downloadPDF = async (plan) => {
+    if (!plan || isGeneratingPDF.value) return
+    
+    try {
+        isGeneratingPDF.value = true
+        console.log('开始生成PDF:', plan.title)
+        
+        // 创建一个新的页面用于PDF生成
+        const printWindow = window.open('', '_blank')
+        if (!printWindow) {
+            throw new Error('无法打开新窗口，请允许弹窗后重试')
+        }
+        
+        // 构建完整的HTML内容
+        let htmlContent = `
+            <!DOCTYPE html>
+            <html lang="zh-CN">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>${plan.title || '研究方案'}</title>
+                <style>
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+                    
+                    body {
+                        font-family: 'Microsoft YaHei', 'SimSun', Arial, sans-serif;
+                        line-height: 1.8;
+                        color: #333;
+                        background: #fff;
+                        padding: 40px;
+                        font-size: 14px;
+                    }
+                    
+                    h1 {
+                        color: #2c3e50;
+                        font-size: 24px;
+                        margin-bottom: 20px;
+                        text-align: center;
+                        border-bottom: 2px solid #3498db;
+                        padding-bottom: 10px;
+                    }
+                    
+                    h2 {
+                        color: #34495e;
+                        font-size: 18px;
+                        margin-top: 30px;
+                        margin-bottom: 15px;
+                        border-left: 4px solid #3498db;
+                        padding-left: 15px;
+                    }
+                    
+                    h3 {
+                        color: #34495e;
+                        font-size: 16px;
+                        margin-top: 20px;
+                        margin-bottom: 10px;
+                    }
+                    
+                    p {
+                        margin-bottom: 12px;
+                        text-indent: 2em;
+                    }
+                    
+                    .meta-info {
+                        background: #f8f9fa;
+                        padding: 20px;
+                        border-radius: 8px;
+                        margin-bottom: 30px;
+                        border: 1px solid #e9ecef;
+                    }
+                    
+                    .meta-info p {
+                        text-indent: 0;
+                        margin-bottom: 8px;
+                    }
+                    
+                    .content-section {
+                        margin-bottom: 25px;
+                        padding: 20px;
+                        background: #fdfdfd;
+                        border-radius: 6px;
+                        border: 1px solid #f0f0f0;
+                    }
+                    
+                    .hypothesis-item {
+                        background: #f8f9ff;
+                        padding: 15px;
+                        margin-bottom: 10px;
+                        border-radius: 5px;
+                        border-left: 3px solid #6c5ce7;
+                    }
+                    
+                    .footer {
+                        margin-top: 50px;
+                        padding-top: 20px;
+                        border-top: 1px solid #ddd;
+                        text-align: center;
+                        color: #666;
+                        font-size: 12px;
+                    }
+                    
+                    ul, ol {
+                        margin-left: 2em;
+                        margin-bottom: 15px;
+                    }
+                    
+                    li {
+                        margin-bottom: 5px;
+                    }
+                    
+                    strong {
+                        color: #2c3e50;
+                        font-weight: 600;
+                    }
+                    
+                    @media print {
+                        body { padding: 20px; }
+                        h1 { page-break-after: avoid; }
+                        h2 { page-break-after: avoid; }
+                        .content-section { page-break-inside: avoid; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>${plan.title || '研究方案'}</h1>
+                
+                <div class="meta-info">
+                    <p><strong>创建时间：</strong>${plan.createdAt || '未知'}</p>
+                    <p><strong>作者：</strong>${plan.author || '未知'}</p>
+                    <p><strong>状态：</strong>${plan.status || '未知'}</p>
+                    ${plan.description ? `<p><strong>描述：</strong>${plan.description}</p>` : ''}
+                </div>
+        `
+        
+        // 添加研究假设
+        if (plan.fullPlan && plan.fullPlan.hypotheses && plan.fullPlan.hypotheses.length > 0) {
+            htmlContent += `
+                <div class="content-section">
+                    <h2>研究假设</h2>
+            `
+            plan.fullPlan.hypotheses.forEach((hypothesis, index) => {
+                const cleanHypothesis = hypothesis.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                htmlContent += `
+                    <div class="hypothesis-item">
+                        <h3>假设 ${index + 1}</h3>
+                        <p>${cleanHypothesis}</p>
+                    </div>
+                `
+            })
+            htmlContent += `</div>`
+        }
+        
+        // 添加实验设计
+        if (plan.fullPlan && plan.fullPlan.experimentalDesign) {
+            const cleanDesign = plan.fullPlan.experimentalDesign
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            htmlContent += `
+                <div class="content-section">
+                    <h2>实验设计</h2>
+                    <p>${cleanDesign}</p>
+                </div>
+            `
+        }
+        
+        // 添加数据分析
+        if (plan.fullPlan && plan.fullPlan.analysisMethod) {
+            const cleanAnalysis = plan.fullPlan.analysisMethod
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            htmlContent += `
+                <div class="content-section">
+                    <h2>数据分析</h2>
+                    <p>${cleanAnalysis}</p>
+                </div>
+            `
+        }
+        
+        // 添加结果呈现
+        if (plan.fullPlan && plan.fullPlan.expectedResults) {
+            const cleanResults = plan.fullPlan.expectedResults
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            htmlContent += `
+                <div class="content-section">
+                    <h2>结果呈现</h2>
+                    <p>${cleanResults}</p>
+                </div>
+            `
+        }
+        
+        // 如果没有内容，添加提示
+        if (!plan.fullPlan || (!plan.fullPlan.hypotheses && !plan.fullPlan.experimentalDesign && !plan.fullPlan.analysisMethod && !plan.fullPlan.expectedResults)) {
+            htmlContent += `
+                <div class="content-section" style="background: #fff3cd; border-color: #ffeaa7;">
+                    <h2 style="color: #856404;">注意</h2>
+                    <p style="color: #856404;">此方案暂无详细内容，可能是数据格式问题或方案尚未完整生成。</p>
+                </div>
+            `
+        }
+        
+        // 添加页脚
+        htmlContent += `
+                <div class="footer">
+                    <p>此文档由 MethodMate 系统生成</p>
+                    <p>生成时间：${new Date().toLocaleString('zh-CN')}</p>
+                </div>
+            </body>
+            </html>
+        `
+        
+        // 写入新窗口
+        printWindow.document.write(htmlContent)
+        printWindow.document.close()
+        
+        // 等待内容加载完成
+        await new Promise(resolve => {
+            printWindow.onload = resolve
+            setTimeout(resolve, 1000) // 备用超时
+        })
+        
+        console.log('开始生成PDF...')
+        
+        // 配置html2pdf选项
+        const opt = {
+            margin: [20, 15, 20, 15],
+            filename: `${(plan.title || '研究方案').replace(/[<>:"/\\|?*]/g, '_')}.pdf`,
+            image: { 
+                type: 'jpeg', 
+                quality: 0.98 
+            },
+            html2canvas: { 
+                scale: 1.5,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+                letterRendering: true,
+                windowWidth: 1200,
+                windowHeight: 800
+            },
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a4', 
+                orientation: 'portrait',
+                compress: true
+            },
+            pagebreak: { 
+                mode: ['avoid-all', 'css', 'legacy']
+            }
+        }
+        
+        // 从新窗口生成PDF
+        await html2pdf().set(opt).from(printWindow.document.body).save()
+        
+        // 关闭新窗口
+        setTimeout(() => {
+            printWindow.close()
+        }, 500)
+        
+        console.log('PDF生成完成')
+        alert('PDF文件已成功生成并开始下载！')
+        
+    } catch (error) {
+        console.error('PDF生成失败:', error)
+        alert(`PDF生成失败：${error.message}`)
+    } finally {
+        isGeneratingPDF.value = false
     }
 }
 </script>
