@@ -507,40 +507,6 @@
                     <div class="prose max-w-none text-gray-600" v-html="renderMarkdown(papersState.selectedPaper.resultsPresentation)"></div>
                   </div>
                 </div>
-
-                <div class="bg-blue-50 p-6 rounded-lg">
-                  <h3 class="text-lg font-semibold text-blue-900 mb-3 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                    </svg>
-                    AI推荐说明
-                  </h3>
-                  <p class="text-blue-700">
-                    这篇文献是基于您的对话内容，由AI智能推荐的相关学术论文。建议您仔细阅读摘要，判断是否符合您的研究需求。
-                  </p>
-                </div>
-                
-                <div class="border-t pt-6">
-                  <h3 class="text-lg font-semibold text-gray-900 mb-3">使用建议</h3>
-                  <ul class="text-gray-600 space-y-2">
-                    <li class="flex items-start">
-                      <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <span>仔细阅读摘要，了解研究的核心内容和方法</span>
-                    </li>
-                    <li class="flex items-start">
-                      <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <span>如果相关，点击"下载原文"获取完整论文</span>
-                    </li>
-                    <li class="flex items-start">
-                      <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <span>可以将重要观点和方法应用到您的研究中</span>
-                    </li>
-                    <li class="flex items-start">
-                      <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <span>注意文献的发表时间和引用情况</span>
-                    </li>
-                  </ul>
-                </div>
               </div>
             </div>
             <div v-else class="text-center text-gray-500">
