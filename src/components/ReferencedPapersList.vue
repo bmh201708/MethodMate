@@ -93,7 +93,7 @@
           <div v-if="selectedPaper">
             <!-- 标题和操作按钮 -->
             <div class="flex justify-between items-start mb-6">
-              <h2 class="text-2xl font-bold text-gray-900 flex-1">{{ selectedPaper.title }}</h2>
+              <h2 class="text-2xl font-bold text-gray-900 flex-1">{{ showTitleTranslation && translatedTitle ? translatedTitle : selectedPaper.title }}</h2>
               <div class="ml-4 flex items-center space-x-2">
                 <span class="px-3 py-1 bg-purple-100 text-purple-600 text-sm rounded-full">
                   已参考
@@ -173,7 +173,7 @@
                                 @click="toggleTranslation"
                                 :disabled="isTranslating"
                                 class="text-sm px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                                title="显示中文译文"
+                                title="翻译标题和摘要"
                               >
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
@@ -434,6 +434,10 @@ const showTranslation = ref(false)
 const translatedAbstract = ref('')
 const isTranslating = ref(false)
 
+// 标题翻译相关状态
+const showTitleTranslation = ref(false)
+const translatedTitle = ref('')
+
 // 研究方法相关状态
 const showMethodTranslation = ref(false)
 const translatedMethod = ref('')
@@ -667,16 +671,14 @@ const retryExtractMethod = async () => {
   }
 }
 
-// 翻译摘要
-const translateAbstract = async (abstractText) => {
-  if (!abstractText || !abstractText.trim()) {
-    throw new Error('摘要内容为空')
+// 翻译文本的通用函数
+const translateText = async (text, type = 'text') => {
+  if (!text || !text.trim()) {
+    throw new Error(`${type}内容为空`)
   }
-
-  isTranslating.value = true
   
   try {
-    console.log('🔤 开始翻译摘要:', abstractText)
+    console.log(`🔤 开始翻译${type}:`, text)
     
     // 调用后端翻译API
     const { getApiBaseUrl } = await import('../config/environment.js')
@@ -689,7 +691,7 @@ const translateAbstract = async (abstractText) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        text: abstractText,
+        text: text,
         from: 'en',
         to: 'zh-CN'
       })
@@ -709,100 +711,109 @@ const translateAbstract = async (abstractText) => {
     
     const translatedText = result.translated.trim()
     
-    if (translatedText && translatedText.length > 5) {
-      console.log('✅ 摘要翻译成功')
+    if (translatedText && translatedText.length > 0) {
+      console.log(`✅ ${type}翻译成功`)
       return translatedText
     } else {
-      throw new Error('翻译结果为空或过短')
+      throw new Error('翻译结果为空')
     }
     
   } catch (error) {
-    console.error('❌ 翻译摘要失败:', error)
+    console.error(`❌ 翻译${type}失败:`, error)
     throw error
+  }
+}
+
+// 翻译摘要
+const translateAbstract = async (abstractText) => {
+  isTranslating.value = true
+  try {
+    return await translateText(abstractText, '摘要')
   } finally {
     isTranslating.value = false
   }
 }
 
-// 切换摘要翻译显示
+// 翻译标题
+const translateTitle = async (titleText) => {
+  isTranslating.value = true
+  try {
+    return await translateText(titleText, '标题')
+  } finally {
+    isTranslating.value = false
+  }
+}
+
+// 切换翻译显示
 const toggleTranslation = async () => {
-  if (!selectedPaper.value || !selectedPaper.value.abstract) {
+  if (!selectedPaper.value) {
     return
   }
 
   // 如果已经显示翻译，切换回原文
   if (showTranslation.value) {
     showTranslation.value = false
+    showTitleTranslation.value = false
     return
   }
 
-  // 如果还没有翻译，先进行翻译
-  if (!translatedAbstract.value) {
-    try {
-      const translated = await translateAbstract(selectedPaper.value.abstract)
-      translatedAbstract.value = translated
-      showTranslation.value = true
-    } catch (error) {
-      console.error('翻译失败:', error)
-      alert('翻译失败：' + error.message)
-    }
-  } else {
-    // 已有翻译，直接显示
+  // 如果已经有翻译内容，直接显示
+  if (translatedAbstract.value || translatedTitle.value) {
     showTranslation.value = true
+    showTitleTranslation.value = true
+    return
+  }
+
+  // 同时翻译标题和摘要
+  try {
+    const promises = []
+    
+    // 翻译标题
+    if (selectedPaper.value.title) {
+      promises.push(
+        translateTitle(selectedPaper.value.title)
+          .then(translated => {
+            translatedTitle.value = translated
+          })
+          .catch(error => {
+            console.error('标题翻译失败:', error)
+            // 标题翻译失败不影响整体流程
+          })
+      )
+    }
+    
+    // 翻译摘要
+    if (selectedPaper.value.abstract || selectedPaper.value.summary) {
+      promises.push(
+        translateAbstract(selectedPaper.value.abstract || selectedPaper.value.summary)
+          .then(translated => {
+            translatedAbstract.value = translated
+          })
+          .catch(error => {
+            console.error('摘要翻译失败:', error)
+            throw error // 摘要翻译失败需要报错
+          })
+      )
+    }
+    
+    // 等待所有翻译完成
+    if (promises.length > 0) {
+      await Promise.all(promises)
+    }
+    
+    // 显示翻译结果
+    showTranslation.value = true
+    showTitleTranslation.value = true
+    
+  } catch (error) {
+    console.error('翻译失败:', error)
+    alert('翻译失败：' + error.message)
   }
 }
 
 // 翻译研究方法
 const translateMethod = async (methodText) => {
-  if (!methodText || !methodText.trim()) {
-    throw new Error('研究方法内容为空')
-  }
-  
-  try {
-    console.log('🔤 开始翻译研究方法')
-    
-    // 调用后端翻译API
-    const { getApiBaseUrl } = await import('../config/environment.js')
-    const translateApiUrl = `${getApiBaseUrl()}/translate`
-    console.log('📤 调用翻译API:', translateApiUrl)
-    
-    const response = await fetch(translateApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text: methodText,
-        from: 'en',
-        to: 'zh-CN'
-      })
-    })
-    
-    if (!response.ok) {
-      const errorResult = await response.json().catch(() => ({}));
-      throw new Error(errorResult.error || `翻译失败，状态码: ${response.status}`);
-    }
-    
-    const result = await response.json()
-    console.log('📥 翻译API响应:', result)
-    
-    if (!result.success || !result.translated) {
-      throw new Error('翻译API返回无效结果')
-    }
-    
-    const translatedText = result.translated.trim()
-    
-    if (translatedText && translatedText.length > 5) {
-      console.log('✅ 研究方法翻译成功')
-      return translatedText
-    } else {
-      throw new Error('翻译结果为空或过短')
-    }
-    
-  } catch (error) {
-    console.error('❌ 翻译研究方法失败:', error)
-    throw error
-  }
+  return await translateText(methodText, '研究方法')
 }
 
 // 切换研究方法翻译显示
@@ -846,12 +857,13 @@ const selectPaper = (paper) => {
   // 重置翻译状态
   showTranslation.value = false
   translatedAbstract.value = ''
+  // 重置标题翻译状态
+  showTitleTranslation.value = false
+  translatedTitle.value = ''
   // 重置研究方法翻译状态
   showMethodTranslation.value = false
   translatedMethod.value = ''
   showFullText.value = false
-  
-
 }
 
 // 移除单个文献的引用
@@ -878,6 +890,8 @@ const removeFromReferences = (paper) => {
     selectedPaper.value = null
     showTranslation.value = false
     translatedAbstract.value = ''
+    showTitleTranslation.value = false
+    translatedTitle.value = ''
     showMethodTranslation.value = false
     translatedMethod.value = ''
     showFullText.value = false
