@@ -1725,6 +1725,10 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
     const referencedPapers = Array.from(papersState.referencedPapersList)
     
     if (referencedPapers.length > 0) {
+      // 获取当前AI服务类型
+      const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
+      const currentAIService = getCurrentAIService()
+      
       message += `\n\n我将为你提供以下${referencedPapers.length}篇参考文献的内容：\n`
       
       // 为每篇论文获取研究方法和摘要
@@ -1749,10 +1753,6 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
                          const { getApiBaseUrl } = await import('../config/environment.js')
              const generateSummaryApiUrl = `${getApiBaseUrl()}/paper/generate-method-summary`
              console.log('📤 生成方法概要API请求URL:', generateSummaryApiUrl)
-             
-             // 获取当前AI服务类型
-             const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
-             const currentAIService = getCurrentAIService()
              
              const response = await fetch(generateSummaryApiUrl, {
               method: 'POST',
@@ -1784,10 +1784,6 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
                          const { getApiBaseUrl } = await import('../config/environment.js')
              const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
              console.log('📤 获取论文内容API请求URL:', getContentApiUrl)
-             
-             // 获取当前AI服务类型
-             const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
-             const currentAIService = getCurrentAIService()
              
              const response = await fetch(getContentApiUrl, {
               method: 'POST',
@@ -1821,10 +1817,6 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
                      const methodSummaryApiUrl = `${getApiBaseUrl()}/paper/generate-method-summary`
                      console.log('📤 生成方法概要API请求URL:', methodSummaryApiUrl)
                      
-                     // 获取当前AI服务类型
-                     const { getCurrentAIService: getCurrentAIService2 } = await import('../stores/aiServiceStore.js')
-                     const currentAIService2 = getCurrentAIService2()
-                     
                      const methodResponse = await fetch(methodSummaryApiUrl, {
                       method: 'POST',
                       headers: {
@@ -1833,7 +1825,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
                       body: JSON.stringify({
                         title: paper.title,
                         fullText: paper.fullText,
-                        aiService: currentAIService2 === 'chatgpt' ? 'chatgpt' : 'coze'
+                        aiService: currentAIService === 'chatgpt' ? 'chatgpt' : 'coze'
                       })
                     });
                     
@@ -1855,11 +1847,46 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
           }
         }
         
-        return paperInfo + "\n";
+        return { paperInfo, fullText: paper.fullText };
       }));
       
-      // 添加所有论文信息到消息中
-      message += paperContents.join("");
+      // ChatGPT模式下的智能内容长度控制
+      if (currentAIService === 'chatgpt') {
+        console.log('🎯 ChatGPT模式：检查消息长度，智能选择参考文献内容')
+        
+        // 先尝试构建包含全文的版本
+        let messageWithFullText = message;
+        let fullTextContents = [];
+        
+        paperContents.forEach((content, index) => {
+          let paperFullInfo = content.paperInfo;
+          
+          // 如果有全文，添加到信息中
+          if (content.fullText) {
+            paperFullInfo += `\n   全文内容：${content.fullText}`;
+          }
+          
+          fullTextContents.push(paperFullInfo + "\n");
+        });
+        
+        messageWithFullText += fullTextContents.join("");
+        
+        // 检查包含全文的消息长度
+        if (messageWithFullText.length <= 250000) {
+          console.log(`✅ 消息长度 ${messageWithFullText.length} 字符，在限制内，使用全文版本`)
+          message = messageWithFullText;
+        } else {
+          console.log(`⚠️ 消息长度 ${messageWithFullText.length} 字符，超出限制，使用研究方法版本`)
+          // 使用只包含研究方法的版本
+          const methodOnlyContents = paperContents.map(content => content.paperInfo + "\n");
+          message += methodOnlyContents.join("");
+        }
+      } else {
+        console.log('🔧 Coze模式：使用标准参考文献处理')
+        // Coze模式：使用原有逻辑，只包含研究方法和摘要
+        const standardContents = paperContents.map(content => content.paperInfo + "\n");
+        message += standardContents.join("");
+      }
       
       message += `\n请基于以上${referencedPapers.length}篇参考文献的内容（特别是研究方法部分）`
     } else {

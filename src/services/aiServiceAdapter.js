@@ -229,37 +229,16 @@ Please respond with only the keywords, separated by commas.
  * 查询统计方法
  * @param {string} methodName - 方法名称
  * @returns {Promise<Object>} - 方法解释
+ * 
+ * 注意：此功能始终使用Coze API，不受AI服务切换影响
  */
 export const queryStatisticalMethod = async (methodName) => {
-  const currentService = getCurrentAIService()
+  // 统计方法查询始终使用Coze API，无论当前选择什么AI服务
+  console.log('📊 统计方法查询：始终使用Coze API，当前方法:', methodName)
   
-  if (currentService === AI_SERVICE_TYPES.COZE) {
-    const response = await callBackendAI('query-statistical-method', {
-      method: methodName
-    })
-    return response
-  } else if (currentService === AI_SERVICE_TYPES.CHATGPT) {
-    const prompt = `请详细解释统计方法"${methodName}"。
-
-请按照以下格式回答：
-1. 方法定义：简要说明该方法的基本概念
-2. 适用场景：什么情况下使用这个方法
-3. 使用步骤：具体的操作步骤
-4. 注意事项：使用时需要注意的要点
-5. 举例说明：提供一个具体的应用例子
-
-请用中文回答，内容要准确、专业。`
-    
-    const response = await sendMessageToChatGPT(prompt, [])
-    
-    return {
-      success: true,
-      method: methodName,
-      explanation: response,
-      isLocalContent: false,
-      source: 'ChatGPT生成'
-    }
-  } else {
-    throw new Error(`不支持的AI服务类型: ${currentService}`)
-  }
+  const response = await callBackendAI('query-statistical-method', {
+    method: methodName
+  })
+  
+  return response
 } 

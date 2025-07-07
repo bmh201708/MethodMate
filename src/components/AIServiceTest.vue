@@ -291,12 +291,12 @@ const testStatisticalMethod = async () => {
   clearResults()
   
   try {
-    console.log(`🧪 测试统计方法查询 - 使用 ${currentAIServiceName.value}`)
+    console.log(`🧪 测试统计方法查询 - 始终使用Coze API（不受当前AI服务选择影响）`)
     
     const methodName = 'ANOVA'
     const result = await queryStatisticalMethod(methodName)
     
-    testResult.value = `✅ 统计方法查询测试成功\n\n查询方法：${methodName}\n数据来源：${result.source}\n\n方法解释：\n${result.explanation}`
+    testResult.value = `✅ 统计方法查询测试成功\n\n查询方法：${methodName}\n数据来源：${result.source}\n说明：统计方法查询始终使用Coze API\n\n方法解释：\n${result.explanation}`
     
   } catch (error) {
     console.error('统计方法查询测试失败:', error)
