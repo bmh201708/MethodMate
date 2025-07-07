@@ -412,7 +412,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { historyState, removeHistoryPlan, clearHistoryPlans, setCurrentViewingPlan, papersState, loadUserData, applyPlanAsCurrentPlan } from '../stores/chatStore'
+import { historyState, removeHistoryPlan, clearHistoryPlans, setCurrentViewingPlan, papersState, loadUserData, applyPlanAsCurrentPlan, researchPlanAPI } from '../stores/chatStore'
 import { useUserStore } from '../stores/userStore.js'
 import { marked } from 'marked'
 import markedKatex from 'marked-katex-extension'
@@ -752,7 +752,9 @@ const regenerateTitle = async (plan) => {
         const newTitle = generateTitleFromPlan(plan)
         
         if (newTitle && newTitle !== plan.title) {
-            // 更新方案标题
+            const originalTitle = plan.title
+            
+            // 先更新前端显示
             plan.title = newTitle
             
             // 如果当前选中的是这个方案，也要更新
@@ -764,6 +766,35 @@ const regenerateTitle = async (plan) => {
             const planIndex = historyState.historyPlans.findIndex(p => p.id === plan.id)
             if (planIndex !== -1) {
                 historyState.historyPlans[planIndex].title = newTitle
+            }
+            
+            // 如果用户已登录且方案有数据库ID，同步更新数据库
+            if (userStore.isAuthenticated && plan.databaseId) {
+                try {
+                    console.log('正在同步标题到数据库...', plan.databaseId)
+                    const updateResult = await researchPlanAPI.update(plan.databaseId, {
+                        title: newTitle
+                    })
+                    
+                    if (updateResult.success) {
+                        console.log('标题已成功同步到数据库')
+                    } else {
+                        throw new Error(updateResult.error || '数据库更新失败')
+                    }
+                } catch (dbError) {
+                    console.error('同步标题到数据库失败:', dbError)
+                    // 恢复原标题
+                    plan.title = originalTitle
+                    if (selectedPlan.value && selectedPlan.value.id === plan.id) {
+                        selectedPlan.value.title = originalTitle
+                    }
+                    if (planIndex !== -1) {
+                        historyState.historyPlans[planIndex].title = originalTitle
+                    }
+                    
+                    alert(`标题更新失败：${dbError.message}\n已恢复原标题。`)
+                    return
+                }
             }
             
             console.log('标题重新生成完成:', newTitle)
@@ -795,7 +826,10 @@ const regenerateAllTitles = async () => {
         console.log('开始批量重新生成标题，方案数量:', planCount)
         
         let updatedCount = 0
+        let dbSuccessCount = 0
+        let dbFailureCount = 0
         const totalPlans = historyState.historyPlans.length
+        const failedUpdates = []
         
         for (let i = 0; i < totalPlans; i++) {
             const plan = historyState.historyPlans[i]
@@ -806,6 +840,7 @@ const regenerateAllTitles = async () => {
             const newTitle = generateTitleFromPlan(plan)
             
             if (newTitle && newTitle !== originalTitle) {
+                // 先更新前端显示
                 plan.title = newTitle
                 updatedCount++
                 
@@ -814,17 +849,76 @@ const regenerateAllTitles = async () => {
                     selectedPlan.value.title = newTitle
                 }
                 
-                console.log(`标题已更新: "${originalTitle}" -> "${newTitle}"`)
+                // 如果用户已登录且方案有数据库ID，同步更新数据库
+                if (userStore.isAuthenticated && plan.databaseId) {
+                    try {
+                        console.log(`正在同步标题到数据库 (${i + 1}/${totalPlans}):`, plan.databaseId)
+                        const updateResult = await researchPlanAPI.update(plan.databaseId, {
+                            title: newTitle
+                        })
+                        
+                        if (updateResult.success) {
+                            dbSuccessCount++
+                            console.log(`✅ 数据库更新成功: "${originalTitle}" -> "${newTitle}"`)
+                        } else {
+                            throw new Error(updateResult.error || '数据库更新失败')
+                        }
+                    } catch (dbError) {
+                        dbFailureCount++
+                        console.error(`❌ 数据库更新失败 (${i + 1}/${totalPlans}):`, dbError)
+                        failedUpdates.push({
+                            planTitle: newTitle,
+                            originalTitle: originalTitle,
+                            error: dbError.message
+                        })
+                        
+                        // 恢复原标题（因为数据库更新失败）
+                        plan.title = originalTitle
+                        if (selectedPlan.value && selectedPlan.value.id === plan.id) {
+                            selectedPlan.value.title = originalTitle
+                        }
+                        updatedCount-- // 减少成功计数
+                    }
+                } else {
+                    console.log(`✅ 前端更新成功: "${originalTitle}" -> "${newTitle}"`)
+                }
             }
             
             // 为了用户体验，添加小延迟
             if (i < totalPlans - 1) {
-                await new Promise(resolve => setTimeout(resolve, 100))
+                await new Promise(resolve => setTimeout(resolve, 200))
             }
         }
         
-        console.log('批量标题重新生成完成，更新数量:', updatedCount)
-        alert(`批量标题重新生成完成！\n共处理 ${totalPlans} 个方案，成功更新 ${updatedCount} 个标题。`)
+        console.log('批量标题重新生成完成')
+        console.log(`- 前端更新: ${updatedCount} 个`)
+        console.log(`- 数据库成功: ${dbSuccessCount} 个`)
+        console.log(`- 数据库失败: ${dbFailureCount} 个`)
+        
+        // 构建结果消息
+        let resultMessage = `批量标题重新生成完成！\n`
+        resultMessage += `共处理 ${totalPlans} 个方案，成功更新 ${updatedCount} 个标题。`
+        
+        if (userStore.isAuthenticated) {
+            resultMessage += `\n\n数据库同步情况：`
+            resultMessage += `\n✅ 成功：${dbSuccessCount} 个`
+            if (dbFailureCount > 0) {
+                resultMessage += `\n❌ 失败：${dbFailureCount} 个`
+                resultMessage += `\n\n注意：部分标题因数据库同步失败已恢复原状，刷新页面后将显示原标题。`
+            }
+        }
+        
+        alert(resultMessage)
+        
+        // 如果有失败的更新，在控制台详细记录
+        if (failedUpdates.length > 0) {
+            console.group('❌ 数据库同步失败的方案详情:')
+            failedUpdates.forEach((item, index) => {
+                console.log(`${index + 1}. "${item.originalTitle}" -> "${item.planTitle}"`)
+                console.log(`   错误: ${item.error}`)
+            })
+            console.groupEnd()
+        }
         
     } catch (error) {
         console.error('批量重新生成标题失败:', error)
