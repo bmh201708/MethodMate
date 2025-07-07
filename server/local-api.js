@@ -85,6 +85,14 @@ const CHATGPT_CONFIG = getChatGPTConfig();
  * @returns {Promise<string>} - ChatGPT回复
  */
 const callChatGPT = async (message, chatHistory = []) => {
+  // 调试信息：打印配置状态
+  console.log('🔧 ChatGPT配置调试信息:');
+  console.log('- API Key存在:', !!CHATGPT_CONFIG.apiKey);
+  console.log('- API Key前缀:', CHATGPT_CONFIG.apiKey ? CHATGPT_CONFIG.apiKey.substring(0, 10) + '...' : 'undefined');
+  console.log('- API URL:', CHATGPT_CONFIG.apiUrl);
+  console.log('- 模型:', CHATGPT_CONFIG.model);
+  console.log('- 完整请求URL:', `${CHATGPT_CONFIG.apiUrl}/chat/completions`);
+  
   if (!CHATGPT_CONFIG.apiKey) {
     throw new Error('ChatGPT API密钥未配置');
   }
@@ -265,8 +273,8 @@ const translateToEnglish = async (text, retries = 3) => {
   }
 };
 
-// 论文研究方法提取函数 - 改进版，处理长文本，支持智能段落定位
-const extractResearchMethod = async (fullText, retries = 3) => {
+// 论文研究方法提取函数 - 改进版，处理长文本，支持智能段落定位，根据AI服务类型采用不同策略
+const extractResearchMethod = async (fullText, retries = 3, aiService = 'coze') => {
   try {
     if (!fullText || typeof fullText !== 'string') {
       console.log('无效的论文全文');
@@ -276,14 +284,31 @@ const extractResearchMethod = async (fullText, retries = 3) => {
     // 计算文本长度，用于判断是否需要分段处理
     const textLength = fullText.length;
     console.log(`论文全文长度: ${textLength} 字符`);
+    console.log(`使用AI服务: ${aiService}`);
 
     // 定义最大段落长度（约10000个字符，适合处理较长的研究方法内容）
     const MAX_CHUNK_LENGTH = 10000;
     // 定义Coze API的实际处理上限（约20000字符）
     const COZE_API_LIMIT = 20000;
+    // 定义ChatGPT的处理上限（可以处理更长的文本）
+    const CHATGPT_LIMIT = 250000;
     
-    // 1. 首先尝试智能定位所有相关的研究方法段落
-    console.log('开始智能定位研究方法相关段落...');
+    // 如果使用ChatGPT，直接处理全文，不使用智能段落定位
+    if (aiService === 'chatgpt') {
+      console.log('使用ChatGPT，跳过智能段落定位，直接处理全文');
+      
+      // ChatGPT可以处理更长的文本，但仍需要分段处理超长文本
+      if (textLength <= CHATGPT_LIMIT) {
+        console.log('全文长度适合ChatGPT处理，直接处理');
+        return await processFullText(fullText, retries, aiService);
+      } else {
+        console.log(`全文过长(${textLength}字符)，对ChatGPT进行分段处理`);
+        return await processTextInChunks(fullText, retries, aiService);
+      }
+    }
+    
+    // 对于Coze，继续使用原有的智能段落定位策略
+    console.log('使用Coze，开始智能定位研究方法相关段落...');
     const methodSections = locateMethodSection(fullText);
     
     if (methodSections) {
@@ -292,23 +317,23 @@ const extractResearchMethod = async (fullText, retries = 3) => {
       // 检查合并后的方法段落长度
       if (methodSections.length <= MAX_CHUNK_LENGTH) {
         console.log('合并的研究方法段落长度适中，直接处理');
-        return await processFullText(methodSections, retries);
+        return await processFullText(methodSections, retries, aiService);
       } else if (methodSections.length <= COZE_API_LIMIT) {
         console.log('合并的研究方法段落较长但在API限制内，直接处理');
-        return await processFullText(methodSections, retries);
+        return await processFullText(methodSections, retries, aiService);
       } else {
         console.log(`合并的研究方法段落过长(${methodSections.length}字符)，超出API限制，进行智能分段处理`);
-        return await processTextInChunks(methodSections, retries);
+        return await processTextInChunks(methodSections, retries, aiService);
       }
     }
     
-    // 2. 如果智能定位失败，检查文本总长度决定处理策略
+    // 如果智能定位失败，检查文本总长度决定处理策略
     if (textLength <= MAX_CHUNK_LENGTH) {
       console.log('智能定位失败，但论文长度适中，直接处理全文');
-      return await processFullText(fullText, retries);
+      return await processFullText(fullText, retries, aiService);
     } else {
       console.log('智能定位失败且论文较长，对全文进行分段处理');
-      return await processTextInChunks(fullText, retries);
+      return await processTextInChunks(fullText, retries, aiService);
     }
     
   } catch (error) {
@@ -318,16 +343,43 @@ const extractResearchMethod = async (fullText, retries = 3) => {
 };
 
 // 处理完整文本块
-const processFullText = async (text, retries = 3) => {
+const processFullText = async (text, retries = 3, aiService = 'coze') => {
   try {
-    const prompt = `你是一位研究方法专家。请从以下学术论文中提炼研究方法，按照固定的四部分框架整理输出。
+    // 为ChatGPT增加引用原文的要求
+    const basePrompt = `你是一位研究方法专家。请从以下学术论文中提炼研究方法，按照固定的四部分框架整理输出。
 
 **要求：**
 1. 严格按照以下四部分框架输出
-2. 只提炼和精炼原文的定量研究方法内容
+2. 提炼原文的定量研究方法内容
 3. 不要添加任何问候语、交流性语言或解释性说明
-4. 如果某部分在原文中没有明确内容，该部分输出"未明确说明"
-5. 直接输出内容，不要包含"以下是提炼结果"等前缀
+4. 直接输出内容，不要包含"以下是提炼结果"等前缀`;
+
+    const chatgptAdditionalRequirement = `
+5. 请务必引用原文内容来支持你的提炼结果
+6. 对于关键的方法描述，可以适当保留原文的专业术语
+7. 回答不少于1000字`;
+
+    const prompt = aiService === 'chatgpt' 
+      ? basePrompt + chatgptAdditionalRequirement + `
+
+**输出格式：**
+## 研究假设
+[从原文中提炼的研究假设内容]
+
+## 实验设计  
+[从原文中提炼的实验设计内容]
+
+## 数据分析
+[从原文中提炼的数据分析方法]
+
+## 结果呈现
+[从原文中提炼的结果呈现方式]
+
+**论文文本：**
+${text}
+
+请严格按照上述格式提炼研究方法。`
+      : basePrompt + `
 
 **输出格式：**
 ## 研究假设
@@ -347,37 +399,43 @@ ${text}
 
 请严格按照上述格式提炼研究方法。`;
 
-    console.log('使用Coze API提取研究方法...');
-    const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${COZE_API_KEY}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        bot_id: COZE_BOT_ID,
-        user: COZE_USER_ID,
-        query: prompt,
-        stream: false,
-        conversation_id: `extract_method_${Date.now()}`
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Coze API responded with status: ${response.status}`);
-    }
-
-    const result = await response.json();
     let methodText = '';
-    
-    if (result.messages && Array.isArray(result.messages)) {
-      const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
-      if (answerMessages.length > 0) {
-        methodText = answerMessages[0].content;
+
+    if (aiService === 'chatgpt') {
+      console.log('使用ChatGPT API提取研究方法...');
+      methodText = await callChatGPT(prompt, []);
+    } else {
+      console.log('使用Coze API提取研究方法...');
+      const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${COZE_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          bot_id: COZE_BOT_ID,
+          user: COZE_USER_ID,
+          query: prompt,
+          stream: false,
+          conversation_id: `extract_method_${Date.now()}`
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Coze API responded with status: ${response.status}`);
       }
-    } else if (result.answer) {
-      methodText = result.answer;
+
+      const result = await response.json();
+      
+      if (result.messages && Array.isArray(result.messages)) {
+        const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
+        if (answerMessages.length > 0) {
+          methodText = answerMessages[0].content;
+        }
+      } else if (result.answer) {
+        methodText = result.answer;
+      }
     }
 
     if (methodText.toLowerCase().includes("i'm sorry") || 
@@ -385,12 +443,12 @@ ${text}
         methodText.toLowerCase().includes("can't assist") ||
         methodText.toLowerCase().includes("抱歉") ||
         methodText.toLowerCase().includes("无法协助")) {
-      console.log('Coze拒绝响应，尝试使用备用方法');
-      return await generateMethodSummary(text);
+      console.log(`${aiService}拒绝响应，尝试使用备用方法`);
+      return await generateMethodSummary(text, aiService);
     }
 
     if (!methodText) {
-      throw new Error('未能从Coze响应中提取研究方法');
+      throw new Error(`未能从${aiService}响应中提取研究方法`);
     }
 
     // 清理响应内容，移除不必要的前缀和后缀
@@ -417,15 +475,15 @@ ${text}
     if (retries > 0) {
       console.log(`处理文本块失败，${error.message}，剩余重试次数: ${retries - 1}`);
       await new Promise(resolve => setTimeout(resolve, 2000));
-      return processFullText(text, retries - 1);
+      return processFullText(text, retries - 1, aiService);
     }
     console.warn('处理文本块失败，尝试使用备用方法');
-    return await generateMethodSummary(text);
+    return await generateMethodSummary(text, aiService);
   }
 };
 
 // 分段处理长文本 - 改进版，优化分段策略
-const processTextInChunks = async (text, retries = 3) => {
+const processTextInChunks = async (text, retries = 3, aiService = 'coze') => {
   try {
     // 将文本分成较小的块
     const MAX_CHUNK_LENGTH = 10000;
@@ -658,7 +716,7 @@ const processTextInChunks = async (text, retries = 3) => {
       console.log(`🔄 正在处理第 ${i + 1}/${chunks.length} 个文本块 (长度: ${chunks[i].length} 字符)`);
       
       try {
-        const result = await processFullText(chunks[i], retries);
+        const result = await processFullText(chunks[i], retries, aiService);
         if (result && result.trim()) {
           results.push(result);
           successfulChunks.push(i + 1);
@@ -701,7 +759,7 @@ const processTextInChunks = async (text, retries = 3) => {
       // 如果合并后的结果过长，生成简洁摘要
       if (combinedResult.length > MAX_CHUNK_LENGTH * 1.5) {
         console.log(`⚠️ 合并结果过长(${combinedResult.length}字符)，生成简洁摘要...`);
-        const summary = await generateMethodSummary(combinedResult);
+        const summary = await generateMethodSummary(combinedResult, aiService);
         if (summary) {
           console.log(`✅ 摘要生成成功，长度: ${summary.length} 字符`);
           return summary;
@@ -3792,13 +3850,14 @@ Please respond in the following JSON format:
 // 获取论文全文和研究方法的API端点
 app.post('/api/paper/get-full-content', async (req, res) => {
   try {
-    const { title, doi } = req.body;
+    const { title, doi, aiService } = req.body;
     
     if (!title) {
       return res.status(400).json({ error: '需要提供论文标题' });
     }
 
-    console.log('开始获取论文全文和研究方法，标题:', title, doi ? `，DOI: ${doi}` : '');
+    const selectedAIService = aiService || 'coze';
+    console.log('开始获取论文全文和研究方法，标题:', title, doi ? `，DOI: ${doi}` : '', '，AI服务:', selectedAIService);
     
     // 优先从数据库获取全文，如果没有则从CORE API获取
     const result = await getFullTextFromDatabaseFirst(title, doi, 3, 1000);
@@ -3823,8 +3882,8 @@ app.post('/api/paper/get-full-content', async (req, res) => {
       
       // 如果没有研究方法，尝试提取
       if (fullText && !researchMethod) {
-        console.log('📝 开始提取研究方法...');
-        researchMethod = await extractResearchMethod(fullText);
+        console.log(`📝 开始使用${selectedAIService}提取研究方法...`);
+        researchMethod = await extractResearchMethod(fullText, 3, selectedAIService);
         
         // 如果成功提取到研究方法，并且数据库中有此论文记录，更新数据库
         // 注意：不再检查fromCache，只要数据库中有记录就应该允许更新

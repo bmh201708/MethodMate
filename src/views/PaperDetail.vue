@@ -906,6 +906,10 @@ const reanalyzeResearchMethod = async () => {
     const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
     console.log('📤 重新分析-获取论文内容API请求URL:', getContentApiUrl)
     
+    // 获取当前AI服务类型
+    const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
+    const currentAIService = getCurrentAIService()
+    
     const response = await fetch(getContentApiUrl, {
       method: 'POST',
       headers: {
@@ -913,7 +917,8 @@ const reanalyzeResearchMethod = async () => {
       },
       body: JSON.stringify({
         title: papersState.selectedPaper.title,
-        doi: papersState.selectedPaper.doi || null
+        doi: papersState.selectedPaper.doi || null,
+        aiService: currentAIService === 'chatgpt' ? 'chatgpt' : 'coze'
       })
     })
     
@@ -986,6 +991,10 @@ const fetchPaperContent = async () => {
     const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
     console.log('📤 获取论文内容API请求URL:', getContentApiUrl)
     
+    // 获取当前AI服务类型
+    const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
+    const currentAIService = getCurrentAIService()
+    
     const response = await fetch(getContentApiUrl, {
       method: 'POST',
       headers: {
@@ -993,7 +1002,8 @@ const fetchPaperContent = async () => {
       },
       body: JSON.stringify({
         title: papersState.selectedPaper.title,
-        doi: papersState.selectedPaper.doi || null
+        doi: papersState.selectedPaper.doi || null,
+        aiService: currentAIService === 'chatgpt' ? 'chatgpt' : 'coze'
       })
     })
     

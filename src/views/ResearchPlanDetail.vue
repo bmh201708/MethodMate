@@ -1751,7 +1751,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
              console.log('📤 生成方法概要API请求URL:', generateSummaryApiUrl)
              
              // 获取当前AI服务类型
-             const { getCurrentAIService } = await import('../services/aiServiceAdapter.js')
+             const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
              const currentAIService = getCurrentAIService()
              
              const response = await fetch(generateSummaryApiUrl, {
@@ -1785,6 +1785,10 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
              const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
              console.log('📤 获取论文内容API请求URL:', getContentApiUrl)
              
+             // 获取当前AI服务类型
+             const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
+             const currentAIService = getCurrentAIService()
+             
              const response = await fetch(getContentApiUrl, {
               method: 'POST',
               headers: {
@@ -1792,7 +1796,8 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
               },
               body: JSON.stringify({
                 title: paper.title,
-                doi: paper.doi || null
+                doi: paper.doi || null,
+                aiService: currentAIService === 'chatgpt' ? 'chatgpt' : 'coze'
               })
             });
             
@@ -1817,7 +1822,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
                      console.log('📤 生成方法概要API请求URL:', methodSummaryApiUrl)
                      
                      // 获取当前AI服务类型
-                     const { getCurrentAIService: getCurrentAIService2 } = await import('../services/aiServiceAdapter.js')
+                     const { getCurrentAIService: getCurrentAIService2 } = await import('../stores/aiServiceStore.js')
                      const currentAIService2 = getCurrentAIService2()
                      
                      const methodResponse = await fetch(methodSummaryApiUrl, {

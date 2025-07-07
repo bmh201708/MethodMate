@@ -532,6 +532,10 @@ export const toggleReference = async (paper) => {
           } 
           // 如果没有全文，先获取全文再提取研究方法
           else {
+            // 获取当前AI服务类型
+            const { getCurrentAIService } = await import('./aiServiceStore.js')
+            const currentAIService = getCurrentAIService()
+            
             const response = await fetch(`${getApiBaseUrl()}/paper/get-full-content`, {
               method: 'POST',
               headers: {
@@ -539,7 +543,8 @@ export const toggleReference = async (paper) => {
               },
               body: JSON.stringify({
                 title: referencedPaper.title,
-                doi: referencedPaper.doi || null
+                doi: referencedPaper.doi || null,
+                aiService: currentAIService === 'chatgpt' ? 'chatgpt' : 'coze'
               })
             });
 
