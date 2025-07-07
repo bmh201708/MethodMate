@@ -2887,17 +2887,23 @@ const generateSourceIntroduction = async () => {
       return
     }
     
+    // 获取当前AI服务类型
+    const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
+    const currentAIService = getCurrentAIService()
+    
     // 构建参考文献信息
     let referencesInfo = ''
+    const paperInfoArray = []
+    
     for (let i = 0; i < referencedPapers.length; i++) {
       const paper = referencedPapers[i]
-      referencesInfo += `\n参考文献${i + 1}：`
-      referencesInfo += `\n标题：${paper.title}`
-      referencesInfo += `\n摘要：${paper.abstract || paper.summary || '无摘要'}`
+      let paperInfo = `\n参考文献${i + 1}：`
+      paperInfo += `\n标题：${paper.title}`
+      paperInfo += `\n摘要：${paper.abstract || paper.summary || '无摘要'}`
       
       // 获取研究方法总结
       if (paper.researchMethod) {
-        referencesInfo += `\n研究方法总结：${paper.researchMethod}`
+        paperInfo += `\n研究方法总结：${paper.researchMethod}`
       } else {
         // 如果没有研究方法总结，尝试从缓存中获取
         try {
@@ -2919,24 +2925,68 @@ const generateSourceIntroduction = async () => {
           if (response.ok) {
             const result = await response.json()
             if (result.success && result.methodSummary) {
-              referencesInfo += `\n研究方法总结：${result.methodSummary}`
+              paperInfo += `\n研究方法总结：${result.methodSummary}`
               // 更新论文对象
               paper.researchMethod = result.methodSummary
             } else {
-              referencesInfo += `\n研究方法总结：暂无`
+              paperInfo += `\n研究方法总结：暂无`
             }
           } else {
-            referencesInfo += `\n研究方法总结：暂无`
+            paperInfo += `\n研究方法总结：暂无`
           }
         } catch (error) {
           console.error('获取研究方法总结失败:', error)
-          referencesInfo += `\n研究方法总结：暂无`
+          paperInfo += `\n研究方法总结：暂无`
         }
       }
-      referencesInfo += '\n'
+      
+      paperInfo += '\n'
+      paperInfoArray.push({ paperInfo, fullText: paper.fullText })
     }
     
-    // 构建发送给Coze的提示
+    // ChatGPT模式下的智能内容长度控制
+    if (currentAIService === 'chatgpt') {
+      console.log('🎯 ChatGPT模式：生成来源介绍时检查消息长度，智能选择参考文献内容')
+      
+      // 先构建基础提示（不包含参考文献）
+      let basePrompt = `我将为你提供一个研究方案，以及研究方案参考的一些参考文献。请分析以下研究方案的"${sectionName}"部分参考了哪些参考文献的研究方法内容，并生成一个简洁的来源介绍。
+
+研究方案的${sectionName}部分：
+${currentSectionContent}
+
+参考文献信息：`
+      
+      // 尝试构建包含全文的版本
+      let fullTextReferencesInfo = ''
+      paperInfoArray.forEach((paperData) => {
+        let enhancedPaperInfo = paperData.paperInfo
+        
+        // 如果有全文，添加到信息中
+        if (paperData.fullText) {
+          enhancedPaperInfo += `\n   全文内容：${paperData.fullText}`
+        }
+        
+        fullTextReferencesInfo += enhancedPaperInfo
+      })
+      
+      const fullTextPrompt = basePrompt + fullTextReferencesInfo
+      
+      // 检查包含全文的消息长度
+      if (fullTextPrompt.length <= 250000) {
+        console.log(`✅ 消息长度 ${fullTextPrompt.length} 字符，在限制内，使用全文版本`)
+        referencesInfo = fullTextReferencesInfo
+      } else {
+        console.log(`⚠️ 消息长度 ${fullTextPrompt.length} 字符，超出限制，使用研究方法版本`)
+        // 使用只包含研究方法的版本
+        referencesInfo = paperInfoArray.map(paperData => paperData.paperInfo).join('')
+      }
+    } else {
+      console.log('🔧 Coze模式：使用标准参考文献处理')
+      // Coze模式：使用原有逻辑，只包含研究方法和摘要
+      referencesInfo = paperInfoArray.map(paperData => paperData.paperInfo).join('')
+    }
+    
+    // 构建发送给AI的提示
     let prompt = `我将为你提供一个研究方案，以及研究方案参考的一些参考文献。请分析以下研究方案的"${sectionName}"部分参考了哪些参考文献的研究方法内容，并生成一个简洁的来源介绍。
 
 研究方案的${sectionName}部分：
@@ -2958,20 +3008,42 @@ ${conversationContext.researchContext}`
 
     prompt += `
 
-请分析${sectionName}部分具体参考了哪些文献的哪些研究方法要素，并生成一个200-300字的来源介绍，说明：
-1. 该部分主要参考了哪些文献
-2. 具体借鉴了这些文献的哪些研究方法要素
-3. 如何结合这些方法要素形成当前的方案设计`
+请分析${sectionName}部分具体参考了哪些文献的哪些研究方法要素，并生成一个300-400字的来源介绍。
+
+要求：
+1. 必须使用分点回答格式，严格按照以下结构组织内容
+2. 每个要点都需要包含2-3处原文引用，使用"原文内容"格式标注
+3. 保留专业术语和具体数据
+4. 引用内容应直接来自参考文献的原文
+
+分点回答格式：
+1. **主要参考文献**：列出该部分主要参考的文献，并引用原文说明参考依据
+   - 引用格式：参考文献X提到"原文内容"
+   
+2. **借鉴的研究方法要素**：详细说明具体借鉴了哪些方法要素
+   - 引用格式：在文献Y中"原文内容"，本方案借鉴了...
+   
+3. **方法要素整合**：说明如何结合这些方法要素形成当前的方案设计
+   - 引用格式：基于文献Z的"原文内容"，设计了...`
 
     // 如果有用户需求，添加个性化要求
     if (conversationContext.hasUserRequirements) {
       prompt += `
-4. 如何结合用户的具体研究需求来选择和调整这些方法要素`
+
+4. **需求适配**：说明如何结合用户的具体研究需求来选择和调整这些方法要素
+   - 引用格式：结合文献W的"原文内容"和用户需求，调整了...`
     }
 
     prompt += `
 
-请用学术性的语言，简洁明了地说明来源和参考依据。`
+格式示例：
+1. **主要参考文献**：
+该${sectionName}部分主要参考了参考文献1和参考文献2。参考文献1提到"[具体原文内容]"，为本部分提供了理论基础。参考文献2中的"[具体原文内容]"为方法设计提供了实践指导。
+
+2. **借鉴的研究方法要素**：
+在文献1中"[具体原文内容]"，本方案借鉴了其实验设计思路。文献2的"[具体原文内容]"为数据收集方法提供了参考。
+
+请用学术性的语言，确保每个分点都包含充分的原文引用支撑。`
 
     console.log('发送来源介绍生成请求:', prompt.substring(0, 200) + '...')
     console.log('来源介绍生成包含用户需求:', conversationContext.hasUserRequirements)
@@ -3017,7 +3089,11 @@ const generateMethodIntroduction = async () => {
   isGeneratingMethod.value = true
   
   try {
-    // 构建发送给Coze的提示
+    // 获取当前AI服务类型
+    const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
+    const currentAIService = getCurrentAIService()
+    
+    // 构建发送给AI的提示
     let prompt = `我将为你提供一个研究方案的数据分析部分内容。请分析其中使用的研究方法和统计分析方法，并生成一个详细的方法介绍。
 
 研究方案的数据分析部分：
@@ -3035,7 +3111,48 @@ ${conversationContext.userRequirements}
 ${conversationContext.researchContext}`
     }
 
-    prompt += `
+    // 根据AI服务类型调整prompt格式
+    if (currentAIService === 'chatgpt') {
+      console.log('🎯 ChatGPT模式：使用分点回答格式生成方法介绍')
+      
+      prompt += `
+
+请基于上述数据分析内容，生成一个400-600字的方法介绍。
+
+要求：
+1. 必须使用分点回答格式，严格按照以下结构组织内容
+2. 每个分点都要详细阐述，确保内容充实
+3. 使用学术性语言，保持专业性
+
+分点回答格式：
+1. **数据分析总体策略**：详细说明数据分析的整体思路和方法论框架
+2. **核心统计方法**：具体介绍使用的统计方法及其选择理由和适用场景
+3. **数据处理流程**：详细描述数据收集、清洗、处理和分析的完整步骤
+4. **方法作用机制**：深入分析各种统计方法的工作原理和预期效果
+5. **优势与局限性**：客观评价分析方法的优势、适用范围和潜在局限性`
+
+      // 如果有用户需求，添加个性化要求
+      if (conversationContext.hasUserRequirements) {
+        prompt += `
+6. **需求适配性**：说明这些分析方法如何有效回答用户的具体研究问题
+7. **方法选择依据**：阐述方法选择如何体现对用户研究需求的考虑`
+      }
+
+      prompt += `
+
+格式示例：
+1. **数据分析总体策略**：
+本研究采用定量分析方法，通过...的整体策略来处理数据。具体而言，分析框架包括...，确保分析结果的可靠性和有效性。
+
+2. **核心统计方法**：
+主要使用...统计方法，该方法适用于...场景，能够有效处理...类型的数据。选择此方法的原因是...
+
+请确保每个分点都包含详细的专业解释和具体的方法描述。`
+      
+    } else {
+      console.log('🔧 Coze模式：使用标准格式生成方法介绍')
+      
+      prompt += `
 
 请基于上述数据分析内容，生成一个300-500字的方法介绍，包括：
 1. 数据分析的总体策略和思路
@@ -3044,19 +3161,21 @@ ${conversationContext.researchContext}`
 4. 各种统计方法的作用和意义
 5. 分析方法的优势和局限性`
 
-    // 如果有用户需求，添加个性化要求
-    if (conversationContext.hasUserRequirements) {
-      prompt += `
+      // 如果有用户需求，添加个性化要求
+      if (conversationContext.hasUserRequirements) {
+        prompt += `
 6. 这些分析方法如何有效回答用户的具体研究问题
 7. 方法选择如何体现对用户研究需求的考虑`
-    }
+      }
 
-    prompt += `
+      prompt += `
 
 请用学术性的语言，清晰详细地介绍这些分析方法的原理、适用性和实施步骤。`
+    }
 
     console.log('发送方法介绍生成请求:', prompt.substring(0, 200) + '...')
     console.log('方法介绍生成包含用户需求:', conversationContext.hasUserRequirements)
+    console.log('当前AI服务:', currentAIService)
     
     // 调用AI服务
     const { generateMethodIntroduction } = await import('../services/aiServiceAdapter.js')
