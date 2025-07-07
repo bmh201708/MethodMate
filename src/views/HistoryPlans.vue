@@ -32,64 +32,136 @@
                             </button>
                         </div>
 
-                        <div v-if="!isLoading && historyState.historyPlans.length > 0" class="space-y-3">
+                        <div v-if="!isLoading && historyState.historyPlans.length > 0" class="space-y-4">
                             <div v-for="plan in historyState.historyPlans" :key="plan.id"
-                                class="border border-gray-200 rounded-lg hover:shadow-md transition-all cursor-pointer"
-                                :class="[selectedPlan && selectedPlan.id === plan.id ? 'bg-purple-50 border-purple-200' : 'bg-white hover:bg-gray-50']"
+                                class="border border-gray-200 rounded-xl hover:shadow-lg transition-all cursor-pointer group"
+                                :class="[selectedPlan && selectedPlan.id === plan.id ? 'bg-purple-50 border-purple-200 shadow-md' : 'bg-white hover:bg-gray-50']"
                                 @click="selectPlan(plan)">
-                                <div class="p-4">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h3 class="text-sm font-semibold text-gray-900 line-clamp-2">{{ plan.title }}
+                                
+                                <!-- 主要内容区域 -->
+                                <div class="p-5">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <h3 class="text-base font-semibold text-gray-900 line-clamp-2 pr-3 leading-relaxed">
+                                            {{ plan.title }}
                                         </h3>
-                                        <div class="flex items-center space-x-2 ml-2">
+                                        <div class="flex items-center space-x-2 ml-2 flex-shrink-0">
                                             <span v-if="historyState.currentAppliedPlanId === plan.id"
-                                                class="px-2 py-1 bg-green-100 text-green-600 rounded-full text-xs font-medium">
+                                                class="px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium whitespace-nowrap">
                                                 应用中
                                             </span>
                                             <span v-else
-                                                class="px-2 py-1 bg-purple-100 text-purple-600 rounded-full text-xs">
+                                                class="px-2.5 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium whitespace-nowrap">
                                                 {{ plan.status }}
                                             </span>
                                         </div>
                                     </div>
-                                    <p class="text-gray-600 text-sm line-clamp-2 mb-2">{{ plan.description }}</p>
+                                    
+                                    <p class="text-gray-600 text-sm line-clamp-2 mb-3 leading-relaxed">
+                                        {{ plan.description }}
+                                    </p>
+                                    
                                     <div class="flex items-center justify-between text-xs text-gray-500">
-                                        <span>{{ plan.createdAt }}</span>
-                                        <span>{{ plan.author }}</span>
+                                        <span class="flex items-center">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-7 9v4a1 1 0 001 1h6a1 1 0 001-1v-4M3 7h18M4 7h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V7z"/>
+                                            </svg>
+                                            {{ plan.createdAt }}
+                                        </span>
+                                        <span class="flex items-center">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                            </svg>
+                                            {{ plan.author }}
+                                        </span>
                                     </div>
                                 </div>
 
                                 <!-- 操作按钮区域 -->
-                                <div
-                                    class="px-4 py-2 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
-                                    <div class="flex space-x-2">
-                                        <button @click.stop="applyPlan(plan)"
-                                            class="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs">
-                                            应用方案
-                                        </button>
-                                        <button @click.stop="downloadPDF(plan)"
-                                            :disabled="isGeneratingPDF"
-                                            class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1">
-                                            <svg v-if="isGeneratingPDF" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                            </svg>
-                                            <span>PDF</span>
-                                        </button>
-                                        <button @click.stop="downloadTXT(plan)"
-                                            class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs flex items-center space-x-1">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                            </svg>
-                                            <span>TXT</span>
-                                        </button>
+                                <div class="px-5 py-3 bg-gray-50 border-t border-gray-200 rounded-b-xl">
+                                    <!-- 主要操作按钮 -->
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex space-x-2">
+                                            <button @click.stop="applyPlan(plan)"
+                                                class="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs font-medium">
+                                                应用方案
+                                            </button>
+                                            <button @click.stop="downloadPDF(plan)"
+                                                :disabled="isGeneratingPDF"
+                                                class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1">
+                                                <svg v-if="isGeneratingPDF" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                </svg>
+                                                <span>PDF</span>
+                                            </button>
+                                            <button @click.stop="downloadTXT(plan)"
+                                                class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs flex items-center space-x-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                </svg>
+                                                <span>TXT</span>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- 更多操作按钮 -->
+                                        <div class="flex items-center space-x-2">
+                                            <div class="relative group/dropdown">
+                                                <button @click.stop="toggleMoreActions(plan.id)"
+                                                    class="px-2 py-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors text-xs flex items-center space-x-1">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                                                    </svg>
+                                                    <span>更多</span>
+                                                </button>
+                                                
+                                                <!-- 下拉菜单 -->
+                                                <div v-if="showMoreActions === plan.id" 
+                                                    class="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 transform transition-all duration-150 ease-out">
+                                                    <div class="py-1">
+                                                        <button @click.stop="regenerateTitle(plan)"
+                                                            :disabled="isRegeneratingTitle"
+                                                            class="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 transition-colors">
+                                                            <svg v-if="isRegeneratingTitle" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                            </svg>
+                                                            <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                                            </svg>
+                                                            <span>{{ isRegeneratingTitle ? '生成中' : '重新命名' }}</span>
+                                                        </button>
+                                                        <div class="border-t border-gray-100"></div>
+                                                        <button @click.stop="confirmDelete(plan)"
+                                                            class="w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 flex items-center space-x-2 transition-colors">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                            </svg>
+                                                            <span>删除</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <button @click.stop="confirmDelete(plan)"
-                                        class="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-xs">
-                                        删除
+                                </div>
+                            </div>
+                            
+                            <!-- 批量操作区域 -->
+                            <div v-if="historyState.historyPlans.length > 0" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-600">
+                                        共 {{ historyState.historyPlans.length }} 个研究方案
+                                    </span>
+                                    <button @click.stop="regenerateAllTitles()"
+                                        :disabled="isRegeneratingTitle || historyState.historyPlans.length === 0"
+                                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                        </svg>
+                                        <span>批量重新命名</span>
                                     </button>
                                 </div>
                             </div>
@@ -338,7 +410,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { historyState, removeHistoryPlan, clearHistoryPlans, setCurrentViewingPlan, papersState, loadUserData, applyPlanAsCurrentPlan } from '../stores/chatStore'
 import { useUserStore } from '../stores/userStore.js'
@@ -353,6 +425,8 @@ const isLoading = ref(false)
 const selectedPlan = ref(null)
 const activeSection = ref('full')
 const isGeneratingPDF = ref(false)
+const isRegeneratingTitle = ref(false) // 添加标题重新生成状态
+const showMoreActions = ref(null) // 控制下拉菜单显示
 
 // 方案导航部分
 const sections = [
@@ -450,6 +524,27 @@ const referencedCount = computed(() => papersState.referencedPapers.size)
 // 页面加载时主动加载数据
 onMounted(async () => {
     await refreshData()
+    
+    // 添加点击外部关闭下拉菜单的监听器
+    const closeDropdownHandler = (e) => {
+        // 如果点击的不是下拉菜单相关元素，则关闭所有下拉菜单
+        if (!e.target.closest('.group\\/dropdown')) {
+            showMoreActions.value = null
+        }
+    }
+    
+    document.addEventListener('click', closeDropdownHandler)
+    
+    // 保存处理器函数以便在unmounted时清理
+    window.closeDropdownHandler = closeDropdownHandler
+})
+
+// 清理事件监听器
+onUnmounted(() => {
+    if (window.closeDropdownHandler) {
+        document.removeEventListener('click', window.closeDropdownHandler)
+        delete window.closeDropdownHandler
+    }
 })
 
 // 添加调试状态
@@ -464,11 +559,21 @@ const debugInfo = ref({
 const selectPlan = (plan) => {
     selectedPlan.value = plan
     activeSection.value = 'full'
+    // 选择方案时关闭所有下拉菜单
+    showMoreActions.value = null
     console.log('选择方案:', plan.title)
+}
+
+// 切换下拉菜单显示
+const toggleMoreActions = (planId) => {
+    showMoreActions.value = showMoreActions.value === planId ? null : planId
 }
 
 // 应用方案
 const applyPlan = (plan) => {
+    // 关闭下拉菜单
+    showMoreActions.value = null
+    
     if (confirm(`确定要应用方案"${plan.title}"吗？这将替换当前的研究方案。`)) {
         // 应用方案到当前方案
         applyPlanAsCurrentPlan(
@@ -521,6 +626,9 @@ const refreshData = async () => {
 
 // 确认删除单个方案
 const confirmDelete = (plan) => {
+    // 关闭下拉菜单
+    showMoreActions.value = null
+    
     if (confirm(`确定要删除方案"${plan.title}"吗？`)) {
         removeHistoryPlan(plan.id)
         // 如果删除的是当前选中的方案，清空选中状态
@@ -567,6 +675,9 @@ const confirmClearAll = async () => {
 // 下载TXT功能
 const downloadTXT = async (plan) => {
     if (!plan) return
+    
+    // 关闭下拉菜单
+    showMoreActions.value = null
     
     try {
         console.log('开始生成TXT文件:', plan.title)
@@ -627,9 +738,240 @@ const downloadTXT = async (plan) => {
     }
 }
 
+// 重新生成单个方案标题
+const regenerateTitle = async (plan) => {
+    if (!plan || isRegeneratingTitle.value) return
+    
+    try {
+        isRegeneratingTitle.value = true
+        // 关闭下拉菜单
+        showMoreActions.value = null
+        console.log('开始为方案重新生成标题:', plan.title)
+        
+        // 使用方案内容生成新标题
+        const newTitle = generateTitleFromPlan(plan)
+        
+        if (newTitle && newTitle !== plan.title) {
+            // 更新方案标题
+            plan.title = newTitle
+            
+            // 如果当前选中的是这个方案，也要更新
+            if (selectedPlan.value && selectedPlan.value.id === plan.id) {
+                selectedPlan.value.title = newTitle
+            }
+            
+            // 更新本地存储中的标题
+            const planIndex = historyState.historyPlans.findIndex(p => p.id === plan.id)
+            if (planIndex !== -1) {
+                historyState.historyPlans[planIndex].title = newTitle
+            }
+            
+            console.log('标题重新生成完成:', newTitle)
+            alert(`标题已更新为："${newTitle}"`)
+        } else {
+            console.log('生成的标题与原标题相同或生成失败')
+            alert('标题生成失败或与原标题相同')
+        }
+        
+    } catch (error) {
+        console.error('重新生成标题失败:', error)
+        alert(`重新生成标题失败：${error.message}`)
+    } finally {
+        isRegeneratingTitle.value = false
+    }
+}
+
+// 批量重新生成所有方案标题
+const regenerateAllTitles = async () => {
+    if (isRegeneratingTitle.value || historyState.historyPlans.length === 0) return
+    
+    const planCount = historyState.historyPlans.length
+    if (!confirm(`确定要重新生成所有 ${planCount} 个方案的标题吗？此操作不可撤销。`)) {
+        return
+    }
+    
+    try {
+        isRegeneratingTitle.value = true
+        console.log('开始批量重新生成标题，方案数量:', planCount)
+        
+        let updatedCount = 0
+        const totalPlans = historyState.historyPlans.length
+        
+        for (let i = 0; i < totalPlans; i++) {
+            const plan = historyState.historyPlans[i]
+            const originalTitle = plan.title
+            
+            console.log(`正在处理第 ${i + 1}/${totalPlans} 个方案: ${originalTitle}`)
+            
+            const newTitle = generateTitleFromPlan(plan)
+            
+            if (newTitle && newTitle !== originalTitle) {
+                plan.title = newTitle
+                updatedCount++
+                
+                // 如果当前选中的是这个方案，也要更新
+                if (selectedPlan.value && selectedPlan.value.id === plan.id) {
+                    selectedPlan.value.title = newTitle
+                }
+                
+                console.log(`标题已更新: "${originalTitle}" -> "${newTitle}"`)
+            }
+            
+            // 为了用户体验，添加小延迟
+            if (i < totalPlans - 1) {
+                await new Promise(resolve => setTimeout(resolve, 100))
+            }
+        }
+        
+        console.log('批量标题重新生成完成，更新数量:', updatedCount)
+        alert(`批量标题重新生成完成！\n共处理 ${totalPlans} 个方案，成功更新 ${updatedCount} 个标题。`)
+        
+    } catch (error) {
+        console.error('批量重新生成标题失败:', error)
+        alert(`批量重新生成标题失败：${error.message}`)
+    } finally {
+        isRegeneratingTitle.value = false
+    }
+}
+
+// 从方案内容生成标题的函数
+const generateTitleFromPlan = (plan) => {
+    if (!plan || !plan.fullPlan) {
+        return null
+    }
+    
+    console.log('开始从方案内容生成标题...')
+    
+    // 策略1：从研究假设中提取关键词
+    if (plan.fullPlan.hypotheses && plan.fullPlan.hypotheses.length > 0) {
+        const hypothesesText = plan.fullPlan.hypotheses.join(' ')
+        const titleFromHypotheses = extractTitleFromContent(hypothesesText)
+        if (titleFromHypotheses) {
+            console.log('从研究假设提取标题:', titleFromHypotheses)
+            return titleFromHypotheses
+        }
+    }
+    
+    // 策略2：从实验设计中提取关键词
+    if (plan.fullPlan.experimentalDesign) {
+        const titleFromDesign = extractTitleFromContent(plan.fullPlan.experimentalDesign)
+        if (titleFromDesign) {
+            console.log('从实验设计提取标题:', titleFromDesign)
+            return titleFromDesign
+        }
+    }
+    
+    // 策略3：从数据分析中提取关键词
+    if (plan.fullPlan.analysisMethod) {
+        const titleFromAnalysis = extractTitleFromContent(plan.fullPlan.analysisMethod)
+        if (titleFromAnalysis) {
+            console.log('从数据分析提取标题:', titleFromAnalysis)
+            return titleFromAnalysis
+        }
+    }
+    
+    // 策略4：从所有内容中综合提取
+    const allContent = [
+        plan.fullPlan.hypotheses?.join(' ') || '',
+        plan.fullPlan.experimentalDesign || '',
+        plan.fullPlan.analysisMethod || '',
+        plan.fullPlan.expectedResults || ''
+    ].filter(content => content.trim().length > 10).join(' ')
+    
+    if (allContent.length > 50) {
+        const titleFromAll = extractTitleFromContent(allContent)
+        if (titleFromAll) {
+            console.log('从综合内容提取标题:', titleFromAll)
+            return titleFromAll
+        }
+    }
+    
+    // 策略5：生成基于时间的默认标题
+    const now = new Date()
+    const timeStr = `${now.getMonth() + 1}月${now.getDate()}日-${now.getHours()}时${now.getMinutes()}分`
+    const smartTitle = `智能重命名研究方案-${timeStr}`
+    
+    console.log('使用默认重命名标题:', smartTitle)
+    return smartTitle
+}
+
+// 从内容中提取标题的函数（与ResearchPlanDetail.vue中的函数相同）
+const extractTitleFromContent = (content) => {
+    if (!content || content.length < 10) return null
+    
+    // 提取关键概念和技术术语
+    const keywordPatterns = [
+        // 技术和方法相关
+        /(?:基于|使用|采用|通过)([^，。！？]{3,15}?)(?:的|技术|方法|算法|系统|平台)/g,
+        // 研究对象和领域
+        /([A-Za-z\u4e00-\u9fa5]{3,15}?)(?:对|与|在)([^，。！？]{3,15}?)(?:的影响|的关系|的效果|中的应用)/g,
+        // 实验和测试相关
+        /(?:实验|测试|验证|评估)([^，。！？]{3,15}?)(?:的|效果|性能|准确性)/g,
+        // 界面和交互相关
+        /([^，。！？]{3,15}?)(?:界面|交互|设计|体验|用户体验)/g,
+        // AI和智能相关
+        /(人工智能|机器学习|深度学习|神经网络|AI|智能)[^，。！？]{0,10}?(?:在|对|与)([^，。！？]{3,15})/g,
+        // 研究主题相关
+        /(?:探讨|研究|分析|调查)([^，。！？]{3,15}?)(?:的影响|的关系|的效果|的作用)/g,
+        // 比较研究相关
+        /比较([^，。！？]{3,15}?)(?:与|和)([^，。！？]{3,15})/g
+    ]
+    
+    const extractedKeywords = new Set()
+    
+    for (const pattern of keywordPatterns) {
+        let match
+        while ((match = pattern.exec(content)) !== null) {
+            if (match[1] && match[1].trim().length > 2) {
+                extractedKeywords.add(match[1].trim())
+            }
+            if (match[2] && match[2].trim().length > 2) {
+                extractedKeywords.add(match[2].trim())
+            }
+        }
+    }
+    
+    // 清理和筛选关键词
+    const cleanedKeywords = Array.from(extractedKeywords)
+        .filter(keyword => 
+            keyword.length > 2 && 
+            keyword.length < 15 &&
+            !keyword.includes('假设') &&
+            !keyword.includes('实验') &&
+            !keyword.includes('研究') &&
+            !keyword.includes('分析') &&
+            !keyword.includes('方法') &&
+            !keyword.includes('用户') &&
+            !keyword.includes('数据') &&
+            !keyword.includes('结果') &&
+            !keyword.includes('设计') &&
+            !keyword.includes('测试') &&
+            !keyword.includes('评估') &&
+            !keyword.includes('验证')
+        )
+        .slice(0, 2) // 最多取2个关键词
+    
+    if (cleanedKeywords.length > 0) {
+        let title = cleanedKeywords.join('与')
+        if (title.length > 20) {
+            title = cleanedKeywords[0]
+        }
+        // 添加研究后缀
+        if (!title.includes('研究') && !title.includes('分析') && !title.includes('评估')) {
+            title += '研究'
+        }
+        return title
+    }
+    
+    return null
+}
+
 // 下载PDF功能
 const downloadPDF = async (plan) => {
     if (!plan || isGeneratingPDF.value) return
+    
+    // 关闭下拉菜单
+    showMoreActions.value = null
     
     try {
         isGeneratingPDF.value = true

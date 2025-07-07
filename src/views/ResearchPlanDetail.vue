@@ -1259,9 +1259,28 @@ const saveToHistoryPlans = async (context = {}) => {
   try {
     console.log('开始保存方案到历史记录，上下文:', context)
     
+    // 确保标题是最新生成的（如果当前标题是默认标题，重新生成）
+    let finalTitle = currentPlanState.title
+    
+    // 检查是否需要重新生成标题
+    const needRegenerateTitle = !finalTitle || 
+      finalTitle === 'AI-Edited Images and Videos Impact on Human Memory' ||
+      finalTitle.includes('定量研究方案') ||
+      finalTitle.includes('AI生成的研究方案') ||
+      finalTitle === '用户自定义研究方案'
+    
+    if (needRegenerateTitle) {
+      console.log('当前标题需要重新生成:', finalTitle)
+      // 重新生成标题，使用更丰富的上下文
+      finalTitle = generatePlanTitle()
+      console.log('重新生成的标题:', finalTitle)
+      // 更新当前方案的标题
+      currentPlanState.title = finalTitle
+    }
+    
     // 构建方案数据
     const planData = {
-      title: currentPlanState.title,
+      title: finalTitle,
       researchQuestions: currentPlanState.researchQuestions,
       methodology: currentPlanState.methodology,
       hypotheses: currentPlanState.hypotheses,
@@ -1984,7 +2003,7 @@ const generatePlanTitle = () => {
   const generationInfo = currentGenerationInfo.value
   console.log('开始生成方案标题，生成信息:', generationInfo)
   
-  // 如果是自定义主题模式且有具体主题，直接使用
+  // 策略1：如果是自定义主题模式且有具体主题，直接使用
   if (generationInfo.mode === 'custom' && generationInfo.customTopic) {
     console.log('使用自定义主题模式，原始主题:', generationInfo.customTopic)
     // 清理主题，移除多余的词汇，保持简洁
@@ -2025,135 +2044,277 @@ const generatePlanTitle = () => {
     return cleanedTopic
   }
   
-  // 智能分析模式：从对话历史中提取关键主题
+  // 策略2：从当前方案内容中提取关键词生成标题
+  if (currentPlanState.hypotheses && currentPlanState.hypotheses.length > 0) {
+    console.log('尝试从研究假设中提取标题')
+    const hypothesesText = currentPlanState.hypotheses.join(' ')
+    const titleFromContent = extractTitleFromContent(hypothesesText)
+    if (titleFromContent) {
+      console.log('从研究假设提取的标题:', titleFromContent)
+      return titleFromContent
+    }
+  }
+  
+  // 策略3：智能分析模式：从对话历史中提取关键主题
   if (generationInfo.mode === 'auto') {
     console.log('使用智能分析模式生成标题')
     const conversationContext = extractConversationContext()
     
     if (conversationContext.hasUserRequirements) {
       console.log('从用户需求中提取关键词，需求内容:', conversationContext.userRequirements)
-      // 从用户需求中提取关键词来生成标题
-      const requirements = conversationContext.userRequirements
-      
-      // 提取研究主题关键词
-      const topicKeywords = []
-      
-             // 常见的研究主题模式
-       const patterns = [
-         /(?:探讨|研究|分析|调查|实验|测试|评估)([^。！？\n]{3,25}?)(?:的影响|的关系|的效果|的作用|研究|分析|实验|$)/g,
-         /([^。！？\n]{3,15}?)(?:对|与)([^。！？\n]{3,15}?)(?:的影响|的关系|的效果|的作用)/g,
-         /(?:关于|针对|面向|基于)([^。！？\n]{3,20}?)(?:的|进行|研究|分析)/g,
-         /([A-Za-z\u4e00-\u9fa5]{3,20}?)(?:系统|平台|工具|方法|技术|设计|界面|交互|应用|效果)/g,
-         /(?:提高|改善|优化|增强)([^。！？\n]{3,20}?)(?:的|效果|性能|体验)/g,
-         /([^。！？\n]{3,20}?)(?:在|中的)([^。！？\n]{3,20}?)(?:应用|使用|效果)/g
-       ]
-      
-      for (const pattern of patterns) {
-        let match
-        while ((match = pattern.exec(requirements)) !== null) {
-          if (match[1] && match[1].trim().length > 2) {
-            topicKeywords.push(match[1].trim())
-          }
-          if (match[2] && match[2].trim().length > 2) {
-            topicKeywords.push(match[2].trim())
-          }
-        }
+      const titleFromRequirements = extractTitleFromRequirements(conversationContext.userRequirements)
+      if (titleFromRequirements) {
+        console.log('从用户需求提取的标题:', titleFromRequirements)
+        return titleFromRequirements
       }
-      
-             // 去重并选择最有意义的关键词
-       const uniqueKeywords = [...new Set(topicKeywords)]
-         .filter(keyword => 
-           keyword.length > 2 && 
-           keyword.length < 20 &&
-           !keyword.includes('用户') && 
-           !keyword.includes('我们') &&
-           !keyword.includes('他们') &&
-           !keyword.includes('这个') &&
-           !keyword.includes('那个') &&
-           !keyword.includes('什么') &&
-           !keyword.includes('如何') &&
-           !keyword.includes('怎么')
-         )
-         .slice(0, 3)
-       
-       if (uniqueKeywords.length > 0) {
-         // 清理关键词，移除多余词汇
-         const cleanedKeywords = uniqueKeywords.map(kw => 
-           kw.replace(/^(对|与|的|在|中|和)/, '').replace(/(的|效果|影响|关系)$/, '').trim()
-         ).filter(kw => kw.length > 1)
-         
-         if (cleanedKeywords.length > 0) {
-           // 组合关键词生成标题
-           let title = cleanedKeywords.join('与')
-           if (title.length > 25) {
-             title = cleanedKeywords[0]
-           }
-           // 如果标题不包含"研究"相关词汇，则添加
-                       if (!title.includes('研究') && !title.includes('分析') && !title.includes('评估')) {
-              title += '研究'
-            }
-            console.log('智能分析模式生成的标题:', title)
-            return title
-          }
-        }
     }
     
-         // 如果提取失败，检查是否有参考文献相关的主题
-     const referencedPapers = Array.from(papersState.referencedPapersList)
-     if (referencedPapers.length > 0) {
-       console.log('尝试从参考文献中提取主题，文献数量:', referencedPapers.length)
-      // 从参考文献标题中提取共同主题
-      const paperTitles = referencedPapers.map(paper => paper.title).join(' ')
-      
-      // 提取高频关键词
-      const commonKeywords = []
-      const keywordPatterns = [
-        /([A-Za-z]+(?:\s+[A-Za-z]+){0,2})/g, // 英文关键词
-        /([\u4e00-\u9fa5]{2,8})/g // 中文关键词
-      ]
-      
-      for (const pattern of keywordPatterns) {
-        let match
-        while ((match = pattern.exec(paperTitles)) !== null) {
-          const keyword = match[1].trim()
-          if (keyword.length > 2 && 
-              !keyword.includes('study') && 
-              !keyword.includes('research') &&
-              !keyword.includes('analysis')) {
-            commonKeywords.push(keyword)
-          }
-        }
+    // 策略4：如果提取失败，检查是否有参考文献相关的主题
+    const referencedPapers = Array.from(papersState.referencedPapersList)
+    if (referencedPapers.length > 0) {
+      console.log('尝试从参考文献中提取主题，文献数量:', referencedPapers.length)
+      const titleFromPapers = extractTitleFromPapers(referencedPapers)
+      if (titleFromPapers) {
+        console.log('从参考文献提取的标题:', titleFromPapers)
+        return titleFromPapers
       }
-      
-      // 统计词频并选择最高频的词
-      const keywordCount = {}
-      commonKeywords.forEach(keyword => {
-        keywordCount[keyword] = (keywordCount[keyword] || 0) + 1
-      })
-      
-      const sortedKeywords = Object.entries(keywordCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 2)
-        .map(entry => entry[0])
-      
-             if (sortedKeywords.length > 0) {
-         let title = sortedKeywords.join('与')
-         if (title.length > 25) {
-           title = sortedKeywords[0]
-         }
-         const finalTitle = title + '研究'
-         console.log('从参考文献生成的标题:', finalTitle)
-         return finalTitle
-       }
     }
   }
   
-  // 默认标题（包含时间戳以便区分）
+  // 策略5：通用内容分析策略（从任何可用内容中提取）
+  const allAvailableContent = [
+    currentPlanState.experimentalDesign,
+    currentPlanState.analysisMethod,
+    currentPlanState.expectedResults,
+    currentPlanState.researchQuestions,
+    currentPlanState.methodology
+  ].filter(content => content && content.trim().length > 10).join(' ')
+  
+  if (allAvailableContent.length > 50) {
+    console.log('尝试从方案内容中提取标题')
+    const titleFromAllContent = extractTitleFromContent(allAvailableContent)
+    if (titleFromAllContent) {
+      console.log('从方案内容提取的标题:', titleFromAllContent)
+      return titleFromAllContent
+    }
+  }
+  
+  // 策略6：基于时间的智能默认标题（更具描述性）
   const now = new Date()
-  const timeStr = `${now.getMonth() + 1}月${now.getDate()}日`
-  const defaultTitle = `定量研究方案-${timeStr}`
-  console.log('使用默认标题:', defaultTitle)
-  return defaultTitle
+  const timeStr = `${now.getMonth() + 1}月${now.getDate()}日-${now.getHours()}时${now.getMinutes()}分`
+  const referencedCount = Array.from(papersState.referencedPapersList).length
+  
+  let smartDefaultTitle = ''
+  if (referencedCount > 0) {
+    smartDefaultTitle = `基于${referencedCount}篇文献的定量研究方案`
+  } else if (generationInfo.mode === 'custom') {
+    smartDefaultTitle = '用户自定义研究方案'
+  } else {
+    smartDefaultTitle = 'AI智能生成研究方案'
+  }
+  
+  const finalTitle = `${smartDefaultTitle}-${timeStr}`
+  console.log('使用智能默认标题:', finalTitle)
+  return finalTitle
+}
+
+// 新增：从内容中提取标题的函数
+const extractTitleFromContent = (content) => {
+  if (!content || content.length < 10) return null
+  
+  // 提取关键概念和技术术语
+  const keywordPatterns = [
+    // 技术和方法相关
+    /(?:基于|使用|采用|通过)([^，。！？]{3,15}?)(?:的|技术|方法|算法|系统|平台)/g,
+    // 研究对象和领域
+    /([A-Za-z\u4e00-\u9fa5]{3,15}?)(?:对|与|在)([^，。！？]{3,15}?)(?:的影响|的关系|的效果|中的应用)/g,
+    // 实验和测试相关
+    /(?:实验|测试|验证|评估)([^，。！？]{3,15}?)(?:的|效果|性能|准确性)/g,
+    // 界面和交互相关
+    /([^，。！？]{3,15}?)(?:界面|交互|设计|体验|用户体验)/g,
+    // AI和智能相关
+    /(人工智能|机器学习|深度学习|神经网络|AI|智能)[^，。！？]{0,10}?(?:在|对|与)([^，。！？]{3,15})/g
+  ]
+  
+  const extractedKeywords = new Set()
+  
+  for (const pattern of keywordPatterns) {
+    let match
+    while ((match = pattern.exec(content)) !== null) {
+      if (match[1] && match[1].trim().length > 2) {
+        extractedKeywords.add(match[1].trim())
+      }
+      if (match[2] && match[2].trim().length > 2) {
+        extractedKeywords.add(match[2].trim())
+      }
+    }
+  }
+  
+  // 清理和筛选关键词
+  const cleanedKeywords = Array.from(extractedKeywords)
+    .filter(keyword => 
+      keyword.length > 2 && 
+      keyword.length < 15 &&
+      !keyword.includes('假设') &&
+      !keyword.includes('实验') &&
+      !keyword.includes('研究') &&
+      !keyword.includes('分析') &&
+      !keyword.includes('方法') &&
+      !keyword.includes('用户') &&
+      !keyword.includes('数据') &&
+      !keyword.includes('结果')
+    )
+    .slice(0, 2) // 最多取2个关键词
+  
+  if (cleanedKeywords.length > 0) {
+    let title = cleanedKeywords.join('与')
+    if (title.length > 20) {
+      title = cleanedKeywords[0]
+    }
+    // 添加研究后缀
+    if (!title.includes('研究') && !title.includes('分析') && !title.includes('评估')) {
+      title += '研究'
+    }
+    return title
+  }
+  
+  return null
+}
+
+// 新增：从用户需求中提取标题的函数
+const extractTitleFromRequirements = (requirements) => {
+  if (!requirements || requirements.length < 10) return null
+  
+  // 提取研究主题关键词
+  const topicKeywords = []
+  
+  // 更全面的研究主题模式
+  const patterns = [
+    /(?:探讨|研究|分析|调查|实验|测试|评估)([^。！？\n]{3,25}?)(?:的影响|的关系|的效果|的作用|研究|分析|实验|$)/g,
+    /([^。！？\n]{3,15}?)(?:对|与)([^。！？\n]{3,15}?)(?:的影响|的关系|的效果|的作用)/g,
+    /(?:关于|针对|面向|基于)([^。！？\n]{3,20}?)(?:的|进行|研究|分析)/g,
+    /([A-Za-z\u4e00-\u9fa5]{3,20}?)(?:系统|平台|工具|方法|技术|设计|界面|交互|应用|效果)/g,
+    /(?:提高|改善|优化|增强)([^。！？\n]{3,20}?)(?:的|效果|性能|体验)/g,
+    /([^。！？\n]{3,20}?)(?:在|中的)([^。！？\n]{3,20}?)(?:应用|使用|效果)/g,
+    // 新增模式
+    /(?:如何|怎样)([^。！？\n]{3,20}?)(?:影响|改善|提升)/g,
+    /([^。！？\n]{3,15}?)(?:与|和)([^。！？\n]{3,15}?)(?:之间的关系|的关联)/g,
+    /比较([^。！？\n]{3,15}?)(?:与|和)([^。！？\n]{3,15})/g
+  ]
+  
+  for (const pattern of patterns) {
+    let match
+    while ((match = pattern.exec(requirements)) !== null) {
+      if (match[1] && match[1].trim().length > 2) {
+        topicKeywords.push(match[1].trim())
+      }
+      if (match[2] && match[2].trim().length > 2) {
+        topicKeywords.push(match[2].trim())
+      }
+    }
+  }
+  
+  // 去重并选择最有意义的关键词
+  const uniqueKeywords = [...new Set(topicKeywords)]
+    .filter(keyword => 
+      keyword.length > 2 && 
+      keyword.length < 20 &&
+      !keyword.includes('用户') && 
+      !keyword.includes('我们') &&
+      !keyword.includes('他们') &&
+      !keyword.includes('这个') &&
+      !keyword.includes('那个') &&
+      !keyword.includes('什么') &&
+      !keyword.includes('如何') &&
+      !keyword.includes('怎么') &&
+      !keyword.includes('方式') &&
+      !keyword.includes('方法')
+    )
+    .slice(0, 3)
+  
+  if (uniqueKeywords.length > 0) {
+    // 清理关键词，移除多余词汇
+    const cleanedKeywords = uniqueKeywords.map(kw => 
+      kw.replace(/^(对|与|的|在|中|和)/, '').replace(/(的|效果|影响|关系)$/, '').trim()
+    ).filter(kw => kw.length > 1)
+    
+    if (cleanedKeywords.length > 0) {
+      // 组合关键词生成标题
+      let title = cleanedKeywords.join('与')
+      if (title.length > 25) {
+        title = cleanedKeywords[0]
+      }
+      // 如果标题不包含"研究"相关词汇，则添加
+      if (!title.includes('研究') && !title.includes('分析') && !title.includes('评估')) {
+        title += '研究'
+      }
+      return title
+    }
+  }
+  
+  return null
+}
+
+// 新增：从参考文献中提取标题的函数
+const extractTitleFromPapers = (referencedPapers) => {
+  if (!referencedPapers || referencedPapers.length === 0) return null
+  
+  // 从参考文献标题中提取共同主题
+  const paperTitles = referencedPapers.map(paper => paper.title).join(' ')
+  
+  // 提取高频关键词
+  const commonKeywords = []
+  const keywordPatterns = [
+    /([A-Za-z]+(?:\s+[A-Za-z]+){0,2})/g, // 英文关键词组
+    /([\u4e00-\u9fa5]{2,8})/g, // 中文关键词
+    // 新增：特定领域术语
+    /(人工智能|机器学习|深度学习|神经网络|计算机视觉|自然语言处理|人机交互|用户体验|界面设计)/g,
+    /(算法|模型|系统|平台|框架|工具|方法|技术)/g
+  ]
+  
+  for (const pattern of keywordPatterns) {
+    let match
+    while ((match = pattern.exec(paperTitles)) !== null) {
+      const keyword = match[1].trim().toLowerCase()
+      if (keyword.length > 2 && 
+          !keyword.includes('study') && 
+          !keyword.includes('research') &&
+          !keyword.includes('analysis') &&
+          !keyword.includes('method') &&
+          !keyword.includes('approach') &&
+          !keyword.includes('based') &&
+          !keyword.includes('using')) {
+        commonKeywords.push(match[1].trim()) // 保持原始大小写
+      }
+    }
+  }
+  
+  // 统计词频并选择最高频的词
+  const keywordCount = {}
+  commonKeywords.forEach(keyword => {
+    const normalizedKeyword = keyword.toLowerCase()
+    keywordCount[normalizedKeyword] = (keywordCount[normalizedKeyword] || 0) + 1
+  })
+  
+  const sortedKeywords = Object.entries(keywordCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(entry => {
+      // 找到原始大小写的版本
+      const originalKeyword = commonKeywords.find(kw => kw.toLowerCase() === entry[0])
+      return originalKeyword || entry[0]
+    })
+  
+  if (sortedKeywords.length > 0) {
+    let title = sortedKeywords.join('与')
+    if (title.length > 25) {
+      title = sortedKeywords[0]
+    }
+    const finalTitle = title + '研究'
+    return finalTitle
+  }
+  
+  return null
 }
 
 // 提取对话历史中的用户需求和上下文
