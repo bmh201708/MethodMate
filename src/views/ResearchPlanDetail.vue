@@ -1750,6 +1750,10 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
              const generateSummaryApiUrl = `${getApiBaseUrl()}/paper/generate-method-summary`
              console.log('📤 生成方法概要API请求URL:', generateSummaryApiUrl)
              
+             // 获取当前AI服务类型
+             const { getCurrentAIService } = await import('../services/aiServiceAdapter.js')
+             const currentAIService = getCurrentAIService()
+             
              const response = await fetch(generateSummaryApiUrl, {
               method: 'POST',
               headers: {
@@ -1757,7 +1761,8 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
               },
               body: JSON.stringify({
                 title: paper.title,
-                fullText: paper.fullText
+                fullText: paper.fullText,
+                aiService: currentAIService === 'chatgpt' ? 'chatgpt' : 'coze'
               })
             });
             
@@ -1811,6 +1816,10 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
                      const methodSummaryApiUrl = `${getApiBaseUrl()}/paper/generate-method-summary`
                      console.log('📤 生成方法概要API请求URL:', methodSummaryApiUrl)
                      
+                     // 获取当前AI服务类型
+                     const { getCurrentAIService: getCurrentAIService2 } = await import('../services/aiServiceAdapter.js')
+                     const currentAIService2 = getCurrentAIService2()
+                     
                      const methodResponse = await fetch(methodSummaryApiUrl, {
                       method: 'POST',
                       headers: {
@@ -1818,7 +1827,8 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
                       },
                       body: JSON.stringify({
                         title: paper.title,
-                        fullText: paper.fullText
+                        fullText: paper.fullText,
+                        aiService: currentAIService2 === 'chatgpt' ? 'chatgpt' : 'coze'
                       })
                     });
                     
@@ -2767,25 +2777,10 @@ const queryStatisticalMethod = async () => {
   try {
     console.log('🔍 查询统计方法:', statisticalMethodQuery.value.trim())
     
-              const { getApiBaseUrl } = await import('../config/environment.js')
-    const queryMethodApiUrl = `${getApiBaseUrl()}/query-statistical-method`
-    console.log('📤 查询统计方法API请求URL:', queryMethodApiUrl)
+    // 调用AI服务适配器
+    const { queryStatisticalMethod } = await import('../services/aiServiceAdapter.js')
+    const data = await queryStatisticalMethod(statisticalMethodQuery.value.trim())
     
-    const response = await fetch(queryMethodApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        method: statisticalMethodQuery.value.trim()
-      })
-    })
-
-    if (!response.ok) {
-      throw new Error('查询失败，请稍后重试')
-    }
-
-    const data = await response.json()
     console.log('📋 查询响应:', data)
     
     if (data.success) {
@@ -2949,35 +2944,18 @@ ${conversationContext.researchContext}`
     console.log('发送来源介绍生成请求:', prompt.substring(0, 200) + '...')
     console.log('来源介绍生成包含用户需求:', conversationContext.hasUserRequirements)
     
-    // 调用Coze API
-         const { getApiBaseUrl } = await import('../config/environment.js')
-     const cozeChatApiUrl = `${getApiBaseUrl()}/coze-chat`
-     console.log('📤 Coze聊天API请求URL:', cozeChatApiUrl)
-     
-     const response = await fetch(cozeChatApiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: prompt,
-          conversation_id: `source_intro_${activeSection.value}_${Date.now()}`
-        })
-      })
+    // 调用AI服务
+    const { generateSourceIntroduction } = await import('../services/aiServiceAdapter.js')
+    const result = await generateSourceIntroduction(
+      prompt, 
+      `source_intro_${activeSection.value}_${Date.now()}`
+    )
     
-    if (!response.ok) {
-      throw new Error('生成来源介绍失败，请稍后重试')
-    }
+    // 保存来源介绍到全局状态
+    updateSourceIntroduction(activeSection.value, result)
+    console.log(`成功生成${sectionName}部分的来源介绍`)
     
-    const data = await response.json()
-    
-    if (data.success && data.reply) {
-      // 保存来源介绍到全局状态
-      updateSourceIntroduction(activeSection.value, data.reply)
-      console.log(`成功生成${sectionName}部分的来源介绍`)
-    } else {
-      throw new Error(data.error || '生成来源介绍失败')
-    }
+
     
   } catch (error) {
     console.error('生成来源介绍失败:', error)
@@ -3048,35 +3026,13 @@ ${conversationContext.researchContext}`
     console.log('发送方法介绍生成请求:', prompt.substring(0, 200) + '...')
     console.log('方法介绍生成包含用户需求:', conversationContext.hasUserRequirements)
     
-    // 调用Coze API
-         const { getApiBaseUrl } = await import('../config/environment.js')
-     const cozeChatApiUrl = `${getApiBaseUrl()}/coze-chat`
-     console.log('📤 Coze聊天API请求URL:', cozeChatApiUrl)
-     
-     const response = await fetch(cozeChatApiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: prompt,
-          conversation_id: `method_intro_${Date.now()}`
-        })
-      })
+    // 调用AI服务
+    const { generateMethodIntroduction } = await import('../services/aiServiceAdapter.js')
+    const result = await generateMethodIntroduction(prompt)
     
-    if (!response.ok) {
-      throw new Error('生成方法介绍失败，请稍后重试')
-    }
-    
-    const data = await response.json()
-    
-    if (data.success && data.reply) {
-      // 保存生成的方法介绍
-      generatedMethodIntro.value = data.reply
-      console.log('成功生成方法介绍')
-    } else {
-      throw new Error(data.error || '生成方法介绍失败')
-    }
+    // 保存生成的方法介绍
+    generatedMethodIntro.value = result
+    console.log('成功生成方法介绍')
     
   } catch (error) {
     console.error('生成方法介绍失败:', error)

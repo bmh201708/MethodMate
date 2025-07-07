@@ -1,6 +1,6 @@
 // 全局聊天状态管理
 import { reactive, ref } from 'vue'
-import { sendStreamMessageToCoze } from '../services/cozeApi'
+import { sendStreamMessage } from '../services/aiServiceAdapter.js'
 import { getApiBaseUrl } from '../config/environment.js'
 
 // 获取认证头
@@ -863,9 +863,11 @@ export const sendMessage = async (message, pageContext = null) => {
       }
     }
 
-    await sendStreamMessageToCoze(messageWithContext, (chunk, fullResponse) => {
+    console.log('🚀 开始调用AI服务...')
+    
+    await sendStreamMessage(messageWithContext, (chunk, fullResponse) => {
       // 更新助手消息内容 - 强制Vue响应式更新
-      console.log('chatStore onChunk被调用，内容长度:', fullResponse.length)
+      console.log('📥 chatStore onChunk被调用，内容长度:', fullResponse.length)
       const assistantMsgIndex = chatState.messages.findIndex(m => m.id === assistantMessageId)
       if (assistantMsgIndex !== -1) {
         console.log('找到助手消息，更新内容:', assistantMessageId)
@@ -895,6 +897,8 @@ export const sendMessage = async (message, pageContext = null) => {
       }
     }, chatState.messages)
 
+    console.log('🎉 AI服务调用完成')
+    
     // 标记消息完成
     const assistantMsgIndex = chatState.messages.findIndex(m => m.id === assistantMessageId)
     if (assistantMsgIndex !== -1) {

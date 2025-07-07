@@ -41,6 +41,11 @@
         </div>
       </div>
 
+      <!-- AI服务测试组件（仅开发模式） -->
+      <div v-if="isDev" class="mb-8">
+        <AIServiceTest />
+      </div>
+
       <!-- 聊天框 -->
       <div class="h-[calc(100vh-22rem)]">
         <ChatBox />
@@ -53,9 +58,13 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import ChatBox from '../components/ChatBox.vue'
+import AIServiceTest from '../components/AIServiceTest.vue'
 import { papersState } from '../stores/chatStore'
 
 const router = useRouter()
+
+// 开发模式检测
+const isDev = computed(() => import.meta.env.DEV)
 
 // 引用文献计数
 const referencedCount = computed(() => papersState.referencedPapers.size)

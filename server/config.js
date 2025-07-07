@@ -102,6 +102,19 @@ export const getYoudaoConfig = () => {
 };
 
 /**
+ * 获取ChatGPT配置
+ */
+export const getChatGPTConfig = () => {
+  return {
+    apiKey: process.env.OPENAI_API_KEY || '',
+    apiUrl: process.env.OPENAI_API_URL || 'https://api.openai.com/v1',
+    model: process.env.OPENAI_MODEL || 'gpt-4o',
+    maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS || '16384'),
+    temperature: parseFloat(process.env.OPENAI_TEMPERATURE || '0.7')
+  };
+};
+
+/**
  * 获取其他API配置
  */
 export const getOtherAPIConfig = () => {
@@ -120,6 +133,7 @@ export default {
   getJWTConfig,
   getServerConfig,
   getCozeConfig,
+  getChatGPTConfig,
   getYoudaoConfig,
   getOtherAPIConfig
 }; 

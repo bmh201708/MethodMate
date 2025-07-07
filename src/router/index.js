@@ -7,6 +7,7 @@ import ScholarSearchView from '../views/ScholarSearchView.vue'
 import ReferencesView from '../views/ReferencesView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
+import ChatGPTView from '../views/ChatGPTView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -61,6 +62,14 @@ const router = createRouter({
       component: RegisterView,
       meta: {
         title: '用户注册'
+      }
+    },
+    {
+      path: '/chatgpt',
+      name: 'chatgpt',
+      component: ChatGPTView,
+      meta: {
+        title: 'ChatGPT 对话'
       }
     }
   ]

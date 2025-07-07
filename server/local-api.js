@@ -8,8 +8,20 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import mysql from 'mysql2/promise';
 import { initDatabase, getPool } from './database.js';
-import { getJWTConfig, getServerConfig } from './config.js';
+import { 
+  getDatabaseConfig, 
+  getJWTConfig, 
+  getServerConfig, 
+  getCozeConfig, 
+  getChatGPTConfig,
+  getYoudaoConfig, 
+  getOtherAPIConfig 
+} from './config.js';
+import { searchStatisticalMethodFromDB, getAllStatisticalMethods, getStatisticalMethodById } from './statistical-methods-db.js';
+import fs from 'fs';
+import path from 'path';
 
 // 获取当前文件的目录
 const __filename = fileURLToPath(import.meta.url);
@@ -62,6 +74,54 @@ const COZE_API_URL = process.env.COZE_API_URL || 'https://api.coze.com';
 const COZE_BOT_ID = process.env.COZE_BOT_ID || '7513529977745915905';
 const COZE_BOT_ID_Reference = process.env.COZE_BOT_ID_Reference || '7511024998740754448';  
 const COZE_USER_ID = process.env.COZE_USER_ID || '7505301221562023954';
+
+// ChatGPT API配置
+const CHATGPT_CONFIG = getChatGPTConfig();
+
+/**
+ * 调用ChatGPT API
+ * @param {string} message - 消息内容
+ * @param {Array} chatHistory - 聊天历史（可选）
+ * @returns {Promise<string>} - ChatGPT回复
+ */
+const callChatGPT = async (message, chatHistory = []) => {
+  if (!CHATGPT_CONFIG.apiKey) {
+    throw new Error('ChatGPT API密钥未配置');
+  }
+  
+  const messages = [
+    { role: 'system', content: '你是一个专业的学术研究助手，擅长定量研究方法、统计分析和学术写作。请用中文回答问题，保持专业性和准确性。' },
+    ...chatHistory,
+    { role: 'user', content: message }
+  ];
+  
+  const response = await fetch(`${CHATGPT_CONFIG.apiUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${CHATGPT_CONFIG.apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: CHATGPT_CONFIG.model,
+      messages: messages,
+      max_tokens: CHATGPT_CONFIG.maxTokens,
+      temperature: CHATGPT_CONFIG.temperature
+    })
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(`ChatGPT API错误 (${response.status}): ${errorData.error?.message || '未知错误'}`);
+  }
+  
+  const result = await response.json();
+  
+  if (!result.choices || result.choices.length === 0) {
+    throw new Error('ChatGPT API返回无效响应');
+  }
+  
+  return result.choices[0].message.content;
+};
 
 // 检查有道翻译API是否可用
 let YOUDAO_API_AVAILABLE = true;
@@ -144,8 +204,7 @@ process.env.YOUDAO_APP_SECRET = YOUDAO_APP_SECRET;
 import translate, { translateWithGoogleUnofficial } from './translate-service.js';
 import { translateWithCoze, translateWithSilentCoze } from './coze-translate-service.js';
 
-// 导入统计方法数据库查询服务
-import { searchStatisticalMethodFromDB, getAllStatisticalMethods, getStatisticalMethodById } from './statistical-methods-db.js';
+// 导入统计方法数据库查询服务（已在上方导入）
 
 // 翻译函数 - 使用Coze API进行中文到英文的翻译
 const translateToEnglish = async (text, retries = 3) => {
@@ -1146,7 +1205,7 @@ ${result}
 };
 
 // 备用的研究方法生成函数
-const generateMethodSummary = async (fullText) => {
+const generateMethodSummary = async (fullText, aiService = 'coze') => {
   try {
     if (!fullText || typeof fullText !== 'string') {
       return null;
@@ -1179,37 +1238,43 @@ ${fullText}
 
 请严格按照上述格式提炼研究方法。`;
 
-    console.log('使用备用方法生成研究方法概要...');
-    const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${COZE_API_KEY}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        bot_id: COZE_BOT_ID,
-        user: COZE_USER_ID,
-        query: prompt,
-        stream: false,
-        conversation_id: `generate_summary_${Date.now()}`
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Coze API responded with status: ${response.status}`);
-    }
-
-    const result = await response.json();
     let summaryText = '';
     
-    if (result.messages && Array.isArray(result.messages)) {
-      const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
-      if (answerMessages.length > 0) {
-        summaryText = answerMessages[0].content;
+    if (aiService === 'chatgpt') {
+      console.log('使用ChatGPT生成研究方法概要...');
+      summaryText = await callChatGPT(prompt, []);
+    } else {
+      console.log('使用Coze生成研究方法概要...');
+      const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${COZE_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          bot_id: COZE_BOT_ID,
+          user: COZE_USER_ID,
+          query: prompt,
+          stream: false,
+          conversation_id: `generate_summary_${Date.now()}`
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Coze API responded with status: ${response.status}`);
       }
-    } else if (result.answer) {
-      summaryText = result.answer;
+
+      const result = await response.json();
+      
+      if (result.messages && Array.isArray(result.messages)) {
+        const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
+        if (answerMessages.length > 0) {
+          summaryText = answerMessages[0].content;
+        }
+      } else if (result.answer) {
+        summaryText = result.answer;
+      }
     }
 
     if (!summaryText || 
@@ -3825,7 +3890,7 @@ app.post('/api/paper/get-full-content', async (req, res) => {
 // 生成研究方法概要的API端点（备用方法）
 app.post('/api/paper/generate-method-summary', async (req, res) => {
   try {
-    const { title, fullText } = req.body;
+    const { title, fullText, aiService } = req.body;
     
     if (!title || !fullText) {
       return res.status(400).json({ 
@@ -3834,10 +3899,10 @@ app.post('/api/paper/generate-method-summary', async (req, res) => {
       });
     }
 
-    console.log('开始生成研究方法概要，标题:', title);
+    console.log('开始生成研究方法概要，标题:', title, 'AI服务:', aiService || 'coze');
     
-    // 使用备用方法生成研究方法概要
-    const methodSummary = await generateMethodSummary(fullText);
+    // 使用指定的AI服务生成研究方法概要
+    const methodSummary = await generateMethodSummary(fullText, aiService);
     
     if (!methodSummary) {
       return res.json({
@@ -4025,40 +4090,54 @@ app.post('/api/query-statistical-method', async (req, res) => {
 
 请用通俗易懂的语言解释，并尽可能提供具体的例子。`;
 
-    const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${COZE_API_KEY}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        bot_id: COZE_BOT_ID,
-        user: COZE_USER_ID,
-        query: prompt,
-        stream: false,
-        conversation_id: `query_method_${Date.now()}`
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Coze API responded with status: ${response.status}`);
-    }
-
-    const result = await response.json();
     let explanation = '';
+    let aiSource = 'AI生成';
     
-    if (result.messages && Array.isArray(result.messages)) {
-      const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
-      if (answerMessages.length > 0) {
-        explanation = answerMessages[0].content;
-      }
-    } else if (result.answer) {
-      explanation = result.answer;
-    }
+    // 检查是否指定了AI服务
+    const { aiService } = req.body;
+    
+    if (aiService === 'chatgpt') {
+      console.log('使用ChatGPT生成统计方法解释');
+      explanation = await callChatGPT(prompt, []);
+      aiSource = 'ChatGPT生成';
+    } else {
+      console.log('使用Coze生成统计方法解释');
+      const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${COZE_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          bot_id: COZE_BOT_ID,
+          user: COZE_USER_ID,
+          query: prompt,
+          stream: false,
+          conversation_id: `query_method_${Date.now()}`
+        })
+      });
 
-    if (!explanation) {
-      throw new Error('未能获取统计方法解释');
+      if (!response.ok) {
+        throw new Error(`Coze API responded with status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.messages && Array.isArray(result.messages)) {
+        const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
+        if (answerMessages.length > 0) {
+          explanation = answerMessages[0].content;
+        }
+      } else if (result.answer) {
+        explanation = result.answer;
+      }
+
+      if (!explanation) {
+        throw new Error('未能获取统计方法解释');
+      }
+      
+      aiSource = 'Coze生成';
     }
 
     console.log('✅ AI API生成成功');
@@ -4068,7 +4147,7 @@ app.post('/api/query-statistical-method', async (req, res) => {
       method: method,
       explanation: explanation,
       isLocalContent: false,
-      source: 'AI生成'
+      source: aiSource
     });
   } catch (error) {
     console.error('查询统计方法错误:', error);
@@ -4153,10 +4232,10 @@ app.post('/api/translate', async (req, res) => {
   }
 });
 
-// Coze聊天API端点 - 用于生成来源介绍等
+// Coze聊天API端点 - 用于生成来源介绍等，支持ChatGPT
 app.post('/api/coze-chat', async (req, res) => {
   try {
-    const { message, conversation_id } = req.body;
+    const { message, conversation_id, aiService } = req.body;
     
     if (!message) {
       return res.status(400).json({ 
@@ -4165,50 +4244,58 @@ app.post('/api/coze-chat', async (req, res) => {
       });
     }
 
-    console.log('Coze聊天API被调用，消息长度:', message.length);
+    console.log('聊天API被调用，AI服务:', aiService || 'coze', '消息长度:', message.length);
     console.log('对话ID:', conversation_id);
-    
-    const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${COZE_API_KEY}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        bot_id: COZE_BOT_ID_Reference,
-        user: COZE_USER_ID,
-        query: message,
-        stream: false,
-        conversation_id: conversation_id || `chat_${Date.now()}`
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Coze API错误响应 (${response.status}):`, errorText);
-      throw new Error(`Coze API responded with status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log('Coze API响应结构:', Object.keys(result));
     
     let reply = '';
     
-    if (result.messages && Array.isArray(result.messages)) {
-      const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
-      if (answerMessages.length > 0) {
-        reply = answerMessages[0].content;
+    // 根据AI服务类型选择不同的处理方式
+    if (aiService === 'chatgpt') {
+      console.log('使用ChatGPT处理请求');
+      reply = await callChatGPT(message, []);
+      console.log('成功获取ChatGPT回复，长度:', reply.length);
+    } else {
+      console.log('使用Coze处理请求');
+      const response = await fetch(`${COZE_API_URL}/open_api/v2/chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${COZE_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          bot_id: COZE_BOT_ID_Reference,
+          user: COZE_USER_ID,
+          query: message,
+          stream: false,
+          conversation_id: conversation_id || `chat_${Date.now()}`
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Coze API错误响应 (${response.status}):`, errorText);
+        throw new Error(`Coze API responded with status: ${response.status}`);
       }
-    } else if (result.answer) {
-      reply = result.answer;
-    }
 
-    if (!reply) {
-      throw new Error('未能从Coze API获取有效回复');
-    }
+      const result = await response.json();
+      console.log('Coze API响应结构:', Object.keys(result));
+      
+      if (result.messages && Array.isArray(result.messages)) {
+        const answerMessages = result.messages.filter(m => m.role === 'assistant' && m.type === 'answer');
+        if (answerMessages.length > 0) {
+          reply = answerMessages[0].content;
+        }
+      } else if (result.answer) {
+        reply = result.answer;
+      }
 
-    console.log('成功获取Coze回复，长度:', reply.length);
+      if (!reply) {
+        throw new Error('未能从Coze API获取有效回复');
+      }
+
+      console.log('成功获取Coze回复，长度:', reply.length);
+    }
 
     res.json({
       success: true,
@@ -4216,7 +4303,7 @@ app.post('/api/coze-chat', async (req, res) => {
       conversation_id: conversation_id
     });
   } catch (error) {
-    console.error('Coze聊天API错误:', error);
+    console.error('聊天API错误:', error);
     
     let statusCode = 500;
     let errorMessage = error.message;

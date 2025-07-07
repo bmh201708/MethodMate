@@ -77,6 +77,32 @@
           </button>
         </div>
       </div>
+
+      <!-- AI服务选择 -->
+      <div class="mb-3">
+        <div class="text-xs text-gray-500 mb-2">AI服务选择</div>
+        <div class="grid grid-cols-2 gap-2">
+          <button
+            @click="switchAIService('coze')"
+            :class="currentAIService === 'coze' 
+              ? 'bg-purple-100 text-purple-700 border-purple-300' 
+              : 'bg-gray-50 text-gray-700 border-gray-300'"
+            class="px-2 py-1 text-xs border rounded hover:bg-opacity-80"
+          >
+            🤖 Coze
+          </button>
+          <button
+            @click="switchAIService('chatgpt')"
+            :class="currentAIService === 'chatgpt' 
+              ? 'bg-green-100 text-green-700 border-green-300' 
+              : 'bg-gray-50 text-gray-700 border-gray-300'"
+            class="px-2 py-1 text-xs border rounded hover:bg-opacity-80"
+          >
+            💬 ChatGPT
+          </button>
+        </div>
+        <div class="text-xs text-gray-600 mt-1">当前: {{ currentAIServiceName }}</div>
+      </div>
       
       <!-- 调试信息 -->
       <div class="mb-3">
@@ -134,6 +160,10 @@ import {
   setCurrentEnvironment, 
   getCurrentEnvironment
 } from '../config/environment.js'
+import { 
+  aiServiceState, 
+  AI_SERVICE_TYPES 
+} from '../stores/aiServiceStore.js'
 
 // 响应式数据
 const showTool = ref(false)
@@ -182,6 +212,10 @@ const connectionStatusText = computed(() => {
   }
 })
 
+// AI服务相关计算属性
+const currentAIService = computed(() => aiServiceState.getCurrentAIService())
+const currentAIServiceName = computed(() => aiServiceState.getCurrentAIServiceName())
+
 // 方法
 function toggleTool() {
   showTool.value = !showTool.value
@@ -197,6 +231,15 @@ function switchEnvironment(envType) {
     connectionStatus.value = 'unknown'
   } catch (error) {
     console.error('环境切换失败:', error)
+  }
+}
+
+function switchAIService(serviceType) {
+  try {
+    aiServiceState.setAIService(serviceType)
+    console.log(`🤖 AI服务已切换到: ${aiServiceState.getCurrentAIServiceName()}`)
+  } catch (error) {
+    console.error('AI服务切换失败:', error)
   }
 }
 

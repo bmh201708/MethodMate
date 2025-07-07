@@ -1279,37 +1279,16 @@ const extractKeywordsFromChat = async () => {
       return
     }
     
-    const { getApiBaseUrl } = await import('../config/environment.js')
-    const extractApiUrl = `${getApiBaseUrl()}/extract-keywords`
-    console.log('📤 提取关键词API请求URL:', extractApiUrl)
+    // 调用AI服务适配器
+    const { extractKeywords } = await import('../services/aiServiceAdapter.js')
+    const keywords = await extractKeywords(chatHistory, Date.now().toString())
     
-    const response = await fetch(extractApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        chatHistory,
-        session_id: Date.now().toString()
-      })
-    })
-    
-    if (!response.ok) {
-      if (response.status === 429) {
-        throw new Error('请求过于频繁，请稍后再试。');
-      }
-      const errorResult = await response.json().catch(() => ({}));
-      throw new Error(errorResult.error || `提取关键词失败，状态码: ${response.status}`);
-    }
-    
-    const result = await response.json()
-    
-    if (result.success && result.keywords) {
-      console.log('提取到关键词:', result.keywords)
-      searchKeywords.value = result.keywords
+    if (keywords) {
+      console.log('提取到关键词:', keywords)
+      searchKeywords.value = keywords
       alert('关键词提取成功！')
     } else {
-      throw new Error(result.error || '提取关键词失败');
+      throw new Error('提取关键词失败');
     }
   } catch (error) {
     console.error('提取关键词出错:', error)
