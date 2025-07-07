@@ -72,6 +72,27 @@
                   {{ paper.abstract || paper.summary || '暂无摘要' }}
                 </p>
                 
+                <!-- 标签显示区域 -->
+                <div v-if="getPaperTags(paper).length > 0" class="mb-2">
+                  <div class="flex flex-wrap gap-1">
+                    <div
+                      v-for="tag in getPaperTags(paper).slice(0, 3)"
+                      :key="tag.id"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                      :style="{ backgroundColor: tag.color + '20', color: tag.color, borderColor: tag.color }"
+                      style="border-width: 1px;"
+                    >
+                      {{ tag.name }}
+                    </div>
+                    <div
+                      v-if="getPaperTags(paper).length > 3"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-300"
+                    >
+                      +{{ getPaperTags(paper).length - 3 }}
+                    </div>
+                  </div>
+                </div>
+                
                 <div class="flex items-center justify-between">
                   <div class="text-xs text-gray-500">
                     <span v-if="paper.authors" class="mr-2">
@@ -136,6 +157,49 @@
                 <div v-if="selectedPaper.referencedAt">
                   <span class="font-medium text-gray-700">引用时间：</span>
                   {{ formatDate(selectedPaper.referencedAt) }}
+                </div>
+              </div>
+              
+              <!-- 标签管理区域 -->
+              <div class="mt-4 pt-3 border-t border-gray-100">
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="text-sm font-medium text-gray-700">自定义标签</h4>
+                  <button 
+                    @click="showTagDialog = true"
+                    class="text-sm px-2 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors flex items-center space-x-1"
+                    title="添加标签"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    <span>添加标签</span>
+                  </button>
+                </div>
+                
+                <!-- 标签显示区域 -->
+                <div class="flex flex-wrap gap-2 min-h-[2rem] mb-3">
+                  <div v-if="getPaperTags(selectedPaper).length === 0" 
+                       class="text-sm text-gray-400 italic flex items-center">
+                    暂无标签，点击右侧按钮添加
+                  </div>
+                  <div
+                    v-for="tag in getPaperTags(selectedPaper)"
+                    :key="tag.id"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 hover:shadow-md cursor-default group"
+                    :style="{ backgroundColor: tag.color + '20', color: tag.color, borderColor: tag.color }"
+                    style="border-width: 1px;"
+                  >
+                    <span>{{ tag.name }}</span>
+                    <button
+                      @click="removeTagFromPaper(selectedPaper, tag.id)"
+                      class="ml-1 p-0.5 rounded-full hover:bg-black hover:bg-opacity-10 transition-colors opacity-0 group-hover:opacity-100"
+                      title="移除标签"
+                    >
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
               
@@ -400,10 +464,129 @@
       </router-link>
     </div>
   </div>
+
+  <!-- 标签管理对话框 -->
+  <div v-if="showTagDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="showTagDialog = false">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4" @click.stop>
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">管理标签</h3>
+        <button @click="showTagDialog = false" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 新建标签区域 -->
+      <div class="mb-6">
+        <h4 class="text-sm font-medium text-gray-700 mb-3">创建新标签</h4>
+        <div class="space-y-3">
+          <input
+            v-model="newTagName"
+            type="text"
+            placeholder="输入标签名称"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            @keyup.enter="createNewTag"
+            maxlength="20"
+          />
+          <div class="flex items-center justify-between">
+            <div class="flex space-x-2">
+              <span class="text-sm text-gray-600">颜色：</span>
+              <div class="flex space-x-1">
+                <button
+                  v-for="color in tagColors"
+                  :key="color"
+                  @click="newTagColor = color"
+                  class="w-6 h-6 rounded-full border-2 transition-all"
+                  :class="newTagColor === color ? 'border-gray-400 scale-110' : 'border-gray-200'"
+                  :style="{ backgroundColor: color }"
+                  :title="color"
+                ></button>
+              </div>
+            </div>
+            <button
+              @click="createNewTag"
+              :disabled="!newTagName.trim()"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+            >
+              创建
+            </button>
+          </div>
+          <!-- 预览 -->
+          <div v-if="newTagName.trim()" class="mt-2">
+            <span class="text-xs text-gray-500">预览：</span>
+            <div
+              class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ml-2"
+              :style="{ backgroundColor: newTagColor + '20', color: newTagColor, borderColor: newTagColor }"
+              style="border-width: 1px;"
+            >
+              {{ newTagName.trim() }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 现有标签列表 -->
+      <div class="mb-6">
+        <h4 class="text-sm font-medium text-gray-700 mb-3">选择现有标签</h4>
+        <div class="max-h-40 overflow-y-auto">
+          <div v-if="allTags.length === 0" class="text-sm text-gray-400 italic text-center py-4">
+            暂无标签，请先创建
+          </div>
+          <div v-else class="space-y-2">
+            <label
+              v-for="tag in allTags"
+              :key="tag.id"
+              class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer group"
+            >
+              <input
+                type="checkbox"
+                :checked="isPaperTagged(selectedPaper, tag.id)"
+                @change="togglePaperTag(selectedPaper, tag)"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <div
+                class="flex-1 inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium"
+                :style="{ backgroundColor: tag.color + '20', color: tag.color, borderColor: tag.color }"
+                style="border-width: 1px;"
+              >
+                {{ tag.name }}
+              </div>
+              <button
+                @click.prevent="deleteTag(tag.id)"
+                class="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:text-red-600 transition-all"
+                title="删除标签"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部按钮 -->
+      <div class="flex justify-end space-x-3">
+        <button
+          @click="showTagDialog = false"
+          class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+        >
+          取消
+        </button>
+        <button
+          @click="showTagDialog = false"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          完成
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { papersState, clearReferences, removePaperFromReferences } from '../stores/chatStore'
 import { marked } from 'marked'
 import markedKatex from 'marked-katex-extension'
@@ -448,6 +631,27 @@ const isLoadingPaperContent = ref(false)
 // 论文缓存相关状态
 const isSavingToCache = ref(false)
 const paperCacheStatus = ref('') // 'saved', 'updated', ''
+
+// 标签管理相关状态
+const showTagDialog = ref(false)
+const newTagName = ref('')
+const newTagColor = ref('#3B82F6')
+const allTags = ref([])
+const paperTags = ref(new Map()) // 存储论文与标签的关联关系
+
+// 预定义的标签颜色
+const tagColors = [
+  '#3B82F6', // 蓝色
+  '#10B981', // 绿色
+  '#F59E0B', // 黄色
+  '#EF4444', // 红色
+  '#8B5CF6', // 紫色
+  '#F97316', // 橙色
+  '#06B6D4', // 青色
+  '#84CC16', // 石灰绿
+  '#EC4899', // 粉色
+  '#6B7280'  // 灰色
+]
 
 // 渲染markdown内容
 const renderMarkdown = (markdown) => {
@@ -1077,6 +1281,155 @@ const savePaperToCache = async (paper) => {
     isSavingToCache.value = false
   }
 }
+
+// 标签管理函数
+const generateTagId = () => {
+  return 'tag_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+}
+
+const generatePaperKey = (paper) => {
+  return paper.title || paper.id || Math.random().toString(36)
+}
+
+// 创建新标签
+const createNewTag = () => {
+  if (!newTagName.value.trim()) return
+  
+  const newTag = {
+    id: generateTagId(),
+    name: newTagName.value.trim(),
+    color: newTagColor.value,
+    createdAt: Date.now()
+  }
+  
+  allTags.value.push(newTag)
+  
+  // 保存到localStorage
+  localStorage.setItem('paperTags_allTags', JSON.stringify(allTags.value))
+  
+  // 重置表单
+  newTagName.value = ''
+  newTagColor.value = tagColors[0]
+  
+  console.log('创建新标签:', newTag)
+}
+
+// 删除标签
+const deleteTag = (tagId) => {
+  if (!confirm('确定要删除这个标签吗？删除后所有文献的此标签也会被移除。')) return
+  
+  // 从所有标签中移除
+  allTags.value = allTags.value.filter(tag => tag.id !== tagId)
+  
+  // 从所有论文中移除此标签
+  paperTags.value.forEach((tags, paperKey) => {
+    const updatedTags = tags.filter(id => id !== tagId)
+    if (updatedTags.length === 0) {
+      paperTags.value.delete(paperKey)
+    } else {
+      paperTags.value.set(paperKey, updatedTags)
+    }
+  })
+  
+  // 保存到localStorage
+  localStorage.setItem('paperTags_allTags', JSON.stringify(allTags.value))
+  localStorage.setItem('paperTags_paperTags', JSON.stringify(Array.from(paperTags.value.entries())))
+  
+  console.log('删除标签:', tagId)
+}
+
+// 获取论文的标签
+const getPaperTags = (paper) => {
+  if (!paper) return []
+  
+  const paperKey = generatePaperKey(paper)
+  const tagIds = paperTags.value.get(paperKey) || []
+  
+  return allTags.value.filter(tag => tagIds.includes(tag.id))
+}
+
+// 检查论文是否有指定标签
+const isPaperTagged = (paper, tagId) => {
+  if (!paper) return false
+  
+  const paperKey = generatePaperKey(paper)
+  const tagIds = paperTags.value.get(paperKey) || []
+  
+  return tagIds.includes(tagId)
+}
+
+// 切换论文标签
+const togglePaperTag = (paper, tag) => {
+  if (!paper) return
+  
+  const paperKey = generatePaperKey(paper)
+  const currentTags = paperTags.value.get(paperKey) || []
+  
+  if (currentTags.includes(tag.id)) {
+    // 移除标签
+    const updatedTags = currentTags.filter(id => id !== tag.id)
+    if (updatedTags.length === 0) {
+      paperTags.value.delete(paperKey)
+    } else {
+      paperTags.value.set(paperKey, updatedTags)
+    }
+  } else {
+    // 添加标签
+    paperTags.value.set(paperKey, [...currentTags, tag.id])
+  }
+  
+  // 保存到localStorage
+  localStorage.setItem('paperTags_paperTags', JSON.stringify(Array.from(paperTags.value.entries())))
+  
+  console.log('切换论文标签:', paperKey, tag.name)
+}
+
+// 从论文中移除标签
+const removeTagFromPaper = (paper, tagId) => {
+  if (!paper) return
+  
+  const paperKey = generatePaperKey(paper)
+  const currentTags = paperTags.value.get(paperKey) || []
+  const updatedTags = currentTags.filter(id => id !== tagId)
+  
+  if (updatedTags.length === 0) {
+    paperTags.value.delete(paperKey)
+  } else {
+    paperTags.value.set(paperKey, updatedTags)
+  }
+  
+  // 保存到localStorage
+  localStorage.setItem('paperTags_paperTags', JSON.stringify(Array.from(paperTags.value.entries())))
+  
+  console.log('从论文移除标签:', paperKey, tagId)
+}
+
+// 加载标签数据
+const loadTagsData = () => {
+  try {
+    // 加载所有标签
+    const savedTags = localStorage.getItem('paperTags_allTags')
+    if (savedTags) {
+      allTags.value = JSON.parse(savedTags)
+    }
+    
+    // 加载论文标签关联
+    const savedPaperTags = localStorage.getItem('paperTags_paperTags')
+    if (savedPaperTags) {
+      const entries = JSON.parse(savedPaperTags)
+      paperTags.value = new Map(entries)
+    }
+    
+    console.log('加载标签数据:', allTags.value.length, '个标签,', paperTags.value.size, '个论文关联')
+  } catch (error) {
+    console.error('加载标签数据失败:', error)
+  }
+}
+
+// 组件挂载时加载标签数据
+onMounted(() => {
+  loadTagsData()
+})
 </script>
 
 <style scoped>
