@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm p-6 h-full">
+  <div class="bg-white rounded-xl shadow-sm p-6 h-full chat-container">
     <div class="flex flex-col h-full">
       <!-- 对话管理头部 -->
       <div class="mb-4 border-b border-gray-200 pb-4">
@@ -201,11 +201,19 @@
       <ConversationGuide @sendPrompt="handlePromptMessage" />
 
       <!-- 悬浮输入框 -->
-      <div class="fixed bottom-4 left-4 z-50">
+      <div 
+        class="fixed z-50 transition-all duration-300"
+        :style="{ 
+          left: `${floatingPosition.x}px`, 
+          top: `${floatingPosition.y}px`,
+          transition: isDragging ? 'none' : 'all 0.3s ease'
+        }"
+      >
         <!-- 收起状态：圆形按钮 -->
         <div v-if="!isInputExpanded" 
              @click="expandInput"
-             class="w-14 h-14 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
+             @mousedown="startDrag"
+             class="w-14 h-14 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-300 transform hover:scale-105 flex items-center justify-center draggable-handle"
         >
           <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.013 8.013 0 01-7-4c0-4.418 3.582-8 8-8s8 3.582 8 8z"/>
@@ -218,7 +226,7 @@
              :class="{ 'animate-scale-in': isInputExpanded }"
         >
           <!-- 头部 -->
-          <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center justify-between mb-3 draggable-handle cursor-move" @mousedown="startDrag">
       <div class="flex items-center space-x-2">
               <div class="w-3 h-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full"></div>
               <h3 class="text-sm font-medium text-gray-900">AI助手</h3>
@@ -302,7 +310,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted, computed } from 'vue'
+import { ref, watch, nextTick, onMounted, onUnmounted, computed } from 'vue'
 import { chatState, sendMessage, conversationAPI, clearMessages, updateCurrentPlan, getIterationComparison, isIterationMessage } from '../stores/chatStore'
 import { useUserStore } from '../stores/userStore.js'
 import { sendSilentMessageToCoze } from '../services/cozeApi'
@@ -326,6 +334,13 @@ const showOptimizeDialog = ref(false)
 const showComparisonDialog = ref(false)
 const currentComparisonData = ref(null)
 const isInputExpanded = ref(false)
+
+// 拖动相关状态
+const isDragging = ref(false)
+const hasDragged = ref(false) // 标记是否发生了拖动
+const floatingPosition = ref({ x: 16, y: window.innerHeight - 72 }) // 默认左下角位置
+const dragOffset = ref({ x: 0, y: 0 })
+const dragStartPosition = ref({ x: 0, y: 0 }) // 记录拖动开始位置
 
 // 用户状态
 const userStore = useUserStore()
@@ -1176,6 +1191,11 @@ watch(() => chatState.messages.length, () => {
 
 // 展开悬浮输入框
 const expandInput = () => {
+  // 如果刚刚进行了拖动，不展开输入框
+  if (hasDragged.value) {
+    hasDragged.value = false
+    return
+  }
   isInputExpanded.value = true
 }
 
@@ -1183,6 +1203,113 @@ const expandInput = () => {
 const collapseInput = () => {
   isInputExpanded.value = false
 }
+
+// 拖动相关方法
+const startDrag = (event) => {
+  // 如果是点击展开状态下的关闭按钮，不进行拖动
+  if (event.target.closest('button') && isInputExpanded.value) {
+    return
+  }
+  
+  event.preventDefault()
+  isDragging.value = true
+  hasDragged.value = false
+  
+  // 记录拖动开始位置
+  dragStartPosition.value = {
+    x: event.clientX,
+    y: event.clientY
+  }
+  
+  const rect = event.currentTarget.getBoundingClientRect()
+  dragOffset.value = {
+    x: event.clientX - floatingPosition.value.x,
+    y: event.clientY - floatingPosition.value.y
+  }
+  
+  document.addEventListener('mousemove', handleDrag)
+  document.addEventListener('mouseup', stopDrag)
+  
+  // 防止文本选择
+  document.body.style.userSelect = 'none'
+  document.body.style.cursor = 'grabbing'
+}
+
+const handleDrag = (event) => {
+  if (!isDragging.value) return
+  
+  event.preventDefault()
+  
+  // 检测是否发生了拖动（移动距离大于5px视为拖动）
+  const dragDistance = Math.abs(event.clientX - dragStartPosition.value.x) + Math.abs(event.clientY - dragStartPosition.value.y)
+  if (dragDistance > 5) {
+    hasDragged.value = true
+  }
+  
+  let newX = event.clientX - dragOffset.value.x
+  let newY = event.clientY - dragOffset.value.y
+  
+  // 边界检测
+  const windowWidth = window.innerWidth
+  const windowHeight = window.innerHeight
+  const elementWidth = isInputExpanded.value ? 320 : 56 // 展开时约320px，收起时56px
+  const elementHeight = isInputExpanded.value ? 200 : 56 // 展开时约200px，收起时56px
+  
+  // 限制在窗口范围内
+  newX = Math.max(0, Math.min(newX, windowWidth - elementWidth))
+  newY = Math.max(0, Math.min(newY, windowHeight - elementHeight))
+  
+  floatingPosition.value = { x: newX, y: newY }
+}
+
+const stopDrag = () => {
+  isDragging.value = false
+  
+  document.removeEventListener('mousemove', handleDrag)
+  document.removeEventListener('mouseup', stopDrag)
+  
+  // 恢复文本选择和鼠标样式
+  document.body.style.userSelect = ''
+  document.body.style.cursor = ''
+  
+  // 延迟重置拖动标记，防止立即触发点击事件
+  if (hasDragged.value) {
+    setTimeout(() => {
+      hasDragged.value = false
+    }, 100)
+  }
+}
+
+// 窗口大小变化时调整位置
+const handleWindowResize = () => {
+  const windowWidth = window.innerWidth
+  const windowHeight = window.innerHeight
+  const elementWidth = isInputExpanded.value ? 320 : 56
+  const elementHeight = isInputExpanded.value ? 200 : 56
+  
+  // 如果是初始化时位置为默认值，重新设置到左下角
+  if (floatingPosition.value.x === 16 && floatingPosition.value.y === window.innerHeight - 72) {
+    floatingPosition.value.y = windowHeight - 72
+  }
+  
+  // 确保浮窗不会超出新的窗口边界
+  floatingPosition.value.x = Math.max(0, Math.min(floatingPosition.value.x, windowWidth - elementWidth))
+  floatingPosition.value.y = Math.max(0, Math.min(floatingPosition.value.y, windowHeight - elementHeight))
+}
+
+// 监听窗口大小变化
+onMounted(() => {
+  // 初始化位置
+  floatingPosition.value.y = window.innerHeight - 72
+  
+  window.addEventListener('resize', handleWindowResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleWindowResize)
+  document.removeEventListener('mousemove', handleDrag)
+  document.removeEventListener('mouseup', stopDrag)
+})
 
 
 </script>
@@ -1301,5 +1428,21 @@ const collapseInput = () => {
   margin: 0.8em 0;
   padding: 0.5em 1em;
   background-color: #f9fafb;
+}
+
+/* 拖动相关样式 */
+.draggable-handle {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.draggable-handle:hover {
+  cursor: grab;
+}
+
+.draggable-handle:active {
+  cursor: grabbing;
 }
 </style> 

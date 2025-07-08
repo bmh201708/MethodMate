@@ -1,8 +1,8 @@
 <template>
   <div v-if="show" 
-       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
        @click.self="closeDialog">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-7xl w-full mx-4 max-h-[90vh] overflow-hidden transform transition-all duration-300">
+    <div class="bg-white rounded-3xl shadow-2xl w-[95vw] max-w-[80rem] mx-4 max-h-[90vh] overflow-hidden transform transition-all duration-300">
       <!-- 演示数据提示条 -->
       <div v-if="comparisonData?.isDemoData" 
            class="px-8 py-3 bg-gradient-to-r from-yellow-50 to-orange-50 border-b border-yellow-200">

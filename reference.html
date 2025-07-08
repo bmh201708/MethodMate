@@ -1,0 +1,386 @@
+<html lang="en" class="scroll-smooth"><head><meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Landing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto}
+    .grid-bg:before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image:
+    linear-gradient(transparent 95%,rgba(255,255,255,.03) 95%),
+    linear-gradient(90deg,transparent 95%,rgba(255,255,255,.03) 95%);
+    background-size:120px 120px;
+    pointer-events:none;
+    }
+    .fade-in { animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
+    .slide-up { animation: slideUp 0.8s ease-out forwards; opacity: 0; transform: translateY(20px); }
+    @keyframes fadeIn { to { opacity: 1; } }
+    @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+    /* Enhanced Card Animations */
+    @keyframes fadeInUp {
+    to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+    }
+    }
+    @keyframes floatIn {
+    0% {
+    opacity: 0;
+    transform: translateX(2rem) translateY(2rem) scale(0.5) rotate(-20deg);
+    }
+    50% {
+    opacity: 0.8;
+    transform: translateX(0.5rem) translateY(0.5rem) scale(1.05) rotate(5deg);
+    }
+    100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1) rotate(0deg);
+    }
+    }
+    @keyframes popIn {
+    0% {
+    opacity: 0;
+    transform: scale(0.3);
+    }
+    50% {
+    opacity: 1;
+    transform: scale(1.2);
+    }
+    100% {
+    opacity: 1;
+    transform: scale(1);
+    }
+    }
+    @keyframes sparkle {
+    0%, 100% {
+    opacity: 0;
+    transform: scale(0.8) translateY(0);
+    }
+    50% {
+    opacity: 1;
+    transform: scale(1.2) translateY(-4px);
+    }
+    }
+    .enhanced-card {
+    opacity: 0;
+    transform: translateY(2rem) blur(4px);
+    animation: fadeInUp 0.8s ease-out forwards;
+    }
+    .enhanced-card:nth-child(1) { animation-delay: 0.2s; }
+    .enhanced-card:nth-child(2) { animation-delay: 0.4s; }
+    .enhanced-card:nth-child(3) { animation-delay: 0.6s; }
+    </style>
+    <link id="all-fonts-link-font-geist" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-geist">.font-geist { font-family: 'Geist', sans-serif !important; }</style><link id="all-fonts-link-font-roboto" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-roboto">.font-roboto { font-family: 'Roboto', sans-serif !important; }</style><link id="all-fonts-link-font-montserrat" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-montserrat">.font-montserrat { font-family: 'Montserrat', sans-serif !important; }</style><link id="all-fonts-link-font-poppins" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-poppins">.font-poppins { font-family: 'Poppins', sans-serif !important; }</style><link id="all-fonts-link-font-playfair" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;900&amp;display=swap"><style id="all-fonts-style-font-playfair">.font-playfair { font-family: 'Playfair Display', serif !important; }</style><link id="all-fonts-link-font-instrument-serif" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:wght@400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-instrument-serif">.font-instrument-serif { font-family: 'Instrument Serif', serif !important; }</style><link id="all-fonts-link-font-merriweather" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&amp;display=swap"><style id="all-fonts-style-font-merriweather">.font-merriweather { font-family: 'Merriweather', serif !important; }</style><link id="all-fonts-link-font-bricolage" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-bricolage">.font-bricolage { font-family: 'Bricolage Grotesque', sans-serif !important; }</style><link id="all-fonts-link-font-jakarta" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap"><style id="all-fonts-style-font-jakarta">.font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif !important; }</style><link id="all-fonts-link-font-manrope" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap"><style id="all-fonts-style-font-manrope">.font-manrope { font-family: 'Manrope', sans-serif !important; }</style><link id="all-fonts-link-font-space-grotesk" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-space-grotesk">.font-space-grotesk { font-family: 'Space Grotesk', sans-serif !important; }</style><link id="all-fonts-link-font-work-sans" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700;800&amp;display=swap"><style id="all-fonts-style-font-work-sans">.font-work-sans { font-family: 'Work Sans', sans-serif !important; }</style><link id="all-fonts-link-font-pt-serif" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&amp;display=swap"><style id="all-fonts-style-font-pt-serif">.font-pt-serif { font-family: 'PT Serif', serif !important; }</style><link id="all-fonts-link-font-geist-mono" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-geist-mono">.font-geist-mono { font-family: 'Geist Mono', monospace !important; }</style><link id="all-fonts-link-font-space-mono" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;display=swap"><style id="all-fonts-style-font-space-mono">.font-space-mono { font-family: 'Space Mono', monospace !important; }</style><link id="all-fonts-link-font-quicksand" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-quicksand">.font-quicksand { font-family: 'Quicksand', sans-serif !important; }</style><link id="all-fonts-link-font-nunito" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&amp;display=swap"><style id="all-fonts-style-font-nunito">.font-nunito { font-family: 'Nunito', sans-serif !important; }</style></head>
+    <body class="relative min-h-screen grid-bg bg-[#050714] text-white overflow-x-hidden"><iframe src="https://my.spline.design/aidatamodelinteraction-mdTL3FktFVHgDvFr5TKtnYDV" frameborder="0" width="100%" height="100%" class="fixed top-0 w-full h-screen"></iframe>
+    
+    <!-- Hero Section -->
+    <section class="relative z-10 flex flex-col md:px-10 lg:px-0 lg:pt-32 text-center pt-20 pr-6 pb-0 pl-6 items-center">
+      <h1 class="fade-in max-w-4xl md:text-6xl lg:text-7xl leading-tight text-4xl font-light tracking-tight font-geist mb-8" style="animation-delay: 0.1s; animation-play-state: running;" id="aura-emcq060z5">
+        Build stunning websites<br class="hidden md:block"> with a canvas you already<br class="hidden md:block"> master.
+      </h1>
+      <button class="slide-up group inline-flex gap-2 transition-transform duration-300 hover:scale-110 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-purple-400 focus:ring-opacity-50 font-medium text-white font-geist mt-10 shadow-xl items-center" style="animation-delay: 0.3s; animation-play-state: running; transform: scale(1); --fancy-button-gradient-0: #8d49fd; --fancy-button-gradient-50: #7f56f3; --fancy-button-gradient-100: #5691f3; --fancy-button-inner-shadow-top: rgba(233, 209, 255, 0.2); --fancy-button-inner-shadow-top-lg: rgba(9, 12, 60, 0.1); --fancy-button-inner-shadow-bottom: rgba(137, 222, 246, 0.3); --fancy-button-shine-top: #e9d1ff; --fancy-button-shine-bottom: #adfff9; font-weight: 500; font-size: 15px; line-height: 21px; text-shadow: rgba(0, 0, 0, 0.2) 0px 0.5px 0.5px; padding: 0px; margin: 0px; appearance: none; border: medium; overflow: hidden; position: relative; cursor: pointer; z-index: 1; color: rgb(255, 255, 255); background-image: linear-gradient(to bottom, var(--fancy-button-gradient-0) 0%, var(--fancy-button-gradient-50) 50%, var(--fancy-button-gradient-100) 100%); box-shadow: 0px 4px 12px rgba(9, 12, 60, 0.15), 0px 2px 8px rgba(9, 12, 60, 0.15), 0px 1px 3px var(--fancy-button-inner-shadow-top-lg), inset 0px 1px 1px var(--fancy-button-inner-shadow-top), inset 0px -1px 3px var(--fancy-button-inner-shadow-bottom); border-radius: 25px;">
+      <span class="block relative overflow-hidden rounded-[inherit]" style="display: block; padding: 12px 24px; background-image: linear-gradient(to bottom, var(--fancy-button-shine-top), transparent 8px); background-position: 0 -6px; background-repeat: no-repeat; z-index: 1;">
+        Get Started
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 inline-block ml-2 transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+      </span>
+    </button>
+    </section>
+    
+    <!-- Mock Application Window -->
+    <section class="relative z-10 flex lg:px-0 lg:mt-24 mt-16 pr-4 pb-40 pl-4 justify-center">
+      <div class="slide-up w-full max-w-7xl bg-white/5 backdrop-blur-sm rounded-xl shadow-2xl ring-1 ring-white/10 overflow-hidden" style="animation-delay: 0.5s; animation-play-state: running;">
+        
+        <!-- Window Controls -->
+        <div class="flex items-center gap-2 h-10 px-4 bg-white/5 border-b border-white/10">
+          <span class="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 transition-colors cursor-pointer"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-400 transition-colors cursor-pointer"></span>
+          <span class="w-3 h-3 rounded-full bg-green-500 hover:bg-green-400 transition-colors cursor-pointer"></span>
+        </div>
+    
+        <div class="flex min-h-[600px]">
+          <!-- Left Sidebar -->
+          <aside class="w-64 bg-white/5 border-r border-white/10 pt-6 pb-4 flex flex-col justify-between">
+            <nav class="px-4 space-y-3">
+              <button class="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-white/10 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              </button>
+              <ul class="mt-6 space-y-1">
+                <li class="">
+                  <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gradient-to-r from-white/15 to-white/5 border border-white/10 hover:from-white/20 hover:to-white/10 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    <span class="text-sm font-medium font-geist">Home</span>
+                  </a>
+                </li>
+                <li class=""><a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg><span class="text-sm text-white/80 font-geist">Music</span></a></li>
+                <li class=""><a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a1 1 0 01-1-1V9a1 1 0 011-1h1a2 2 0 100-4H4a1 1 0 01-1-1V4a1 1 0 011-1h3a1 1 0 011 1v1z"></path></svg><span class="text-sm text-white/80 font-geist">Gaming</span></a></li>
+                <li class=""><a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg><span class="text-sm text-white/80 font-geist">Education</span></a></li>
+                <li class=""><a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg><span class="text-sm text-white/80 font-geist">Science &amp; Tech</span></a></li>
+                <li class=""><a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 3v13a2 2 0 002 2h6a2 2 0 002-2V7M7 7h10l-1 13H8L7 7z"></path></svg><span class="text-sm text-white/80 font-geist">Entertainment</span></a></li>
+                <li class=""><a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path></svg><span class="text-sm text-white/80 font-geist">Student Hubs</span></a></li>
+              </ul>
+            </nav>
+            <div class="px-4">
+              <button class="flex items-center justify-center w-full gap-2 py-2.5 rounded-lg hover:bg-white/10 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                <span class="text-sm font-medium font-geist">Add</span>
+              </button>
+            </div>
+          </aside>
+    
+          <!-- Main Content -->
+          <main class="flex-1 p-6 space-y-8 overflow-y-auto">
+            <!-- Featured Section -->
+            <section class="space-y-4">
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold tracking-tight font-geist">Featured Community</h2>
+                <button class="text-xs font-medium text-white/60 hover:text-white transition-colors font-geist">See all</button>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <article class="bg-white/5 rounded-xl p-5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-300 group">
+                  <div class="flex justify-between items-start mb-3">
+                    <h3 class="group-hover:text-white transition-colors font-semibold text-white font-geist">Virtual Reality</h3>
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                  </div>
+                  <p class="text-sm text-white/70 leading-relaxed font-geist">A community for VR enthusiasts and novices alike, regular and friendly chat.</p>
+                </article>
+                <article class="bg-white/5 rounded-xl p-5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-300 group">
+                  <div class="flex justify-between items-start mb-3">
+                    <h3 class="font-semibold text-white group-hover:text-white transition-colors font-geist">Game Play</h3>
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a1 1 0 01-1-1V9a1 1 0 011-1h1a2 2 0 100-4H4a1 1 0 01-1-1V4a1 1 0 011-1h3a1 1 0 011 1v1z"></path></svg>
+                    </div>
+                  </div>
+                  <p class="text-sm text-white/70 leading-relaxed font-geist">Always a new challenge. Great place to make new friends.</p>
+                </article>
+                <article class="hover:border-white/20 hover:bg-white/10 transition-all duration-300 group bg-white/5 border-white/10 border rounded-xl pt-5 pr-5 pb-5 pl-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <h3 class="font-semibold text-white group-hover:text-white transition-colors font-geist">Gameplay Community</h3>
+                    <div class="w-8 h-8 flex bg-gradient-to-r from-orange-400 to-pink-400 rounded-lg items-center justify-center">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a1 1 0 01-1-1V9a1 1 0 011-1h1a2 2 0 100-4H4a1 1 0 01-1-1V4a1 1 0 011-1h3a1 1 0 011 1v1z"></path></svg>
+                    </div>
+                  </div>
+                  <p class="text-sm text-white/70 leading-relaxed font-geist">Challenge yourself daily and connect with gamers worldwide.</p>
+                </article>
+              </div>
+            </section>
+    
+            <!-- Popular Section -->
+            <section class="space-y-4">
+              <div class="flex mb-4 items-center justify-between">
+                <h2 class="text-lg font-semibold tracking-tight font-geist">Popular Right Now</h2>
+                <button class="text-xs font-medium text-white/60 hover:text-white transition-colors font-geist">See all</button>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <article class="bg-white/5 rounded-xl p-5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-300 group">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h3 class="group-hover:text-white transition-colors font-semibold text-white font-geist">Digital Art</h3>
+                  </div>
+                  <p class="leading-relaxed text-sm text-white/70 font-geist">Share your digital creations and get feedback from fellow artists.</p>
+                </article>
+                <article class="bg-white/5 rounded-xl p-5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-300 group">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    </div>
+                    <h3 class="font-semibold text-white group-hover:text-white transition-colors font-geist">Study Groups</h3>
+                  </div>
+                  <p class="text-sm text-white/70 leading-relaxed font-geist">Join collaborative study sessions and academic discussions.</p>
+                </article>
+                <article class="bg-white/5 rounded-xl p-5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-300 group">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                    </div>
+                    <h3 class="font-semibold text-white group-hover:text-white transition-colors font-geist">Music Production</h3>
+                  </div>
+                  <p class="text-sm text-white/70 leading-relaxed font-geist">Connect with musicians and producers to share beats and collaborate.</p>
+                </article>
+              </div>
+            </section>
+    
+            <!-- Recent Add Section with Enhanced Cards -->
+            <section class="space-y-4">
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold tracking-tight font-geist">Recent Add</h2>
+                <button class="text-xs font-medium text-white/60 hover:text-white transition-colors font-geist">See all</button>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-0 pt-2">
+      <div class="relative w-full max-w-sm opacity-0 blur-sm translate-y-8" style="animation: fadeInUp 0.8s ease-out 0.2s forwards;">
+        <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-teal-400/20 via-fuchsia-500/20 to-indigo-500/20 blur-xl"></div>
+        <div class="relative hover:shadow-3xl transition-all duration-700 hover:scale-[1.02] cursor-pointer group bg-gradient-to-br from-teal-400/40 via-fuchsia-500/40 to-indigo-500/40 rounded-3xl pt-[1px] pr-[1px] pb-[1px] pl-[1px] shadow-2xl">
+          <div class="overflow-hidden bg-slate-800/90 rounded-[calc(theme(borderRadius.3xl)-2px)] backdrop-blur-sm">
+            <div class="relative h-32 overflow-hidden opacity-0 translate-y-4" style="animation: fadeInUp 0.6s ease-out 0.4s forwards;">
+              <img src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=800&amp;q=80" alt="Movie Banner" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" style="">
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-800/60 via-transparent to-transparent"></div>
+            </div>
+            <div class="pt-8 pr-6 pb-6 pl-6">
+              <div class="opacity-0 translate-y-2" style="animation: fadeInUp 0.6s ease-out 0.6s forwards;">
+                <h2 class="transition-colors duration-300 group-hover:text-teal-100 text-xl font-semibold text-white tracking-tight font-geist">Movie recapped</h2>
+              </div>
+              <div class="opacity-0 translate-y-2" style="animation: fadeInUp 0.6s ease-out 0.8s forwards;">
+                <p class="leading-relaxed transition-colors duration-300 group-hover:text-slate-300 text-sm text-slate-400 font-geist mt-3">
+      Share your favorite movies and shows with fellow enthusiasts.
+    </p>
+              </div>
+              <div class="mt-6 flex items-center justify-between opacity-0 translate-y-2" style="animation: fadeInUp 0.6s ease-out 1s forwards;">
+                <div class="flex items-center text-sm text-slate-400 transition-colors duration-300 group-hover:text-slate-300">
+                  <i data-lucide="users" class="w-4 h-4 mr-2 stroke-current"></i>
+                  <span class="font-normal font-geist">3 Members</span>
+                </div>
+                <div class="flex items-center text-sm text-slate-400 transition-colors duration-300 group-hover:text-slate-300">
+                  <i data-lucide="message-circle" class="w-4 h-4 mr-2 stroke-current"></i>
+                  <span class="font-normal font-geist">12 Posts</span>
+                </div>
+              </div>
+              <div class="mt-6 h-px bg-gradient-to-r from-transparent via-slate-600/50 to-transparent opacity-0" style="animation: fadeIn 0.6s ease-out 1.2s forwards;"></div>
+              <div class="mt-6 opacity-0 translate-y-2" style="animation: fadeInUp 0.6s ease-out 1.4s forwards;">
+                <button class="w-full transition-all duration-300 hover:from-teal-400 hover:to-indigo-500 hover:shadow-lg hover:shadow-teal-500/25 active:scale-95 focus:outline-none focus:ring-2 focus:ring-teal-500/50 text-sm font-medium text-white font-geist bg-gradient-to-r from-teal-500 to-indigo-600 rounded-xl pt-3 pr-4 pb-3 pl-4">
+                  Join Community
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="absolute -top-3 -right-3 z-50 opacity-0 translate-x-8 translate-y-8 scale-75" style="animation: floatIn 1s ease-out 1.6s forwards;">
+          <div class="relative">
+            <div class="absolute inset-0 rounded-full bg-gradient-to-br from-teal-400/40 via-fuchsia-500/40 to-indigo-500/40 blur-md scale-110"></div>
+            <div class="relative w-16 h-16 rounded-full p-[2px] bg-gradient-to-br from-teal-400 via-fuchsia-500 to-indigo-500 shadow-2xl hover:shadow-teal-500/25 transition-all duration-500 hover:scale-110 hover:rotate-3 group/avatar">
+              <img src="https://images.unsplash.com/photo-1595152772835-219674b2a8a6?auto=format&amp;fit=crop&amp;w=128&amp;q=80" alt="Profile" class="w-full h-full rounded-full object-cover transition-transform duration-500 group-hover/avatar:scale-95" style="">
+              <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full ring-2 ring-slate-800 shadow-lg opacity-0 scale-50" style="animation: popIn 0.4s ease-out 2.2s forwards;"></div>
+            </div>
+            <div class="absolute -top-2 -left-2 w-1 h-1 bg-teal-400 rounded-full opacity-0" style="animation: sparkle 2s ease-in-out 2s infinite;"></div>
+            <div class="absolute -bottom-1 -right-3 w-1.5 h-1.5 bg-fuchsia-400 rounded-full opacity-0" style="animation: sparkle 2s ease-in-out 2.5s infinite;"></div>
+            <div class="absolute -top-1 -right-2 w-0.5 h-0.5 bg-indigo-400 rounded-full opacity-0" style="animation: sparkle 2s ease-in-out 3s infinite;"></div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="relative w-full max-w-sm opacity-0 blur-sm translate-y-8" style="animation: fadeInUp 0.8s ease-out 0.4s forwards;">
+        <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-orange-400/20 via-pink-500/20 to-red-500/20 blur-xl"></div>
+        <div class="relative hover:shadow-3xl transition-all duration-700 hover:scale-[1.02] cursor-pointer group bg-gradient-to-br from-orange-400/40 via-pink-500/40 to-red-500/40 rounded-3xl pt-[1px] pr-[1px] pb-[1px] pl-[1px] shadow-2xl">
+          <div class="overflow-hidden bg-slate-800/90 rounded-[calc(theme(borderRadius.3xl)-2px)] backdrop-blur-sm">
+            <div class="relative h-32 overflow-hidden opacity-0 translate-y-4" style="animation: fadeInUp 0.6s ease-out 0.6s forwards;">
+              <img src="https://images.unsplash.com/photo-1633596683562-4a47eb4983c5?w=800&amp;q=80" alt="Music Banner" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" style="">
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-800/60 via-transparent to-transparent"></div>
+            </div>
+            <div class="pt-8 pr-6 pb-6 pl-6">
+              <div class="opacity-0 translate-y-2" style="animation: fadeInUp 0.6s ease-out 0.8s forwards;">
+                <h2 class="transition-colors duration-300 group-hover:text-orange-100 text-xl font-semibold text-white tracking-tight font-geist">Music Lovers</h2>
+              </div>
+              <div class="opacity-0 translate-y-2" style="animation: fadeInUp 0.6s ease-out 1s forwards;">
+                <p class="leading-relaxed transition-colors duration-300 group-hover:text-slate-300 text-sm text-slate-400 font-geist mt-3">
+                  Share your favorite tunes and discuss new releases in the music world.
+                </p>
+              </div>
+              <div class="mt-6 flex items-center justify-between opacity-0 translate-y-2" style="animation: fadeInUp 0.6s ease-out 1.2s forwards;">
+                <div class="flex items-center text-sm text-slate-400 transition-colors duration-300 group-hover:text-slate-300">
+                  <i data-lucide="users" class="w-4 h-4 mr-2 stroke-current"></i>
+                  <span class="font-normal font-geist">8 Members</span>
+                </div>
+                <div class="flex items-center text-sm text-slate-400 transition-colors duration-300 group-hover:text-slate-300">
+                  <i data-lucide="message-circle" class="w-4 h-4 mr-2 stroke-current"></i>
+                  <span class="font-normal font-geist">24 Posts</span>
+                </div>
+              </div>
+              <div class="mt-6 h-px bg-gradient-to-r from-transparent via-slate-600/50 to-transparent opacity-0" style="animation: fadeIn 0.6s ease-out 1.4s forwards;"></div>
+              <div class="mt-6 opacity-0 translate-y-2" style="animation: fadeInUp 0.6s ease-out 1.6s forwards;">
+                <button class="w-full transition-all duration-300 hover:from-orange-400 hover:to-red-500 hover:shadow-lg hover:shadow-orange-500/25 active:scale-95 focus:outline-none focus:ring-2 focus:ring-orange-500/50 text-sm font-medium text-white font-geist bg-gradient-to-r from-orange-500 to-red-600 rounded-xl pt-3 pr-4 pb-3 pl-4">
+                  Join Community
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="absolute -top-3 -right-3 z-50 opacity-0 translate-x-8 translate-y-8 scale-75" style="animation: floatIn 1s ease-out 1.8s forwards;">
+          <div class="relative">
+            <div class="absolute inset-0 rounded-full bg-gradient-to-br from-orange-400/40 via-pink-500/40 to-red-500/40 blur-md scale-110"></div>
+            <div class="relative w-16 h-16 rounded-full p-[2px] bg-gradient-to-br from-orange-400 via-pink-500 to-red-500 shadow-2xl hover:shadow-orange-500/25 transition-all duration-500 hover:scale-110 hover:rotate-3 group/avatar">
+              <img src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&amp;fit=crop&amp;w=128&amp;q=80" alt="Profile" class="w-full h-full rounded-full object-cover transition-transform duration-500 group-hover/avatar:scale-95" style="">
+              <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full ring-2 ring-slate-800 shadow-lg opacity-0 scale-50" style="animation: popIn 0.4s ease-out 2.4s forwards;"></div>
+            </div>
+            <div class="absolute -top-2 -left-2 w-1 h-1 bg-orange-400 rounded-full opacity-0" style="animation: sparkle 2s ease-in-out 2.2s infinite;"></div>
+            <div class="absolute -bottom-1 -right-3 w-1.5 h-1.5 bg-pink-400 rounded-full opacity-0" style="animation: sparkle 2s ease-in-out 2.7s infinite;"></div>
+            <div class="absolute -top-1 -right-2 w-0.5 h-0.5 bg-red-400 rounded-full opacity-0" style="animation: sparkle 2s ease-in-out 3.2s infinite;"></div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="relative w-full max-w-sm opacity-0 blur-sm translate-y-8" style="animation: fadeInUp 0.8s ease-out 0.6s forwards;">
+        <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-purple-400/20 via-indigo-500/20 to-blue-500/20 blur-xl"></div>
+        <div class="relative hover:shadow-3xl transition-all duration-700 hover:scale-[1.02] cursor-pointer group bg-gradient-to-br from-purple-400/40 via-indigo-500/40 to-blue-500/40 rounded-3xl pt-[1px] pr-[1px] pb-[1px] pl-[1px] shadow-2xl">
+          <div class="overflow-hidden bg-slate-800/90 rounded-[calc(theme(borderRadius.3xl)-2px)] backdrop-blur-sm">
+            <div class="relative h-32 overflow-hidden opacity-0 translate-y-4" style="animation: fadeInUp 0.6s ease-out 0.8s forwards;">
+              <img src="https://images.unsplash.com/photo-1724525647065-f948fc102e68?auto=format&amp;fit=crop&amp;w=800&amp;q=80" alt="Gaming Banner" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" style="">
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-800/60 via-transparent to-transparent"></div>
+            </div>
+            <div class="pt-8 pr-6 pb-6 pl-6">
+              <div class="opacity-0 translate-y-2" style="animation: fadeInUp 0.6s ease-out 1s forwards;">
+                <h2 class="transition-colors duration-300 group-hover:text-purple-100 text-xl font-semibold text-white tracking-tight font-geist">Gaming Hub</h2>
+              </div>
+              <div class="opacity-0 translate-y-2" style="animation: fadeInUp 0.6s ease-out 1.2s forwards;">
+                <p class="leading-relaxed transition-colors duration-300 group-hover:text-slate-300 text-sm text-slate-400 font-geist mt-3">
+                  Connect with gamers worldwide, share tips, and discuss the latest games.
+                </p>
+              </div>
+              <div class="mt-6 flex items-center justify-between opacity-0 translate-y-2" style="animation: fadeInUp 0.6s ease-out 1.4s forwards;">
+                <div class="flex items-center text-sm text-slate-400 transition-colors duration-300 group-hover:text-slate-300">
+                  <i data-lucide="users" class="w-4 h-4 mr-2 stroke-current"></i>
+                  <span class="font-normal font-geist">15 Members</span>
+                </div>
+                <div class="flex items-center text-sm text-slate-400 transition-colors duration-300 group-hover:text-slate-300">
+                  <i data-lucide="message-circle" class="w-4 h-4 mr-2 stroke-current"></i>
+                  <span class="font-normal font-geist">50 Posts</span>
+                </div>
+              </div>
+              <div class="mt-6 h-px bg-gradient-to-r from-transparent via-slate-600/50 to-transparent opacity-0" style="animation: fadeIn 0.6s ease-out 1.6s forwards;"></div>
+              <div class="mt-6 opacity-0 translate-y-2" style="animation: fadeInUp 0.6s ease-out 1.8s forwards;">
+                <button class="w-full transition-all duration-300 hover:from-purple-400 hover:to-blue-500 hover:shadow-lg hover:shadow-purple-500/25 active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm font-medium text-white font-geist bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl pt-3 pr-4 pb-3 pl-4">
+                  Join Community
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="absolute -top-3 -right-3 z-50 opacity-0 translate-x-8 translate-y-8 scale-75" style="animation: floatIn 1s ease-out 2s forwards;">
+          <div class="relative">
+            <div class="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400/40 via-indigo-500/40 to-blue-500/40 blur-md scale-110"></div>
+            <div class="relative w-16 h-16 rounded-full p-[2px] bg-gradient-to-br from-purple-400 via-indigo-500 to-blue-500 shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 hover:scale-110 hover:rotate-3 group/avatar">
+              <img src="https://images.unsplash.com/photo-1621619856624-42fd193a0661?w=1080&amp;q=80" alt="Profile" class="w-full h-full rounded-full object-cover transition-transform duration-500 group-hover/avatar:scale-95" style="">
+              <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full ring-2 ring-slate-800 shadow-lg opacity-0 scale-50" style="animation: popIn 0.4s ease-out 2.6s forwards;"></div>
+            </div>
+            <div class="absolute -top-2 -left-2 w-1 h-1 bg-purple-400 rounded-full opacity-0" style="animation: sparkle 2s ease-in-out 2.4s infinite;"></div>
+            <div class="absolute -bottom-1 -right-3 w-1.5 h-1.5 bg-indigo-400 rounded-full opacity-0" style="animation: sparkle 2s ease-in-out 2.9s infinite;"></div>
+            <div class="absolute -top-1 -right-2 w-0.5 h-0.5 bg-blue-400 rounded-full opacity-0" style="animation: sparkle 2s ease-in-out 3.4s infinite;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+            </section>
+          </main>
+        </div>
+      </div>
+    </section>
+    
+    
+    </body></html>
+    Aura Logo
+    Made in Aura
+    
+    Aksonvady Phomhome
+    
+    Remix
+    Preview
+    Code
+    
+    
+    
