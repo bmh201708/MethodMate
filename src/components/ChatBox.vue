@@ -201,6 +201,7 @@
       <ConversationGuide @sendPrompt="handlePromptMessage" />
 
       <!-- 悬浮输入框 -->
+      <Teleport to="body">
       <div 
         class="fixed z-50 transition-all duration-300"
         :style="{ 
@@ -290,6 +291,7 @@
           </div>
         </div>
       </div>
+      </Teleport>
     </div>
 
     <!-- 润色提示词对话框 -->
