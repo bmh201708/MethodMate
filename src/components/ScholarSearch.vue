@@ -596,6 +596,12 @@ export default {
 }
 
 /* 按钮悬浮效果 */
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 按钮悬浮效果 */
 .paper-actions button:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);

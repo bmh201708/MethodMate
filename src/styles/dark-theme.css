@@ -1010,4 +1010,256 @@
 .dark-theme .fixed.inset-0[class*="z-[9999]"] .text-gray-800,
 .dark-theme .fixed.inset-0[class*="z-[9999]"] .text-gray-900 {
   color: var(--dark-text-primary) !important;
+}
+
+/* ==================== Scholar Search 页面暗黑主题 ==================== */
+
+/* Scholar Search View 背景 */
+.dark-theme .scholar-search-view {
+  background: var(--dark-bg-primary) !important;
+}
+
+/* Scholar Search 容器背景 */
+.dark-theme .scholar-search-container {
+  background: var(--dark-bg-primary) !important;
+}
+
+/* 搜索表单 - dark主题 */
+.dark-theme .search-form {
+  background: var(--dark-bg-card) !important;
+  border: 1px solid var(--dark-border-primary) !important;
+  backdrop-filter: blur(10px);
+}
+
+.dark-theme .search-form h2 {
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .search-form .text-sm.text-gray-600 {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark-theme .search-form input {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .search-form input::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.dark-theme .search-form input:focus {
+  border-color: var(--dark-accent-primary) !important;
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1) !important;
+}
+
+.dark-theme .search-form select {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .search-form label span {
+  color: var(--dark-text-secondary) !important;
+}
+
+/* 引用文献区域 - dark主题 */
+.dark-theme .referenced-papers {
+  background: var(--dark-bg-card) !important;
+  border: 1px solid var(--dark-border-primary) !important;
+  border-left: 4px solid var(--dark-accent-primary) !important;
+}
+
+.dark-theme .referenced-papers h3 {
+  color: #c4b5fd !important;
+}
+
+.dark-theme .referenced-papers .text-sm.text-gray-500 {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* 搜索结果标题区域 - dark主题 */
+.dark-theme .search-results h3 {
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .search-results .text-sm.text-gray-700 {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark-theme .search-results .text-sm.text-gray-600 {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* 论文卡片 - dark主题 */
+.dark-theme .paper-card {
+  background: var(--dark-bg-card) !important;
+  border: 1px solid var(--dark-border-primary) !important;
+  backdrop-filter: blur(10px);
+}
+
+.dark-theme .paper-card:hover {
+  background: var(--dark-bg-card-hover) !important;
+  border-color: var(--dark-border-secondary) !important;
+}
+
+.dark-theme .paper-card h4 {
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .paper-card .paper-meta span {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark-theme .paper-card .paper-summary p {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* 引用状态的卡片 - dark主题 */
+.dark-theme .paper-card.border-purple-300 {
+  background: rgba(196, 181, 253, 0.1) !important;
+  border-color: #c4b5fd !important;
+}
+
+/* 顶会顶刊标识 - dark主题 */
+.dark-theme .paper-card .border-blue-300 {
+  border-color: var(--dark-accent-primary) !important;
+}
+
+/* Scholar Search 按钮样式 - dark主题 */
+.dark-theme .scholar-search-container button:not(.bg-blue-600):not(.bg-green-600):not(.bg-purple-600),
+.dark-theme .scholar-search-container a:not(.bg-blue-600):not(.bg-green-600):not(.bg-purple-600) {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .scholar-search-container button:not(.bg-blue-600):not(.bg-green-600):not(.bg-purple-600):hover,
+.dark-theme .scholar-search-container a:not(.bg-blue-600):not(.bg-green-600):not(.bg-purple-600):hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: var(--dark-accent-primary) !important;
+}
+
+/* 下载源链接 - dark主题 */
+.dark-theme .download-sources {
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark-theme .download-sources h5 {
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .download-sources a {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .download-sources a:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark-theme .download-sources .border-green-300 {
+  border-color: #34d399 !important;
+  background: rgba(52, 211, 153, 0.1) !important;
+}
+
+.dark-theme .download-sources .text-xs.text-gray-500 {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* 空状态 - dark主题 */
+.dark-theme .empty-state h3 {
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .empty-state p {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* 错误消息 - dark主题 */
+.dark-theme .error-message {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+.dark-theme .error-message span {
+  color: #fca5a5 !important;
+}
+
+/* Scholar Search 相关性标签 - dark主题 */
+.dark-theme .scholar-search-container .bg-green-100 {
+  background: rgba(52, 211, 153, 0.2) !important;
+}
+
+.dark-theme .scholar-search-container .text-green-700 {
+  color: #34d399 !important;
+}
+
+.dark-theme .scholar-search-container .bg-yellow-100 {
+  background: rgba(251, 191, 36, 0.2) !important;
+}
+
+.dark-theme .scholar-search-container .text-yellow-700 {
+  color: #fbbf24 !important;
+}
+
+.dark-theme .scholar-search-container .bg-orange-100 {
+  background: rgba(251, 146, 60, 0.2) !important;
+}
+
+.dark-theme .scholar-search-container .text-orange-700 {
+  color: #fb923c !important;
+}
+
+.dark-theme .scholar-search-container .bg-red-100 {
+  background: rgba(239, 68, 68, 0.2) !important;
+}
+
+.dark-theme .scholar-search-container .text-red-700 {
+  color: #f87171 !important;
+}
+
+/* Scholar Search 复选框样式 - dark主题 */
+.dark-theme .scholar-search-container .form-checkbox {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark-theme .scholar-search-container .form-checkbox:checked {
+  background: var(--dark-accent-primary) !important;
+  border-color: var(--dark-accent-primary) !important;
+}
+
+/* 强制覆盖所有白色背景 */
+.dark-theme .scholar-search-view .bg-white,
+.dark-theme .scholar-search-container .bg-white {
+  background: var(--dark-bg-card) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+/* 强制覆盖所有灰色文字 */
+.dark-theme .scholar-search-view .text-gray-900,
+.dark-theme .scholar-search-view .text-gray-800,
+.dark-theme .scholar-search-view .text-gray-700,
+.dark-theme .scholar-search-view .text-gray-600 {
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .scholar-search-view .text-gray-500,
+.dark-theme .scholar-search-view .text-gray-400 {
+  color: var(--dark-text-secondary) !important;
+}
+
+/* 强制覆盖所有边框 */
+.dark-theme .scholar-search-view .border-gray-200,
+.dark-theme .scholar-search-view .border-gray-300 {
+  border-color: var(--dark-border-primary) !important;
+}
+
+/* 确保Shadow效果适配dark主题 */
+.dark-theme .scholar-search-view .shadow-md,
+.dark-theme .scholar-search-view .shadow-lg {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.1) !important;
 } 
