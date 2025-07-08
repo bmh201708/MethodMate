@@ -15,61 +15,21 @@
 
       <!-- 内容区域 -->
       <div class="px-8 py-6 max-h-[60vh] overflow-y-auto">
-        <!-- 快捷选项 -->
-        <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-3">快速选择优化方式</label>
-          <div class="flex flex-wrap gap-3">
-            <button 
-              @click="handleQuickOption('auto')"
-              :class="[
-                'px-4 py-2.5 text-sm rounded-2xl transition-colors font-medium border',
-                selectedQuickOption === 'auto'
-                  ? 'bg-purple-100 text-purple-700 border-purple-300 shadow-sm'
-                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-700'
-              ]"
-            >
-              ✨ 自动优化
-            </button>
-            <button 
-              @click="handleQuickOption('clear')"
-              :class="[
-                'px-4 py-2.5 text-sm rounded-2xl transition-colors font-medium border',
-                selectedQuickOption === 'clear'
-                  ? 'bg-purple-100 text-purple-700 border-purple-300 shadow-sm'
-                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-700'
-              ]"
-            >
-              🎯 使表达更清晰
-            </button>
-            <button 
-              @click="handleQuickOption('professional')"
-              :class="[
-                'px-4 py-2.5 text-sm rounded-2xl transition-colors font-medium border',
-                selectedQuickOption === 'professional'
-                  ? 'bg-purple-100 text-purple-700 border-purple-300 shadow-sm'
-                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-700'
-              ]"
-            >
-              📚 使表达更专业
-            </button>
-          </div>
-        </div>
-
         <!-- 输入框 -->
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-3">自定义优化要求</label>
+          <label class="block text-sm font-medium text-gray-700 mb-3">自定义优化要求（可选）</label>
           <div class="relative">
             <input
               v-model="optimizeInstruction"
               type="text"
-              placeholder="您希望如何润色提示词？例如：使语言更学术化..."
+              placeholder="您希望如何润色提示词？留空将使用默认专业化润色..."
               class="w-full rounded-2xl border border-gray-200 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
               @keyup.enter="handleOptimize"
               :disabled="isOptimizing"
             />
             <button
               @click="handleOptimize"
-              :disabled="!optimizeInstruction.trim() || isOptimizing"
+              :disabled="isOptimizing"
               class="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,12 +50,18 @@
         <!-- 润色结果 -->
         <div v-if="optimizedPrompt || isOptimizing" class="mb-6">
           <label class="block text-sm font-medium text-gray-700 mb-3">润色后的提示词</label>
-          <div class="bg-purple-50 rounded-2xl p-4 border border-purple-200">
-            <div v-if="isOptimizing" class="flex items-center space-x-3">
+          <div class="bg-purple-50 rounded-2xl border border-purple-200">
+            <div v-if="isOptimizing" class="flex items-center space-x-3 p-4">
               <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
               <span class="text-sm text-purple-700 font-medium">正在润色中...</span>
             </div>
-            <p v-else class="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed">{{ optimizedPrompt }}</p>
+            <textarea
+              v-else
+              v-model="optimizedPrompt"
+              class="w-full p-4 bg-transparent text-gray-800 text-sm leading-relaxed resize-none focus:outline-none placeholder-gray-500"
+              rows="8"
+              placeholder="润色后的提示词将在这里显示，您可以直接编辑..."
+            ></textarea>
           </div>
         </div>
 
@@ -166,7 +132,6 @@ const optimizeInstruction = ref('')
 const optimizedPrompt = ref('')
 const optimizationSuggestions = ref(null) // 可以是字符串或数组
 const isOptimizing = ref(false)
-const selectedQuickOption = ref('') // 当前选中的快捷选项
 
 // 监听显示状态变化，重置数据
 watch(() => props.visible, (newVisible) => {
@@ -175,26 +140,8 @@ watch(() => props.visible, (newVisible) => {
     optimizedPrompt.value = ''
     optimizationSuggestions.value = null
     isOptimizing.value = false
-    selectedQuickOption.value = ''
   }
 })
-
-// 快捷选项处理
-const handleQuickOption = (type) => {
-  selectedQuickOption.value = type
-  switch (type) {
-    case 'auto':
-      optimizeInstruction.value = '全面优化这个研究提示词，使其更符合学术研究标准，包含详细的方法论指导、理论背景和实践步骤，帮助研究者获得更深入的专业指导'
-      break
-    case 'clear':
-      optimizeInstruction.value = '优化提示词的结构和逻辑，使其更加清晰明确，包含具体的研究步骤和操作指南，便于研究者理解和执行'
-      break
-    case 'professional':
-      optimizeInstruction.value = '提升提示词的学术专业性，使用准确的研究术语和方法论表达，结合相关理论框架和最新研究进展，符合学术论文写作标准'
-      break
-  }
-  handleOptimize()
-}
 
 // 处理建议数据的格式化
 const processSuggestions = (suggestions) => {
@@ -254,33 +201,39 @@ const processSuggestions = (suggestions) => {
 
 // 处理优化请求
 const handleOptimize = async () => {
-  if (!optimizeInstruction.value.trim() || isOptimizing.value) return
+  if (isOptimizing.value) return
   
   isOptimizing.value = true
   optimizedPrompt.value = ''
   optimizationSuggestions.value = null
   
   try {
+    // 如果用户没有输入自定义要求，使用默认的专业化润色
+    const finalInstruction = optimizeInstruction.value.trim() || 
+      '提升提示词的学术专业性，使用准确的研究术语和方法论表达，结合相关理论框架和最新研究进展，符合学术论文写作标准'
+    
     // 构建发送给coze的消息
     const optimizeMessage = `你是一位资深的学术研究指导专家，专门帮助科研工作者优化他们的研究提示词和问题。请根据以下要求专业地润色提示词，使其更符合学术研究的标准和深度。
 
 【背景信息】
 - 这是一个面向科研工作者的MethodMate研究助手项目
 - 用户主要从事定量研究、HCI（人机交互）、实验设计等学术研究
-- 需要提供专业、详细、可操作的研究指导
+- 用户可能有多种研究需求：生成研究方案、了解研究背景、分析研究方法、探索研究问题等
+- 需要提供专业、详细、可操作的指导
 
 【原始提示词】
 ${props.originalPrompt}
 
 【润色要求】
-${optimizeInstruction.value}
+${finalInstruction}
 
 【润色标准】
-1. 学术专业性：使用准确的学术术语和研究方法论
+1. 学术专业性：使用准确的学术术语和研究方法论表达
 2. 详细程度：提供具体的操作指导和理论背景
 3. 结构化：逻辑清晰，层次分明
 4. 实用性：包含具体的步骤、方法或案例参考
-5. 前沿性：结合最新的研究趋势和方法
+5. 适应性：适合不同类型的研究需求（方案生成、背景了解、方法分析等）
+6. 前沿性：结合最新的研究趋势和方法
 
 【输出要求】
 请返回JSON格式，包含以下字段：
@@ -297,7 +250,10 @@ ${optimizeInstruction.value}
   ]
 }
 
-请确保润色后的提示词能够帮助研究者获得更深入、更专业的研究指导。`
+注意：
+- 不要假设用户一定要生成研究方案，要根据提示词内容判断用户的真实需求
+- 润色后的提示词应该保持原有的核心意图，只是让表达更专业、更学术化
+- 确保润色后的提示词能够帮助研究者获得更深入、更专业的指导`
     
     console.log('开始润色提示词:', optimizeMessage)
     
@@ -391,5 +347,15 @@ const handleReplace = () => {
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* 文本框样式 */
+textarea {
+  min-height: 120px;
+}
+
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
 }
 </style> 
