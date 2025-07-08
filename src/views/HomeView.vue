@@ -41,16 +41,38 @@
         </div>
       </div>
 
-      <!-- AI服务测试组件（仅开发模式） -->
-      <div v-if="isDev" class="mb-8">
-        <AIServiceTest />
-      </div>
-
       <!-- 聊天框 -->
       <div class="h-[calc(100vh-22rem)]">
         <ChatBox />
       </div>
     </main>
+
+    <!-- AI服务测试侧边栏 -->
+    <div v-if="isDev">
+      <!-- 切换按钮 -->
+      <button 
+        @click="isTestPanelOpen = !isTestPanelOpen" 
+        class="fixed top-1/2 z-50 bg-white p-2 rounded-l-md shadow-lg border-l border-t border-b h-24 flex items-center justify-center transition-all duration-300 ease-in-out"
+        :style="{ right: isTestPanelOpen ? '24rem' : '0rem', transform: 'translateY(-50%)' }"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 transition-transform duration-300" :class="{'rotate-180': isTestPanelOpen}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <!-- 面板内容 -->
+      <div 
+        class="fixed top-1/2 -translate-y-1/2 z-40 bg-white shadow-lg border rounded-l-md w-96 h-[80vh] overflow-y-auto transition-transform duration-300 ease-in-out"
+        :class="isTestPanelOpen ? 'translate-x-0' : 'translate-x-full'"
+        style="right: 0;"
+      >
+        <div class="p-4">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">AI服务测试</h3>
+          <AIServiceTest />
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -65,6 +87,7 @@ const router = useRouter()
 
 // 开发模式检测
 const isDev = computed(() => import.meta.env.DEV)
+const isTestPanelOpen = ref(false)
 
 // 引用文献计数
 const referencedCount = computed(() => papersState.referencedPapers.size)
@@ -110,4 +133,4 @@ const researchPlans = ref([
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
-</style> 
+</style>
