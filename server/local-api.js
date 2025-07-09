@@ -1590,10 +1590,39 @@ const extractKeywords = (messages) => {
 };
 
 // 简单的重试函数
-const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+const fetchWithRetry = async (url, options = {}, retries = 3, delay = 1000) => {
   try {
-    return await fetch(url, options);
+    // 创建AbortController来处理超时
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
+    
+    const fetchOptions = {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'MethodMate/1.0 (Research Tool)',
+        'Accept': 'application/json',
+        ...options.headers
+      },
+      signal: controller.signal,
+      ...options
+    };
+    
+    const response = await fetch(url, fetchOptions);
+    clearTimeout(timeoutId);
+    
+    return response;
   } catch (err) {
+    console.log(`❌ Fetch失败 (剩余重试: ${retries - 1}):`, err.message);
+    
+    // 针对不同错误类型的处理
+    if (err.name === 'AbortError') {
+      console.log('⏰ 请求超时');
+    } else if (err.code === 'ENOTFOUND') {
+      console.log('🌐 DNS解析失败');
+    } else if (err.code === 'ECONNREFUSED') {
+      console.log('🚫 连接被拒绝');
+    }
+    
     if (retries <= 1) throw err;
     await new Promise(resolve => setTimeout(resolve, delay));
     return fetchWithRetry(url, options, retries - 1, delay * 2);
@@ -2423,16 +2452,16 @@ app.post('/api/scholar-search', async (req, res) => {
       }
       
       console.log('外部搜索URL:', searchUrl);
-      
-      const headers = {
-        'Accept': 'application/json',
-      };
+      console.log(`🌐 发起Semantic Scholar API请求 (URL长度: ${searchUrl.length})`);
       
       try {
-        // 使用重试机制发送请求
+        // 使用重试机制发送请求，增加Semantic Scholar API特定的headers
         const response = await fetchWithRetry(searchUrl, {
-          headers: headers
-        }, 3, 1000);
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        }, 3, 2000); // 3次重试，间隔2秒
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -2521,7 +2550,29 @@ app.post('/api/scholar-search', async (req, res) => {
           console.log(`🌐 外部搜索新增 ${newResults.length} 篇论文`);
         }
       } catch (externalError) {
-        console.error('外部搜索失败:', externalError);
+        console.error('Semantic Scholar API请求失败:', externalError);
+        
+        // 针对不同错误类型提供更详细的诊断信息
+        if (externalError.name === 'AbortError') {
+          console.error('⏰ 请求超时 (30秒)，可能原因：');
+          console.error('  - API服务器响应缓慢');
+          console.error('  - 网络连接不稳定');
+          console.error('  - 查询过于复杂');
+        } else if (externalError.code === 'ETIMEDOUT') {
+          console.error('⏰ 连接超时，可能原因：');
+          console.error('  - 网络连接问题');
+          console.error('  - 防火墙阻止连接');
+        } else if (externalError.code === 'ENOTFOUND') {
+          console.error('🌐 DNS解析失败，检查：');
+          console.error('  - 网络连接是否正常');
+          console.error('  - DNS服务器设置');
+        } else if (externalError.code === 'ECONNREFUSED') {
+          console.error('🚫 连接被拒绝，可能原因：');
+          console.error('  - API服务暂时不可用');
+          console.error('  - 端口被阻止');
+        }
+        
+        console.log('💡 建议：使用本地缓存结果或稍后重试');
         // 外部搜索失败不影响返回缓存结果
       }
     }
@@ -3800,8 +3851,12 @@ Please respond in the following JSON format:
         let searchResponse;
         try {
           searchResponse = await fetchWithRetry(searchUrl, {
-            headers: headers
-          }, 3, 1000); // 最多重试3次，初始延迟1秒
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              ...headers
+            }
+          }, 3, 2000); // 最多重试3次，初始延迟2秒
           
           console.log('Semantic Scholar API响应状态:', searchResponse.status, searchResponse.statusText);
           
@@ -6012,9 +6067,8 @@ app.get('/api/proxy-image', async (req, res) => {
 
     // 获取图片
     const imageResponse = await fetchWithRetry(url, {
-      headers: headers,
-      timeout: 10000 // 10秒超时
-    }, 2, 1000);
+      headers: headers
+    }, 2, 1000); // 2次重试，初始延迟1秒
 
     if (!imageResponse.ok) {
       console.error(`获取图片失败，状态码: ${imageResponse.status}`);

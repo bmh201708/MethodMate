@@ -1750,61 +1750,18 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
       
       message += `\n\n我将为你提供以下${referencedPapers.length}篇参考文献的内容：\n`
       
-      // 为每篇论文获取研究方法和摘要
+      // 获取每篇论文的全文内容
       const paperContents = await Promise.all(referencedPapers.map(async (paper, index) => {
-        let paperInfo = `\n${index + 1}. 标题：${paper.title}`
-        paperInfo += `\n   作者：${Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors || '未知'}`
-        paperInfo += `\n   年份：${paper.year || '未知'}`
-        paperInfo += `\n   来源：${paper.source === 'search' ? '文献搜索' : 'AI推荐'}`
+        let fullText = paper.fullText;
         
-        // 如果已有摘要，直接使用
-        if (paper.abstract || paper.summary) {
-          paperInfo += `\n   摘要：${paper.abstract || paper.summary}`
-        }
-        
-        // 如果已有研究方法，直接使用
-        if (paper.researchMethod) {
-          paperInfo += `\n   研究方法：${paper.researchMethod}`
-        }
-        // 如果没有研究方法但有全文，尝试获取研究方法
-        else if (paper.fullText) {
+        // 如果没有全文，尝试获取
+        if (!fullText) {
           try {
-                         const { getApiBaseUrl } = await import('../config/environment.js')
-             const generateSummaryApiUrl = `${getApiBaseUrl()}/paper/generate-method-summary`
-             console.log('📤 生成方法概要API请求URL:', generateSummaryApiUrl)
-             
-             const response = await fetch(generateSummaryApiUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                title: paper.title,
-                fullText: paper.fullText,
-                aiService: currentAIService === 'chatgpt' ? 'chatgpt' : 'coze'
-              })
-            });
+            const { getApiBaseUrl } = await import('../config/environment.js')
+            const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
+            console.log('📤 获取论文内容API请求URL:', getContentApiUrl)
             
-            if (response.ok) {
-              const result = await response.json();
-              if (result.success && result.methodSummary) {
-                // 更新论文对象的研究方法
-                paper.researchMethod = result.methodSummary;
-                paperInfo += `\n   研究方法：${result.methodSummary}`;
-              }
-            }
-          } catch (error) {
-            console.error(`获取论文"${paper.title}"研究方法失败:`, error);
-          }
-        }
-        // 如果既没有研究方法也没有全文，尝试获取全文和研究方法
-        else {
-          try {
-                         const { getApiBaseUrl } = await import('../config/environment.js')
-             const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
-             console.log('📤 获取论文内容API请求URL:', getContentApiUrl)
-             
-             const response = await fetch(getContentApiUrl, {
+            const response = await fetch(getContentApiUrl, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -1818,96 +1775,31 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
             
             if (response.ok) {
               const result = await response.json();
-              if (result.success) {
-                // 更新论文对象的全文
-                if (result.fullText) {
-                  paper.fullText = result.fullText;
-                }
-                
-                // 更新研究方法
-                if (result.researchMethod) {
-                  paper.researchMethod = result.researchMethod;
-                  paperInfo += `\n   研究方法：${result.researchMethod}`;
-                }
-                // 如果没有获取到研究方法但有全文，尝试生成研究方法概要
-                else if (paper.fullText) {
-                  try {
-                                         const { getApiBaseUrl } = await import('../config/environment.js')
-                     const methodSummaryApiUrl = `${getApiBaseUrl()}/paper/generate-method-summary`
-                     console.log('📤 生成方法概要API请求URL:', methodSummaryApiUrl)
-                     
-                     const methodResponse = await fetch(methodSummaryApiUrl, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({
-                        title: paper.title,
-                        fullText: paper.fullText,
-                        aiService: currentAIService === 'chatgpt' ? 'chatgpt' : 'coze'
-                      })
-                    });
-                    
-                    if (methodResponse.ok) {
-                      const methodResult = await methodResponse.json();
-                      if (methodResult.success && methodResult.methodSummary) {
-                        paper.researchMethod = methodResult.methodSummary;
-                        paperInfo += `\n   研究方法：${methodResult.methodSummary}`;
-                      }
-                    }
-                  } catch (methodError) {
-                    console.error(`生成论文"${paper.title}"研究方法概要失败:`, methodError);
-                  }
-                }
+              if (result.success && result.fullText) {
+                fullText = result.fullText;
+                paper.fullText = fullText; // 更新论文对象
               }
             }
           } catch (error) {
-            console.error(`获取论文"${paper.title}"内容失败:`, error);
+            console.error(`获取论文"${paper.title}"全文失败:`, error);
           }
         }
         
-        return { paperInfo, fullText: paper.fullText };
+        return { fullText };
       }));
       
-      // ChatGPT模式下的智能内容长度控制
-      if (currentAIService === 'chatgpt') {
-        console.log('🎯 ChatGPT模式：检查消息长度，智能选择参考文献内容')
-        
-        // 先尝试构建包含全文的版本
-        let messageWithFullText = message;
-        let fullTextContents = [];
-        
-        paperContents.forEach((content, index) => {
-          let paperFullInfo = content.paperInfo;
-          
-          // 如果有全文，添加到信息中
-          if (content.fullText) {
-            paperFullInfo += `\n   全文内容：${content.fullText}`;
-          }
-          
-          fullTextContents.push(paperFullInfo + "\n");
-        });
-        
-        messageWithFullText += fullTextContents.join("");
-        
-        // 检查包含全文的消息长度
-        if (messageWithFullText.length <= 250000) {
-          console.log(`✅ 消息长度 ${messageWithFullText.length} 字符，在限制内，使用全文版本`)
-          message = messageWithFullText;
-        } else {
-          console.log(`⚠️ 消息长度 ${messageWithFullText.length} 字符，超出限制，使用研究方法版本`)
-          // 使用只包含研究方法的版本
-          const methodOnlyContents = paperContents.map(content => content.paperInfo + "\n");
-          message += methodOnlyContents.join("");
-        }
-      } else {
-        console.log('🔧 Coze模式：使用标准参考文献处理')
-        // Coze模式：使用原有逻辑，只包含研究方法和摘要
-        const standardContents = paperContents.map(content => content.paperInfo + "\n");
-        message += standardContents.join("");
-      }
+      // 只使用全文内容，不添加其他信息
+      console.log('📄 使用简化模式：仅包含全文内容')
       
-      message += `\n请基于以上${referencedPapers.length}篇参考文献的内容（特别是研究方法部分）`
+      paperContents.forEach((content, index) => {
+        if (content.fullText) {
+          message += `\n参考文献${index + 1}全文内容：\n${content.fullText}\n`;
+        } else {
+          console.warn(`论文${index + 1}没有全文内容`);
+        }
+      });
+      
+      message += `\n请基于以上${referencedPapers.length}篇参考文献的全文内容`
     } else {
       message += `\n\n`
     }
