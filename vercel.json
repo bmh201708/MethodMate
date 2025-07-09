@@ -4,27 +4,27 @@
   "rewrites": [
     {
       "source": "/api/paper/(.*)",
-      "destination": "http://1.13.253.97:3002/api/paper/$1"
+      "destination": "http://175.27.162.174:3002/api/paper/$1"
     },
     {
       "source": "/api/query-statistical-method",
-      "destination": "http://1.13.253.97:3002/api/query-statistical-method"
+      "destination": "http://175.27.162.174:3002/api/query-statistical-method"
     },
     {
       "source": "/api/coze-chat",
-      "destination": "http://1.13.253.97:3002/api/coze-chat"
+      "destination": "http://175.27.162.174:3002/api/coze-chat"
     },
     {
       "source": "/api/health",
-      "destination": "http://1.13.253.97:3002/api/health"
+      "destination": "http://175.27.162.174:3002/api/health"
     },
     {
       "source": "/api/semantic-recommend",
-      "destination": "http://1.13.253.97:3002/api/semantic-recommend"
+      "destination": "http://175.27.162.174:3002/api/semantic-recommend"
     },
     {
       "source": "/api/scholar-search",
-      "destination": "http://1.13.253.97:3002/api/scholar-search"
+      "destination": "http://175.27.162.174:3002/api/scholar-search"
     },
     {
       "source": "/(.*)",

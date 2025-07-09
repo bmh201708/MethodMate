@@ -18,14 +18,14 @@ export const ENVIRONMENT_CONFIG = {
   },
   [ENVIRONMENT_TYPES.REMOTE]: {
     name: '云服务器',
-    apiBaseUrl: 'http://1.13.253.97:3004/api', // 直接访问云服务器
-    chatApiUrl: 'http://1.13.253.97:3004/api/chat',
+    apiBaseUrl: 'http://175.27.162.174:3004/api', // 直接访问云服务器
+    chatApiUrl: 'http://175.27.162.174:3004/api/chat',
     description: '生产环境云服务器'
   },
   [ENVIRONMENT_TYPES.DEVELOPMENT]: {
     name: '开发环境',
-    apiBaseUrl: import.meta.env.DEV ? '/api' : 'http://1.13.253.97:3004/api',
-    chatApiUrl: import.meta.env.DEV ? '/api/chat' : 'http://1.13.253.97:3004/api/chat',
+    apiBaseUrl: import.meta.env.DEV ? '/api' : 'http://175.27.162.174:3004/api',
+    chatApiUrl: import.meta.env.DEV ? '/api/chat' : 'http://175.27.162.174:3004/api/chat',
     description: '根据开发/生产环境自动切换'
   }
 }
