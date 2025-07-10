@@ -200,98 +200,89 @@
       <!-- 对话引导 -->
       <ConversationGuide @sendPrompt="handlePromptMessage" />
 
-      <!-- 悬浮输入框 -->
-      <Teleport to="body">
-      <div 
-        class="fixed z-50 transition-all duration-300"
-        :style="{ 
-          left: `${floatingPosition.x}px`, 
-          top: `${floatingPosition.y}px`,
-          transition: isDragging ? 'none' : 'all 0.3s ease'
-        }"
-      >
-        <!-- 收起状态：圆形按钮 -->
-        <div v-if="!isInputExpanded" 
-             @click="expandInput"
-             @mousedown="startDrag"
-             class="w-14 h-14 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-300 transform hover:scale-105 flex items-center justify-center draggable-handle"
+      <!-- 聊天输入区域 -->
+      <div class="mt-4">
+                <!-- 收起状态：展开聊天按钮 -->
+        <button v-if="!isInputExpanded" 
+                @click="expandInput"
+                class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-3 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all duration-300 flex items-center justify-center space-x-2"
         >
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.013 8.013 0 01-7-4c0-4.418 3.582-8 8-8s8 3.582 8 8z"/>
           </svg>
-        </div>
+          <span class="font-medium">与AI助手对话</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
 
-        <!-- 展开状态：完整输入框 -->
+        <!-- 展开状态：聊天输入界面 -->
         <div v-else 
-             class="bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 min-w-80 max-w-md transition-all duration-300 transform"
-             :class="{ 'animate-scale-in': isInputExpanded }"
+             class="bg-white border border-gray-200 rounded-lg transition-all duration-300"
+             :class="{ 'animate-expand-in': isInputExpanded }"
         >
-          <!-- 头部 -->
-          <div class="flex items-center justify-between mb-3 draggable-handle cursor-move" @mousedown="startDrag">
-      <div class="flex items-center space-x-2">
-              <div class="w-3 h-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full"></div>
-              <h3 class="text-sm font-medium text-gray-900">AI助手</h3>
-            </div>
-            <button 
-              @click="collapseInput"
-              class="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
-
           <!-- 输入区域 -->
-          <div class="space-y-3">
+          <div class="p-4 space-y-3">
+            <!-- 头部信息 -->
+            <div class="mb-3">
+            </div>
+
+            <!-- 输入框 -->
             <div class="relative">
               <textarea
-            v-model="newMessage"
-            placeholder="请输入您的问题..."
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                v-model="newMessage"
+                placeholder="请输入您的问题..."
+                class="w-full rounded-lg bg-white px-3 py-2 focus:outline-none resize-none text-sm"
                 rows="3"
                 @keyup.enter.ctrl="handleSendMessage"
                 @keyup.enter.exact="handleSendMessage"
-            :disabled="chatState.isLoading"
-          />
-        </div>
+                :disabled="chatState.isLoading"
+                ref="messageInput"
+              />
+            </div>
 
             <!-- 按钮组 -->
             <div class="flex items-center justify-between">
-              <button
-                @click="handleShowOptimizeDialog"
-                :disabled="!newMessage.trim() || chatState.isLoading"
-                class="flex items-center space-x-1 px-3 py-1.5 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-                <span>润色</span>
-              </button>
-              
-        <button
-          @click="handleSendMessage"
-                :disabled="chatState.isLoading || !newMessage.trim()"
-                class="flex items-center space-x-1 px-4 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg v-if="chatState.isLoading" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                </svg>
-                <span>{{ chatState.isLoading ? '发送中...' : '发送' }}</span>
-        </button>
-            </div>
-
-            <!-- 快捷提示 -->
-            <div class="text-xs text-gray-500 text-center">
-              按 Ctrl+Enter 快速发送
+              <div class="flex items-center space-x-2">
+                <button
+                  @click="handleShowOptimizeDialog"
+                  :disabled="!newMessage.trim() || chatState.isLoading"
+                  class="flex items-center space-x-1 px-3 py-1.5 text-sm bg-gradient-to-r from-purple-600 to-blue-600 text-white border-none rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="white" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  <span>润色</span>
+                </button>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button
+                  @click="handleSendMessage"
+                  :disabled="chatState.isLoading || !newMessage.trim()"
+                  class="flex items-center space-x-1 px-4 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white border-none rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg v-if="chatState.isLoading" class="w-4 h-4 animate-spin" fill="none" stroke="white" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  <svg v-else class="w-4 h-4" fill="none" stroke="white" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                  </svg>
+                  <span>{{ chatState.isLoading ? '发送中...' : '发送' }}</span>
+                </button>
+                <!-- 收起按钮移到右下角 -->
+                <button 
+                  @click="collapseInput"
+                  class="text-black hover:text-gray-700 transition-colors p-1"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      </Teleport>
     </div>
 
     <!-- 润色提示词对话框 -->
@@ -312,7 +303,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted, onUnmounted, computed } from 'vue'
+import { ref, watch, nextTick, onMounted, computed } from 'vue'
 import { chatState, sendMessage, conversationAPI, clearMessages, updateCurrentPlan, getIterationComparison, isIterationMessage } from '../stores/chatStore'
 import { useUserStore } from '../stores/userStore.js'
 import { sendSilentMessageToCoze } from '../services/cozeApi'
@@ -332,17 +323,11 @@ const props = defineProps({
 
 const newMessage = ref('')
 const chatContainer = ref(null)
+const messageInput = ref(null)
 const showOptimizeDialog = ref(false)
 const showComparisonDialog = ref(false)
 const currentComparisonData = ref(null)
 const isInputExpanded = ref(false)
-
-// 拖动相关状态
-const isDragging = ref(false)
-const hasDragged = ref(false) // 标记是否发生了拖动
-const floatingPosition = ref({ x: 16, y: window.innerHeight - 72 }) // 默认左下角位置
-const dragOffset = ref({ x: 0, y: 0 })
-const dragStartPosition = ref({ x: 0, y: 0 }) // 记录拖动开始位置
 
 // 用户状态
 const userStore = useUserStore()
@@ -1191,146 +1176,45 @@ watch(() => chatState.messages.length, () => {
   })
 })
 
-// 展开悬浮输入框
+// 展开聊天输入框
 const expandInput = () => {
-  // 如果刚刚进行了拖动，不展开输入框
-  if (hasDragged.value) {
-    hasDragged.value = false
-    return
-  }
   isInputExpanded.value = true
+  // 等待DOM更新后聚焦到输入框
+  nextTick(() => {
+    if (messageInput.value) {
+      messageInput.value.focus()
+    }
+  })
 }
 
-// 收起悬浮输入框
+// 收起聊天输入框
 const collapseInput = () => {
   isInputExpanded.value = false
 }
 
-// 拖动相关方法
-const startDrag = (event) => {
-  // 如果是点击展开状态下的关闭按钮，不进行拖动
-  if (event.target.closest('button') && isInputExpanded.value) {
-    return
-  }
-  
-  event.preventDefault()
-  isDragging.value = true
-  hasDragged.value = false
-  
-  // 记录拖动开始位置
-  dragStartPosition.value = {
-    x: event.clientX,
-    y: event.clientY
-  }
-  
-  const rect = event.currentTarget.getBoundingClientRect()
-  dragOffset.value = {
-    x: event.clientX - floatingPosition.value.x,
-    y: event.clientY - floatingPosition.value.y
-  }
-  
-  document.addEventListener('mousemove', handleDrag)
-  document.addEventListener('mouseup', stopDrag)
-  
-  // 防止文本选择
-  document.body.style.userSelect = 'none'
-  document.body.style.cursor = 'grabbing'
-}
 
-const handleDrag = (event) => {
-  if (!isDragging.value) return
-  
-  event.preventDefault()
-  
-  // 检测是否发生了拖动（移动距离大于5px视为拖动）
-  const dragDistance = Math.abs(event.clientX - dragStartPosition.value.x) + Math.abs(event.clientY - dragStartPosition.value.y)
-  if (dragDistance > 5) {
-    hasDragged.value = true
-  }
-  
-  let newX = event.clientX - dragOffset.value.x
-  let newY = event.clientY - dragOffset.value.y
-  
-  // 边界检测
-  const windowWidth = window.innerWidth
-  const windowHeight = window.innerHeight
-  const elementWidth = isInputExpanded.value ? 320 : 56 // 展开时约320px，收起时56px
-  const elementHeight = isInputExpanded.value ? 200 : 56 // 展开时约200px，收起时56px
-  
-  // 限制在窗口范围内
-  newX = Math.max(0, Math.min(newX, windowWidth - elementWidth))
-  newY = Math.max(0, Math.min(newY, windowHeight - elementHeight))
-  
-  floatingPosition.value = { x: newX, y: newY }
-}
-
-const stopDrag = () => {
-  isDragging.value = false
-  
-  document.removeEventListener('mousemove', handleDrag)
-  document.removeEventListener('mouseup', stopDrag)
-  
-  // 恢复文本选择和鼠标样式
-  document.body.style.userSelect = ''
-  document.body.style.cursor = ''
-  
-  // 延迟重置拖动标记，防止立即触发点击事件
-  if (hasDragged.value) {
-    setTimeout(() => {
-      hasDragged.value = false
-    }, 100)
-  }
-}
-
-// 窗口大小变化时调整位置
-const handleWindowResize = () => {
-  const windowWidth = window.innerWidth
-  const windowHeight = window.innerHeight
-  const elementWidth = isInputExpanded.value ? 320 : 56
-  const elementHeight = isInputExpanded.value ? 200 : 56
-  
-  // 如果是初始化时位置为默认值，重新设置到左下角
-  if (floatingPosition.value.x === 16 && floatingPosition.value.y === window.innerHeight - 72) {
-    floatingPosition.value.y = windowHeight - 72
-  }
-  
-  // 确保浮窗不会超出新的窗口边界
-  floatingPosition.value.x = Math.max(0, Math.min(floatingPosition.value.x, windowWidth - elementWidth))
-  floatingPosition.value.y = Math.max(0, Math.min(floatingPosition.value.y, windowHeight - elementHeight))
-}
-
-// 监听窗口大小变化
-onMounted(() => {
-  // 初始化位置
-  floatingPosition.value.y = window.innerHeight - 72
-  
-  window.addEventListener('resize', handleWindowResize)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleWindowResize)
-  document.removeEventListener('mousemove', handleDrag)
-  document.removeEventListener('mouseup', stopDrag)
-})
 
 
 </script>
 
 <style scoped>
-/* 悬浮输入框样式 */
-@keyframes scale-in {
+/* 展开动画 */
+@keyframes expand-in {
   from {
-    transform: scale(0.8);
+    max-height: 0;
     opacity: 0;
+    transform: scaleY(0.8);
   }
   to {
-    transform: scale(1);
+    max-height: 200px;
     opacity: 1;
+    transform: scaleY(1);
   }
 }
 
-.animate-scale-in {
-  animation: scale-in 0.3s ease-out;
+.animate-expand-in {
+  animation: expand-in 0.3s ease-out;
+  transform-origin: top;
 }
 
 /* 自定义滚动条样式 */
@@ -1432,19 +1316,11 @@ onUnmounted(() => {
   background-color: #f9fafb;
 }
 
-/* 拖动相关样式 */
-.draggable-handle {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-
-.draggable-handle:hover {
-  cursor: grab;
-}
-
-.draggable-handle:active {
-  cursor: grabbing;
+/* 文本截断样式 */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 </style> 
