@@ -1,136 +1,134 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col">
-    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <!-- 相关文献 -->
-        <div>
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">相关文献</h2>
-          <div class="space-y-4">
-            <div class="research-card">
-              <img src="/images/os-icon.png" alt="Operating System" class="card-icon" />
-              <div class="card-content">
-                <h3 class="card-title">{{ papers[0].title }}</h3>
-                <p class="card-description">{{ papers[0].description }}</p>
-                <p class="card-author">Created by {{ papers[0].author }}</p>
-              </div>
-              <div class="card-arrow cursor-pointer" @click="router.push('/papers')">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
+    <!-- 顶部简介（无logo，放大标题） -->
+    <header class="text-center py-16">
+      <h1 class="text-5xl md:text-6xl font-extrabold mb-4">MethodMate</h1>
+      <p class="text-2xl text-gray-700 mb-2">让科研方法与文献推荐更智能</p>
+      <p class="text-gray-500">一站式学术研究助手，助力高效科研</p>
+    </header>
 
-        <!-- 定量研究方案 -->
-        <div>
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">定量研究方案</h2>
-          <div class="research-card">
-            <img src="/images/ai-icon.png" alt="Research Plan" class="card-icon" />
-            <div class="card-content">
-              <h3 class="card-title">{{ researchPlans[0].title }}</h3>
-              <p class="card-description">{{ researchPlans[0].description }}</p>
-              <p class="card-author">Created by {{ researchPlans[0].author }}</p>
-            </div>
-            <div class="card-arrow cursor-pointer" @click="router.push('/research-plan')">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 聊天框 -->
-      <div class="h-[calc(100vh-22rem)]">
-        <ChatBox />
-      </div>
-    </main>
-
-    <!-- AI服务测试侧边栏 -->
-    <div v-if="isDev">
-      <!-- 切换按钮 -->
-      <button 
-        @click="isTestPanelOpen = !isTestPanelOpen" 
-        class="fixed top-1/2 z-50 bg-white p-2 rounded-l-md shadow-lg border-l border-t border-b h-24 flex items-center justify-center transition-all duration-300 ease-in-out"
-        :style="{ right: isTestPanelOpen ? '24rem' : '0rem', transform: 'translateY(-50%)' }"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 transition-transform duration-300" :class="{'rotate-180': isTestPanelOpen}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-
-      <!-- 面板内容 -->
-      <div 
-        class="fixed top-1/2 -translate-y-1/2 z-40 bg-white shadow-lg border rounded-l-md w-96 h-[80vh] overflow-y-auto transition-transform duration-300 ease-in-out"
-        :class="isTestPanelOpen ? 'translate-x-0' : 'translate-x-full'"
-        style="right: 0;"
-      >
-        <div class="p-4">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">AI服务测试</h3>
-          <AIServiceTest />
-        </div>
-      </div>
+    <!-- 主按钮区 -->
+    <div class="flex justify-center gap-8 mb-8">
+      <button @click="router.push('/papers')" class="px-8 py-4 bg-blue-600 text-white rounded-full text-lg font-semibold shadow hover:bg-blue-700 transition">从文献推荐开始</button>
+      <button @click="router.push('/research-plan')" class="px-8 py-4 bg-green-600 text-white rounded-full text-lg font-semibold shadow hover:bg-green-700 transition">从研究方案开始</button>
     </div>
 
+    <!-- 横向Tab导航（移到按钮下方） -->
+    <div class="flex justify-center gap-4 mb-10 flex-wrap">
+      <button
+        v-for="(tab, idx) in tabs"
+        :key="tab.key"
+        @click="activeTab = idx"
+        :class="[
+          'px-6 py-2 rounded-full font-semibold text-lg transition',
+          activeTab === idx
+            ? 'bg-blue-600 text-white shadow'
+            : 'bg-white text-gray-700 border border-gray-200 hover:bg-blue-50'
+        ]"
+      >
+        {{ tab.title }}
+      </button>
+    </div>
+
+    <!-- 当前选中功能卡片（更大宽度，统一渐变色） -->
+    <section class="flex-1 flex items-start justify-center mb-16">
+      <transition name="fade-slide" mode="out-in">
+        <div
+          v-if="tabs[activeTab]"
+          :key="tabs[activeTab].key"
+          class="w-[98vw] md:w-[90vw] h-[40vh] max-w-7xl flex items-center justify-center"
+        >
+          <FeatureCard
+            :image="tabs[activeTab].image"
+            gradient="bg-gradient-to-b from-blue-500 to-blue-100"
+            :title="tabs[activeTab].title"
+            :descList="tabs[activeTab].descList"
+            class="w-full h-full"
+          />
+        </div>
+      </transition>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="text-center text-gray-400 py-4 text-sm">
+      © 2024 MethodMate 团队
+    </footer>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import ChatBox from '../components/ChatBox.vue'
-import AIServiceTest from '../components/AIServiceTest.vue'
-import { papersState } from '../stores/chatStore'
+import FeatureCard from '../components/FeatureCard.vue'
 
 const router = useRouter()
 
-// 开发模式检测
-const isDev = computed(() => import.meta.env.DEV)
-const isTestPanelOpen = ref(false)
-
-// 引用文献计数
-const referencedCount = computed(() => papersState.referencedPapers.size)
-
-// 论文和研究计划数据
-const papers = ref([
+const tabs = [
   {
-    id: 1,
-    title: 'Relevant Papers',
-    description: 'Learn the basic operating system abstractions, mechanisms, and their implementations.',
-    author: 'Qi Liu',
-    icon: '/images/os-icon.png'
-  }
-])
-
-const researchPlans = ref([
+    key: 'paper',
+    title: '文献推荐',
+    image: '/src/images/paper-recommand.jpg',
+    descList: [
+      '智能对话提取关键词',
+      '相关文献精准查询',
+      '支持研究方法预览'
+    ]
+  },
   {
-    id: 1,
-    title: 'Research Plan',
-    description: 'Intelligence demonstrated by machines, unlike the natural intelligence displayed by humans and animals.',
-    author: 'Qi Liu',
-    icon: '/images/ai-icon.png'
+    key: 'plan',
+    title: '研究方案',
+    image: '/src/images/research-plan.jpg',
+    descList: [
+      'AI生成定量研究方案',
+      '方案评估与一键迭代',
+      '方案来源、方法、统计方法查询'
+    ]
+  },
+  {
+    key: 'search',
+    title: '学术搜索',
+    image: '/src/images/scholar-search.jpg',
+    descList: [
+      '直接检索所需论文',
+      '多条件筛选与排序',
+      '高效定位学术资源'
+    ]
+  },
+  {
+    key: 'ref',
+    title: '引用管理',
+    image: '/src/images/referrence-paper.jpg',
+    descList: [
+      '集中查看已引用论文',
+      '便捷管理引用列表',
+      '支持引用内容预览'
+    ]
+  },
+  {
+    key: 'history',
+    title: '历史方案',
+    image: '/src/images/history-plan.jpg',
+    descList: [
+      '浏览历史生成方案',
+      '快速应用与对比',
+      '方案内容一键复用'
+    ]
   }
-])
+]
+
+const activeTab = ref(0)
 </script>
 
 <style>
-/* 自定义滚动条样式 */
-.overflow-y-auto::-webkit-scrollbar {
-  width: 6px;
+.fade-slide-enter-active, .fade-slide-leave-active {
+  transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
 }
-
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(40px) scale(0.98);
 }
-
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #c5c5c5;
-  border-radius: 3px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-40px) scale(0.98);
 }
 </style>

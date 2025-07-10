@@ -7,11 +7,11 @@
           <ChatBox ref="chatBoxRef" pageContext="research-plan" />
           
           <!-- 生成研究方案按钮 -->
-          <div class="mt-1">
+          <div class="mt-1 px-6">
             <button
               @click="showResearchPlanDialog"
               :disabled="isGenerating"
-              class="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-3 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
               <svg v-if="isGenerating" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -119,7 +119,7 @@
                       <button
                         @click="evaluatePlan"
                         :disabled="isEvaluating"
-                        class="px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
+                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                       >
                         <svg v-if="isEvaluating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -133,7 +133,7 @@
                       <button
                         @click="showIterateDialog('full')"
                         :disabled="isIterating"
-                        class="px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
+                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                       >
                         <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -217,7 +217,7 @@
                       <button
                         @click="evaluateSectionPlan('hypothesis')"
                         :disabled="isEvaluatingSection && evaluatingSection === 'hypothesis'"
-                        class="px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
+                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                       >
                         <svg v-if="isEvaluatingSection && evaluatingSection === 'hypothesis'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -231,7 +231,7 @@
                       <button
                         @click="showIterateDialog('hypothesis')"
                         :disabled="isIterating"
-                        class="px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
+                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                       >
                         <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -267,7 +267,7 @@
                       <button
                         @click="evaluateSectionPlan('design')"
                         :disabled="isEvaluatingSection && evaluatingSection === 'design'"
-                        class="px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
+                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                       >
                         <svg v-if="isEvaluatingSection && evaluatingSection === 'design'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -281,7 +281,7 @@
                       <button
                         @click="showIterateDialog('design')"
                         :disabled="isIterating"
-                        class="px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
+                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                       >
                         <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -316,7 +316,7 @@
                       <button
                         @click="evaluateSectionPlan('analysis')"
                         :disabled="isEvaluatingSection && evaluatingSection === 'analysis'"
-                        class="px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
+                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                       >
                         <svg v-if="isEvaluatingSection && evaluatingSection === 'analysis'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -330,7 +330,7 @@
                       <button
                         @click="showIterateDialog('analysis')"
                         :disabled="isIterating"
-                        class="px-3 py-1.5 text-sm bg-green-50 text-green-600 rounded-md hover:bg-green-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
+                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                       >
                         <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -365,7 +365,7 @@
                       <button
                         @click="evaluateSectionPlan('results')"
                         :disabled="isEvaluatingSection && evaluatingSection === 'results'"
-                        class="px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
+                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                       >
                         <svg v-if="isEvaluatingSection && evaluatingSection === 'results'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -379,7 +379,7 @@
                       <button
                         @click="showIterateDialog('results')"
                         :disabled="isIterating"
-                        class="px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
+                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                       >
                         <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -1750,61 +1750,18 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
       
       message += `\n\n我将为你提供以下${referencedPapers.length}篇参考文献的内容：\n`
       
-      // 为每篇论文获取研究方法和摘要
+      // 获取每篇论文的全文内容
       const paperContents = await Promise.all(referencedPapers.map(async (paper, index) => {
-        let paperInfo = `\n${index + 1}. 标题：${paper.title}`
-        paperInfo += `\n   作者：${Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors || '未知'}`
-        paperInfo += `\n   年份：${paper.year || '未知'}`
-        paperInfo += `\n   来源：${paper.source === 'search' ? '文献搜索' : 'AI推荐'}`
+        let fullText = paper.fullText;
         
-        // 如果已有摘要，直接使用
-        if (paper.abstract || paper.summary) {
-          paperInfo += `\n   摘要：${paper.abstract || paper.summary}`
-        }
-        
-        // 如果已有研究方法，直接使用
-        if (paper.researchMethod) {
-          paperInfo += `\n   研究方法：${paper.researchMethod}`
-        }
-        // 如果没有研究方法但有全文，尝试获取研究方法
-        else if (paper.fullText) {
+        // 如果没有全文，尝试获取
+        if (!fullText) {
           try {
-                         const { getApiBaseUrl } = await import('../config/environment.js')
-             const generateSummaryApiUrl = `${getApiBaseUrl()}/paper/generate-method-summary`
-             console.log('📤 生成方法概要API请求URL:', generateSummaryApiUrl)
-             
-             const response = await fetch(generateSummaryApiUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                title: paper.title,
-                fullText: paper.fullText,
-                aiService: currentAIService === 'chatgpt' ? 'chatgpt' : 'coze'
-              })
-            });
+            const { getApiBaseUrl } = await import('../config/environment.js')
+            const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
+            console.log('📤 获取论文内容API请求URL:', getContentApiUrl)
             
-            if (response.ok) {
-              const result = await response.json();
-              if (result.success && result.methodSummary) {
-                // 更新论文对象的研究方法
-                paper.researchMethod = result.methodSummary;
-                paperInfo += `\n   研究方法：${result.methodSummary}`;
-              }
-            }
-          } catch (error) {
-            console.error(`获取论文"${paper.title}"研究方法失败:`, error);
-          }
-        }
-        // 如果既没有研究方法也没有全文，尝试获取全文和研究方法
-        else {
-          try {
-                         const { getApiBaseUrl } = await import('../config/environment.js')
-             const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
-             console.log('📤 获取论文内容API请求URL:', getContentApiUrl)
-             
-             const response = await fetch(getContentApiUrl, {
+            const response = await fetch(getContentApiUrl, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -1818,96 +1775,31 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
             
             if (response.ok) {
               const result = await response.json();
-              if (result.success) {
-                // 更新论文对象的全文
-                if (result.fullText) {
-                  paper.fullText = result.fullText;
-                }
-                
-                // 更新研究方法
-                if (result.researchMethod) {
-                  paper.researchMethod = result.researchMethod;
-                  paperInfo += `\n   研究方法：${result.researchMethod}`;
-                }
-                // 如果没有获取到研究方法但有全文，尝试生成研究方法概要
-                else if (paper.fullText) {
-                  try {
-                                         const { getApiBaseUrl } = await import('../config/environment.js')
-                     const methodSummaryApiUrl = `${getApiBaseUrl()}/paper/generate-method-summary`
-                     console.log('📤 生成方法概要API请求URL:', methodSummaryApiUrl)
-                     
-                     const methodResponse = await fetch(methodSummaryApiUrl, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({
-                        title: paper.title,
-                        fullText: paper.fullText,
-                        aiService: currentAIService === 'chatgpt' ? 'chatgpt' : 'coze'
-                      })
-                    });
-                    
-                    if (methodResponse.ok) {
-                      const methodResult = await methodResponse.json();
-                      if (methodResult.success && methodResult.methodSummary) {
-                        paper.researchMethod = methodResult.methodSummary;
-                        paperInfo += `\n   研究方法：${methodResult.methodSummary}`;
-                      }
-                    }
-                  } catch (methodError) {
-                    console.error(`生成论文"${paper.title}"研究方法概要失败:`, methodError);
-                  }
-                }
+              if (result.success && result.fullText) {
+                fullText = result.fullText;
+                paper.fullText = fullText; // 更新论文对象
               }
             }
           } catch (error) {
-            console.error(`获取论文"${paper.title}"内容失败:`, error);
+            console.error(`获取论文"${paper.title}"全文失败:`, error);
           }
         }
         
-        return { paperInfo, fullText: paper.fullText };
+        return { fullText };
       }));
       
-      // ChatGPT模式下的智能内容长度控制
-      if (currentAIService === 'chatgpt') {
-        console.log('🎯 ChatGPT模式：检查消息长度，智能选择参考文献内容')
-        
-        // 先尝试构建包含全文的版本
-        let messageWithFullText = message;
-        let fullTextContents = [];
-        
-        paperContents.forEach((content, index) => {
-          let paperFullInfo = content.paperInfo;
-          
-          // 如果有全文，添加到信息中
-          if (content.fullText) {
-            paperFullInfo += `\n   全文内容：${content.fullText}`;
-          }
-          
-          fullTextContents.push(paperFullInfo + "\n");
-        });
-        
-        messageWithFullText += fullTextContents.join("");
-        
-        // 检查包含全文的消息长度
-        if (messageWithFullText.length <= 250000) {
-          console.log(`✅ 消息长度 ${messageWithFullText.length} 字符，在限制内，使用全文版本`)
-          message = messageWithFullText;
-        } else {
-          console.log(`⚠️ 消息长度 ${messageWithFullText.length} 字符，超出限制，使用研究方法版本`)
-          // 使用只包含研究方法的版本
-          const methodOnlyContents = paperContents.map(content => content.paperInfo + "\n");
-          message += methodOnlyContents.join("");
-        }
-      } else {
-        console.log('🔧 Coze模式：使用标准参考文献处理')
-        // Coze模式：使用原有逻辑，只包含研究方法和摘要
-        const standardContents = paperContents.map(content => content.paperInfo + "\n");
-        message += standardContents.join("");
-      }
+      // 只使用全文内容，不添加其他信息
+      console.log('📄 使用简化模式：仅包含全文内容')
       
-      message += `\n请基于以上${referencedPapers.length}篇参考文献的内容（特别是研究方法部分）`
+      paperContents.forEach((content, index) => {
+        if (content.fullText) {
+          message += `\n参考文献${index + 1}全文内容：\n${content.fullText}\n`;
+        } else {
+          console.warn(`论文${index + 1}没有全文内容`);
+        }
+      });
+      
+      message += `\n请基于以上${referencedPapers.length}篇参考文献的全文内容`
     } else {
       message += `\n\n`
     }
@@ -1941,26 +1833,32 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
 #数据分析：<此处描述数据分析方法>；
 #结果呈现：<此处说明结果展示形式>；
 
-要求：`
-    
-    // 根据模式添加不同的要求
-    if (mode === 'custom' && customTopic.trim()) {
-      message += `
-请基于我提供的研究内容和目的，以及我选择的参考文献中的定量研究部分，构建一份人机交互（HCI）领域的高质量定量研究方案。方案需结构完整、逻辑严谨、内容具体，避免泛泛而谈或堆砌无效信息。包括以下部分：
-● 研究假设：简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
-● 实验设计：详述实验方案，包括被试特征（如年龄、背景、样本量等）、分组方式、实验流程及任务设置。确保所有参数具体明确，不使用模糊表述（如"若干"、"约xx人"），采用分段或分点详述，不使用表格。
-● 数据分析：说明采集哪些用户数据（如行为日志、生理数据、主观评分等），以及如何采集。匹配每项数据类型，明确采用的统计分析方法（如t检验、ANOVA、回归等），并解释其与假设的对应关系。采用分段或分点详述，不使用表格。
-● 结果呈现：仅罗列将要使用的图表类型（如柱状图、折线图、散点图、箱线图、热力图等），并明确说明每个图表将展示研究中的什么具体结论。采用分点罗列格式，每个图表类型为一个要点。
-要求： 所有内容需围绕输入研究构建，信息准确、精炼、无冗余。如输入不完整，可合理假设，但需标明前提。`
-    } else {
-      message += `
-请基于对话内容，以及我选择的参考文献中的定量研究部分，构建一份人机交互（HCI）领域的高质量定量研究方案。方案需结构完整、逻辑严谨、内容具体，避免泛泛而谈或堆砌无效信息。包括以下部分：
-● 研究假设：简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
-● 实验设计：详述实验方案，包括被试特征（如年龄、背景、样本量等）、分组方式、实验流程及任务设置。确保所有参数具体明确，不使用模糊表述（如"若干"、"约xx人"），采用分段或分点详述，不使用表格。
-● 数据分析：说明采集哪些用户数据（如行为日志、生理数据、主观评分等），以及如何采集。匹配每项数据类型，明确采用的统计分析方法（如t检验、ANOVA、回归等），并解释其与假设的对应关系。采用分段或分点详述，不使用表格。
-● 结果呈现：仅罗列将要使用的图表类型（如柱状图、折线图、散点图、箱线图、热力图等），并明确说明每个图表将展示研究中的什么具体结论。采用分点罗列格式，每个图表类型为一个要点。
-要求： 所有内容需围绕输入研究构建，信息准确、精炼、无冗余。如输入不完整，可合理假设，但需标明前提。`
-    }
+请基于我提供的研究背景与研究目标/研究问题以及参考文献，撰写一份面向人机交互（HCI）领域的高质量定量研究方案。该方案需结构清晰、逻辑严谨、内容详实，避免泛泛而谈或堆砌术语。请严格按照以下结构组织内容，并在每一部分展开具体描述（每项不少于3句话）：
+
+一、研究假设
+简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
+
+二、实验设计
+参与者特征：可考虑但不限于样本量估算、年龄与性别构成、专业或技术背景、招募方式、纳入与排除标准，以及样本的代表性或研究适配性等，分点详细罗列。 
+分组方式：可描述分组方式与研究设计类型（如组间设计、组内设计、混合设计），明确自变量与因变量的定义及其操作化方式等，列出所有实验条件与控制变量。若存在系统或任务顺序安排，请说明是否使用了顺序控制策略（如固定顺序或拉丁方设计）以降低学习效应或信息泄露。
+实验流程：尽可能详细说明实验流程，包括各阶段的任务设置与执行顺序。若包含不同类型的任务（如封闭式任务与开放式创作），请分别说明任务目标、任务内容、是否提供参考信息（如示例图像）等。此外，请描述每个阶段名称、实验是否包含预实验、前测或系统说明等准备过程。在评估环节，请简介评估的具体方式（如主观问卷、半结构化访谈）以及评估内容、指标等，确保流程完整、清晰、具备可复现性。
+
+三、数据分析
+请详细说明本研究采集的用户数据类型，可考虑但不限于以下内容：主观评分数据，需明确测量的主观指标（如满意度、沉浸感等），指出采用的量表形式（如7点Likert量表、百分位滑动条、自编量表或标准量表），并简要说明各维度的测量目的与评分范围。行为数据方面，请列出所记录的具体指标（如点击次数、任务完成时长、生成内容数量、交互步数等），并说明这些数据如何采集。系统记录数据部分，请说明是否保留用户生成的文本、图像或交互轨迹，并指出其是否用于语义分析、自动评分或内容比较等后续处理。
+在数据分析部分，请针对关键因变量，说明将采用的统计方法（如t检验、单/双因素ANOVA、线性回归、ANCOVA、调节/中介分析等），并务必注意，需要将每种方法与相应研究假设（如H1、H2等）明确对应，解释其选择依据。请设定显著性标准（如α = 0.05），说明是否控制协变量（如用户背景、前测结果），以及在涉及多重比较时，是否采用Bonferroni、Holm等校正方法。整体分析框架应清晰展示变量、方法与假设之间的对应关系，以确保研究假设可通过数据系统性验证。
+
+四、结果呈现
+预测不同实验条件下，主要因变量之间可能呈现的差异或变化趋势，结合前人研究推测可能的解释机制。输出需结构化呈现，每段内容应明确对应一个假设（如 H1、H2 等），并包含以下三点：
+1. 预期的差异或效应方向（如哪种条件更高/更易发生）
+2. 对应的假设编号（如"支持 H1"）
+3. 差异背后的机制解释（如注意分配、加工方式、信任感等）
+进一步说明将如何呈现各类实验结果，包括适合用于描述组间差异的图表（如箱线图、条形图）、用于展示交互效应或趋势的图表（如折线图、交互图）等。请说明每类图表如何辅助结果解读，并强调其与研究结论之间的逻辑映射关系。
+
+要求与注意事项
+● 全文请使用中文撰写，风格应贴近正式科研报告或论文开题材料；
+● 各部分需结构分明，层级清晰，避免堆砌术语或空洞表述；
+● 所有内容必须围绕输入研究构建，信息需准确、具体、有逻辑；
+● 若输入材料不完整，可基于合理学术常识作出假设，但需明确标注前提假设。`
     
     console.log('准备发送的消息:', message)
     console.log('生成模式:', mode)
@@ -2786,12 +2684,30 @@ ${conversationContext.researchContext}
 #数据分析：<优化后的数据分析方法>
 #结果呈现：<优化后的结果呈现方式>
 
-注意：
-1. 重点优化评估中指出的问题部分
-2. 保持方案的整体一致性
-3. 确保优化后的方案更加科学严谨
-4. 如果有用户需求，确保优化后的方案更好地满足这些需求
-5. 必须按照上述格式返回完整的优化方案`
+请按照以下详细结构优化方案，确保每一部分内容详实具体（每项不少于3句话）：
+
+一、研究假设
+简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
+
+二、实验设计
+参与者特征：可考虑但不限于样本量估算、年龄与性别构成、专业或技术背景、招募方式、纳入与排除标准，以及样本的代表性或研究适配性等，分点详细罗列。 
+分组方式：可描述分组方式与研究设计类型（如组间设计、组内设计、混合设计），明确自变量与因变量的定义及其操作化方式等，列出所有实验条件与控制变量。
+实验流程：尽可能详细说明实验流程，可描述各阶段的名称、任务内容、执行顺序等，确保流程完整、清晰、具备可复现性。
+
+三、数据分析
+详述将采集的用户数据类型，可参考但不限于主观评分数据（如问卷量表、用户偏好评估）、行为数据（如点击次数、任务完成时长、操作路径）与系统记录数据（如日志、交互轨迹等），并解释每类数据的采集方式（如问卷平台、实验系统、后台日志）。
+针对每一类关键因变量，明确采用的统计分析方法（如t检验、单/双因素ANOVA、回归分析、调节/中介效应分析等），并说明分析方法与研究假设的匹配关系、假设检验标准（如α = .05）及是否纳入协变量控制。
+
+四、结果呈现
+预测不同实验条件下，主要因变量之间可能呈现的差异或变化趋势，结合前人研究推测可能的解释机制。进一步说明将如何呈现各类实验结果，包括适合用于描述组间差异的图表（如箱线图、条形图）、用于展示交互效应或趋势的图表（如折线图、交互图）等。请说明每类图表如何辅助结果解读，并强调其与研究结论之间的逻辑映射关系。
+
+注意事项：
+1. 重点优化评估建议中指出的问题部分
+2. 保持方案的整体一致性和学术规范性
+3. 确保优化后的方案更加科学严谨、逻辑清晰
+4. 各部分需结构分明，层级清晰，避免堆砌术语或空洞表述
+5. 如果有用户需求，确保优化后的方案更好地满足这些需求
+6. 必须按照上述格式返回完整的优化方案`
 
     console.log('迭代提示包含用户需求:', conversationContext.hasUserRequirements)
     
@@ -2915,11 +2831,29 @@ ${conversationContext.researchContext}`
 #数据分析：<数据分析内容>
 #结果呈现：<结果呈现内容>
 
+请按照以下详细结构优化方案，确保每一部分内容详实具体（每项不少于3句话）：
+
+一、研究假设
+简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
+
+二、实验设计
+参与者特征：可考虑但不限于样本量估算、年龄与性别构成、专业或技术背景、招募方式、纳入与排除标准，以及样本的代表性或研究适配性等，分点详细罗列。 
+分组方式：可描述分组方式与研究设计类型（如组间设计、组内设计、混合设计），明确自变量与因变量的定义及其操作化方式等，列出所有实验条件与控制变量。
+实验流程：尽可能详细说明实验流程，可描述各阶段的名称、任务内容、执行顺序等，确保流程完整、清晰、具备可复现性。
+
+三、数据分析
+详述将采集的用户数据类型，可参考但不限于主观评分数据（如问卷量表、用户偏好评估）、行为数据（如点击次数、任务完成时长、操作路径）与系统记录数据（如日志、交互轨迹等），并解释每类数据的采集方式（如问卷平台、实验系统、后台日志）。
+针对每一类关键因变量，明确采用的统计分析方法（如t检验、单/双因素ANOVA、回归分析、调节/中介效应分析等），并说明分析方法与研究假设的匹配关系、假设检验标准（如α = .05）及是否纳入协变量控制。
+
+四、结果呈现
+预测不同实验条件下，主要因变量之间可能呈现的差异或变化趋势，结合前人研究推测可能的解释机制。进一步说明将如何呈现各类实验结果，包括适合用于描述组间差异的图表（如箱线图、条形图）、用于展示交互效应或趋势的图表（如折线图、交互图）等。请说明每类图表如何辅助结果解读，并强调其与研究结论之间的逻辑映射关系。
+
 ⚠️ **重要要求：**
-- 必须返回完整的4个部分
+- 必须返回完整的4个部分，严格按照上述详细结构组织内容
 - 重点优化"${sectionName}"部分，其他部分保持原样或做必要的协调调整
-- 必须使用Markdown格式
-- 内容要详细具体，符合学术规范
+- 必须使用Markdown格式，内容要详细具体，符合学术规范
+- 各部分需结构分明，层级清晰，避免堆砌术语或空洞表述
+- 风格应贴近正式科研报告或论文开题材料
 - 严格按照上述格式返回，不要添加其他说明`
     
     console.log(`发送${sectionName}部分迭代请求`)

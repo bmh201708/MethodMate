@@ -82,12 +82,12 @@
                                     <div class="flex justify-between items-center">
                                         <div class="flex space-x-2">
                                             <button @click.stop="applyPlan(plan)"
-                                                class="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs font-medium">
+                                                class="w-20 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs font-medium flex items-center justify-center">
                                                 应用方案
                                             </button>
                                             <button @click.stop="downloadPDF(plan)"
                                                 :disabled="isGeneratingPDF"
-                                                class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1">
+                                                class="w-16 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1">
                                                 <svg v-if="isGeneratingPDF" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -98,7 +98,7 @@
                                                 <span>PDF</span>
                                             </button>
                                             <button @click.stop="downloadTXT(plan)"
-                                                class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs flex items-center space-x-1">
+                                                class="w-16 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs flex items-center justify-center space-x-1">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                                 </svg>
@@ -247,11 +247,11 @@
                             <!-- 完整方案 -->
                             <div v-if="activeSection === 'full'">
                                 <div class="flex justify-between items-center mb-6">
-                                    <h2 class="text-2xl font-bold text-gray-900">{{ selectedPlan.title }}</h2>
-                                    <div class="flex space-x-2">
+                                    <h2 class="text-2xl font-bold text-gray-900 flex-1 mr-4">{{ selectedPlan.title }}</h2>
+                                    <div class="flex space-x-2 flex-shrink-0">
                                         <button @click="downloadPDF(selectedPlan)"
                                             :disabled="isGeneratingPDF"
-                                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2">
+                                            class="w-32 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2">
                                             <svg v-if="isGeneratingPDF" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -259,18 +259,18 @@
                                             <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                             </svg>
-                                            <span>{{ isGeneratingPDF ? '生成中...' : '下载PDF' }}</span>
+                                            <span class="text-sm">{{ isGeneratingPDF ? '生成中...' : '下载PDF' }}</span>
                                         </button>
                                         <button @click="downloadTXT(selectedPlan)"
-                                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+                                            class="w-32 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                             </svg>
-                                            <span>导出TXT</span>
+                                            <span class="text-sm">导出TXT</span>
                                         </button>
                                         <button @click="applyPlan(selectedPlan)"
-                                            class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-                                            应用此方案
+                                            class="w-32 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center">
+                                            <span class="text-sm">应用此方案</span>
                                         </button>
                                     </div>
                                 </div>
@@ -574,7 +574,10 @@ const applyPlan = (plan) => {
     // 关闭下拉菜单
     showMoreActions.value = null
     
-    if (confirm(`确定要应用方案"${plan.title}"吗？这将替换当前的研究方案。`)) {
+    // 确保plan对象存在且有title属性
+    const planTitle = plan?.title || '未命名方案'
+    
+    if (confirm(`确定要应用方案"${planTitle}"吗？这将替换当前的研究方案。`)) {
         // 应用方案到当前方案
         applyPlanAsCurrentPlan(
             plan.fullPlan,
@@ -582,8 +585,8 @@ const applyPlan = (plan) => {
             plan.sourceIntroductions || {}
         )
 
-        console.log('应用方案:', plan.title)
-        alert('方案已成功应用！您可以前往研究方案页面查看。')
+        console.log('应用方案:', planTitle)
+        alert(`方案"${planTitle}"已成功应用！您可以前往研究方案页面查看。`)
 
         // 可选：跳转到研究方案页面
         router.push('/research-plan')

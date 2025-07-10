@@ -342,9 +342,6 @@
                            getRelevanceLevel(papersState.selectedPaper) === 'medium' ? '中等相关性' : 
                            getRelevanceLevel(papersState.selectedPaper) === 'low' ? '低相关性' : '极低相关性' }}
                       </span>
-                      <span v-if="papersState.selectedPaper.relevance_score" class="text-xs opacity-75">
-                        ({{ (papersState.selectedPaper.relevance_score * 100).toFixed(0) }}%)
-                      </span>
                     </div>
                   </span>
                 </div>

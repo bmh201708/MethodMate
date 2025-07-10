@@ -1330,8 +1330,10 @@ export const applyPlanAsCurrentPlan = (planData, planId = null, sourceIntroducti
     currentPlanState.sourceIntroductions = JSON.parse(JSON.stringify(sourceIntroductions))
   }
   
-  // 重新生成时间戳，标记为新的当前方案
-  currentPlanState.title = '基于AI智能体生成的定量研究方案'
+  // 保持原始标题，只更新时间戳标记
+  if (planData.title) {
+    currentPlanState.title = planData.title
+  }
   currentPlanState.methodology = `基于参考文献生成的研究方法 (应用时间: ${new Date().toLocaleString('zh-CN')})`
   
   // 标记当前应用的方案ID
