@@ -2628,7 +2628,7 @@ app.post('/api/scholar-search', async (req, res) => {
   }
 });
 
-// 辅助函数：从缓存搜索论文 - 增强语义匹配版本
+// 辅助函数：从缓存搜索论文 - 优化版本
 const searchFromCache = async (query, limit = 10, filter_venues = false, excludeIds = []) => {
   try {
     const pool = getPool();
@@ -2639,7 +2639,7 @@ const searchFromCache = async (query, limit = 10, filter_venues = false, exclude
       return [];
     }
     
-    console.log(`🔍 开始增强语义缓存搜索，查询: "${searchQuery}", 限制: ${limit}, 过滤顶会: ${filter_venues}, 排除论文数: ${excludeIds.length}`);
+    console.log(`🔍 开始优化缓存搜索，查询: "${searchQuery}", 限制: ${limit}, 过滤顶会: ${filter_venues}, 排除论文数: ${excludeIds.length}`);
     
     // 第一步：检测并翻译中文关键词
     let translatedQuery = searchQuery;
@@ -2654,101 +2654,48 @@ const searchFromCache = async (query, limit = 10, filter_venues = false, exclude
       }
     }
     
-    // 第二步：智能关键词处理和扩展
+    // 第二步：智能关键词处理
     const keywords = translatedQuery
-      .split(',')
+      .split(/[,，]+/) // 只支持逗号、中文逗号分隔，避免分割复合词
       .map(kw => kw.trim())
       .filter(kw => kw.length > 1)
-      .slice(0, 5); // 最多5个关键词，避免查询过于复杂
+      .slice(0, 3); // 限制为3个关键词，提高精确度
+    
+
     
     console.log('🔍 原始查询:', query);
     console.log('🔄 翻译后查询:', translatedQuery);
-    console.log('🔑 基础关键词:', keywords);
+    console.log('🔑 处理后的关键词:', keywords);
+    
+
     
     if (keywords.length === 0) {
       console.log('⚠️ 没有有效的搜索关键词');
       return [];
     }
     
-    // 第三步：构建语义关键词扩展映射
-    const semanticExpansion = {
-      // 研究方法相关
-      'method': ['methodology', 'approach', 'technique', 'procedure', 'protocol'],
-      'methodology': ['method', 'approach', 'technique', 'framework', 'strategy'],
-      'approach': ['method', 'methodology', 'technique', 'strategy', 'framework'],
-      'analysis': ['analyze', 'analytical', 'examination', 'evaluation', 'assessment'],
-      'research': ['study', 'investigation', 'exploration', 'inquiry', 'examination'],
-      'study': ['research', 'investigation', 'exploration', 'analysis', 'examination'],
-      
-      // 数据分析相关
-      'quantitative': ['statistical', 'numerical', 'measurement', 'metrics', 'data'],
-      'qualitative': ['interpretive', 'descriptive', 'exploratory', 'interview', 'observation'],
-      'experimental': ['experiment', 'trial', 'testing', 'controlled', 'empirical'],
-      'statistical': ['quantitative', 'numerical', 'analysis', 'metrics', 'measurement'],
-      'data': ['information', 'dataset', 'evidence', 'findings', 'results'],
-      
-      // 设计相关
-      'design': ['framework', 'architecture', 'structure', 'layout', 'interface'],
-      'user': ['participant', 'subject', 'individual', 'person', 'human'],
-      'interface': ['UI', 'interaction', 'usability', 'experience', 'design'],
-      'interaction': ['interface', 'engagement', 'communication', 'behavior', 'activity'],
-      
-      // 技术相关
-      'machine': ['artificial', 'automated', 'computer', 'algorithm', 'AI'],
-      'learning': ['training', 'education', 'adaptation', 'improvement', 'development'],
-      'algorithm': ['method', 'procedure', 'technique', 'computation', 'process'],
-      'model': ['framework', 'structure', 'representation', 'system', 'architecture'],
-      'system': ['platform', 'framework', 'infrastructure', 'architecture', 'environment'],
-      
-      // 评估相关
-      'evaluation': ['assessment', 'analysis', 'testing', 'validation', 'measurement'],
-      'assessment': ['evaluation', 'testing', 'measurement', 'analysis', 'validation'],
-      'validation': ['verification', 'testing', 'confirmation', 'evaluation', 'proof'],
-      'performance': ['efficiency', 'effectiveness', 'results', 'outcomes', 'metrics']
-    };
-    
-    // 第四步：为每个关键词生成语义扩展
-    const expandedKeywords = [];
-    keywords.forEach(keyword => {
-      const lowerKeyword = keyword.toLowerCase();
-      expandedKeywords.push(keyword); // 保留原始关键词
-      
-      // 查找完全匹配的扩展词
-      if (semanticExpansion[lowerKeyword]) {
-        expandedKeywords.push(...semanticExpansion[lowerKeyword]);
-      }
-      
-      // 查找部分匹配的扩展词
-      Object.keys(semanticExpansion).forEach(key => {
-        if (lowerKeyword.includes(key) || key.includes(lowerKeyword)) {
-          expandedKeywords.push(...semanticExpansion[key].slice(0, 2)); // 只取前2个，避免过度扩展
-        }
-      });
-    });
-    
-    // 去重并限制扩展词数量
-    const uniqueExpandedKeywords = [...new Set(expandedKeywords)].slice(0, 15);
-    console.log('🚀 扩展后的语义关键词:', uniqueExpandedKeywords);
-    
-    // 第五步：构建多层次搜索策略
+    // 第三步：构建多层次搜索策略
     let results = [];
     
-    // 策略1：全文搜索（最精确）
-    try {
-      console.log('📖 策略1：尝试MySQL全文搜索...');
-      const fullTextQuery = keywords.join(' ');
+    // 策略1：精确标题匹配（最高优先级）
+    console.log('🎯 策略1：精确标题匹配...');
+    for (const keyword of keywords) {
+      if (results.length >= limit) break;
       
       let sqlQuery = `
         SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
                citation_count, research_method, full_text, translated_abstract, translated_method,
                paper_id, source, is_top_venue, quality_score, download_sources, metadata,
-               created_at, updated_at,
-               MATCH(title, abstract) AGAINST(? IN NATURAL LANGUAGE MODE) as relevance_score
+               created_at, updated_at
         FROM paper_cache 
-        WHERE MATCH(title, abstract) AGAINST(? IN NATURAL LANGUAGE MODE)
+        WHERE (
+          LOWER(TRIM(title)) = LOWER(TRIM(?)) OR
+          LOWER(title) LIKE ? OR
+          LOWER(REPLACE(title, ' ', '')) = LOWER(REPLACE(?, ' ', ''))
+        )
       `;
       
-      const params = [fullTextQuery, fullTextQuery];
+      const params = [keyword, `%${keyword.toLowerCase()}%`, keyword];
       
       if (filter_venues) {
         sqlQuery += ' AND is_top_venue = TRUE';
@@ -2761,64 +2708,61 @@ const searchFromCache = async (query, limit = 10, filter_venues = false, exclude
         params.push(...excludeIds);
       }
       
-      sqlQuery += ' ORDER BY relevance_score DESC, citation_count DESC';
-      sqlQuery += ` LIMIT ${parseInt(limit)}`;
+      // 排除已找到的论文
+      if (results.length > 0) {
+        const foundIds = results.map(r => r.id);
+        sqlQuery += ` AND id NOT IN (${foundIds.map(() => '?').join(',')})`;
+        params.push(...foundIds);
+      }
       
-      console.log('📝 全文搜索SQL:', sqlQuery.replace(/\s+/g, ' ').trim());
-      console.log('🔧 全文搜索参数:', params);
+      sqlQuery += ' ORDER BY citation_count DESC, created_at DESC';
+      sqlQuery += ` LIMIT ${parseInt(limit - results.length)}`;
       
-      const [fullTextResults] = await pool.execute(sqlQuery, params);
+      const [exactResults] = await pool.execute(sqlQuery, params);
       
-      if (fullTextResults.length > 0) {
-        console.log(`✅ 全文搜索成功，找到 ${fullTextResults.length} 篇论文`);
-        results = fullTextResults.map(paper => ({
+      if (exactResults.length > 0) {
+        console.log(`✅ 精确匹配关键词"${keyword}"，找到 ${exactResults.length} 篇论文`);
+        const processedExact = exactResults.map(paper => ({
           ...paper,
           download_sources: paper.download_sources ? 
             (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null,
           metadata: paper.metadata ? 
             (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
-          matched_strategy: 'fulltext',
-          relevance_score: Math.max(0.95, paper.relevance_score || 0.95) // 全文搜索最低0.95分
+          matched_strategy: 'exact_title',
+          relevance_score: calculateRelevanceScore(paper.title, keywords, 'title')
         }));
         
-        if (results.length >= limit) {
-          console.log('📚 全文搜索结果充足，直接返回');
-          return results;
-        }
+        results = results.concat(processedExact);
+      }
+    }
+    
+    // 策略2：标题+摘要组合匹配（中等优先级）
+    if (results.length < limit) {
+      console.log('📖 策略2：标题+摘要组合匹配...');
+      
+      let sqlQuery = `
+        SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
+               citation_count, research_method, full_text, translated_abstract, translated_method,
+               paper_id, source, is_top_venue, quality_score, download_sources, metadata,
+               created_at, updated_at
+        FROM paper_cache 
+        WHERE 1=1
+      `;
+      
+      const params = [];
+      const conditions = [];
+      
+      // 构建组合匹配条件：标题包含关键词1 AND (标题包含关键词2 OR 摘要包含关键词2)
+      if (keywords.length >= 2) {
+        conditions.push(`(LOWER(title) LIKE ? AND (LOWER(title) LIKE ? OR LOWER(abstract) LIKE ?))`);
+        params.push(`%${keywords[0].toLowerCase()}%`, `%${keywords[1].toLowerCase()}%`, `%${keywords[1].toLowerCase()}%`);
       } else {
-        console.log('⚠️ 全文搜索无结果，继续尝试其他策略');
+        // 单个关键词：标题或摘要包含
+        conditions.push(`(LOWER(title) LIKE ? OR LOWER(abstract) LIKE ?)`);
+        params.push(`%${keywords[0].toLowerCase()}%`, `%${keywords[0].toLowerCase()}%`);
       }
-    } catch (fullTextError) {
-      console.log('⚠️ 全文搜索失败，继续尝试其他策略:', fullTextError.message);
-    }
-    
-    // 策略2：扩展关键词匹配（语义相关）
-    if (results.length < limit) {
-      console.log('🎯 策略2：扩展关键词语义匹配...');
       
-      let sqlQuery = `
-        SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
-               citation_count, research_method, full_text, translated_abstract, translated_method,
-               paper_id, source, is_top_venue, quality_score, download_sources, metadata,
-               created_at, updated_at
-        FROM paper_cache 
-        WHERE 1=1
-      `;
-      
-      const params = [];
-      
-      // 使用扩展关键词构建OR条件
-      const orConditions = [];
-      uniqueExpandedKeywords.forEach((keyword) => {
-        orConditions.push(`title LIKE ?`);
-        orConditions.push(`abstract LIKE ?`);
-        params.push(`%${keyword.toLowerCase()}%`);
-        params.push(`%${keyword.toLowerCase()}%`);
-      });
-      
-      if (orConditions.length > 0) {
-        sqlQuery += ` AND (${orConditions.join(' OR ')})`;
-      }
+      sqlQuery += ` AND (${conditions.join(' OR ')})`;
       
       if (filter_venues) {
         sqlQuery += ' AND is_top_venue = TRUE';
@@ -2841,30 +2785,27 @@ const searchFromCache = async (query, limit = 10, filter_venues = false, exclude
       sqlQuery += ' ORDER BY citation_count DESC, created_at DESC';
       sqlQuery += ` LIMIT ${parseInt(limit - results.length)}`;
       
-      console.log('📝 扩展关键词SQL:', sqlQuery.replace(/\s+/g, ' ').trim());
-      console.log('🔧 扩展关键词参数数量:', params.length);
+      const [combinedResults] = await pool.execute(sqlQuery, params);
       
-      const [expandedResults] = await pool.execute(sqlQuery, params);
-      
-      if (expandedResults.length > 0) {
-        console.log(`✅ 扩展关键词搜索成功，找到 ${expandedResults.length} 篇论文`);
-        const processedExpanded = expandedResults.map(paper => ({
+      if (combinedResults.length > 0) {
+        console.log(`✅ 组合匹配成功，找到 ${combinedResults.length} 篇论文`);
+        const processedCombined = combinedResults.map(paper => ({
           ...paper,
           download_sources: paper.download_sources ? 
             (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null,
           metadata: paper.metadata ? 
             (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
-          matched_strategy: 'semantic_expansion',
-          relevance_score: 0.9 // 提高语义匹配分数
+          matched_strategy: 'combined_match',
+          relevance_score: calculateRelevanceScore(paper.title + ' ' + paper.abstract, keywords, 'combined')
         }));
         
-        results = results.concat(processedExpanded);
+        results = results.concat(processedCombined);
       }
     }
     
-    // 策略3：基础关键词匹配（回退策略）
+    // 策略3：摘要匹配（较低优先级）
     if (results.length < limit) {
-      console.log('🔄 策略3：基础关键词匹配（回退策略）...');
+      console.log('📝 策略3：摘要匹配...');
       
       let sqlQuery = `
         SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
@@ -2876,13 +2817,11 @@ const searchFromCache = async (query, limit = 10, filter_venues = false, exclude
       `;
       
       const params = [];
-      
-      // 使用原始关键词构建OR条件
       const orConditions = [];
+      
+      // 摘要中包含任意关键词
       keywords.forEach((keyword) => {
-        orConditions.push(`title LIKE ?`);
-        orConditions.push(`abstract LIKE ?`);
-        params.push(`%${keyword.toLowerCase()}%`);
+        orConditions.push(`LOWER(abstract) LIKE ?`);
         params.push(`%${keyword.toLowerCase()}%`);
       });
       
@@ -2911,23 +2850,21 @@ const searchFromCache = async (query, limit = 10, filter_venues = false, exclude
       sqlQuery += ' ORDER BY citation_count DESC, created_at DESC';
       sqlQuery += ` LIMIT ${parseInt(limit - results.length)}`;
       
-      console.log('📝 基础关键词SQL:', sqlQuery.replace(/\s+/g, ' ').trim());
+      const [abstractResults] = await pool.execute(sqlQuery, params);
       
-      const [basicResults] = await pool.execute(sqlQuery, params);
-      
-      if (basicResults.length > 0) {
-        console.log(`✅ 基础关键词搜索成功，找到 ${basicResults.length} 篇论文`);
-        const processedBasic = basicResults.map(paper => ({
+      if (abstractResults.length > 0) {
+        console.log(`✅ 摘要匹配成功，找到 ${abstractResults.length} 篇论文`);
+        const processedAbstract = abstractResults.map(paper => ({
           ...paper,
           download_sources: paper.download_sources ? 
             (typeof paper.download_sources === 'string' ? JSON.parse(paper.download_sources) : paper.download_sources) : null,
           metadata: paper.metadata ? 
             (typeof paper.metadata === 'string' ? JSON.parse(paper.metadata) : paper.metadata) : null,
-          matched_strategy: 'basic_keywords',
-          relevance_score: 0.85 // 提高基础关键词匹配分数
+          matched_strategy: 'abstract_match',
+          relevance_score: calculateRelevanceScore(paper.abstract, keywords, 'abstract')
         }));
         
-        results = results.concat(processedBasic);
+        results = results.concat(processedAbstract);
       }
     }
     
@@ -2935,36 +2872,84 @@ const searchFromCache = async (query, limit = 10, filter_venues = false, exclude
     const finalResults = results
       .slice(0, limit)
       .sort((a, b) => {
-        // 按匹配策略和相关性排序
-        const strategyPriority = { 'fulltext': 3, 'semantic_expansion': 2, 'basic_keywords': 1 };
-        const aPriority = strategyPriority[a.matched_strategy] || 0;
-        const bPriority = strategyPriority[b.matched_strategy] || 0;
-        
-        if (aPriority !== bPriority) return bPriority - aPriority;
+        // 按相关性评分和引用次数排序
         if (a.relevance_score !== b.relevance_score) return b.relevance_score - a.relevance_score;
         return b.citation_count - a.citation_count;
       });
     
-    console.log(`🎉 增强语义搜索完成，总共找到 ${finalResults.length} 篇论文`);
+    console.log(`🎉 优化搜索完成，总共找到 ${finalResults.length} 篇论文`);
     finalResults.forEach((paper, index) => {
-      console.log(`  ${index + 1}. ${paper.title} (策略: ${paper.matched_strategy}, 相关性: ${paper.relevance_score})`);
+      console.log(`  ${index + 1}. ${paper.title} (策略: ${paper.matched_strategy}, 相关性: ${paper.relevance_score.toFixed(3)})`);
     });
+    
+
     
     return finalResults;
     
   } catch (error) {
-    console.error('❌ 增强语义缓存搜索失败:', error);
+    console.error('❌ 优化缓存搜索失败:', error);
     console.error('错误详情:', error.stack);
     
-    // 如果增强搜索失败，使用原始的备用搜索
+    // 如果优化搜索失败，使用简化的备用搜索
     try {
-      console.log('🆘 使用原始备用搜索方案...');
-      return await fallbackSearch(query, limit, filter_venues);
+      console.log('🆘 使用简化备用搜索方案...');
+      return await fallbackSearch(query, limit, filter_venues, excludeIds);
     } catch (fallbackError) {
       console.error('❌ 备用搜索也失败了:', fallbackError);
       return [];
     }
   }
+};
+
+// 计算相关性评分的辅助函数
+const calculateRelevanceScore = (text, keywords, matchType) => {
+  if (!text || !keywords || keywords.length === 0) return 0.5;
+  
+  const lowerText = text.toLowerCase();
+  let score = 0.5; // 基础分数
+  
+  // 根据匹配类型调整基础分数
+  const typeMultiplier = {
+    'title': 1.0,
+    'combined': 0.9,
+    'abstract': 0.8
+  };
+  
+  score *= typeMultiplier[matchType] || 0.8;
+  
+  // 计算关键词匹配情况
+  let matchedKeywords = 0;
+  let totalKeywordOccurrences = 0;
+  
+  keywords.forEach(keyword => {
+    const lowerKeyword = keyword.toLowerCase();
+    const occurrences = (lowerText.match(new RegExp(lowerKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+    
+    if (occurrences > 0) {
+      matchedKeywords++;
+      totalKeywordOccurrences += occurrences;
+    }
+  });
+  
+  // 关键词匹配率
+  const keywordMatchRate = matchedKeywords / keywords.length;
+  score += keywordMatchRate * 0.3;
+  
+  // 关键词出现频率奖励
+  const frequencyBonus = Math.min(totalKeywordOccurrences * 0.05, 0.2);
+  score += frequencyBonus;
+  
+  // 标题开头匹配奖励
+  if (matchType === 'title') {
+    keywords.forEach(keyword => {
+      const lowerKeyword = keyword.toLowerCase();
+      if (lowerText.startsWith(lowerKeyword.toLowerCase())) {
+        score += 0.1; // 标题开头匹配额外奖励
+      }
+    });
+  }
+  
+  return Math.min(score, 1.0); // 确保分数不超过1.0
 };
 
 // 简化的备用搜索函数 - 只搜索标题
