@@ -22,6 +22,9 @@ import {
 import { searchStatisticalMethodFromDB, getAllStatisticalMethods, getStatisticalMethodById } from './statistical-methods-db.js';
 import fs from 'fs';
 import path from 'path';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+
+const PROXY_URL = process.env.PROXY_URL || '';
 
 // 获取当前文件的目录
 const __filename = fileURLToPath(import.meta.url);
@@ -1596,6 +1599,8 @@ const fetchWithRetry = async (url, options = {}, retries = 3, delay = 1000) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
     
+    const agent = PROXY_URL ? new HttpsProxyAgent(PROXY_URL) : null;
+
     const fetchOptions = {
       method: 'GET',
       headers: {
@@ -1604,6 +1609,7 @@ const fetchWithRetry = async (url, options = {}, retries = 3, delay = 1000) => {
         ...options.headers
       },
       signal: controller.signal,
+      agent: agent,
       ...options
     };
     

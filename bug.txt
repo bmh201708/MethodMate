@@ -1,12 +1,2 @@
-[root@VM-16-17-tencentos ~]# curl -v https://api.semanticscholar.org/graph/v1/paper/search?query=test
-*   Trying 3.169.183.75:443...
-* connect to 3.169.183.75 port 443 failed: Connection timed out
-*   Trying 3.169.183.105:443...
-* ipv4 connect timeout after 83047ms, move on!
-*   Trying 3.169.183.110:443...
-* ipv4 connect timeout after 41522ms, move on!
-*   Trying 3.169.183.99:443...
-* ipv4 connect timeout after 41523ms, move on!
-* Failed to connect to api.semanticscholar.org port 443 after 300518 ms: Timeout was reached
-* Closing connection
-curl: (28) Failed to connect to api.semanticscholar.org port 443 after 300518 ms: Timeout was reached
+C:\Users\jimjy>curl --proxy "http://zbnuzfap:yrdqhq4715wp@38.154.227.167:5868/" https://ipv4.webshare.io/
+curl: (56) Proxy CONNECT aborte
