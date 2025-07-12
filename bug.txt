@@ -1,2 +1,2 @@
-C:\Users\jimjy>curl --proxy "http://zbnuzfap:yrdqhq4715wp@38.154.227.167:5868/" https://ipv4.webshare.io/
-curl: (56) Proxy CONNECT aborte
+生成来源介绍失败: ReferenceError: conversationContext is not defined
+    at generateSourceIntroduction (ResearchPlanDetail.vue:3129:34)

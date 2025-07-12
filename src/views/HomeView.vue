@@ -67,7 +67,7 @@ const tabs = [
   {
     key: 'paper',
     title: '文献推荐',
-    image: '/src/images/paper-recommand.jpg',
+    image: '/images/paper-recommand.jpg',
     descList: [
       '智能对话提取关键词',
       '相关文献精准查询',
@@ -77,7 +77,7 @@ const tabs = [
   {
     key: 'plan',
     title: '研究方案',
-    image: '/src/images/research-plan.jpg',
+    image: '/images/research-plan.jpg',
     descList: [
       'AI生成定量研究方案',
       '方案评估与一键迭代',
@@ -87,7 +87,7 @@ const tabs = [
   {
     key: 'search',
     title: '学术搜索',
-    image: '/src/images/scholar-search.jpg',
+    image: '/images/scholar-search.jpg',
     descList: [
       '直接检索所需论文',
       '多条件筛选与排序',
@@ -97,7 +97,7 @@ const tabs = [
   {
     key: 'ref',
     title: '引用管理',
-    image: '/src/images/referrence-paper.jpg',
+    image: '/images/referrence-paper.jpg',
     descList: [
       '集中查看已引用论文',
       '便捷管理引用列表',
@@ -107,7 +107,7 @@ const tabs = [
   {
     key: 'history',
     title: '历史方案',
-    image: '/src/images/history-plan.jpg',
+    image: '/images/history-plan.jpg',
     descList: [
       '浏览历史生成方案',
       '快速应用与对比',
