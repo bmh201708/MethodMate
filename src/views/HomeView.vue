@@ -1,134 +1,106 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col">
-    <!-- 顶部简介（无logo，放大标题） -->
-    <header class="text-center py-16">
-      <h1 class="text-5xl md:text-6xl font-extrabold mb-4">MethodMate</h1>
-      <p class="text-2xl text-gray-700 mb-2">让科研方法与文献推荐更智能</p>
-      <p class="text-gray-500">一站式学术研究助手，助力高效科研</p>
-    </header>
+  <div class="min-h-screen bg-gray-50 overflow-hidden">
+    <div class="container mx-auto px-4 py-16 sm:py-24">
+      
+      <!-- Header Section -->
+      <header class="text-center mb-16 sm:mb-20">
+        <h1 class="text-5xl md:text-6xl font-bold text-gray-900">MethodMate</h1>
+        <p class="mt-4 text-lg md:text-xl text-gray-600">让科研方法与文献推荐更智能</p>
+        <p class="mt-2 text-base text-gray-500">一站式学术研究助手，助力高效科研</p>
+      </header>
 
-    <!-- 主按钮区 -->
-    <div class="flex justify-center gap-8 mb-8">
-      <button @click="router.push('/papers')" class="px-8 py-4 bg-blue-600 text-white rounded-full text-lg font-semibold shadow hover:bg-blue-700 transition">从文献推荐开始</button>
-      <button @click="router.push('/research-plan')" class="px-8 py-4 bg-green-600 text-white rounded-full text-lg font-semibold shadow hover:bg-green-700 transition">从研究方案开始</button>
-    </div>
-
-    <!-- 横向Tab导航（移到按钮下方） -->
-    <div class="flex justify-center gap-4 mb-10 flex-wrap">
-      <button
-        v-for="(tab, idx) in tabs"
-        :key="tab.key"
-        @click="activeTab = idx"
-        :class="[
-          'px-6 py-2 rounded-full font-semibold text-lg transition',
-          activeTab === idx
-            ? 'bg-blue-600 text-white shadow'
-            : 'bg-white text-gray-700 border border-gray-200 hover:bg-blue-50'
-        ]"
-      >
-        {{ tab.title }}
-      </button>
-    </div>
-
-    <!-- 当前选中功能卡片（更大宽度，统一渐变色） -->
-    <section class="flex-1 flex items-start justify-center mb-16">
-      <transition name="fade-slide" mode="out-in">
-        <div
-          v-if="tabs[activeTab]"
-          :key="tabs[activeTab].key"
-          class="w-[98vw] md:w-[90vw] h-[40vh] max-w-7xl flex items-center justify-center"
-        >
-          <FeatureCard
-            :image="tabs[activeTab].image"
-            gradient="bg-gradient-to-b from-blue-500 to-blue-100"
-            :title="tabs[activeTab].title"
-            :descList="tabs[activeTab].descList"
-            class="w-full h-full"
-          />
+      <!-- Features Section -->
+      <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+        
+        <!-- Literature Recommendation Card -->
+        <div class="relative bg-white rounded-2xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 flex flex-col">
+          <!-- Watermark Icon -->
+          <img :src="homeIcon1" alt="" class="absolute top-0 left-0 w-48 h-48 opacity-50 mix-blend-luminosity" />
+          
+          <div class="p-8 z-10">
+            <div class="flex justify-between items-center">
+              <!-- Left Content -->
+              <div>
+                <h2 class="text-3xl font-bold text-gray-800">文献推荐</h2>
+                <ul class="mt-4 space-y-2 text-gray-600 text-lg">
+                  <li v-for="(item, index) in literatureFeatures" :key="index" class="flex items-center">
+                    <svg class="w-6 h-6 text-purple-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                    <span>{{ item }}</span>
+                  </li>
+                </ul>
+              </div>
+              <!-- Right Button -->
+              <button @click="goTo('/papers')" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center text-base flex-shrink-0">
+                立刻体验
+                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+              </button>
+            </div>
+          </div>
+          <div class="bg-gray-50 p-4 mt-auto z-10">
+            <img :src="homeFeature1" alt="文献推荐功能截图" class="rounded-lg shadow-inner w-full">
+          </div>
         </div>
-      </transition>
-    </section>
 
-    <!-- 页脚 -->
-    <footer class="text-center text-gray-400 py-4 text-sm">
-      © 2024 MethodMate 团队
-    </footer>
+        <!-- Research Plan Card -->
+        <div class="relative bg-white rounded-2xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 flex flex-col">
+          <!-- Watermark Icon -->
+          <img :src="homeIcon2" alt="" class="absolute top-0 left-0 w-48 h-48 opacity-50 mix-blend-luminosity" />
+
+          <div class="p-8 z-10">
+             <div class="flex justify-between items-center">
+              <!-- Left Content -->
+              <div>
+                <h2 class="text-3xl font-bold text-gray-800">研究方案</h2>
+                <ul class="mt-4 space-y-2 text-gray-600 text-lg">
+                  <li v-for="(item, index) in planFeatures" :key="index" class="flex items-center">
+                    <svg class="w-6 h-6 text-indigo-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                    <span>{{ item }}</span>
+                  </li>
+                </ul>
+              </div>
+              <!-- Right Button -->
+              <button @click="goTo('/research-plan')" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center text-base flex-shrink-0">
+                立刻体验
+                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+              </button>
+            </div>
+          </div>
+          <div class="bg-gray-50 p-4 mt-auto z-10">
+            <img :src="homeFeature2" alt="研究方案功能截图" class="rounded-lg shadow-inner w-full">
+          </div>
+        </div>
+
+      </main>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import FeatureCard from '../components/FeatureCard.vue'
+import homeIcon1 from '../images/home-icon-1.png'
+import homeIcon2 from '../images/home-icon-2.png'
+import homeFeature1 from '../images/home-feature-1.png'
+import homeFeature2 from '../images/home-feature-2.png'
 
 const router = useRouter()
 
-const tabs = [
-  {
-    key: 'paper',
-    title: '文献推荐',
-    image: '/images/paper-recommand.jpg',
-    descList: [
-      '智能对话提取关键词',
-      '相关文献精准查询',
-      '支持研究方法预览'
-    ]
-  },
-  {
-    key: 'plan',
-    title: '研究方案',
-    image: '/images/research-plan.jpg',
-    descList: [
-      'AI生成定量研究方案',
-      '方案评估与一键迭代',
-      '方案来源、方法、统计方法查询'
-    ]
-  },
-  {
-    key: 'search',
-    title: '学术搜索',
-    image: '/images/scholar-search.jpg',
-    descList: [
-      '直接检索所需论文',
-      '多条件筛选与排序',
-      '高效定位学术资源'
-    ]
-  },
-  {
-    key: 'ref',
-    title: '引用管理',
-    image: '/images/referrence-paper.jpg',
-    descList: [
-      '集中查看已引用论文',
-      '便捷管理引用列表',
-      '支持引用内容预览'
-    ]
-  },
-  {
-    key: 'history',
-    title: '历史方案',
-    image: '/images/history-plan.jpg',
-    descList: [
-      '浏览历史生成方案',
-      '快速应用与对比',
-      '方案内容一键复用'
-    ]
-  }
+const literatureFeatures = [
+  '用户输入研究目的与内容',
+  '系统自动推荐相关文献并生成列表',
+  '支持点击查看摘要与 AI 提炼的定量研究信息'
 ]
 
-const activeTab = ref(0)
+const planFeatures = [
+  '自动生成定量研究方案',
+  '支持多轮评估与模块级优化',
+  '提供文献对应关系，保障可溯源性'
+]
+
+const goTo = (path) => {
+  router.push(path)
+}
 </script>
 
-<style>
-.fade-slide-enter-active, .fade-slide-leave-active {
-  transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
-}
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateY(40px) scale(0.98);
-}
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-40px) scale(0.98);
-}
+<style scoped>
+/* You can add additional styles here if needed, but Tailwind should cover most cases. */
 </style>
