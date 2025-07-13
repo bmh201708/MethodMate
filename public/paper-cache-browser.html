@@ -1260,6 +1260,17 @@
                     closeResearchMethodModal();
                 }
             });
+            
+            // 事件委托：处理删除按钮点击
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('btn-delete')) {
+                    const paperId = e.target.dataset.paperId;
+                    // 从当前论文列表中根据ID查找标题
+                    const paper = currentPapers.find(p => p.id == paperId);
+                    const paperTitle = paper ? paper.title : '未知论文';
+                    deletePaper(paperId, paperTitle);
+                }
+            });
         });
 
         // 加载统计信息
@@ -1487,7 +1498,7 @@
                                         <button class="btn-edit" onclick="editPaper(${paper.id})" title="编辑论文">
                                             📝
                                         </button>
-                                        <button class="btn-delete" onclick="deletePaper(${paper.id}, '${escapeHtml(paper.title || '').replace(/'/g, '\\\'')}')" title="删除论文">
+                                        <button class="btn-delete" data-paper-id="${paper.id}" title="删除论文">
                                             🗑️
                                         </button>
                                     </div>
