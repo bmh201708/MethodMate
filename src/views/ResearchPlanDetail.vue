@@ -9,6 +9,7 @@
           <!-- 生成研究方案按钮 -->
           <div class="mt-1 px-6">
             <button
+              ref="generatePlanBtnRef"
               @click="showResearchPlanDialog"
               :disabled="isGenerating"
               class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-3 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
@@ -98,6 +99,7 @@
                   <button
                     v-for="section in sections"
                     :key="section.id"
+                    :ref="section.id === 'full' ? 'fullSectionBtnRef' : null"
                     @click="activeSection = section.id"
                     class="px-4 py-2 rounded-lg font-medium transition-colors"
                     :class="[
@@ -117,6 +119,7 @@
                     <!-- 简约的评估和迭代按钮 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
                       <button
+                        ref="evaluateBtnRef"
                         @click="evaluatePlan"
                         :disabled="isEvaluating"
                         class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
@@ -131,6 +134,7 @@
                         <span>{{ isEvaluating ? '评估中...' : '整体评估' }}</span>
                       </button>
                       <button
+                        ref="iterateBtnRef"
                         @click="showIterateDialog('full')"
                         :disabled="isIterating"
                         class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
@@ -417,6 +421,7 @@
                   <div class="flex items-center justify-between mb-3">
                     <h3 class="text-lg font-semibold text-gray-900">来源介绍</h3>
                     <button
+                      ref="sourceIntroBtnRef"
                       @click="generateSourceIntroduction"
                       :disabled="isGeneratingSource"
                       class="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
@@ -444,6 +449,7 @@
                     <button
                       v-for="subSection in analysisSubSections"
                       :key="subSection.id"
+                      :ref="subSection.id === 'query' ? 'statisticalQueryBtnRef' : null"
                       @click="analysisSubSection = subSection.id"
                       class="px-4 py-2 rounded-lg font-medium transition-colors"
                       :class="[
@@ -461,6 +467,7 @@
                     <div class="flex items-center justify-between mb-3">
                       <h3 class="text-lg font-semibold text-gray-900">来源介绍</h3>
                       <button
+                        ref="sourceIntroBtnRef2"
                         @click="generateSourceIntroduction"
                         :disabled="isGeneratingSource"
                         class="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
@@ -486,6 +493,7 @@
                     <div class="flex items-center justify-between mb-3">
                       <h3 class="text-lg font-semibold text-gray-900">方法介绍</h3>
                       <button
+                        ref="methodIntroBtnRef"
                         @click="generateMethodIntroduction"
                         :disabled="isGeneratingMethod"
                         class="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
@@ -514,6 +522,7 @@
                       <h3 class="text-lg font-semibold text-gray-900 mb-4">统计方法查询</h3>
                       <div class="flex space-x-4">
                         <input
+                          ref="statisticalQueryInputRef"
                           v-model="statisticalMethodQuery"
                           type="text"
                           placeholder="输入统计方法名称，如：t检验、方差分析、回归分析等"
@@ -521,6 +530,7 @@
                           @keyup.enter="queryStatisticalMethod"
                         />
                         <button
+                          ref="statisticalQueryBtnRef"
                           @click="queryStatisticalMethod"
                           :disabled="isQuerying"
                           class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
@@ -558,6 +568,104 @@
         </div>
       </div>
     </main>
+    
+    <!-- 新手指引遮罩层 -->
+    <div v-if="showTutorial" class="fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300" @click="skipTutorial">
+      <!-- 高亮区域 -->
+      <div 
+        v-if="currentTutorialStep < tutorialSteps.length"
+        class="absolute border-2 border-blue-400 bg-blue-50 bg-opacity-20 rounded-lg transition-all duration-500 tutorial-highlight"
+        :style="highlightStyle"
+      ></div>
+      
+      <!-- 引导提示框 -->
+      <div 
+        v-if="currentTutorialStep < tutorialSteps.length"
+        class="absolute bg-white rounded-lg shadow-xl p-4 max-w-sm transition-all duration-300 transform tutorial-tooltip"
+        :style="tooltipStyle"
+        @click.stop
+      >
+        <div class="flex items-start space-x-3">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center animate-bounce">
+              <span class="text-blue-600 font-semibold text-sm">{{ currentTutorialStep + 1 }}</span>
+            </div>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-sm font-semibold text-gray-900 mb-1">
+              {{ tutorialSteps[currentTutorialStep].title }}
+            </h3>
+            <p class="text-sm text-gray-600 mb-3 leading-relaxed">
+              {{ tutorialSteps[currentTutorialStep].description }}
+            </p>
+            <div class="flex items-center justify-between">
+              <div class="flex space-x-2">
+                <button
+                  @click="nextTutorialStep"
+                  class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  知道了
+                </button>
+                <button
+                  @click="skipTutorial"
+                  class="px-3 py-1.5 text-gray-600 text-sm hover:text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                >
+                  跳过
+                </button>
+              </div>
+              <button
+                @click="dontShowAgain"
+                class="text-xs text-gray-500 hover:text-gray-700 transition-colors underline"
+              >
+                下次不提示
+              </button>
+            </div>
+            
+            <!-- 键盘快捷键提示 -->
+            <div class="mt-2 text-xs text-gray-400 text-center">
+              <span>Enter/空格: 下一步</span>
+              <span class="mx-2">•</span>
+              <span>Esc: 跳过</span>
+              <span class="mx-2">•</span>
+              <span>←→: 切换步骤</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 进度指示器 -->
+        <div class="mt-3 pt-2 border-t border-gray-100">
+          <div class="flex items-center justify-between text-xs text-gray-500">
+            <span>步骤 {{ currentTutorialStep + 1 }} / {{ tutorialSteps.length }}</span>
+            <div class="flex space-x-1">
+              <div 
+                v-for="(step, index) in tutorialSteps" 
+                :key="index"
+                class="w-2 h-2 rounded-full transition-colors"
+                :class="index <= currentTutorialStep ? 'bg-blue-500' : 'bg-gray-300'"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 重置引导按钮（开发模式） -->
+    <div v-if="isDevelopment" class="fixed bottom-4 right-4 z-40 flex flex-col space-y-2">
+      <button
+        @click="resetTutorial"
+        class="px-3 py-2 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-700 transition-colors opacity-50 hover:opacity-100"
+        title="重置新手指引状态"
+      >
+        重置引导
+      </button>
+      <button
+        @click="debugElementRefs"
+        class="px-3 py-2 bg-blue-800 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors opacity-50 hover:opacity-100"
+        title="调试元素引用"
+      >
+        调试元素
+      </button>
+    </div>
     
     <!-- 迭代建议对话框 -->
     <div v-if="showIterateDialogModal" 
@@ -833,6 +941,356 @@ const selectedPresetSuggestion = ref('') // 当前选中的预设建议
 const showResearchPlanDialogModal = ref(false) // 是否显示研究方案生成对话框
 const researchPlanMode = ref('custom') // 研究方案生成模式：'auto' 或 'custom'
 const researchTopicInput = ref('') // 用户输入的研究主题
+
+// 新手指引相关状态
+const showTutorial = ref(false)
+const currentTutorialStep = ref(0)
+
+// 开发模式判断
+const isDevelopment = computed(() => {
+  return process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost'
+})
+
+// 引用DOM元素
+const generatePlanBtnRef = ref(null)
+const fullSectionBtnRef = ref(null)
+const evaluateBtnRef = ref(null)
+const iterateBtnRef = ref(null)
+const sourceIntroBtnRef = ref(null)
+const sourceIntroBtnRef2 = ref(null)
+const methodIntroBtnRef = ref(null)
+const statisticalQueryBtnRef = ref(null)
+const statisticalQueryInputRef = ref(null)
+
+// 引导步骤定义
+const tutorialSteps = [
+  {
+    title: '生成定量研究方案',
+    description: '点击这个按钮可以生成定量的研究方案，AI会根据您的需求和参考文献智能生成完整的研究设计。',
+    ref: generatePlanBtnRef
+  },
+  {
+    title: '生成来源介绍',
+    description: '基于您选择的参考文献，AI可以生成当前部分的来源说明，帮助您了解研究背景。',
+    getElement: () => {
+      // 优先选择数据分析部分的来源介绍按钮
+      if (activeSection.value === 'analysis' && analysisSubSection.value === 'source') {
+        return sourceIntroBtnRef2.value
+      }
+      
+      // 如果不在数据分析部分，先切换到数据分析的来源介绍子页面
+      if (activeSection.value !== 'analysis') {
+        activeSection.value = 'analysis'
+        return null // 返回null让focusCurrentElement处理重试
+      }
+      
+      // 如果在数据分析部分但不在来源介绍子页面，切换到来源介绍子页面
+      if (analysisSubSection.value !== 'source') {
+        analysisSubSection.value = 'source'
+        return null // 返回null让focusCurrentElement处理重试
+      }
+      
+      // 如果已经在正确的页面，返回来源介绍按钮
+      return sourceIntroBtnRef2.value
+    }
+  },
+  {
+    title: '生成方法介绍',
+    description: '在数据分析部分，可以生成详细的研究方法介绍和统计分析方法说明。',
+    getElement: () => {
+      // 确保在数据分析部分
+      if (activeSection.value !== 'analysis') {
+        activeSection.value = 'analysis'
+        return null // 返回null让focusCurrentElement处理重试
+      }
+      
+      // 确保在方法介绍子页面
+      if (analysisSubSection.value !== 'method') {
+        analysisSubSection.value = 'method'
+        return null // 返回null让focusCurrentElement处理重试
+      }
+      
+      return methodIntroBtnRef.value
+    }
+  },
+  {
+    title: '统计方法查询',
+    description: '在数据分析部分，可以查询各种统计方法的详细说明和使用场景。',
+    getElement: () => {
+      // 确保在数据分析部分
+      if (activeSection.value !== 'analysis') {
+        activeSection.value = 'analysis'
+        return null // 返回null让focusCurrentElement处理重试
+      }
+      
+      // 确保在统计方法查询子页面
+      if (analysisSubSection.value !== 'query') {
+        analysisSubSection.value = 'query'
+        return null // 返回null让focusCurrentElement处理重试
+      }
+      
+      return statisticalQueryBtnRef.value
+    }
+  }
+]
+
+// 计算高亮区域样式
+const highlightStyle = computed(() => {
+  if (currentTutorialStep.value >= tutorialSteps.length) return {}
+  
+  const currentStep = tutorialSteps[currentTutorialStep.value]
+  const element = currentStep.getElement ? currentStep.getElement() : currentStep.ref.value
+  
+  if (!element || typeof element.getBoundingClientRect !== 'function') {
+    console.warn('元素不存在或无法获取位置:', currentStep.title, element)
+    return {}
+  }
+  
+  try {
+    const rect = element.getBoundingClientRect()
+    return {
+      top: `${rect.top - 8}px`,
+      left: `${rect.left - 8}px`,
+      width: `${rect.width + 16}px`,
+      height: `${rect.height + 16}px`
+    }
+  } catch (error) {
+    console.warn('计算高亮区域样式失败:', error)
+    return {}
+  }
+})
+
+// 计算提示框位置
+const tooltipStyle = computed(() => {
+  if (currentTutorialStep.value >= tutorialSteps.length) return {}
+  
+  const currentStep = tutorialSteps[currentTutorialStep.value]
+  const element = currentStep.getElement ? currentStep.getElement() : currentStep.ref.value
+  
+  if (!element || typeof element.getBoundingClientRect !== 'function') return {}
+  
+  try {
+    const rect = element.getBoundingClientRect()
+    const windowHeight = window.innerHeight
+    const windowWidth = window.innerWidth
+    
+    // 计算提示框位置，避免超出屏幕
+    let top = rect.bottom + 20
+    let left = rect.left
+    
+    // 如果下方空间不够，显示在上方
+    if (top + 200 > windowHeight) {
+      top = rect.top - 220
+    }
+    
+    // 如果右侧空间不够，调整位置
+    if (left + 320 > windowWidth) {
+      left = windowWidth - 340
+    }
+    
+    return {
+      top: `${Math.max(20, top)}px`,
+      left: `${Math.max(20, left)}px`
+    }
+  } catch (error) {
+    console.warn('计算提示框位置失败:', error)
+    return {}
+  }
+})
+
+// 检查是否需要显示新手指引
+const shouldShowTutorial = () => {
+  const tutorialShown = localStorage.getItem('researchPlanDetail_tutorial_shown')
+  return tutorialShown !== 'true'
+}
+
+// 开始新手指引
+const startTutorial = () => {
+  if (!shouldShowTutorial()) return
+  
+  // 确保在正确的初始状态
+  activeSection.value = 'full'
+  analysisSubSection.value = 'source'
+  
+  showTutorial.value = true
+  currentTutorialStep.value = 0
+  
+  // 等待DOM更新后聚焦到第一个元素
+  nextTick(() => {
+    setTimeout(() => {
+      focusCurrentElement()
+    }, 500) // 增加延迟确保页面完全加载
+  })
+}
+
+// 聚焦到当前步骤的元素
+const focusCurrentElement = () => {
+  if (currentTutorialStep.value >= tutorialSteps.length) return
+  
+  const currentStep = tutorialSteps[currentTutorialStep.value]
+  
+  // 第一步确保在完整方案页面
+  if (currentTutorialStep.value === 0) {
+    activeSection.value = 'full'
+  }
+  
+  // 等待DOM更新后再聚焦
+  nextTick(() => {
+    setTimeout(() => {
+      const element = currentStep.getElement ? currentStep.getElement() : currentStep.ref.value
+      
+      if (element && typeof element.scrollIntoView === 'function') {
+        try {
+          console.log('聚焦元素:', currentStep.title, element)
+          
+          // 滚动到元素位置
+          element.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          })
+          
+          // 如果是输入框，聚焦
+          if (element.tagName === 'INPUT' && typeof element.focus === 'function') {
+            element.focus()
+          }
+        } catch (error) {
+          console.warn('聚焦元素失败:', error)
+        }
+      } else {
+        console.warn('元素不存在或无法聚焦:', currentStep.title)
+        
+        // 如果元素不存在，可能是页面状态还没切换完成，重试一次
+        if (currentStep.getElement) {
+          console.log('元素不存在，可能是页面状态切换中，重试一次')
+          setTimeout(() => {
+            const retryElement = currentStep.getElement()
+            if (retryElement && typeof retryElement.scrollIntoView === 'function') {
+              try {
+                console.log('重试成功，聚焦元素:', currentStep.title, retryElement)
+                retryElement.scrollIntoView({ 
+                  behavior: 'smooth', 
+                  block: 'center' 
+                })
+              } catch (error) {
+                console.warn('重试聚焦元素失败:', error)
+                // 如果重试也失败，跳到下一步
+                if (currentTutorialStep.value < tutorialSteps.length - 1) {
+                  console.log('重试失败，自动跳到下一步')
+                  nextTutorialStep()
+                }
+              }
+            } else {
+              console.log('重试失败，元素仍然不存在，跳到下一步')
+              if (currentTutorialStep.value < tutorialSteps.length - 1) {
+                nextTutorialStep()
+              }
+            }
+          }, 500) // 重试延迟
+        } else {
+          // 如果元素不存在，尝试跳到下一步
+          if (currentTutorialStep.value < tutorialSteps.length - 1) {
+            console.log('元素不存在，自动跳到下一步')
+            nextTutorialStep()
+          }
+        }
+      }
+    }, 300) // 增加延迟确保DOM更新完成
+  })
+}
+
+// 下一步
+const nextTutorialStep = () => {
+  currentTutorialStep.value++
+  
+  if (currentTutorialStep.value >= tutorialSteps.length) {
+    // 引导完成
+    completeTutorial()
+  } else {
+    // 聚焦到下一个元素
+    nextTick(() => {
+      setTimeout(() => {
+        focusCurrentElement()
+      }, 200) // 增加延迟确保页面切换完成
+    })
+  }
+}
+
+// 跳过引导
+const skipTutorial = () => {
+  showTutorial.value = false
+  currentTutorialStep.value = 0
+}
+
+// 下次不提示
+const dontShowAgain = () => {
+  localStorage.setItem('researchPlanDetail_tutorial_shown', 'true')
+  skipTutorial()
+}
+
+// 完成引导
+const completeTutorial = () => {
+  showTutorial.value = false
+  currentTutorialStep.value = 0
+  console.log('✅ 研究方案详情页面新手指引完成')
+}
+
+// 重置引导状态（用于测试）
+const resetTutorial = () => {
+  localStorage.removeItem('researchPlanDetail_tutorial_shown')
+  console.log('🔄 研究方案详情页面新手指引状态已重置')
+}
+
+// 调试函数：检查所有元素引用
+const debugElementRefs = () => {
+  console.log('=== 调试元素引用 ===')
+  console.log('当前页面状态:', {
+    activeSection: activeSection.value,
+    analysisSubSection: analysisSubSection.value,
+    hasGeneratedPlan: hasGeneratedPlan.value
+  })
+  
+  tutorialSteps.forEach((step, index) => {
+    const element = step.getElement ? step.getElement() : step.ref.value
+    console.log(`步骤${index + 1} (${step.title}):`, element ? '存在' : '不存在', element)
+    
+    if (step.getElement) {
+      console.log(`  - 使用getElement函数`)
+    } else {
+      console.log(`  - 使用ref引用`)
+    }
+  })
+  console.log('=== 调试完成 ===')
+}
+
+// 键盘事件处理
+const handleKeydown = (event) => {
+  if (!showTutorial.value) return
+  
+  switch (event.key) {
+    case 'Enter':
+    case ' ':
+      event.preventDefault()
+      nextTutorialStep()
+      break
+    case 'Escape':
+      event.preventDefault()
+      skipTutorial()
+      break
+    case 'ArrowRight':
+      event.preventDefault()
+      nextTutorialStep()
+      break
+    case 'ArrowLeft':
+      event.preventDefault()
+      if (currentTutorialStep.value > 0) {
+        currentTutorialStep.value--
+        nextTick(() => {
+          focusCurrentElement()
+        })
+      }
+      break
+  }
+}
 
 // 统计方法名称列表
 const statisticalMethods = [
@@ -1704,9 +2162,6 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
     .pop()
   lastMessageIdBeforeGenerate.value = latestMessage ? latestMessage.id : 0
   
-  // 清除之前的解析记录，确保新生成的方案能被解析
-    // 已移除：lastProcessedMessageId.value = null // 不再需要
-  
   // 保存当前生成的信息，用于后续标题生成
   currentGenerationInfo.value = {
     mode: mode,
@@ -1840,7 +2295,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
 
 二、实验设计
 参与者特征：可考虑但不限于样本量估算、年龄与性别构成、专业或技术背景、招募方式、纳入与排除标准，以及样本的代表性或研究适配性等，分点详细罗列。 
-分组方式：可描述分组方式与研究设计类型（如组间设计、组内设计、混合设计），明确自变量与因变量的定义及其操作化方式等，列出所有实验条件与控制变量。若存在系统或任务顺序安排，请说明是否使用了顺序控制策略（如固定顺序或拉丁方设计）以降低学习效应或信息泄露。
+分组方式：可描述分组方式与研究设计类型（如组间设计、组内设计、混合设计），明确自变量与因变量的定义及其操作化方式等，列出所有实验条件与控制变量。若涉及不同系统或技术条件的实验时，需详细说明或举例对照组所使用的工具（如Adobe Illustrator等），避免仅用"传统系统"或"baseline"等模糊表述。在设定对照组时，应充分考虑其内部是否存在可进一步区分的类型，结合参考文献进行发散思考，确保对照条件设置充分且具代表性，以提升结果的解释力与外部效度。
 实验流程：尽可能详细说明实验流程，包括各阶段的任务设置与执行顺序。若包含不同类型的任务（如封闭式任务与开放式创作），请分别说明任务目标、任务内容、是否提供参考信息（如示例图像）等。此外，请描述每个阶段名称、实验是否包含预实验、前测或系统说明等准备过程。在评估环节，请简介评估的具体方式（如主观问卷、半结构化访谈）以及评估内容、指标等，确保流程完整、清晰、具备可复现性。
 
 三、数据分析
@@ -2368,6 +2823,17 @@ onMounted(() => {
     analysisMethodLength: currentPlanState.analysisMethod?.length || 0,
     analysisMethodPreview: currentPlanState.analysisMethod?.substring(0, 100) + '...'
   })
+  
+  // 添加键盘事件监听
+  document.addEventListener('keydown', handleKeydown)
+  
+  // 检查是否需要显示新手指引
+  if (shouldShowTutorial()) {
+    // 延迟一点时间，确保页面完全加载
+    setTimeout(() => {
+      startTutorial()
+    }, 1000)
+  }
 })
 
 // 组件卸载时清理全局函数
@@ -2382,6 +2848,9 @@ onUnmounted(() => {
       console.log('🧹 已清理全局函数 handleStatisticalMethodClick')
     }
   }
+  
+  // 移除键盘事件监听
+  document.removeEventListener('keydown', handleKeydown)
 })
 
 // 加载历史方案数据
@@ -3738,5 +4207,45 @@ const confirmIterate = async () => {
 
 .prose .markdown-table tr:hover {
   background-color: #f3f4f6 !important;
+}
+
+/* 新手指引动画样式 */
+@keyframes tutorial-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes tutorial-highlight {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.1);
+  }
+}
+
+.tutorial-highlight {
+  animation: tutorial-highlight 2s infinite;
+}
+
+.tutorial-tooltip {
+  animation: tutorial-fade-in 0.3s ease-out;
+}
+
+/* 确保高亮元素在最上层 */
+.tutorial-highlight {
+  z-index: 51;
+}
+
+/* 引导提示框样式优化 */
+.tutorial-tooltip {
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 </style> 
