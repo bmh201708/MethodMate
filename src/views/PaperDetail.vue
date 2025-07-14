@@ -16,6 +16,7 @@
               <label class="block text-sm font-medium text-gray-700">搜索关键词</label>
               <div class="flex space-x-2">
                 <input
+                  ref="keywordInputRef"
                   v-model="searchKeywords"
                   type="text"
                   placeholder="输入关键词，用逗号分隔"
@@ -23,6 +24,7 @@
                   @keyup.enter="getRecommendedPapers"
                 />
                 <button
+                  ref="extractKeywordsBtnRef"
                   @click="extractKeywordsFromChat"
                   :disabled="isExtractingKeywords"
                   class="px-2 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1 whitespace-nowrap"
@@ -46,6 +48,7 @@
             <!-- 获取相关文献按钮和选项 -->
             <div class="space-y-2">
               <button
+                ref="getPapersBtnRef"
                 @click="getRecommendedPapers"
                 :disabled="papersState.isLoadingRecommendations"
                 class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
@@ -73,7 +76,7 @@
                     title="清空论文池"
                   >
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
                   </button>
                 </div>
@@ -86,6 +89,7 @@
               <div class="flex items-center justify-between px-1">
                 <label class="flex items-center text-sm text-gray-600 cursor-pointer">
                   <input 
+                    ref="localCacheCheckboxRef"
                     type="checkbox" 
                     v-model="useLocalCache" 
                     class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
@@ -99,6 +103,7 @@
               <div class="flex items-center justify-between px-1">
                 <label class="flex items-center text-sm text-gray-600 cursor-pointer">
                   <input 
+                    ref="expandRangeCheckboxRef"
                     type="checkbox" 
                     v-model="expandRange" 
                     class="form-checkbox h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
@@ -285,6 +290,7 @@
                     已选为参考
                   </span>
                   <button 
+                    ref="referenceBtnRef"
                     @click="toggleReference(papersState.selectedPaper)"
                     class="px-4 py-2 text-sm rounded-lg transition-colors"
                     :class="[
@@ -713,10 +719,101 @@
       </div>
     </div>
   </div>
+
+  <!-- 新手指引遮罩层 -->
+  <div v-if="showTutorial" class="fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300" @click="skipTutorial">
+    <!-- 高亮区域 -->
+    <div 
+      v-if="currentTutorialStep < tutorialSteps.length"
+      class="absolute border-2 border-blue-400 bg-blue-50 bg-opacity-20 rounded-lg transition-all duration-500 tutorial-highlight"
+      :style="highlightStyle"
+    ></div>
+    
+    <!-- 引导提示框 -->
+    <div 
+      v-if="currentTutorialStep < tutorialSteps.length"
+      class="absolute bg-white rounded-lg shadow-xl p-4 max-w-sm transition-all duration-300 transform tutorial-tooltip"
+      :style="tooltipStyle"
+      @click.stop
+    >
+      <div class="flex items-start space-x-3">
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center animate-bounce">
+            <span class="text-blue-600 font-semibold text-sm">{{ currentTutorialStep + 1 }}</span>
+          </div>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-sm font-semibold text-gray-900 mb-1">
+            {{ tutorialSteps[currentTutorialStep].title }}
+          </h3>
+          <p class="text-sm text-gray-600 mb-3 leading-relaxed">
+            {{ tutorialSteps[currentTutorialStep].description }}
+          </p>
+          <div class="flex items-center justify-between">
+            <div class="flex space-x-2">
+              <button
+                @click="nextTutorialStep"
+                class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                知道了
+              </button>
+              <button
+                @click="skipTutorial"
+                class="px-3 py-1.5 text-gray-600 text-sm hover:text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                跳过
+              </button>
+            </div>
+            <button
+              @click="dontShowAgain"
+              class="text-xs text-gray-500 hover:text-gray-700 transition-colors underline"
+            >
+              下次不提示
+            </button>
+          </div>
+          
+          <!-- 键盘快捷键提示 -->
+          <div class="mt-2 text-xs text-gray-400 text-center">
+            <span>Enter/空格: 下一步</span>
+            <span class="mx-2">•</span>
+            <span>Esc: 跳过</span>
+            <span class="mx-2">•</span>
+            <span>←→: 切换步骤</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 进度指示器 -->
+      <div class="mt-3 pt-2 border-t border-gray-100">
+        <div class="flex items-center justify-between text-xs text-gray-500">
+          <span>步骤 {{ currentTutorialStep + 1 }} / {{ tutorialSteps.length }}</span>
+          <div class="flex space-x-1">
+            <div 
+              v-for="(step, index) in tutorialSteps" 
+              :key="index"
+              class="w-2 h-2 rounded-full transition-colors"
+              :class="index <= currentTutorialStep ? 'bg-blue-500' : 'bg-gray-300'"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 重置引导按钮（开发模式） -->
+  <div v-if="isDevelopment" class="fixed bottom-4 right-4 z-40">
+    <button
+      @click="resetTutorial"
+      class="px-3 py-2 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-700 transition-colors opacity-50 hover:opacity-100"
+      title="重置新手指引状态"
+    >
+      重置引导
+    </button>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import ChatBox from '../components/ChatBox.vue'
 import { marked } from 'marked'
@@ -824,7 +921,53 @@ onMounted(() => {
   updateExternalPoolStatus()
   loadTagsData()
   console.log('🔄 页面加载时已清空已显示论文记录，重新开始推荐')
+  
+  // 检查是否需要显示新手指引
+  if (shouldShowTutorial()) {
+    // 延迟一点时间，确保页面完全加载
+    setTimeout(() => {
+      startTutorial()
+    }, 1000)
+  }
+  
+  // 添加键盘事件监听
+  document.addEventListener('keydown', handleKeydown)
 })
+
+// 组件卸载时移除事件监听
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
+})
+
+// 键盘事件处理
+const handleKeydown = (event) => {
+  if (!showTutorial.value) return
+  
+  switch (event.key) {
+    case 'Enter':
+    case ' ':
+      event.preventDefault()
+      nextTutorialStep()
+      break
+    case 'Escape':
+      event.preventDefault()
+      skipTutorial()
+      break
+    case 'ArrowRight':
+      event.preventDefault()
+      nextTutorialStep()
+      break
+    case 'ArrowLeft':
+      event.preventDefault()
+      if (currentTutorialStep.value > 0) {
+        currentTutorialStep.value--
+        nextTick(() => {
+          focusCurrentElement()
+        })
+      }
+      break
+  }
+}
 
 // 清空外部论文池
 const clearExternalPool = () => {
@@ -1791,6 +1934,188 @@ const getRelevanceLevel = (paper) => {
   // 如果没有relevance_score，返回null（不显示相关性标签）
   return null
 }
+
+// 新手指引相关状态
+const showTutorial = ref(false)
+const currentTutorialStep = ref(0)
+
+// 开发模式判断
+const isDevelopment = computed(() => {
+  return process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost'
+})
+
+// 引用DOM元素
+const keywordInputRef = ref(null)
+const extractKeywordsBtnRef = ref(null)
+const getPapersBtnRef = ref(null)
+const localCacheCheckboxRef = ref(null)
+const expandRangeCheckboxRef = ref(null)
+const referenceBtnRef = ref(null)
+
+// 引导步骤定义
+const tutorialSteps = [
+  {
+    title: '输入关键词',
+    description: '在这里输入你想要搜索的关键词，支持中英文，多个关键词用逗号分隔。',
+    ref: keywordInputRef
+  },
+  {
+    title: '智能提取关键词',
+    description: '点击这个按钮可以从对话历史中智能提取相关关键词，帮助你快速开始搜索。',
+    ref: extractKeywordsBtnRef
+  },
+  {
+    title: '获取相关文献',
+    description: '这是核心功能按钮，点击后会根据关键词为你推荐相关的学术文献。',
+    ref: getPapersBtnRef
+  },
+  {
+    title: '本地缓存选项',
+    description: '勾选此项会优先从本地高质量缓存中搜索论文，提高搜索速度和准确性。',
+    ref: localCacheCheckboxRef
+  },
+  {
+    title: '扩大搜索范围',
+    description: '勾选此项会包含更多文献源，不仅限于顶级期刊和会议，但可能影响相关性。',
+    ref: expandRangeCheckboxRef
+  },
+  {
+    title: '标记参考文献',
+    description: '选择文献后，可以点击此按钮将其标记为参考文献，方便后续引用。',
+    ref: referenceBtnRef
+  }
+]
+
+// 计算高亮区域样式
+const highlightStyle = computed(() => {
+  if (currentTutorialStep.value >= tutorialSteps.length) return {}
+  
+  const currentStep = tutorialSteps[currentTutorialStep.value]
+  const element = currentStep.ref.value
+  
+  if (!element) return {}
+  
+  const rect = element.getBoundingClientRect()
+  return {
+    top: `${rect.top - 8}px`,
+    left: `${rect.left - 8}px`,
+    width: `${rect.width + 16}px`,
+    height: `${rect.height + 16}px`
+  }
+})
+
+// 计算提示框位置
+const tooltipStyle = computed(() => {
+  if (currentTutorialStep.value >= tutorialSteps.length) return {}
+  
+  const currentStep = tutorialSteps[currentTutorialStep.value]
+  const element = currentStep.ref.value
+  
+  if (!element) return {}
+  
+  const rect = element.getBoundingClientRect()
+  const windowHeight = window.innerHeight
+  const windowWidth = window.innerWidth
+  
+  // 计算提示框位置，避免超出屏幕
+  let top = rect.bottom + 20
+  let left = rect.left
+  
+  // 如果下方空间不够，显示在上方
+  if (top + 200 > windowHeight) {
+    top = rect.top - 220
+  }
+  
+  // 如果右侧空间不够，调整位置
+  if (left + 320 > windowWidth) {
+    left = windowWidth - 340
+  }
+  
+  return {
+    top: `${Math.max(20, top)}px`,
+    left: `${Math.max(20, left)}px`
+  }
+})
+
+// 检查是否需要显示新手指引
+const shouldShowTutorial = () => {
+  const tutorialShown = localStorage.getItem('paperDetail_tutorial_shown')
+  return tutorialShown !== 'true'
+}
+
+// 开始新手指引
+const startTutorial = () => {
+  if (!shouldShowTutorial()) return
+  
+  showTutorial.value = true
+  currentTutorialStep.value = 0
+  
+  // 等待DOM更新后聚焦到第一个元素
+  nextTick(() => {
+    focusCurrentElement()
+  })
+}
+
+// 聚焦到当前步骤的元素
+const focusCurrentElement = () => {
+  if (currentTutorialStep.value >= tutorialSteps.length) return
+  
+  const currentStep = tutorialSteps[currentTutorialStep.value]
+  const element = currentStep.ref.value
+  
+  if (element) {
+    // 滚动到元素位置
+    element.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'center' 
+    })
+    
+    // 如果是输入框，聚焦
+    if (element.tagName === 'INPUT') {
+      element.focus()
+    }
+  }
+}
+
+// 下一步
+const nextTutorialStep = () => {
+  currentTutorialStep.value++
+  
+  if (currentTutorialStep.value >= tutorialSteps.length) {
+    // 引导完成
+    completeTutorial()
+  } else {
+    // 聚焦到下一个元素
+    nextTick(() => {
+      focusCurrentElement()
+    })
+  }
+}
+
+// 跳过引导
+const skipTutorial = () => {
+  showTutorial.value = false
+  currentTutorialStep.value = 0
+}
+
+// 下次不提示
+const dontShowAgain = () => {
+  localStorage.setItem('paperDetail_tutorial_shown', 'true')
+  skipTutorial()
+}
+
+// 完成引导
+const completeTutorial = () => {
+  showTutorial.value = false
+  currentTutorialStep.value = 0
+  console.log('✅ 新手指引完成')
+}
+
+// 重置引导状态（用于测试）
+const resetTutorial = () => {
+  localStorage.removeItem('paperDetail_tutorial_shown')
+  console.log('🔄 新手指引状态已重置')
+}
 </script>
 
 <style>
@@ -1937,5 +2262,45 @@ const getRelevanceLevel = (paper) => {
 
 .prose a:hover {
   color: #2563eb;
+}
+
+/* 新手指引动画样式 */
+@keyframes tutorial-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes tutorial-highlight {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.1);
+  }
+}
+
+.tutorial-highlight {
+  animation: tutorial-highlight 2s infinite;
+}
+
+.tutorial-tooltip {
+  animation: tutorial-fade-in 0.3s ease-out;
+}
+
+/* 确保高亮元素在最上层 */
+.tutorial-highlight {
+  z-index: 51;
+}
+
+/* 引导提示框样式优化 */
+.tutorial-tooltip {
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 </style>
