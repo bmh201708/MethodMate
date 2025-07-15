@@ -182,30 +182,26 @@ export const extractKeywords = async (chatHistory = [], sessionId = Date.now().t
     return response.keywords
   } else if (currentService === AI_SERVICE_TYPES.CHATGPT) {
     // 构建关键词提取消息
-    let messageContent = `Please analyze the following text and extract 1-2 key academic search terms in English. 
-Focus on the most important and specific technical terms, methodologies, and core concepts.
-The keywords MUST be in English only.
-
-Please respond with only the keywords, separated by commas.
+    let messageContent = `你是一名学术文献检索专家。请根据以下研究背景和研究目的，推测出最适合用来检索相关学术文献的1-3个专业关键词。请尽量使用学术领域常用的英文关键词，并用逗号分隔输出。
 
 `
 
     if (chatHistory && chatHistory.length > 1) {
-      messageContent += 'Conversation history:\n'
+      messageContent += '研究背景和对话历史：\n'
       
       const recentHistory = chatHistory.slice(-8)
       
       recentHistory.forEach((msg, index) => {
         if (msg.type === 'user') {
-          messageContent += `User ${index + 1}: ${msg.content}\n`
+          messageContent += `用户 ${index + 1}: ${msg.content}\n`
         } else if (msg.type === 'assistant' && !msg.isError) {
-          messageContent += `Assistant ${index + 1}: ${msg.content}\n`
+          messageContent += `助手 ${index + 1}: ${msg.content}\n`
         }
       })
       
-      messageContent += '\nBased on the above conversation, extract the most relevant academic search keywords.'
+      messageContent += '\n\n根据以上对话内容，请提取最相关的学术检索关键词。'
     } else {
-      messageContent += 'Please provide some general academic research method keywords, especially in quantitative research methods, experimental design, data analysis, and related fields.'
+      messageContent += '如果没有足够的对话历史，请提供一些通用的学术研究方法关键词，特别是定量研究方法、实验设计、数据分析等相关领域的关键词。'
     }
     
     const response = await sendMessageToChatGPT(messageContent, [])

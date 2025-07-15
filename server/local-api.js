@@ -3145,13 +3145,13 @@ const parseKeywordsFromCozeResponse = (reply) => {
       try {
         const jsonData = JSON.parse(jsonStr);
         if (jsonData.keywords && Array.isArray(jsonData.keywords)) {
-          // 只取前1-2个关键词，确保是英文，并使用逗号分隔
+          // 只取前1-3个关键词，确保是英文，并使用逗号分隔
           const keywords = jsonData.keywords
             .filter(kw => kw && typeof kw === 'string' && kw.trim().length > 0)
             .filter(kw => /^[a-zA-Z\s\-]+$/.test(kw.trim())) // 只保留英文关键词（包含空格和连字符）
-            .slice(0, 2) // 只取前2个关键词
+            .slice(0, 3) // 只取前3个关键词
             .join(','); // 使用逗号而不是空格
-          console.log('从JSON中提取的关键词(逗号分隔,1-2个英文):', keywords);
+          console.log('从JSON中提取的关键词(逗号分隔,1-3个英文):', keywords);
           return keywords;
         }
       } catch (jsonError) {
@@ -3168,9 +3168,9 @@ const parseKeywordsFromCozeResponse = (reply) => {
         .split(/[,，]/) // 按逗号分隔
         .map(kw => kw.trim())
         .filter(kw => kw.length > 0 && /^[a-zA-Z\s\-]+$/.test(kw)) // 只保留英文关键词
-        .slice(0, 2) // 只取前2个关键词
+        .slice(0, 3) // 只取前3个关键词
         .join(',');
-      console.log('从文本中提取的关键词(1-2个英文):', textKeywords);
+      console.log('从文本中提取的关键词(1-3个英文):', textKeywords);
       return textKeywords;
     }
     
@@ -3180,9 +3180,9 @@ const parseKeywordsFromCozeResponse = (reply) => {
       const listKeywords = listMatches
         .map(item => item.replace(/^\d+\.\s*/, '').trim())
         .filter(kw => kw.length > 0 && /^[a-zA-Z\s\-]+$/.test(kw)) // 只保留英文关键词
-        .slice(0, 2) // 只取前2个关键词
+        .slice(0, 3) // 只取前3个关键词
         .join(',');
-      console.log('从列表中提取的关键词(1-2个英文):', listKeywords);
+      console.log('从列表中提取的关键词(1-3个英文):', listKeywords);
       return listKeywords;
     }
     
@@ -3191,20 +3191,20 @@ const parseKeywordsFromCozeResponse = (reply) => {
       .replace(/[^\w\s]/g, ' ')
       .split(/\s+/)
       .filter(word => word.length > 3 && /^[a-zA-Z]+$/.test(word)) // 只保留纯英文且长度>3的词
-      .slice(0, 2) // 只取前2个关键词
+      .slice(0, 3) // 只取前3个关键词
       .join(','); // 使用逗号分隔
     
     if (words.length > 0) {
-      console.log('从文本中提取的英文单词作为关键词(1-2个):', words);
+      console.log('从文本中提取的英文单词作为关键词(1-3个):', words);
       return words;
     }
     
     // 最后的备用方案
     console.log('无法提取关键词，使用默认关键词');
-    return 'research methodology quantitative analysis experimental design';
+    return 'research methodology,quantitative analysis,experimental design';
   } catch (err) {
     console.error('解析关键词错误:', err);
-    return 'research methodology quantitative analysis experimental design';
+    return 'research methodology,quantitative analysis,experimental design';
   }
 };
 
@@ -3261,14 +3261,12 @@ app.post('/api/extract-keywords', async (req, res) => {
     console.log('关键词提取API被调用');
     
     // 构建关键词提取消息
-    let messageContent = `Please analyze the following text and extract 1-2 key academic search terms in English. 
-Focus on the most important and specific technical terms, methodologies, and core concepts.
-The keywords MUST be in English only.
+    let messageContent = `你是一名学术文献检索专家。请根据以下研究背景和研究目的，推测出最适合用来检索相关学术文献的1-3个专业关键词。请尽量使用学术领域常用的英文关键词，并用逗号分隔输出。
 
-Please respond in the following JSON format:
+请以JSON格式回复：
 \`\`\`json
 {
-  "keywords": ["keyword1", "keyword2"]
+  "keywords": ["keyword1", "keyword2", "keyword3"]
 }
 \`\`\`
 
@@ -3289,9 +3287,9 @@ Please respond in the following JSON format:
         }
       });
       
-      messageContent += '\nBased on the above conversation, extract the most relevant academic search keywords.';
+      messageContent += '\n\n根据以上对话内容，请提取最相关的学术检索关键词。';
     } else {
-      messageContent += 'Please provide some general academic research method keywords, especially in quantitative research methods, experimental design, data analysis, and related fields.';
+      messageContent += '如果没有足够的对话历史，请提供一些通用的学术研究方法关键词，特别是定量研究方法、实验设计、数据分析等相关领域的关键词。';
     }
     
     console.log('发送给Coze API的关键词提取消息:', messageContent);
@@ -3437,14 +3435,12 @@ app.post('/api/semantic-recommend', async (req, res) => {
       console.log('从聊天历史中提取关键词');
       
       // 构建关键词提取消息
-      let messageContent = `Please analyze the following text and extract 1-2 key academic search terms in English. 
-Focus on the most important and specific technical terms, methodologies, and core concepts.
-The keywords MUST be in English only.
+      let messageContent = `你是一名学术文献检索专家。请根据以下研究背景和研究目的，推测出最适合用来检索相关学术文献的1-3个专业关键词。请尽量使用学术领域常用的英文关键词，并用逗号分隔输出。
 
-Please respond in the following JSON format:
+请以JSON格式回复：
 \`\`\`json
 {
-  "keywords": ["keyword1", "keyword2"]
+  "keywords": ["keyword1", "keyword2", "keyword3"]
 }
 \`\`\`
 
@@ -3469,9 +3465,9 @@ Please respond in the following JSON format:
           }
         });
         
-        messageContent += '\nBased on the above conversation, extract the most relevant academic search keywords.';
+        messageContent += '\n\n根据以上对话内容，请提取最相关的学术检索关键词。';
       } else {
-        messageContent += 'Please provide some general academic research method keywords, especially in quantitative research methods, experimental design, data analysis, and related fields.';
+        messageContent += '如果没有足够的对话历史，请提供一些通用的学术研究方法关键词，特别是定量研究方法、实验设计、数据分析等相关领域的关键词。';
       }
       
       console.log('发送给Coze API的消息:', messageContent);
