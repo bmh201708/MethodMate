@@ -617,10 +617,17 @@
             <div class="flex items-center justify-between">
               <div class="flex space-x-2">
                 <button
+                  v-if="currentTutorialStep > 0"
+                  @click="prevTutorialStep"
+                  class="px-3 py-1.5 text-gray-600 text-sm hover:text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                >
+                  上一步
+                </button>
+                <button
                   @click="nextTutorialStep"
                   class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
-                  知道了
+                  {{ currentTutorialStep === tutorialSteps.length - 1 ? '完成' : '知道了' }}
                 </button>
                 <button
                   @click="skipTutorial"
@@ -643,7 +650,7 @@
               <span class="mx-2">•</span>
               <span>Esc: 跳过</span>
               <span class="mx-2">•</span>
-              <span>←→: 切换步骤</span>
+              <span>←→: 前后步骤</span>
             </div>
           </div>
         </div>
@@ -1243,21 +1250,7 @@ const tutorialSteps = [
     description: '点击"方案迭代"按钮，可以对整个研究方案进行优化改进，AI会根据您的建议重新生成更完善的方案。',
     ref: iterateBtnRef
   },
-  {
-    title: '部分方案迭代',
-    description: '在各个部分（研究假设、实验设计、数据分析、结果呈现）都有独立的迭代按钮，可以针对特定部分进行优化。',
-    getElement: () => {
-      // 确保在完整方案页面
-      if (activeSection.value !== 'full') {
-        activeSection.value = 'full'
-        return null
-      }
-      
-      // 查找第一个可用的部分迭代按钮
-      const sectionButtons = document.querySelectorAll('[data-section-iterate]')
-      return sectionButtons.length > 0 ? sectionButtons[0] : null
-    }
-  },
+
   {
     title: '方案对比功能',
     description: '在方案迭代后，可以查看迭代前后的对比，了解方案的改进情况。',
@@ -1415,7 +1408,7 @@ const startTutorial = () => {
   showTutorial.value = true
   currentTutorialStep.value = 0
   
-  // 等待DOM更新后聚焦到第一个元素
+  // 等待DOM更新后计算高亮区域
   nextTick(() => {
     setTimeout(() => {
       focusCurrentElement()
@@ -1429,25 +1422,41 @@ const focusCurrentElement = () => {
   
   const currentStep = tutorialSteps[currentTutorialStep.value]
   
-  // 第一步确保在完整方案页面
+  // 根据步骤设置正确的页面状态
   if (currentTutorialStep.value === 0) {
+    // 第一步：生成方案 - 确保在完整方案页面
     activeSection.value = 'full'
+  } else if (currentTutorialStep.value === 1) {
+    // 第二步：方案评估 - 确保在完整方案页面
+    activeSection.value = 'full'
+  } else if (currentTutorialStep.value === 2) {
+    // 第三步：整体方案迭代 - 确保在完整方案页面
+    activeSection.value = 'full'
+  } else if (currentTutorialStep.value === 3) {
+    // 第四步：方案对比 - 确保在完整方案页面
+    activeSection.value = 'full'
+  } else if (currentTutorialStep.value === 4) {
+    // 第五步：生成来源介绍 - 切换到数据分析的来源介绍
+    activeSection.value = 'analysis'
+    analysisSubSection.value = 'source'
+  } else if (currentTutorialStep.value === 5) {
+    // 第六步：生成方法介绍 - 切换到数据分析的方法介绍
+    activeSection.value = 'analysis'
+    analysisSubSection.value = 'method'
+  } else if (currentTutorialStep.value === 6) {
+    // 第七步：统计方法查询 - 切换到数据分析的统计方法查询
+    activeSection.value = 'analysis'
+    analysisSubSection.value = 'query'
   }
   
-  // 等待DOM更新后再聚焦
+  // 等待DOM更新后计算高亮区域
   nextTick(() => {
     setTimeout(() => {
       const element = currentStep.getElement ? currentStep.getElement() : currentStep.ref.value
       
-      if (element && typeof element.scrollIntoView === 'function') {
+      if (element && typeof element.getBoundingClientRect === 'function') {
         try {
           console.log('聚焦元素:', currentStep.title, element)
-          
-          // 滚动到元素位置
-          element.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
-          })
           
           // 如果是输入框，聚焦
           if (element.tagName === 'INPUT' && typeof element.focus === 'function') {
@@ -1464,13 +1473,13 @@ const focusCurrentElement = () => {
           console.log('元素不存在，可能是页面状态切换中，重试一次')
           setTimeout(() => {
             const retryElement = currentStep.getElement()
-            if (retryElement && typeof retryElement.scrollIntoView === 'function') {
+            if (retryElement && typeof retryElement.getBoundingClientRect === 'function') {
               try {
                 console.log('重试成功，聚焦元素:', currentStep.title, retryElement)
-                retryElement.scrollIntoView({ 
-                  behavior: 'smooth', 
-                  block: 'center' 
-                })
+                // 如果是输入框，聚焦
+                if (retryElement.tagName === 'INPUT' && typeof retryElement.focus === 'function') {
+                  retryElement.focus()
+                }
               } catch (error) {
                 console.warn('重试聚焦元素失败:', error)
                 // 如果重试也失败，跳到下一步
@@ -1485,7 +1494,7 @@ const focusCurrentElement = () => {
                 nextTutorialStep()
               }
             }
-          }, 500) // 重试延迟
+          }, 800) // 增加重试延迟，给页面切换更多时间
         } else {
           // 如果元素不存在，尝试跳到下一步
           if (currentTutorialStep.value < tutorialSteps.length - 1) {
@@ -1494,8 +1503,21 @@ const focusCurrentElement = () => {
           }
         }
       }
-    }, 300) // 增加延迟确保DOM更新完成
+    }, 500) // 增加延迟确保DOM更新完成
   })
+}
+
+// 前一步
+const prevTutorialStep = () => {
+  if (currentTutorialStep.value > 0) {
+    currentTutorialStep.value--
+    // 等待DOM更新后重新聚焦
+    nextTick(() => {
+      setTimeout(() => {
+        focusCurrentElement()
+      }, 300) // 给页面切换更多时间
+    })
+  }
 }
 
 // 下一步
@@ -1510,7 +1532,7 @@ const nextTutorialStep = () => {
     nextTick(() => {
       setTimeout(() => {
         focusCurrentElement()
-      }, 200) // 增加延迟确保页面切换完成
+      }, 300) // 增加延迟确保页面切换完成
     })
   }
 }
@@ -1609,8 +1631,11 @@ const handleKeydown = (event) => {
       event.preventDefault()
       if (currentTutorialStep.value > 0) {
         currentTutorialStep.value--
+        // 等待DOM更新后重新聚焦
         nextTick(() => {
-          focusCurrentElement()
+          setTimeout(() => {
+            focusCurrentElement()
+          }, 200) // 给页面切换更多时间
         })
       }
       break

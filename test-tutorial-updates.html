@@ -3,175 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新手指引更新功能测试</title>
+    <title>新手指引修复测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+        .tutorial-highlight {
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+            animation: pulse 2s infinite;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.5); }
         }
-        .test-section {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+        
+        .tutorial-tooltip {
+            animation: slideIn 0.3s ease-out;
         }
-        .status {
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .status.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .status.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-        .status.warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-        .highlight {
-            background: #fff3cd;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-weight: bold;
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>PaperDetail.vue 新手指引更新功能测试</h1>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">新手指引修复测试</h1>
         
-        <div class="test-section">
-            <h3>🎯 主要更新内容</h3>
-            <div class="status success">
-                <h4>✅ 已完成的改进：</h4>
-                <ul>
-                    <li><span class="highlight">论文标题更新</span>：右侧展示 "Synthetic Human Memories: AI-Edited Images and Videos Can Implant False Memories and Distort Recollection"</li>
-                    <li><span class="highlight">选中状态</span>：中间文献列表中第一篇论文自动选中并显示详情</li>
-                    <li><span class="highlight">研究方法展开</span>：引导时研究方法预览自动展开显示完整内容</li>
-                    <li><span class="highlight">新增引导步骤</span>：添加"选为参考功能"和"研究方法预览"两个步骤</li>
-                </ul>
+        <div class="max-w-4xl mx-auto space-y-8">
+            <!-- 测试说明 -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">修复内容</h2>
+                <div class="space-y-3 text-gray-600">
+                    <div class="flex items-start space-x-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <span>修复了页面滚动导致的定位偏移问题</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <span>修复了返回前一步时页面状态切换问题</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <span>添加了前一步按钮，支持双向导航</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <span>改进了页面状态管理，确保每个步骤在正确的页面</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <span>移除了页面滚动功能，使用固定定位避免偏移</span>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <div class="test-section">
-            <h3>📋 更新后的引导步骤</h3>
-            <div class="status info">
-                <ol>
-                    <li>输入关键词</li>
-                    <li>智能提取关键词</li>
-                    <li>获取相关文献</li>
-                    <li>本地缓存选项</li>
-                    <li>扩大搜索范围</li>
-                    <li><strong>文献列表管理</strong> - 高亮中间文献列表区域</li>
-                    <li><strong>文献详情查看</strong> - 高亮右侧详情区域</li>
-                    <li><strong>选为参考功能</strong> - 高亮"选为参考"按钮</li>
-                    <li><strong>研究方法预览</strong> - 高亮研究方法预览区域</li>
-                </ol>
+            
+            <!-- 测试步骤 -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">测试步骤</h2>
+                <div class="space-y-4">
+                    <div class="p-4 bg-blue-50 rounded-lg">
+                        <h3 class="font-medium text-blue-900 mb-2">1. 启动新手指引</h3>
+                        <p class="text-blue-700 text-sm">在研究方案详情页面，点击"重置引导"按钮，然后刷新页面启动新手指引</p>
+                    </div>
+                    
+                    <div class="p-4 bg-green-50 rounded-lg">
+                        <h3 class="font-medium text-green-900 mb-2">2. 测试导航功能</h3>
+                        <p class="text-green-700 text-sm">使用"知道了"按钮前进，使用"上一步"按钮后退，观察页面切换是否正确</p>
+                    </div>
+                    
+                    <div class="p-4 bg-yellow-50 rounded-lg">
+                        <h3 class="font-medium text-yellow-900 mb-2">3. 测试键盘快捷键</h3>
+                        <p class="text-yellow-700 text-sm">使用左右箭头键切换步骤，Enter/空格键前进，Esc键跳过</p>
+                    </div>
+                    
+                    <div class="p-4 bg-purple-50 rounded-lg">
+                        <h3 class="font-medium text-purple-900 mb-2">4. 测试定位准确性</h3>
+                        <p class="text-purple-700 text-sm">观察每个步骤是否正确高亮目标元素，没有定位偏移</p>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <div class="test-section">
-            <h3>🔍 关键功能验证</h3>
-            <div class="status warning">
-                <h4>需要验证的功能点：</h4>
-                <ul>
-                    <li><strong>论文选中状态</strong>：中间列表第一篇论文应显示为选中状态（紫色边框）</li>
-                    <li><strong>右侧详情显示</strong>：右侧应显示指定论文的完整信息</li>
-                    <li><strong>研究方法展开</strong>：研究方法预览部分应自动展开，显示完整内容</li>
-                    <li><strong>引用状态演示</strong>：第二篇论文应显示为"已参考"状态</li>
-                    <li><strong>高亮区域准确</strong>：每个引导步骤应正确高亮对应区域</li>
-                </ul>
+            
+            <!-- 预期结果 -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">预期结果</h2>
+                <div class="space-y-3 text-gray-600">
+                    <div class="flex items-start space-x-2">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <span>每个步骤都能正确切换到对应的页面状态</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <span>元素定位准确，使用固定定位避免偏移</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <span>前后导航都能正确切换页面状态</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <span>键盘快捷键响应正常</span>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <div class="test-section">
-            <h3>🎨 界面状态检查</h3>
-            <div class="status info">
-                <h4>引导开始时的界面状态：</h4>
-                <ul>
-                    <li>✅ 中间文献列表：显示3篇样例论文</li>
-                    <li>✅ 第一篇论文：选中状态，紫色边框</li>
-                    <li>✅ 第二篇论文：显示"已参考"标签</li>
-                    <li>✅ 右侧详情：显示指定论文的完整信息</li>
-                    <li>✅ 研究方法：展开状态，显示完整内容</li>
-                    <li>✅ 选为参考按钮：显示"取消参考"状态</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="test-section">
-            <h3>🧹 清理机制验证</h3>
-            <div class="status success">
-                <h4>引导结束后的清理操作：</h4>
-                <ul>
-                    <li>✅ 清除所有样例论文</li>
-                    <li>✅ 清除引用状态</li>
-                    <li>✅ 清空选中论文</li>
-                    <li>✅ 重置研究方法预览为收起状态</li>
-                    <li>✅ 页面恢复到初始空状态</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="test-section">
-            <h3>🔧 技术实现细节</h3>
-            <div class="status info">
-                <h4>关键代码修改：</h4>
-                <ul>
-                    <li><strong>论文标题</strong>：更新为 "Synthetic Human Memories: AI-Edited Images and Videos Can Implant False Memories and Distort Recollection"</li>
-                    <li><strong>选中逻辑</strong>：引导开始时自动选中第一篇论文</li>
-                    <li><strong>展开状态</strong>：设置 <code>showFullText.value = true</code></li>
-                    <li><strong>DOM标识</strong>：为研究方法区域添加 <code>id="research-method-section"</code></li>
-                    <li><strong>引导步骤</strong>：新增2个步骤，总共9个步骤</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="test-section">
-            <h3>📝 测试步骤</h3>
-            <div class="status warning">
-                <ol>
-                    <li>清除浏览器本地存储中的 <code>paperDetail_tutorial_shown</code></li>
-                    <li>刷新 PaperDetail 页面</li>
-                    <li>观察新手指引是否自动启动</li>
-                    <li>检查中间文献列表是否显示3篇论文</li>
-                    <li>验证第一篇论文是否被选中（紫色边框）</li>
-                    <li>确认右侧显示指定论文的详情</li>
-                    <li>检查研究方法预览是否展开</li>
-                    <li>按步骤完成引导，观察高亮区域</li>
-                    <li>完成引导后检查页面是否恢复到空状态</li>
-                </ol>
-            </div>
-        </div>
-
-        <div class="test-section">
-            <h3>🎉 预期效果</h3>
-            <div class="status success">
-                <p><strong>用户体验提升：</strong></p>
-                <ul>
-                    <li>✅ 用户能清楚看到论文选中和详情显示的关系</li>
-                    <li>✅ 研究方法预览的展开状态让用户了解完整功能</li>
-                    <li>✅ 选为参考功能的演示帮助用户理解引用机制</li>
-                    <li>✅ 9个步骤的完整引导覆盖所有主要功能</li>
-                    <li>✅ 引导完成后干净的状态让用户开始实际使用</li>
-                </ul>
+            
+            <!-- 技术细节 -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">技术修复细节</h2>
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="font-medium text-gray-900 mb-2">页面状态管理</h3>
+                        <pre class="bg-gray-100 p-3 rounded text-sm overflow-x-auto"><code>// 根据步骤设置正确的页面状态
+if (currentTutorialStep.value === 0) {
+  activeSection.value = 'full'  // 生成方案
+} else if (currentTutorialStep.value === 4) {
+  activeSection.value = 'analysis'
+  analysisSubSection.value = 'source'  // 来源介绍
+}</code></pre>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-medium text-gray-900 mb-2">移除页面滚动</h3>
+                        <pre class="bg-gray-100 p-3 rounded text-sm overflow-x-auto"><code>// 移除所有滚动逻辑，只保留元素检测
+if (element && typeof element.getBoundingClientRect === 'function') {
+  // 只进行输入框聚焦，不进行页面滚动
+  if (element.tagName === 'INPUT' && typeof element.focus === 'function') {
+    element.focus()
+  }
+}</code></pre>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-medium text-gray-900 mb-2">双向导航支持</h3>
+                        <pre class="bg-gray-100 p-3 rounded text-sm overflow-x-auto"><code>// 前一步函数
+const prevTutorialStep = () => {
+  if (currentTutorialStep.value > 0) {
+    currentTutorialStep.value--
+    nextTick(() => {
+      setTimeout(() => {
+        focusCurrentElement()
+      }, 300)
+    })
+  }
+}</code></pre>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
