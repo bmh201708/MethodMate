@@ -1403,11 +1403,18 @@ const buildVenueFilter = (filterVenues = true) => {
 /**
  * 构建OpenAlex API的领域过滤条件
  * @param {boolean} enableDomainFilter - 是否启用领域过滤
+ * @param {boolean} hciOnly - 是否只推荐人机交互领域文献（默认false）
  * @returns {string} - 过滤条件字符串
  */
-const buildDomainFilter = (enableDomainFilter = true) => {
+const buildDomainFilter = (enableDomainFilter = true, hciOnly = false) => {
   if (!enableDomainFilter) {
     return ''; // 不启用领域过滤时返回空字符串，年份过滤在URL构建函数中统一处理
+  }
+  
+  // 如果只要HCI领域文献
+  if (hciOnly) {
+    console.log('🎯 只推荐人机交互领域文献 (Subfield ID: 1709)');
+    return 'primary_topic.subfield.id:1709'; // Human-Computer Interaction: 246,120篇专门的HCI文献
   }
   
   // 根据OpenAlex API实测结果，使用正确的Field ID和Subfield ID
@@ -1427,6 +1434,7 @@ const buildDomainFilter = (enableDomainFilter = true) => {
   // 这样可以覆盖计算机科学中的HCI，以及其他领域中的设计相关研究
   const fieldIds = ['17', '12', '32', '33']; // Computer Science, Arts & Humanities, Psychology, Social Sciences
   
+  console.log('🌐 推荐多领域相关文献 (CS+Arts+Psychology+Social)');
   // 只使用Field级别过滤，避免AND关系限制
   // Computer Science (17) 包含了 HCI子领域 (1709)
   // Arts & Humanities (12) 包含视觉设计、图形设计
@@ -1453,9 +1461,10 @@ const buildDomainFilter = (enableDomainFilter = true) => {
  * @param {number} limit - 结果数量限制
  * @param {boolean} filterVenues - 是否过滤顶级期刊/会议
  * @param {boolean} enableDomainFilter - 是否启用领域过滤
+ * @param {boolean} hciOnly - 是否只推荐人机交互领域文献
  * @returns {string} - 完整的API查询URL
  */
-const buildOpenAlexSearchUrl = (searchQuery, limit = 20, filterVenues = true, enableDomainFilter = true) => {
+const buildOpenAlexSearchUrl = (searchQuery, limit = 20, filterVenues = true, enableDomainFilter = true, hciOnly = false) => {
   let url = `${OPENALEX_API_BASE}/works?search=${encodeURIComponent(searchQuery)}`;
   url += `&per-page=${limit}`;
   url += `&sort=relevance_score:desc`;
@@ -1486,7 +1495,7 @@ const buildOpenAlexSearchUrl = (searchQuery, limit = 20, filterVenues = true, en
   
   // 添加领域过滤
   if (enableDomainFilter) {
-    const domainFilter = buildDomainFilter(true);
+    const domainFilter = buildDomainFilter(true, hciOnly);
     if (domainFilter) {
       filters.push(domainFilter);
     }
@@ -1607,13 +1616,14 @@ const transformOpenAlexWork = (openAlexWork, index = 0) => {
  * @param {number} limit - 结果数量限制
  * @param {boolean} filterVenues - 是否过滤顶级期刊/会议
  * @param {boolean} enableDomainFilter - 是否启用领域过滤
+ * @param {boolean} hciOnly - 是否只推荐人机交互领域文献
  * @returns {Promise<Object>} - 搜索结果
  */
-const searchOpenAlexPapers = async (searchQuery, limit = 20, filterVenues = true, enableDomainFilter = true) => {
+const searchOpenAlexPapers = async (searchQuery, limit = 20, filterVenues = true, enableDomainFilter = true, hciOnly = false) => {
   try {
-    console.log(`🔍 OpenAlex搜索开始: "${searchQuery}", 限制: ${limit}篇, 顶级期刊过滤: ${filterVenues}, 领域过滤: ${enableDomainFilter}`);
+    console.log(`🔍 OpenAlex搜索开始: "${searchQuery}", 限制: ${limit}篇, 顶级期刊过滤: ${filterVenues}, 领域过滤: ${enableDomainFilter}, 仅HCI: ${hciOnly}`);
     
-    const searchUrl = buildOpenAlexSearchUrl(searchQuery, limit, filterVenues, enableDomainFilter);
+    const searchUrl = buildOpenAlexSearchUrl(searchQuery, limit, filterVenues, enableDomainFilter, hciOnly);
     console.log(`📡 完整API URL: ${searchUrl}`); // 添加URL调试日志
     
     const response = await fetchWithRetry(searchUrl, {
@@ -3390,7 +3400,8 @@ app.post('/api/semantic-recommend', async (req, res) => {
       use_local_cache = true, // 新增：是否使用本地缓存搜索（默认为true）
       useExternalPool = false, // 新增：是否使用外部论文池
       externalPoolData = null, // 新增：外部论文池数据
-      poolKeywords = '' // 新增：论文池对应的关键词
+      poolKeywords = '', // 新增：论文池对应的关键词
+      hci_only = false // 新增：是否只推荐人机交互领域文献（默认为false）
     } = req.body;
     
     console.log('接收到的数据:', {
@@ -3398,7 +3409,8 @@ app.post('/api/semantic-recommend', async (req, res) => {
       use_local_cache,
       useExternalPool,
       hasPoolData: !!externalPoolData,
-      poolKeywords
+      poolKeywords,
+      hci_only
     });
     
     let searchQuery = 'research methodology quantitative analysis experimental design'; // 默认关键词
@@ -3817,7 +3829,8 @@ Please respond in the following JSON format:
             queryParam, 
             poolLimit, 
             filter_venues, // 是否过滤顶级期刊/会议
-            true // 启用领域过滤（设计、计算机科学、人机交互）
+            true, // 启用领域过滤（设计、计算机科学、人机交互）
+            hci_only // 是否只推荐人机交互领域文献
           );
           
           externalSearchResult = {

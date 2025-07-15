@@ -26,7 +26,7 @@ const buildVenueFilter = (filterVenues = true) => {
   return `primary_location.source.id:${venueSourceIds.join('|')}`;
 };
 
-const buildDomainFilter = (enableDomainFilter = true) => {
+const buildDomainFilter = (enableDomainFilter = true, hciOnly = false) => {
   if (!enableDomainFilter) {
     return '';
   }
@@ -34,7 +34,7 @@ const buildDomainFilter = (enableDomainFilter = true) => {
   return 'primary_topic.field.id:17'; // Computer Science领域
 };
 
-const buildOpenAlexSearchUrl = (searchQuery, limit = 20, filterVenues = true, enableDomainFilter = true) => {
+const buildOpenAlexSearchUrl = (searchQuery, limit = 20, filterVenues = true, enableDomainFilter = true, hciOnly = false) => {
   let url = `https://api.openalex.org/works?search=${encodeURIComponent(searchQuery)}`;
   url += `&per-page=${limit}`;
   url += `&sort=relevance_score:desc`;
@@ -59,7 +59,7 @@ const buildOpenAlexSearchUrl = (searchQuery, limit = 20, filterVenues = true, en
   
   // 添加领域过滤
   if (enableDomainFilter) {
-    const domainFilter = buildDomainFilter(true);
+    const domainFilter = buildDomainFilter(true, hciOnly);
     if (domainFilter) {
       filters.push(domainFilter);
     }
@@ -111,7 +111,8 @@ async function testYearFiltering() {
         testCase.query, 
         10, 
         testCase.filterVenues, 
-        testCase.enableDomainFilter
+        testCase.enableDomainFilter,
+        false // 不只要HCI
       );
       
       console.log(`   🌐 请求URL: ${url}`);
@@ -194,7 +195,7 @@ async function testYearBoundary() {
     console.log(`🔍 测试关键词: "${query}"`);
     
     try {
-      const urlWithYearFilter = buildOpenAlexSearchUrl(query, 20, false, true);
+      const urlWithYearFilter = buildOpenAlexSearchUrl(query, 20, false, true, false);
       console.log(`   🌐 URL: ${urlWithYearFilter}`);
       
       const response = await fetch(urlWithYearFilter);

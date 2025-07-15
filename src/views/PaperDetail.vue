@@ -99,6 +99,20 @@
                 <span class="text-xs text-gray-500">优先使用本地高质量缓存</span>
               </div>
               
+              <!-- HCI范围控制选项 -->
+              <div class="flex items-center justify-between px-1">
+                <label class="flex items-center text-sm text-gray-600 cursor-pointer">
+                  <input 
+                    ref="hciOnlyCheckboxRef"
+                    type="checkbox" 
+                    v-model="hciOnly" 
+                    class="form-checkbox h-4 w-4 text-green-600 rounded border-gray-300 focus:ring-green-500"
+                  />
+                  <span class="ml-2">缩小推荐范围：只人机交互领域的文献</span>
+                </label>
+                <span class="text-xs text-gray-500">专注HCI核心研究</span>
+              </div>
+              
               <!-- 扩大范围选项 -->
               <div class="flex items-center justify-between px-1">
                 <label class="flex items-center text-sm text-gray-600 cursor-pointer">
@@ -875,6 +889,9 @@ const expandRange = ref(false)
 // 本地缓存搜索选项 - 默认为true（优先使用本地缓存）
 const useLocalCache = ref(true)
 
+// HCI范围控制选项 - 默认为false（推荐多领域相关文献）
+const hciOnly = ref(false)
+
 // 关键词输入
 const searchKeywords = ref('')
 const isExtractingKeywords = ref(false)
@@ -1533,6 +1550,7 @@ const getRecommendedPapers = async () => {
       exclude_ids: excludeIds, // 传递要排除的论文ID
       exclude_titles: excludeTitles, // 传递要排除的论文标题
       use_local_cache: useLocalCache.value, // 是否使用本地缓存搜索
+      hci_only: hciOnly.value, // 是否只推荐人机交互领域文献
       
       // 外部论文池相关参数
       useExternalPool: poolAvailable,
@@ -1580,6 +1598,7 @@ const getRecommendedPapers = async () => {
      
      console.log(`🔍 搜索模式: ${useLocalCache.value ? '本地缓存 + 外部搜索' : '仅外部搜索'}`);
      console.log(`📊 文献范围: ${expandRange.value ? '扩大范围（包含非顶刊顶会）' : '仅顶刊顶会'}`);
+     console.log(`🎯 推荐领域: ${hciOnly.value ? '仅人机交互领域 (HCI)' : '多领域相关（CS+Arts+Psychology+Social）'}`);
 
     if (!response.ok) {
       if (response.status === 429) {
@@ -1949,6 +1968,7 @@ const keywordInputRef = ref(null)
 const extractKeywordsBtnRef = ref(null)
 const getPapersBtnRef = ref(null)
 const localCacheCheckboxRef = ref(null)
+const hciOnlyCheckboxRef = ref(null)
 const expandRangeCheckboxRef = ref(null)
 const referenceBtnRef = ref(null)
 
@@ -2044,6 +2064,11 @@ const tutorialSteps = [
     title: '本地缓存选项',
     description: '勾选此项会优先从本地高质量缓存中搜索论文，提高搜索速度和准确性。',
     ref: localCacheCheckboxRef
+  },
+  {
+    title: 'HCI专业范围',
+    description: '勾选此项会专注推荐人机交互（HCI）领域的核心文献，适合深入研究HCI主题。',
+    ref: hciOnlyCheckboxRef
   },
   {
     title: '扩大搜索范围',
