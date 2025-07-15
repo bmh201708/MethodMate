@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>研究方案详情新手指引测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .test-section h2 {
+            color: #555;
+            margin-top: 0;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .test-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+        .test-item h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .test-item p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .feature-list li:before {
+            content: "✅ ";
+            margin-right: 8px;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button.secondary {
+            background: #6c757d;
+        }
+        .button.secondary:hover {
+            background: #545b62;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>研究方案详情新手指引功能测试</h1>
+        
+        <div class="test-section">
+            <h2>🎯 功能概述</h2>
+            <div class="test-item">
+                <h3>新手指引功能</h3>
+                <p>为ResearchPlanDetail.vue页面添加了完整的新手指引功能，包括样例数据和扩展的引导步骤。</p>
+                <span class="status success">已完成</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 样例数据设计</h2>
+            <div class="test-item">
+                <h3>样例研究方案</h3>
+                <p><strong>标题：</strong>社交媒体使用对大学生学习效率影响的定量研究方案</p>
+                <p><strong>研究假设：</strong>包含3个具体假设（H1-H3）</p>
+                <p><strong>实验设计：</strong>详细的参与者特征、分组方式、实验流程</p>
+                <p><strong>数据分析：</strong>完整的数据采集类型和统计分析方法</p>
+                <p><strong>结果呈现：</strong>预期差异、图表类型、结果解释逻辑</p>
+                <span class="status success">已实现</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎮 引导步骤扩展</h2>
+            <div class="test-item">
+                <h3>新增引导步骤</h3>
+                <ul class="feature-list">
+                    <li><strong>方案评估功能：</strong>整体评估按钮的引导</li>
+                    <li><strong>整体方案迭代：</strong>方案迭代按钮的引导</li>
+                    <li><strong>部分方案迭代：</strong>各部分的迭代按钮引导</li>
+                    <li><strong>方案对比功能：</strong>方案对比按钮的引导</li>
+                    <li><strong>生成来源介绍：</strong>来源介绍按钮的引导</li>
+                    <li><strong>生成方法介绍：</strong>方法介绍按钮的引导</li>
+                    <li><strong>统计方法查询：</strong>统计方法查询的引导</li>
+                </ul>
+                <span class="status success">已实现</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 技术实现要点</h2>
+            <div class="test-item">
+                <h3>样例数据管理</h3>
+                <p><strong>动态加载：</strong>新手指引开始时自动加载样例数据</p>
+                <p><strong>智能清理：</strong>引导完成或跳过时自动清理样例数据</p>
+                <p><strong>状态判断：</strong>通过标题匹配判断是否使用了样例数据</p>
+                <span class="status info">已实现</span>
+            </div>
+            
+            <div class="test-item">
+                <h3>DOM元素标识</h3>
+                <p><strong>部分迭代按钮：</strong>添加data-section-iterate属性</p>
+                <p><strong>方案对比按钮：</strong>新增planComparisonBtnRef引用</p>
+                <p><strong>动态元素查找：</strong>使用querySelector查找部分迭代按钮</p>
+                <span class="status info">已实现</span>
+            </div>
+            
+            <div class="test-item">
+                <h3>引导逻辑优化</h3>
+                <p><strong>页面状态切换：</strong>自动切换到正确的页面和子页面</p>
+                <p><strong>元素聚焦：</strong>智能聚焦到当前步骤的目标元素</p>
+                <p><strong>重试机制：</strong>元素不存在时自动重试和跳过</p>
+                <span class="status info">已实现</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎨 用户体验设计</h2>
+            <div class="test-item">
+                <h3>引导体验</h3>
+                <p><strong>渐进式引导：</strong>从基础功能到高级功能的逐步引导</p>
+                <p><strong>样例数据展示：</strong>提供完整的研究方案样例供用户参考</p>
+                <p><strong>功能覆盖：</strong>涵盖所有主要功能按钮的引导</p>
+                <p><strong>智能清理：</strong>引导结束后自动恢复到初始状态</p>
+                <span class="status success">已实现</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 测试验证</h2>
+            <div class="test-item">
+                <h3>功能测试步骤</h3>
+                <ol>
+                    <li>访问研究方案详情页面</li>
+                    <li>清除localStorage中的tutorial_shown标记</li>
+                    <li>刷新页面，触发新手指引</li>
+                    <li>验证样例数据是否正确显示</li>
+                    <li>逐步完成所有引导步骤</li>
+                    <li>验证引导完成后样例数据是否被清理</li>
+                    <li>测试跳过引导功能</li>
+                </ol>
+                <span class="status warning">需要测试</span>
+            </div>
+            
+            <div class="test-item">
+                <h3>测试按钮</h3>
+                <button class="button" onclick="resetTutorial()">重置引导状态</button>
+                <button class="button secondary" onclick="checkLocalStorage()">检查localStorage</button>
+                <button class="button secondary" onclick="showTestInfo()">显示测试信息</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 代码示例</h2>
+            <div class="test-item">
+                <h3>样例数据结构</h3>
+                <div class="code-block">
+const sampleResearchPlan = {
+  title: '社交媒体使用对大学生学习效率影响的定量研究方案',
+  hypotheses: [
+    'H1：社交媒体使用时间与学习效率呈负相关关系',
+    'H2：不同类型的社交媒体使用对学习效率的影响存在显著差异',
+    'H3：社交媒体使用动机在学习时间与学习效率之间起调节作用'
+  ],
+  experimentalDesign: `**参与者特征：**
+- 样本量：预计招募300名大学生...
+- 年龄构成：18-25岁，平均年龄21.5岁...
+`,
+  analysisMethod: `**数据采集类型：**
+1. 主观评分数据：学习效率自评量表...
+2. 行为数据：社交媒体使用时长...
+3. 系统记录数据：应用切换频率...
+`,
+  expectedResults: `**预期差异和趋势：**
+1. 主要因变量差异预测...
+2. 交互效应预测...
+3. 调节效应预测...
+`,
+  isGenerated: true,
+  lastUpdated: new Date().toISOString()
+}
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <h3>引导步骤定义</h3>
+                <div class="code-block">
+const tutorialSteps = [
+  {
+    title: '生成定量研究方案',
+    description: '点击这个按钮可以生成定量的研究方案...',
+    ref: generatePlanBtnRef
+  },
+  {
+    title: '方案评估功能',
+    description: '点击"整体评估"按钮，AI会对您的研究方案进行全面评估...',
+    ref: evaluateBtnRef
+  },
+  {
+    title: '整体方案迭代',
+    description: '点击"方案迭代"按钮，可以对整个研究方案进行优化改进...',
+    ref: iterateBtnRef
+  },
+  {
+    title: '部分方案迭代',
+    description: '在各个部分都有独立的迭代按钮，可以针对特定部分进行优化...',
+    getElement: () => {
+      // 动态查找部分迭代按钮
+      const sectionButtons = document.querySelectorAll('[data-section-iterate]')
+      return sectionButtons.length > 0 ? sectionButtons[0] : null
+    }
+  },
+  // ... 更多步骤
+]
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 功能特点</h2>
+            <div class="test-item">
+                <h3>核心特性</h3>
+                <ul class="feature-list">
+                    <li><strong>智能样例数据：</strong>提供完整的研究方案样例，帮助用户理解功能</li>
+                    <li><strong>全面功能覆盖：</strong>涵盖生成、评估、迭代、对比等所有主要功能</li>
+                    <li><strong>动态元素定位：</strong>支持动态查找和聚焦页面元素</li>
+                    <li><strong>状态智能管理：</strong>自动管理样例数据的加载和清理</li>
+                    <li><strong>用户体验优化：</strong>渐进式引导，避免信息过载</li>
+                    <li><strong>错误处理机制：</strong>元素不存在时自动重试和跳过</li>
+                </ul>
+                <span class="status success">已实现</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function resetTutorial() {
+            localStorage.removeItem('researchPlanDetail_tutorial_shown');
+            alert('✅ 新手指引状态已重置！\n\n请刷新研究方案详情页面来测试新手指引功能。');
+        }
+        
+        function checkLocalStorage() {
+            const tutorialShown = localStorage.getItem('researchPlanDetail_tutorial_shown');
+            const message = tutorialShown === 'true' 
+                ? '❌ 新手指引已标记为显示过，不会再次显示' 
+                : '✅ 新手指引未显示过，下次访问会显示';
+            alert(message);
+        }
+        
+        function showTestInfo() {
+            const info = `
+🧪 研究方案详情新手指引测试指南
+
+📋 测试步骤：
+1. 点击"重置引导状态"按钮
+2. 访问研究方案详情页面
+3. 观察是否自动显示新手指引
+4. 验证样例数据是否正确显示
+5. 逐步完成所有引导步骤
+6. 检查引导完成后样例数据是否被清理
+
+🎯 测试要点：
+- 样例数据的加载和显示
+- 引导步骤的流畅性
+- 元素聚焦的准确性
+- 样例数据的清理机制
+- 跳过引导功能
+
+🔧 技术验证：
+- DOM元素引用是否正确
+- 页面状态切换是否正常
+- localStorage状态管理
+- 错误处理和重试机制
+
+📊 预期结果：
+- 新手指引正常显示
+- 样例数据完整展示
+- 引导步骤流畅执行
+- 引导完成后数据清理
+- 用户体验良好
+            `;
+            alert(info);
+        }
+    </script>
+</body>
+</html> 

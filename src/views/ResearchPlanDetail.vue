@@ -148,6 +148,18 @@
                         </svg>
                         <span>{{ isIterating ? '迭代中...' : '方案迭代' }}</span>
                       </button>
+                      
+                      <!-- 方案对比按钮 -->
+                      <button
+                        ref="planComparisonBtnRef"
+                        @click="showPlanComparison"
+                        class="w-28 px-3 py-1.5 text-sm bg-green-50 text-green-600 rounded-md hover:bg-green-100 transition-colors flex items-center justify-center space-x-1.5"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        <span>方案对比</span>
+                      </button>
                     </div>
                   </div>
                   <div class="space-y-6">
@@ -235,6 +247,7 @@
                       <button
                         @click="showIterateDialog('hypothesis')"
                         :disabled="isIterating"
+                        data-section-iterate="hypothesis"
                         class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                       >
                         <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -285,6 +298,7 @@
                       <button
                         @click="showIterateDialog('design')"
                         :disabled="isIterating"
+                        data-section-iterate="design"
                         class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                       >
                         <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -334,6 +348,7 @@
                       <button
                         @click="showIterateDialog('analysis')"
                         :disabled="isIterating"
+                        data-section-iterate="analysis"
                         class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                       >
                         <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -383,6 +398,7 @@
                       <button
                         @click="showIterateDialog('results')"
                         :disabled="isIterating"
+                        data-section-iterate="results"
                         class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                       >
                         <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -946,6 +962,128 @@ const researchTopicInput = ref('') // 用户输入的研究主题
 const showTutorial = ref(false)
 const currentTutorialStep = ref(0)
 
+// 样例研究方案数据
+const sampleResearchPlan = {
+  title: '社交媒体使用对大学生学习效率影响的定量研究方案',
+  hypotheses: [
+    'H1：社交媒体使用时间与学习效率呈负相关关系',
+    'H2：不同类型的社交媒体使用对学习效率的影响存在显著差异',
+    'H3：社交媒体使用动机在学习时间与学习效率之间起调节作用'
+  ],
+  experimentalDesign: `**参与者特征：**
+- 样本量：预计招募300名大学生，基于效应量0.25，α=0.05，检验力0.8计算得出
+- 年龄构成：18-25岁，平均年龄21.5岁
+- 性别比例：男女比例接近1:1
+- 专业背景：涵盖理工科、文科、艺术类等不同专业
+- 招募方式：通过校园公告、社交媒体、课程群等渠道招募
+- 纳入标准：全日制在校大学生，有智能手机使用经验
+- 排除标准：有严重心理疾病史，无法完成实验任务
+
+**分组方式：**
+- 研究设计：采用2×3混合设计
+- 自变量1：社交媒体使用时间（高使用组 vs 低使用组）
+- 自变量2：社交媒体类型（娱乐型、学习型、社交型）
+- 因变量：学习效率指标（任务完成时间、正确率、注意力集中度）
+- 控制变量：年龄、性别、专业背景、学习习惯、睡眠质量
+
+**实验流程：**
+1. 预实验阶段（30分钟）：
+   - 签署知情同意书
+   - 填写基本信息问卷
+   - 完成学习能力基线测试
+   - 安装实验监控软件
+
+2. 实验阶段（7天）：
+   - 第1-3天：正常使用社交媒体，系统记录使用数据
+   - 第4天：完成学习任务测试
+   - 第5-7天：继续记录使用数据
+   - 每日填写使用日记和情绪状态问卷
+
+3. 后测阶段（60分钟）：
+   - 完成学习效率测试
+   - 填写社交媒体使用动机问卷
+   - 进行深度访谈（随机抽取30%参与者）`,
+  analysisMethod: `**数据采集类型：**
+1. 主观评分数据：
+   - 学习效率自评量表（5点量表）
+   - 社交媒体使用动机问卷
+   - 注意力集中度评估
+   - 采集方式：在线问卷平台（问卷星）
+
+2. 行为数据：
+   - 社交媒体使用时长（分钟/天）
+   - 使用频率（次数/天）
+   - 学习任务完成时间
+   - 任务正确率
+   - 采集方式：实验监控软件、学习平台记录
+
+3. 系统记录数据：
+   - 应用切换频率
+   - 屏幕使用时间分布
+   - 学习软件使用时长
+   - 采集方式：手机系统日志、学习平台后台
+
+**统计分析方法：**
+1. 描述性统计：
+   - 计算各变量的均值、标准差、分布特征
+   - 使用SPSS 26.0进行数据分析
+
+2. 相关性分析：
+   - 使用Pearson相关系数分析社交媒体使用时间与学习效率的关系
+   - 显著性水平设定为α = 0.05
+
+3. 方差分析：
+   - 采用双因素混合设计ANOVA分析社交媒体类型和使用时间的交互效应
+   - 进行事后检验（LSD法）分析组间差异
+
+4. 调节效应分析：
+   - 使用层次回归分析检验使用动机的调节作用
+   - 计算调节效应大小（ΔR²）
+
+5. 协变量控制：
+   - 将年龄、性别、专业背景作为协变量纳入分析
+   - 使用ANCOVA进行协方差分析`,
+  expectedResults: `**预期差异和趋势：**
+1. 主要因变量差异预测：
+   - 高使用组的学习效率显著低于低使用组（p < 0.05）
+   - 娱乐型社交媒体使用者的学习效率最低
+   - 学习型社交媒体使用者的学习效率相对较高
+   - 使用时间与学习效率呈显著负相关（r = -0.35）
+
+2. 交互效应预测：
+   - 社交媒体类型与使用时间存在显著交互效应
+   - 娱乐型社交媒体在高使用组中的负面影响最大
+   - 学习型社交媒体在低使用组中可能产生正向影响
+
+3. 调节效应预测：
+   - 使用动机在学习时间与效率间起显著调节作用
+   - 学习动机强的用户，使用时间对效率的负面影响较小
+
+**结果呈现方式：**
+1. 描述性统计图表：
+   - 箱线图：展示不同使用组的学习效率分布
+   - 条形图：比较不同类型社交媒体的使用时长
+   - 散点图：显示使用时间与学习效率的相关关系
+
+2. 推断统计图表：
+   - 交互效应图：展示社交媒体类型与使用时间的交互作用
+   - 调节效应图：显示使用动机的调节作用
+   - 效应量森林图：展示各统计检验的效应量大小
+
+3. 辅助解读图表：
+   - 路径图：展示变量间的因果关系
+   - 热力图：显示各变量间的相关矩阵
+   - 时间序列图：展示7天内使用模式的变化趋势
+
+**结果解释逻辑：**
+- 通过多维度数据验证研究假设的合理性
+- 结合前人研究解释发现的理论意义
+- 分析结果对教育实践的指导价值
+- 讨论研究的局限性和未来研究方向`,
+  isGenerated: true,
+  lastUpdated: new Date().toISOString()
+}
+
 // 开发模式判断
 const isDevelopment = computed(() => {
   return process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost'
@@ -961,6 +1099,7 @@ const sourceIntroBtnRef2 = ref(null)
 const methodIntroBtnRef = ref(null)
 const statisticalQueryBtnRef = ref(null)
 const statisticalQueryInputRef = ref(null)
+const planComparisonBtnRef = ref(null) // 方案对比按钮
 
 // 引导步骤定义
 const tutorialSteps = [
@@ -968,6 +1107,36 @@ const tutorialSteps = [
     title: '生成定量研究方案',
     description: '点击这个按钮可以生成定量的研究方案，AI会根据您的需求和参考文献智能生成完整的研究设计。',
     ref: generatePlanBtnRef
+  },
+  {
+    title: '方案评估功能',
+    description: '点击"整体评估"按钮，AI会对您的研究方案进行全面评估，包括逻辑性、合理性、可行性和需求匹配度。',
+    ref: evaluateBtnRef
+  },
+  {
+    title: '整体方案迭代',
+    description: '点击"方案迭代"按钮，可以对整个研究方案进行优化改进，AI会根据您的建议重新生成更完善的方案。',
+    ref: iterateBtnRef
+  },
+  {
+    title: '部分方案迭代',
+    description: '在各个部分（研究假设、实验设计、数据分析、结果呈现）都有独立的迭代按钮，可以针对特定部分进行优化。',
+    getElement: () => {
+      // 确保在完整方案页面
+      if (activeSection.value !== 'full') {
+        activeSection.value = 'full'
+        return null
+      }
+      
+      // 查找第一个可用的部分迭代按钮
+      const sectionButtons = document.querySelectorAll('[data-section-iterate]')
+      return sectionButtons.length > 0 ? sectionButtons[0] : null
+    }
+  },
+  {
+    title: '方案对比功能',
+    description: '在方案迭代后，可以查看迭代前后的对比，了解方案的改进情况。',
+    ref: planComparisonBtnRef
   },
   {
     title: '生成来源介绍',
@@ -1112,6 +1281,12 @@ const startTutorial = () => {
   activeSection.value = 'full'
   analysisSubSection.value = 'source'
   
+  // 如果没有生成方案，使用样例数据
+  if (!hasGeneratedPlan.value) {
+    console.log('新手指引：使用样例数据')
+    Object.assign(currentPlanState, sampleResearchPlan)
+  }
+  
   showTutorial.value = true
   currentTutorialStep.value = 0
   
@@ -1219,6 +1394,18 @@ const nextTutorialStep = () => {
 const skipTutorial = () => {
   showTutorial.value = false
   currentTutorialStep.value = 0
+  
+  // 如果使用了样例数据，清理掉
+  if (hasGeneratedPlan.value && currentPlanState.title === sampleResearchPlan.title) {
+    console.log('跳过新手指引：清理样例数据')
+    // 重置为未生成状态
+    currentPlanState.isGenerated = false
+    currentPlanState.title = ''
+    currentPlanState.hypotheses = []
+    currentPlanState.experimentalDesign = ''
+    currentPlanState.analysisMethod = ''
+    currentPlanState.expectedResults = ''
+  }
 }
 
 // 下次不提示
@@ -1231,6 +1418,19 @@ const dontShowAgain = () => {
 const completeTutorial = () => {
   showTutorial.value = false
   currentTutorialStep.value = 0
+  
+  // 如果使用了样例数据，清理掉
+  if (hasGeneratedPlan.value && currentPlanState.title === sampleResearchPlan.title) {
+    console.log('新手指引完成：清理样例数据')
+    // 重置为未生成状态
+    currentPlanState.isGenerated = false
+    currentPlanState.title = ''
+    currentPlanState.hypotheses = []
+    currentPlanState.experimentalDesign = ''
+    currentPlanState.analysisMethod = ''
+    currentPlanState.expectedResults = ''
+  }
+  
   console.log('✅ 研究方案详情页面新手指引完成')
 }
 
@@ -4000,6 +4200,24 @@ const confirmIterate = async () => {
   } else {
     await iterateSectionPlan(section, suggestion)
   }
+}
+
+// 显示方案对比
+const showPlanComparison = () => {
+  // 检查是否有迭代历史
+  const iterationHistory = historyState.iterationSnapshots
+  if (!iterationHistory || Object.keys(iterationHistory).length === 0) {
+    alert('暂无迭代历史，请先进行方案迭代')
+    return
+  }
+  
+  // 这里可以打开方案对比对话框
+  // 暂时使用简单的提示
+  alert('方案对比功能：可以查看迭代前后的方案差异，了解改进情况。\n\n当前迭代历史：\n' + 
+    Object.keys(iterationHistory).map(key => {
+      const snapshot = iterationHistory[key]
+      return `${key}: ${snapshot.suggestion} (${new Date(snapshot.timestamp).toLocaleString()})`
+    }).join('\n'))
 }
 </script>
 
