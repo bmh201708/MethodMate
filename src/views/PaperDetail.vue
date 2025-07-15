@@ -2218,11 +2218,22 @@ const startTutorial = () => {
     // 注意：使用tutorialSamplePapers[0]而不是tutorialSamplePaperDetail，确保中间列表高亮正确
     selectPaper(tutorialSamplePapers[0])
     
+    // 直接操作引用状态，避免调用toggleReference函数（防止API调用）
     // 将第一篇论文添加到引用列表，确保标题显示紫色高亮
-    toggleReference(tutorialSamplePapers[0])
+    papersState.referencedPapers.add(tutorialSamplePapers[0].id)
+    papersState.referencedPapersList.push({
+      ...tutorialSamplePapers[0],
+      referencedAt: new Date().toISOString(),
+      source: 'tutorial'
+    })
     
     // 将第二篇论文添加到引用列表（用于演示）
-    toggleReference(tutorialSamplePapers[1])
+    papersState.referencedPapers.add(tutorialSamplePapers[1].id)
+    papersState.referencedPapersList.push({
+      ...tutorialSamplePapers[1],
+      referencedAt: new Date().toISOString(),
+      source: 'tutorial'
+    })
     
     // 确保研究方法预览为展开状态
     showFullText.value = true
