@@ -75,9 +75,26 @@ app.use(cors(corsOptions));
 
 // API配置
 const SEMANTIC_API_BASE = 'https://api.semanticscholar.org/graph/v1';
+const OPENALEX_API_BASE = 'https://api.openalex.org';
 const CORE_API_BASE = 'https://api.core.ac.uk/v3';
 const CORE_API_KEY = process.env.CORE_API_KEY;
 const SEMANTIC_API_KEY = process.env.SEMANTIC_API_KEY || '';
+
+// OpenAlex目标领域的Topic IDs和相关关键词
+const TARGET_DOMAINS = {
+  COMPUTER_SCIENCE: {
+    topics: ['computer science', 'artificial intelligence', 'machine learning', 'software engineering', 'data science'],
+    keywords: ['computer science', 'AI', 'machine learning', 'software', 'algorithm', 'programming']
+  },
+  DESIGN: {
+    topics: ['design', 'user experience', 'graphic design', 'industrial design', 'design thinking'],
+    keywords: ['design', 'UX', 'UI', 'visual design', 'product design', 'design methodology']
+  },
+  HCI: {
+    topics: ['human-computer interaction', 'user interface', 'usability', 'interaction design'],
+    keywords: ['HCI', 'human-computer interaction', 'user interface', 'usability', 'interaction design', 'user experience']
+  }
+};
 
 // Coze API配置 - 从cozeApi.js获取
 const COZE_API_KEY = process.env.COZE_API_KEY || 'pat_Q06cU8OsiWefqJHG2ed8GlV1al9WRGRVNAfkNmpG567hDXVbcHeyLHWtMLciNj37';
@@ -1340,6 +1357,308 @@ if (!CORE_API_KEY) {
   console.log('CORE_API_KEY found:', CORE_API_KEY.substring(0, 4) + '...');
 }
 
+// ================================
+// OpenAlex API 相关函数
+// ================================
+
+/**
+ * 构建OpenAlex API的venue过滤条件
+ * @param {boolean} filterVenues - 是否过滤顶级期刊/会议
+ * @returns {string} - venue过滤条件字符串
+ */
+const buildVenueFilter = (filterVenues = true) => {
+  if (!filterVenues) {
+    return '';
+  }
+  
+  // 人机交互领域的顶刊顶会 OpenAlex Source ID列表
+  // 通过实际查询OpenAlex API获得的准确source ID (使用简化格式)
+  const venueSourceIds = [
+    // 顶会
+    'S4363607743', // CHI Conference on Human Factors in Computing Systems
+    'S4306421131', // User Interface Software and Technology (UIST)
+    
+    // 顶刊  
+    'S204030396',  // Computers in Human Behavior
+    'S4210190811', // International Journal of Human-Computer Studies  
+    'S165559636',  // International Journal of Human-Computer Interaction
+    'S152445846',  // Design Studies
+    'S70698675',   // Technovation
+    'S4210189112', // CoDesign
+    'S94432539',   // Applied Ergonomics
+    'S4210171473', // Computer-Aided Design
+    
+    // 需要进一步验证的source ID (暂时注释)
+    // 'S178916657',  // Computer-Supported Cooperative Work (可能不准确)
+    // 'S16161090',   // Pervasive and Ubiquitous Computing (可能是期刊而非会议)
+    // 'S87067389',   // ACM Transactions on Computer-Human Interaction (可能不准确)
+    // 'S4210176815', // Human Factors (是会议proceedings而非期刊)
+  ];
+  
+  // 构建OpenAlex API的venue过滤条件
+  // 使用管道符|分隔多个source ID (OpenAlex支持的语法)
+  return `primary_location.source.id:${venueSourceIds.join('|')}`;
+};
+
+/**
+ * 构建OpenAlex API的领域过滤条件
+ * @param {boolean} enableDomainFilter - 是否启用领域过滤
+ * @returns {string} - 过滤条件字符串
+ */
+const buildDomainFilter = (enableDomainFilter = true) => {
+  if (!enableDomainFilter) {
+    return ''; // 不启用领域过滤时返回空字符串，年份过滤在URL构建函数中统一处理
+  }
+  
+  // 根据OpenAlex API实测结果，使用正确的Field ID和Subfield ID
+  // 包含计算机科学、人机交互、设计相关领域的文献
+  
+  // 主要领域 (Field级别)：
+  // - Computer Science (17): 13,174,502篇 - 核心计算机科学文献
+  // - Arts and Humanities (12): 14,141,287篇 - 包含视觉艺术、图形设计
+  // - Psychology (32): 6,066,230篇 - 包含用户体验、认知研究
+  // - Social Sciences (33): 34,163,020篇 - 包含用户体验、可访问性研究
+  
+  // 专门子领域 (Subfield级别)：
+  // - Human-Computer Interaction (1709): 246,120篇 - 专门的HCI文献
+  
+  // 使用多领域Field过滤（OR关系）
+  // 包含计算机科学、艺术人文、心理学、社会科学领域
+  // 这样可以覆盖计算机科学中的HCI，以及其他领域中的设计相关研究
+  const fieldIds = ['17', '12', '32', '33']; // Computer Science, Arts & Humanities, Psychology, Social Sciences
+  
+  // 只使用Field级别过滤，避免AND关系限制
+  // Computer Science (17) 包含了 HCI子领域 (1709)
+  // Arts & Humanities (12) 包含视觉设计、图形设计
+  // Psychology (32) 包含用户体验、认知研究  
+  // Social Sciences (33) 包含用户体验、可访问性研究
+  return `primary_topic.field.id:${fieldIds.join('|')}`;
+  
+  // 注释：如果需要更精确的主题级过滤，可以使用Topic ID (备用)
+  // const designTopicIds = [
+  //   'T11398', // Gesture Recognition in Human-Computer Interaction
+  //   'T10470', // Usability and User Interface Design  
+  //   'T10789', // Interactive and Immersive Displays
+  //   'T10803', // Innovative Human-Technology Interaction
+  //   'T13757', // Graphic Design and Typography
+  //   'T14254', // Digital Media and Visual Art
+  //   'T10888'  // Augmented Reality Applications
+  // ];
+  // return `topics.id:${hciTopicIds.join('|')}`;
+};
+
+/**
+ * 构建OpenAlex API查询URL
+ * @param {string} searchQuery - 搜索查询
+ * @param {number} limit - 结果数量限制
+ * @param {boolean} filterVenues - 是否过滤顶级期刊/会议
+ * @param {boolean} enableDomainFilter - 是否启用领域过滤
+ * @returns {string} - 完整的API查询URL
+ */
+const buildOpenAlexSearchUrl = (searchQuery, limit = 20, filterVenues = true, enableDomainFilter = true) => {
+  let url = `${OPENALEX_API_BASE}/works?search=${encodeURIComponent(searchQuery)}`;
+  url += `&per-page=${limit}`;
+  url += `&sort=relevance_score:desc`;
+  
+  // 选择需要的字段
+  const fields = [
+    'id', 'title', 'display_name', 'publication_year', 'publication_date',
+    'authorships', 'cited_by_count', 'is_retracted', 'is_paratext',
+    'primary_location', 'open_access', 'authorships', 'topics',
+    'abstract_inverted_index', 'doi', 'concepts'
+  ].join(',');
+  url += `&select=${fields}`;
+  
+  // 构建过滤条件
+  const filters = [];
+  
+  // 添加venue过滤 - 重新启用，确保只返回顶刊顶会
+  if (filterVenues) {
+    const venueFilter = buildVenueFilter(true);
+    if (venueFilter) {
+      filters.push(venueFilter);
+    }
+  }
+  
+  // 添加质量过滤条件
+  filters.push('is_retracted:false');        // 排除撤回的论文
+  filters.push('is_paratext:false');         // 排除非正文内容
+  
+  // 添加领域过滤
+  if (enableDomainFilter) {
+    const domainFilter = buildDomainFilter(true);
+    if (domainFilter) {
+      filters.push(domainFilter);
+    }
+  }
+  
+  // 始终添加年份过滤（2019年以后），无论是否启用领域过滤
+  filters.push('publication_year:>2019');
+  
+  // 将过滤条件添加到URL
+  if (filters.length > 0) {
+    url += `&filter=${encodeURIComponent(filters.join(','))}`;
+  }
+  
+  console.log('🔍 OpenAlex搜索URL:', url);
+  return url;
+};
+
+/**
+ * 重建摘要文本从OpenAlex的倒排索引格式
+ * @param {Object} abstractInvertedIndex - OpenAlex的摘要倒排索引
+ * @returns {string} - 重建的摘要文本
+ */
+const reconstructAbstract = (abstractInvertedIndex) => {
+  if (!abstractInvertedIndex || typeof abstractInvertedIndex !== 'object') {
+    return '';
+  }
+  
+  try {
+    const words = [];
+    
+    // 遍历倒排索引，将词汇按位置排序
+    Object.entries(abstractInvertedIndex).forEach(([word, positions]) => {
+      if (Array.isArray(positions)) {
+        positions.forEach(pos => {
+          words[pos] = word;
+        });
+      }
+    });
+    
+    // 过滤undefined元素并连接成文本
+    return words.filter(word => word !== undefined).join(' ');
+  } catch (error) {
+    console.error('重建摘要失败:', error);
+    return '';
+  }
+};
+
+/**
+ * 转换OpenAlex响应格式为项目标准格式
+ * @param {Object} openAlexWork - OpenAlex的work对象
+ * @param {number} index - 在搜索结果中的位置（用于计算相关性分数）
+ * @returns {Object} - 转换后的论文对象
+ */
+const transformOpenAlexWork = (openAlexWork, index = 0) => {
+  // 基于搜索结果位置计算相关性分数
+  const baseScore = 0.95 - (index * 0.02);
+  const relevanceScore = Math.max(0.7, baseScore);
+  
+  // 提取作者信息
+  const authors = (openAlexWork.authorships || []).map(authorship => 
+    authorship.author?.display_name || 'Unknown Author'
+  );
+  
+  // 提取期刊/会议信息
+  const primaryLocation = openAlexWork.primary_location || {};
+  const source = primaryLocation.source || {};
+  const venue = source.display_name || '';
+  
+  // 重建摘要
+  const abstract = reconstructAbstract(openAlexWork.abstract_inverted_index);
+  
+  // 提取开放获取PDF链接
+  const openAccess = openAlexWork.open_access || {};
+  const downloadUrl = openAccess.oa_url || primaryLocation.pdf_url || null;
+  
+  // 判断是否为顶级期刊/会议
+  const topVenues = [
+    'CHI', 'CSCW', 'UbiComp', 'UIST', 'TOCHI',
+    'Computers in Human Behavior', 'Design Studies', 'Human-Computer Interaction'
+  ];
+  const isTopVenue = topVenues.some(topVenue => 
+    venue.toLowerCase().includes(topVenue.toLowerCase())
+  );
+  
+  return {
+    id: `openalex_${openAlexWork.id?.replace('https://openalex.org/', '') || Date.now()}`,
+    title: openAlexWork.display_name || openAlexWork.title || '',
+    abstract: abstract,
+    downloadUrl: downloadUrl,
+    year: openAlexWork.publication_year?.toString() || '',
+    citationCount: openAlexWork.cited_by_count || 0,
+    citations: openAlexWork.cited_by_count || 0, // 保持兼容性
+    authors: authors,
+    venue: venue,
+    journal: venue, // 保持兼容性
+    url: openAlexWork.id || '',
+    doi: openAlexWork.doi?.replace('https://doi.org/', '') || '',
+    isTopVenue: isTopVenue,
+    from_cache: false,
+    source: 'openalex',
+    relevance_score: relevanceScore,
+    // 添加OpenAlex特有的字段
+    openalex_id: openAlexWork.id,
+    publication_date: openAlexWork.publication_date,
+    is_oa: openAccess.is_oa || false,
+    oa_date: openAccess.oa_date,
+    topics: (openAlexWork.topics || []).map(topic => ({
+      id: topic.id,
+      display_name: topic.display_name,
+      score: topic.score
+    }))
+  };
+};
+
+/**
+ * 调用OpenAlex API进行搜索
+ * @param {string} searchQuery - 搜索查询
+ * @param {number} limit - 结果数量限制
+ * @param {boolean} filterVenues - 是否过滤顶级期刊/会议
+ * @param {boolean} enableDomainFilter - 是否启用领域过滤
+ * @returns {Promise<Object>} - 搜索结果
+ */
+const searchOpenAlexPapers = async (searchQuery, limit = 20, filterVenues = true, enableDomainFilter = true) => {
+  try {
+    console.log(`🔍 OpenAlex搜索开始: "${searchQuery}", 限制: ${limit}篇, 顶级期刊过滤: ${filterVenues}, 领域过滤: ${enableDomainFilter}`);
+    
+    const searchUrl = buildOpenAlexSearchUrl(searchQuery, limit, filterVenues, enableDomainFilter);
+    console.log(`📡 完整API URL: ${searchUrl}`); // 添加URL调试日志
+    
+    const response = await fetchWithRetry(searchUrl, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'MethodMate/1.0 (mailto:support@methodmate.org)'
+      }
+    }, 3, 2000);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`OpenAlex API错误响应 (${response.status}):`, errorText);
+      throw new Error(`OpenAlex API responded with status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('OpenAlex API响应论文数量:', data.results?.length || 0);
+    console.log('OpenAlex API总计数量:', data.meta?.count || 0);
+    console.log('🔍 调试: API响应元数据:', JSON.stringify(data.meta, null, 2)); // 添加元数据调试
+    
+    if (!data.results || !Array.isArray(data.results)) {
+      console.warn('OpenAlex API返回的数据格式不正确');
+      return { papers: [], total: 0 };
+    }
+    
+    // 转换结果格式
+    const transformedPapers = data.results.map((work, index) => 
+      transformOpenAlexWork(work, index)
+    );
+    
+    console.log(`✅ OpenAlex搜索完成，转换了 ${transformedPapers.length} 篇论文`);
+    
+    return {
+      papers: transformedPapers,
+      total: data.meta?.count || transformedPapers.length,
+      meta: data.meta
+    };
+    
+  } catch (error) {
+    console.error('OpenAlex搜索失败:', error);
+    throw new Error(`OpenAlex搜索失败: ${error.message}`);
+  }
+};
+
+// ================================
 // 中间件 - 增加请求体大小限制以支持论文全文保存
 app.use(express.json({ limit: '50mb', parameterLimit: 50000 }));
 app.use(express.urlencoded({ limit: '50mb', extended: true, parameterLimit: 50000 }));
@@ -3220,32 +3539,6 @@ Please respond in the following JSON format:
 
     console.log('最终构建的搜索查询:', searchQuery);
 
-    // 定义允许的期刊/会议列表
-    const allowedVenues = [
-      // 顶会
-      'Computer-Supported Cooperative Work', 'CSCW',
-      'Human Factors in Computing Systems', 'CHI',
-      'Pervasive and Ubiquitous Computing', 'UbiComp',
-      'User Interface Software and Technology', 'UIST',
-      
-      // 顶刊
-      'Computers in Human Behavior',
-      'CoDesign',
-      'Technovation',
-      'Design Studies',
-      'Journal of Mixed Methods Research',
-      'ACM Transactions on Computer-Human Interaction', 'TOCHI',
-      'International Journal of Human-Computer Studies',
-      'Design Issues',
-      'Human-Computer Interaction',
-      'Computer-Aided Design',
-      'Applied Ergonomics',
-      'International Journal of Design',
-      'Human Factors',
-      'Leonardo',
-      'The Design Journal'
-    ];
-
     // 修复关键词处理问题：保留短语结构，只在关键词之间添加逗号
     let formattedSearchQuery = searchQuery;
     
@@ -3514,136 +3807,55 @@ Please respond in the following JSON format:
         }
         
         console.log(`📏 论文池目标大小: ${poolLimit} 篇`);
-        let searchUrl = `${SEMANTIC_API_BASE}/paper/search?query=${queryParam}&limit=${poolLimit}&fields=title,abstract,url,openAccessPdf,year,citationCount,authors,venue`;
         
-        // 如果需要过滤期刊/会议，使用venue参数
-        if (filter_venues) {
-          // 使用原始venue名称，用逗号连接但不进行URL编码
-          const venueParam = allowedVenues.join(',');
-          searchUrl += `&venue=${venueParam}`;
-        }
+        // 使用OpenAlex API替代Semantic Scholar
+        console.log('🔍 开始调用OpenAlex API建立论文池（限制在设计、计算机科学、人机交互领域）...');
         
-        // 输出最终请求URL用于调试
-        console.log('外部搜索URL (论文池):', searchUrl);
-
-        // 准备请求头 - 只使用基本的Accept头，避免API密钥问题
-        const headers = {
-          'Accept': 'application/json'
-        };
-        
-        // 输出请求信息用于调试
-        console.log('请求头:', JSON.stringify(headers));
-        console.log('SEMANTIC_API_KEY是否存在:', !!SEMANTIC_API_KEY);
-
-        // 调用Semantic Scholar API搜索相关论文 - 不使用API密钥
-        console.log('开始调用Semantic Scholar API建立论文池...');
-        let searchResponse;
         try {
-          searchResponse = await fetchWithRetry(searchUrl, {
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-              ...headers
-            }
-          }, 3, 2000); // 最多重试3次，初始延迟2秒
+          // 调用OpenAlex搜索函数，启用领域过滤
+          const openAlexResult = await searchOpenAlexPapers(
+            queryParam, 
+            poolLimit, 
+            filter_venues, // 是否过滤顶级期刊/会议
+            true // 启用领域过滤（设计、计算机科学、人机交互）
+          );
           
-          console.log('Semantic Scholar API响应状态:', searchResponse.status, searchResponse.statusText);
+          externalSearchResult = {
+            papers: openAlexResult.papers,
+            total: openAlexResult.total,
+            meta: openAlexResult.meta
+          };
           
-          if (!searchResponse.ok) {
-            const errorText = await searchResponse.text();
-            console.error('Semantic Scholar API错误响应:', errorText);
-            throw new Error(`Semantic Scholar API responded with status: ${searchResponse.status}`);
-          }
+          console.log('✅ OpenAlex API响应成功:', 
+            `获取 ${openAlexResult.papers?.length || 0} 篇论文，总计可用 ${openAlexResult.total} 篇`
+          );
+          
         } catch (fetchError) {
-          console.error('Semantic Scholar API请求失败:', fetchError);
+          console.error('❌ OpenAlex API请求失败:', fetchError);
           // 不抛出错误，继续使用已有的本地缓存结果
           console.log('⚠️ 外部搜索失败，将使用已有的本地缓存结果');
           if (externalPoolInfo) {
-            externalPoolInfo.error = `外部搜索失败: ${fetchError.message}`;
+            externalPoolInfo.error = `OpenAlex搜索失败: ${fetchError.message}`;
           }
         }
 
-        // 解析响应
-        try {
-          externalSearchResult = await searchResponse.json();
-          console.log('Semantic Scholar API响应数据结构:', 
-            Object.keys(externalSearchResult), 
-            '数据项数量:', externalSearchResult.data ? externalSearchResult.data.length : 0
-          );
-        } catch (jsonError) {
-          console.error('解析Semantic Scholar API响应失败:', jsonError);
-          // 不抛出错误，继续使用已有的本地缓存结果
-          console.log('⚠️ 解析外部搜索响应失败，将使用已有的本地缓存结果');
-          if (externalPoolInfo) {
-            externalPoolInfo.error = `解析响应失败: ${jsonError.message}`;
-          }
-        }
-
-                 // 处理外部搜索结果并建立/扩展论文池
-         if (externalSearchResult && externalSearchResult.data && externalSearchResult.data.length > 0) {
-           const externalResults = externalSearchResult.data.map((paper, index) => {
-             const venue = paper.venue || '';
-             
-             // 判断是否是顶会顶刊
-             const isTopVenue = allowedVenues.some(allowedVenue => {
-               const allowedLower = allowedVenue.toLowerCase();
-               const venueLower = venue.toLowerCase();
-               
-               if (venueLower === allowedLower) return true;
-               
-               if (allowedLower === 'cscw' && (venueLower === 'cscw' || venueLower.includes('computer-supported cooperative work'))) return true;
-               if (allowedLower === 'chi' && (venueLower === 'chi' || venueLower.includes('human factors in computing systems'))) return true;
-               if (allowedLower === 'ubicomp' && (venueLower === 'ubicomp' || venueLower.includes('pervasive and ubiquitous computing'))) return true;
-               if (allowedLower === 'uist' && (venueLower === 'uist' || venueLower.includes('user interface software and technology'))) return true;
-               if (allowedLower === 'tochi' && (venueLower === 'tochi' || venueLower.includes('transactions on computer-human interaction'))) return true;
-               
-               const words = allowedLower.split(' ');
-               if (words.length > 1) {
-                 return venueLower === allowedLower || 
-                        venueLower.includes(` ${allowedLower} `) || 
-                        venueLower.startsWith(`${allowedLower} `) || 
-                        venueLower.endsWith(` ${allowedLower}`);
-               }
-               
-               return venueLower === allowedLower || 
-                      venueLower.includes(` ${allowedLower} `) || 
-                      venueLower.startsWith(`${allowedLower} `) || 
-                      venueLower.endsWith(` ${allowedLower}`);
-             });
-             
-             // 基于搜索结果位置计算相关性分数 - 分层设定
-             let relevanceScore;
-             if (index < 10) {
-               // 前10篇：高相关性 (0.95-0.8)
-               relevanceScore = 0.95 - (index * 0.015); // 每篇递减0.015，第10篇约0.815
-             } else if (index < 20) {
-               // 第11-20篇：中等相关性 (0.75-0.6)  
-               relevanceScore = 0.75 - ((index - 10) * 0.015); // 第11篇0.735，第20篇约0.6
-             } else if (index < 30) {
-               // 第21-30篇：低相关性 (0.55-0.4)
-               relevanceScore = 0.55 - ((index - 20) * 0.015); // 第21篇0.535，第30篇约0.4
-             } else {
-               // 第31篇以后：极低相关性 (0.35-0.2)
-               relevanceScore = Math.max(0.2, 0.35 - ((index - 30) * 0.01));
-             }
-             
-             return {
-               id: `external_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
-               title: paper.title || '',
-               abstract: paper.abstract || '暂无摘要',
-               downloadUrl: (paper.openAccessPdf && paper.openAccessPdf.url) || paper.url || null,
-               year: paper.year?.toString() || '',
-               citationCount: paper.citationCount || 0,
-               authors: (paper.authors && paper.authors.map(author => author.name)) || [],
-               venue: venue,
-               fullText: null,
-               researchMethod: null,
-               isTopVenue: isTopVenue,
-               from_cache: false,
-               source: 'external',
-               relevance_score: relevanceScore // 添加基于位置的相关性分数
-             };
-           });
+        // 处理OpenAlex搜索结果并建立/扩展论文池
+        if (externalSearchResult && externalSearchResult.papers && externalSearchResult.papers.length > 0) {
+          const externalResults = externalSearchResult.papers.map((paper, index) => {
+            // OpenAlex结果已经包含了相关性分数和正确的格式
+            // 只需要确保ID的唯一性和一些字段的兼容性
+            return {
+              ...paper,
+              // 确保ID唯一性
+              id: paper.id || `openalex_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
+              // 确保兼容性字段
+              fullText: null,
+              researchMethod: null,
+              // 重新确认来源
+              source: 'openalex',
+              from_cache: false
+            };
+          });
 
            const action = externalPoolInfo?.action || 'creating_new_pool';
                        console.log(`🏊‍♂️ ${action === 'creating_new_pool' ? '建立新的' : '扩展'}外部论文池，总共获取 ${externalResults.length} 篇论文`);
@@ -4572,7 +4784,7 @@ app.post('/api/reference-papers', authenticateToken, async (req, res) => {
     if (conversation_id) {
       const [conversations] = await pool.execute(
         'SELECT id FROM conversations WHERE id = ? AND user_id = ?',
-        [conversationId, req.user.id]
+        [conversation_id, req.user.id]
       );
 
       if (conversations.length === 0) {
