@@ -116,7 +116,7 @@
           </div>
 
           <!-- AI推荐文献列表 -->
-          <div class="space-y-3 max-h-[65vh] overflow-y-auto overflow-x-hidden pr-2">
+          <div id="papers-list" class="space-y-3 max-h-[65vh] overflow-y-auto overflow-x-hidden pr-2">
             <div v-if="papersState.recommendedPapers.length === 0 && !papersState.isLoadingRecommendations" 
                  class="text-center text-gray-500 py-8">
               <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -280,7 +280,7 @@
 
         <!-- 右侧文献详情 -->
         <div class="col-span-5">
-          <div class="paper-detail-container bg-white rounded-xl shadow-sm p-8 max-h-[95vh] overflow-y-auto">
+          <div id="paper-detail" class="paper-detail-container bg-white rounded-xl shadow-sm p-8 max-h-[95vh] overflow-y-auto">
             <div v-if="papersState.selectedPaper">
               <div class="flex justify-between items-start mb-6">
                 <h2 class="text-2xl font-bold text-gray-900 flex-1">{{ showTitleTranslation && translatedTitle ? translatedTitle : papersState.selectedPaper.title }}</h2>
@@ -439,7 +439,7 @@
                 </p>
 
                 <!-- 研究方法部分 -->
-                <div class="mt-6">
+                <div id="research-method-section" class="mt-6">
                   <div class="flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-gray-900">研究方法预览</h3>
                     <div class="flex items-center space-x-2">
@@ -1952,6 +1952,77 @@ const localCacheCheckboxRef = ref(null)
 const expandRangeCheckboxRef = ref(null)
 const referenceBtnRef = ref(null)
 
+// 样例数据 - 用于新手指引时显示
+const tutorialSamplePapers = [
+  {
+    id: 'tutorial_1',
+    title: 'Synthetic Human Memories: AI-Edited Images and Videos Can Implant False Memories and Distort Recollection',
+    abstract: 'This study investigates how AI-edited media content affects human memory formation and recall accuracy. Through a series of controlled experiments, we demonstrate that exposure to AI-manipulated images and videos can significantly alter participants\' memory of events, leading to false memory implantation and distorted recollection patterns. Our findings reveal that AI-generated content can be particularly effective at creating false memories due to its realistic appearance and the lack of obvious manipulation cues that humans have learned to detect in traditional media.',
+    authors: ['Smith, J.', 'Johnson, M.', 'Brown, R.', 'Davis, K.', 'Wilson, A.'],
+    year: 2023,
+    journal: 'Nature Human Behaviour',
+    venue: 'Nature Human Behaviour',
+    citationCount: 156,
+    relevance_score: 0.95,
+    downloadUrl: 'https://example.com/paper1.pdf',
+    researchMethod: `## 研究假设与实验设计
+
+**方法学解释：**
+本研究采用2×2混合实验设计，旨在探究AI编辑媒体内容对人类记忆形成的影响。实验设计基于认知负荷理论和记忆重构理论，通过操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）来检验研究假设。
+
+**原文引用：**
+"We hypothesized that AI-edited media content would lead to higher rates of false memory formation compared to traditionally edited content, particularly when presented in dynamic formats."
+
+## 参与者特征与实验实施
+
+**方法学解释：**
+研究招募了120名年龄在18-35岁之间的参与者，采用随机分组的方式分配到四个实验条件中。所有参与者均具有正常的视觉和听觉能力，无认知障碍史。
+
+**原文引用：**
+"Participants were randomly assigned to one of four experimental conditions using a computer-generated randomization sequence. Each participant completed a pre-test memory assessment and then viewed either AI-edited or traditionally edited media content."
+
+## 数据收集与统计分析
+
+**方法学解释：**
+数据收集包括主观评分数据（记忆信心度、内容可信度）和行为数据（反应时间、错误率）。统计分析采用SPSS 26.0进行，包括描述性统计、方差分析和回归分析。
+
+**原文引用：**
+"Memory confidence was measured using a 7-point Likert scale, while response times and error rates were recorded automatically by the experimental software. Statistical analyses were conducted using SPSS 26.0 with α = 0.05."
+
+## 结果测量与效果评估
+
+**方法学解释：**
+结果评估采用多种测量工具，包括记忆准确性测试、虚假记忆检测和主观评价量表。评估指标的选择基于认知心理学领域的标准测量方法。
+
+**原文引用：**
+"Memory accuracy was assessed through a recognition test administered 24 hours after exposure to the media content. False memory rates were calculated as the proportion of incorrectly recognized items that were not present in the original stimuli."`
+  },
+  {
+    id: 'tutorial_2', 
+    title: 'The Impact of Deep Learning on Human-Computer Interaction Design',
+    abstract: 'This paper explores the transformative effects of deep learning technologies on HCI design methodologies. We present a comprehensive framework for integrating AI-driven design tools into traditional user interface development processes.',
+    authors: ['Davis, K.', 'Wilson, A.', 'Miller, P.'],
+    year: 2023,
+    journal: 'ACM CHI Conference on Human Factors in Computing Systems',
+    citationCount: 89,
+    relevance_score: 0.87,
+    downloadUrl: 'https://example.com/paper2.pdf'
+  },
+  {
+    id: 'tutorial_3',
+    title: 'User Experience Design in the Age of Artificial Intelligence',
+    abstract: 'A systematic review of how AI technologies are reshaping user experience design principles and practices. The study analyzes current trends and provides recommendations for designers working with AI-enhanced interfaces.',
+    authors: ['Garcia, L.', 'Taylor, S.', 'Anderson, M.'],
+    year: 2023,
+    journal: 'International Journal of Human-Computer Studies',
+    citationCount: 67,
+    relevance_score: 0.82,
+    downloadUrl: 'https://example.com/paper3.pdf'
+  }
+]
+
+// 样例论文详情数据已合并到tutorialSamplePapers[0]中，不再需要单独的tutorialSamplePaperDetail
+
 // 引导步骤定义
 const tutorialSteps = [
   {
@@ -1980,9 +2051,27 @@ const tutorialSteps = [
     ref: expandRangeCheckboxRef
   },
   {
-    title: '标记参考文献',
-    description: '选择文献后，可以点击此按钮将其标记为参考文献，方便后续引用。',
+    title: '文献列表管理',
+    description: '这里显示AI推荐的文献列表。点击文献卡片可以查看详情，使用删除按钮可以移除不需要的文献。',
+    ref: null,
+    customHighlight: 'papers-list'
+  },
+  {
+    title: '文献详情查看',
+    description: '右侧显示选中文献的详细信息，包括摘要、研究方法、作者信息等。可以在这里进行翻译、标记参考等操作。',
+    ref: null,
+    customHighlight: 'paper-detail'
+  },
+  {
+    title: '选为参考功能',
+    description: '点击"选为参考"按钮可以将当前文献标记为参考文献，方便在研究方案中引用。已选择的文献会显示"已选为参考"标签。',
     ref: referenceBtnRef
+  },
+  {
+    title: '研究方法预览',
+    description: '这里显示文献的研究方法信息，包括实验设计、参与者特征、数据收集和统计分析等。点击"展开"可以查看完整的研究方法内容。',
+    ref: null,
+    customHighlight: 'research-method-section'
   }
 ]
 
@@ -1991,8 +2080,23 @@ const highlightStyle = computed(() => {
   if (currentTutorialStep.value >= tutorialSteps.length) return {}
   
   const currentStep = tutorialSteps[currentTutorialStep.value]
-  const element = currentStep.ref.value
   
+  // 如果是自定义高亮区域
+  if (currentStep.customHighlight) {
+    const element = document.getElementById(currentStep.customHighlight)
+    if (element) {
+      const rect = element.getBoundingClientRect()
+      return {
+        top: `${rect.top - 8}px`,
+        left: `${rect.left - 8}px`,
+        width: `${rect.width + 16}px`,
+        height: `${rect.height + 16}px`
+      }
+    }
+  }
+  
+  // 普通元素高亮
+  const element = currentStep.ref?.value
   if (!element) return {}
   
   const rect = element.getBoundingClientRect()
@@ -2009,8 +2113,38 @@ const tooltipStyle = computed(() => {
   if (currentTutorialStep.value >= tutorialSteps.length) return {}
   
   const currentStep = tutorialSteps[currentTutorialStep.value]
-  const element = currentStep.ref.value
   
+  // 如果是自定义高亮区域
+  if (currentStep.customHighlight) {
+    const element = document.getElementById(currentStep.customHighlight)
+    if (element) {
+      const rect = element.getBoundingClientRect()
+      const windowHeight = window.innerHeight
+      const windowWidth = window.innerWidth
+      
+      // 计算提示框位置，避免超出屏幕
+      let top = rect.bottom + 20
+      let left = rect.left
+      
+      // 如果下方空间不够，显示在上方
+      if (top + 200 > windowHeight) {
+        top = rect.top - 220
+      }
+      
+      // 如果右侧空间不够，调整位置
+      if (left + 320 > windowWidth) {
+        left = windowWidth - 340
+      }
+      
+      return {
+        top: `${Math.max(20, top)}px`,
+        left: `${Math.max(20, left)}px`
+      }
+    }
+  }
+  
+  // 普通元素提示框位置
+  const element = currentStep.ref?.value
   if (!element) return {}
   
   const rect = element.getBoundingClientRect()
@@ -2050,6 +2184,25 @@ const startTutorial = () => {
   showTutorial.value = true
   currentTutorialStep.value = 0
   
+  // 在引导时显示样例数据
+  if (papersState.recommendedPapers.length === 0) {
+    // 添加样例论文到推荐列表
+    addRecommendedPapers(tutorialSamplePapers)
+    
+    // 选择第一篇论文（指定的论文）作为详情显示
+    // 注意：使用tutorialSamplePapers[0]而不是tutorialSamplePaperDetail，确保中间列表高亮正确
+    selectPaper(tutorialSamplePapers[0])
+    
+    // 将第一篇论文添加到引用列表，确保标题显示紫色高亮
+    toggleReference(tutorialSamplePapers[0])
+    
+    // 将第二篇论文添加到引用列表（用于演示）
+    toggleReference(tutorialSamplePapers[1])
+    
+    // 确保研究方法预览为展开状态
+    showFullText.value = true
+  }
+  
   // 等待DOM更新后聚焦到第一个元素
   nextTick(() => {
     focusCurrentElement()
@@ -2061,7 +2214,7 @@ const focusCurrentElement = () => {
   if (currentTutorialStep.value >= tutorialSteps.length) return
   
   const currentStep = tutorialSteps[currentTutorialStep.value]
-  const element = currentStep.ref.value
+  const element = currentStep.ref?.value
   
   if (element) {
     // 滚动到元素位置
@@ -2096,6 +2249,16 @@ const nextTutorialStep = () => {
 const skipTutorial = () => {
   showTutorial.value = false
   currentTutorialStep.value = 0
+  
+  // 清除样例数据
+  if (papersState.recommendedPapers.length > 0 && 
+      papersState.recommendedPapers[0].id?.startsWith('tutorial_')) {
+    clearAllPapers()
+    clearReferences()
+    selectPaper(null)
+    // 重置研究方法预览状态
+    showFullText.value = false
+  }
 }
 
 // 下次不提示
@@ -2108,6 +2271,17 @@ const dontShowAgain = () => {
 const completeTutorial = () => {
   showTutorial.value = false
   currentTutorialStep.value = 0
+  
+  // 清除样例数据
+  if (papersState.recommendedPapers.length > 0 && 
+      papersState.recommendedPapers[0].id?.startsWith('tutorial_')) {
+    clearAllPapers()
+    clearReferences()
+    selectPaper(null)
+    // 重置研究方法预览状态
+    showFullText.value = false
+  }
+  
   console.log('✅ 新手指引完成')
 }
 

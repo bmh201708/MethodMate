@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新手指引测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PaperDetail.vue 新手指引功能测试</h1>
+        
+        <div class="test-section">
+            <h3>功能说明</h3>
+            <p>新手指引功能已成功实现以下改进：</p>
+            <ul>
+                <li>✅ 在引导时显示样例数据（3篇论文）</li>
+                <li>✅ 右侧显示指定论文的详细信息</li>
+                <li>✅ 添加了对中间文献列表的引导</li>
+                <li>✅ 添加了对右侧文献详情的引导</li>
+                <li>✅ 引导完成后自动清除样例数据</li>
+                <li>✅ 支持键盘快捷键操作</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>样例数据内容</h3>
+            <div class="status info">
+                <strong>主要论文：</strong> Synthetic Human Memories: AI-Edited Images and Videos Can Implant False Memories and Distort Recollection<br>
+                <strong>期刊：</strong> Nature Human Behaviour<br>
+                <strong>引用次数：</strong> 156<br>
+                <strong>相关性：</strong> 高相关性 (0.95)
+            </div>
+            <div class="status info">
+                <strong>包含完整的研究方法信息：</strong><br>
+                - 研究假设与实验设计<br>
+                - 参与者特征与实验实施<br>
+                - 数据收集与统计分析<br>
+                - 结果测量与效果评估
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>引导步骤</h3>
+            <ol>
+                <li>输入关键词</li>
+                <li>智能提取关键词</li>
+                <li>获取相关文献</li>
+                <li>本地缓存选项</li>
+                <li>扩大搜索范围</li>
+                <li><strong>文献列表管理</strong> (新增)</li>
+                <li><strong>文献详情查看</strong> (新增)</li>
+                <li><strong>选为参考功能</strong> (新增)</li>
+                <li><strong>研究方法预览</strong> (新增)</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>测试方法</h3>
+            <div class="status success">
+                <strong>自动触发：</strong> 首次访问页面时会自动显示新手指引<br>
+                <strong>手动重置：</strong> 在开发模式下，页面右下角有"重置引导"按钮<br>
+                <strong>键盘操作：</strong> Enter/空格键下一步，Esc键跳过，左右箭头切换步骤
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>技术实现</h3>
+            <div class="status info">
+                <strong>样例数据：</strong> 使用 tutorialSamplePapers 数组存储3篇样例论文<br>
+                <strong>详情数据：</strong> 使用 tutorialSamplePaperDetail 对象存储完整论文信息<br>
+                <strong>高亮区域：</strong> 通过 getElementById 获取元素位置进行动态高亮<br>
+                <strong>状态管理：</strong> 引导完成后自动清除样例数据和引用状态
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>验证要点</h3>
+            <ul>
+                <li>✅ 首次访问时自动显示引导</li>
+                <li>✅ 中间文献列表显示3篇样例论文</li>
+                <li>✅ 右侧显示指定论文的完整详情</li>
+                <li>✅ 第一篇论文自动选中并显示详情</li>
+                <li>✅ 第二篇论文自动标记为已参考</li>
+                <li>✅ 研究方法预览自动展开</li>
+                <li>✅ 引导步骤正确高亮对应区域</li>
+                <li>✅ 引导完成后清除所有样例数据</li>
+                <li>✅ 支持"下次不提示"功能</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 
