@@ -204,6 +204,60 @@ const createTables = async () => {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
+    // 方案迭代历史表 - 用于存储方案的迭代前后对比数据
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS plan_iterations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        plan_id INT NOT NULL,
+        user_id INT NOT NULL,
+        iteration_type ENUM('full', 'partial') NOT NULL COMMENT '迭代类型：整体迭代或部分迭代',
+        iteration_section VARCHAR(50) COMMENT '迭代的部分（如：hypotheses, methodology等）',
+        iteration_suggestion TEXT COMMENT '迭代建议或说明',
+        message_id VARCHAR(255) COMMENT '关联的AI消息ID',
+        
+        -- 迭代前的方案数据
+        before_title VARCHAR(255),
+        before_research_questions TEXT,
+        before_methodology TEXT,
+        before_data_collection TEXT,
+        before_analysis_method TEXT,
+        before_hypotheses TEXT,
+        before_experimental_design TEXT,
+        before_expected_results TEXT,
+        before_variables TEXT,
+        before_statistical_tools TEXT,
+        before_visualization TEXT,
+        before_source_introductions JSON,
+        
+        -- 迭代后的方案数据
+        after_title VARCHAR(255),
+        after_research_questions TEXT,
+        after_methodology TEXT,
+        after_data_collection TEXT,
+        after_analysis_method TEXT,
+        after_hypotheses TEXT,
+        after_experimental_design TEXT,
+        after_expected_results TEXT,
+        after_variables TEXT,
+        after_statistical_tools TEXT,
+        after_visualization TEXT,
+        after_source_introductions JSON,
+        
+        -- 元数据
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        
+        FOREIGN KEY (plan_id) REFERENCES research_plans(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_plan_id (plan_id),
+        INDEX idx_user_id (user_id),
+        INDEX idx_iteration_type (iteration_type),
+        INDEX idx_iteration_section (iteration_section),
+        INDEX idx_message_id (message_id),
+        INDEX idx_created_at (created_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
     console.log('✅ 数据库表创建成功');
   } catch (error) {
     console.error('❌ 创建数据库表失败:', error);

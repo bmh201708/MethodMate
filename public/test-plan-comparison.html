@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>方案对比功能测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 方案对比功能测试</h1>
+    
+    <div class="container">
+        <h2>1. 创建测试数据</h2>
+        <div class="test-section">
+            <h3>创建测试迭代数据</h3>
+            <div id="create-status"></div>
+            <button onclick="createTestData()">创建测试数据</button>
+            <button onclick="clearTestData()">清空测试数据</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>2. 模拟方案对比功能</h2>
+        <div class="test-section">
+            <h3>测试对比逻辑</h3>
+            <div id="comparison-status"></div>
+            <button onclick="testComparisonLogic()">测试对比逻辑</button>
+            <button onclick="testGetIterationComparison()">测试 getIterationComparison</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>3. 调试日志</h2>
+        <div class="test-section">
+            <div id="debug-log" class="log"></div>
+            <button onclick="clearLog()">清空日志</button>
+        </div>
+    </div>
+
+    <script>
+        let logElement;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            logElement.innerHTML += logEntry;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(logEntry.trim());
+        }
+        
+        function updateStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function createTestData() {
+            log('开始创建测试数据...');
+            
+            try {
+                // 创建测试迭代数据
+                const testIteration = {
+                    id: Date.now(),
+                    section: 'methodology',
+                    suggestion: '测试迭代建议：改进研究方法',
+                    before: {
+                        title: '测试研究方案 - 迭代前',
+                        researchQuestions: '如何测试用户界面？',
+                        methodology: '采用问卷调查方法',
+                        dataCollection: '在线收集数据',
+                        analysisMethod: '描述性统计',
+                        hypotheses: ['假设1：用户喜欢简单界面', '假设2：响应时间影响满意度'],
+                        experimentalDesign: '单因素实验设计',
+                        expectedResults: '预期用户满意度提高'
+                    },
+                    after: {
+                        title: '测试研究方案 - 迭代后',
+                        researchQuestions: '如何测试用户界面？',
+                        methodology: '采用混合研究方法，结合问卷调查和用户访谈',
+                        dataCollection: '在线收集数据，并进行深度访谈',
+                        analysisMethod: '描述性统计和质性分析',
+                        hypotheses: ['假设1：用户喜欢简单界面', '假设2：响应时间影响满意度', '假设3：用户反馈对设计改进有重要影响'],
+                        experimentalDesign: '混合实验设计，包含定量和定性部分',
+                        expectedResults: '预期用户满意度提高，并获得深入的用户反馈'
+                    },
+                    timestamp: new Date().toISOString(),
+                    messageId: 'test-message-' + Date.now()
+                };
+                
+                // 获取当前方案状态
+                let planData = localStorage.getItem('currentPlanState');
+                let plan = planData ? JSON.parse(planData) : {
+                    title: '测试研究方案',
+                    isGenerated: true,
+                    iterationHistory: []
+                };
+                
+                // 添加测试迭代
+                if (!plan.iterationHistory) {
+                    plan.iterationHistory = [];
+                }
+                plan.iterationHistory.push(testIteration);
+                
+                // 更新最后迭代快照
+                plan.lastIterationSnapshot = testIteration.before;
+                plan.lastIterationAfterSnapshot = testIteration.after;
+                plan.lastIterationSection = testIteration.section;
+                plan.lastIterationSuggestion = testIteration.suggestion;
+                plan.lastIterationMessageId = testIteration.messageId;
+                plan.lastUpdated = new Date().toISOString();
+                
+                // 保存到localStorage
+                localStorage.setItem('currentPlanState', JSON.stringify(plan));
+                
+                updateStatus('create-status', '✅ 测试数据创建成功', 'success');
+                log('测试数据创建成功');
+                log(`测试迭代ID: ${testIteration.id}`);
+                log(`测试消息ID: ${testIteration.messageId}`);
+                log(`迭代历史数量: ${plan.iterationHistory.length}`);
+                
+            } catch (error) {
+                updateStatus('create-status', `❌ 创建测试数据失败: ${error.message}`, 'error');
+                log(`创建测试数据失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearTestData() {
+            log('清空测试数据...');
+            localStorage.removeItem('currentPlanState');
+            updateStatus('create-status', '✅ 测试数据已清空', 'success');
+            log('测试数据已清空');
+        }
+        
+        function testComparisonLogic() {
+            log('开始测试对比逻辑...');
+            
+            try {
+                // 获取方案状态
+                const planData = localStorage.getItem('currentPlanState');
+                if (!planData) {
+                    updateStatus('comparison-status', '❌ 未找到方案数据', 'error');
+                    log('未找到方案数据', 'error');
+                    return;
+                }
+                
+                const plan = JSON.parse(planData);
+                log(`方案标题: ${plan.title}`);
+                log(`迭代历史数量: ${plan.iterationHistory?.length || 0}`);
+                
+                if (!plan.iterationHistory || plan.iterationHistory.length === 0) {
+                    updateStatus('comparison-status', '⚠️ 无迭代历史', 'warning');
+                    log('无迭代历史', 'warning');
+                    return;
+                }
+                
+                // 获取最新迭代
+                const latestIteration = plan.iterationHistory[plan.iterationHistory.length - 1];
+                log(`最新迭代: ${latestIteration.section}`);
+                log(`迭代建议: ${latestIteration.suggestion}`);
+                
+                // 模拟生成对比数据
+                const comparisonData = {
+                    before: latestIteration.before,
+                    after: latestIteration.after,
+                    section: latestIteration.section,
+                    suggestion: latestIteration.suggestion,
+                    timestamp: latestIteration.timestamp
+                };
+                
+                log('对比数据生成成功');
+                log(`迭代前标题: ${comparisonData.before.title}`);
+                log(`迭代后标题: ${comparisonData.after.title}`);
+                log(`迭代部分: ${comparisonData.section}`);
+                
+                updateStatus('comparison-status', '✅ 对比逻辑测试成功', 'success');
+                
+            } catch (error) {
+                updateStatus('comparison-status', `❌ 对比逻辑测试失败: ${error.message}`, 'error');
+                log(`对比逻辑测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGetIterationComparison() {
+            log('开始测试 getIterationComparison 函数...');
+            
+            try {
+                // 模拟 getIterationComparison 的逻辑
+                const planData = localStorage.getItem('currentPlanState');
+                if (!planData) {
+                    log('未找到方案数据', 'error');
+                    return null;
+                }
+                
+                const plan = JSON.parse(planData);
+                
+                // 检查本地迭代历史
+                const iterationHistory = plan.iterationHistory || [];
+                log(`本地迭代历史数量: ${iterationHistory.length}`);
+                
+                if (iterationHistory.length === 0) {
+                    log('无迭代历史', 'warning');
+                    return null;
+                }
+                
+                // 获取最新迭代
+                const latestIteration = iterationHistory[iterationHistory.length - 1];
+                log('找到最新迭代记录');
+                
+                const result = {
+                    before: latestIteration.before,
+                    after: latestIteration.after,
+                    section: latestIteration.section,
+                    suggestion: latestIteration.suggestion,
+                    timestamp: latestIteration.timestamp
+                };
+                
+                log('getIterationComparison 测试成功');
+                log(`返回数据: ${JSON.stringify(result, null, 2)}`);
+                
+                updateStatus('comparison-status', '✅ getIterationComparison 测试成功', 'success');
+                
+                return result;
+                
+            } catch (error) {
+                log(`getIterationComparison 测试失败: ${error.message}`, 'error');
+                updateStatus('comparison-status', `❌ getIterationComparison 测试失败: ${error.message}`, 'error');
+                return null;
+            }
+        }
+        
+        function clearLog() {
+            logElement.innerHTML = '';
+            log('日志已清空');
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            logElement = document.getElementById('debug-log');
+            log('方案对比功能测试页面已加载');
+            log('请先创建测试数据，然后测试对比功能');
+        });
+    </script>
+</body>
+</html> 

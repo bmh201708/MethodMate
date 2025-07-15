@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>左右分栏方案对比测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 左右分栏对比样式 */
+        .left-right-comparison {
+            @apply space-y-6;
+        }
+
+        .comparison-section {
+            @apply bg-white rounded-lg border border-gray-200 p-4;
+        }
+
+        .section-title {
+            @apply text-lg font-semibold text-gray-900 mb-4;
+        }
+
+        .left-right-diff {
+            @apply w-full;
+        }
+
+        .diff-columns {
+            @apply grid grid-cols-2 gap-6;
+        }
+
+        .diff-column {
+            @apply bg-gray-50 rounded-lg p-4;
+        }
+
+        .column-title {
+            @apply text-sm font-medium mb-3 px-2 py-1 rounded;
+        }
+
+        .column-title.removed {
+            @apply bg-red-100 text-red-700;
+        }
+
+        .column-title.added {
+            @apply bg-green-100 text-green-700;
+        }
+
+        .column-content {
+            @apply space-y-2;
+        }
+
+        .diff-line {
+            @apply p-2 rounded text-sm;
+        }
+
+        .diff-line.removed {
+            @apply bg-red-100 text-red-800 border-l-4 border-red-400;
+        }
+
+        .diff-line.added {
+            @apply bg-green-100 text-green-800 border-l-4 border-green-400;
+        }
+
+        .diff-line.unchanged {
+            @apply bg-gray-100 text-gray-800;
+        }
+
+        .left-right-array-diff {
+            @apply w-full;
+        }
+
+        .array-diff-title {
+            @apply text-lg font-semibold text-gray-900 mb-4;
+        }
+
+        .diff-item {
+            @apply p-2 rounded text-sm mb-2;
+        }
+
+        .diff-item.removed {
+            @apply bg-red-100 text-red-800 border-l-4 border-red-400;
+        }
+
+        .diff-item.added {
+            @apply bg-green-100 text-green-800 border-l-4 border-green-400;
+        }
+
+        .diff-item.unchanged {
+            @apply bg-gray-100 text-gray-800;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">左右分栏方案对比测试</h1>
+        
+        <div class="bg-white rounded-xl shadow-xl p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">测试说明</h2>
+            <p class="text-gray-700 mb-4">
+                这个页面测试新的左右分栏方案对比功能，左边显示原文，右边显示修改后的内容。
+                删除的内容用红色标记，新增的内容用绿色标记，保持不变的内容用灰色显示。
+            </p>
+        </div>
+
+        <div id="comparison-container" class="bg-white rounded-xl shadow-xl p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">方案对比结果</h2>
+            <div id="comparison-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟方案对比数据
+        const beforePlan = {
+            title: 'AI编辑可能引入研究',
+            hypotheses: [
+                'H1：曝光于AI编辑的图像将导致参与者比观看未编辑图像的对照组产生更多的错误记忆',
+                'H2：AI编辑的视频内容比静态图像产生更强的错误记忆效应',
+                'H3：不同类型的AI编辑对错误记忆的影响存在差异',
+                'H4：参与者的个体特征会影响AI编辑内容对记忆的影响'
+            ],
+            experimentalDesign: '**实验设计：**\n- 采用2×3混合设计\n- 自变量：图像编辑类型（未编辑、AI编辑、AI生成视频）\n- 因变量：错误记忆的数量和信心程度',
+            analysisMethod: '**数据分析：**\n- 使用SPSS进行统计分析\n- 采用重复测量方差分析\n- 显著性水平设定为α = 0.05',
+            expectedResults: '**预期结果：**\n- AI编辑内容会增加错误记忆\n- 视频内容比静态图像影响更大\n- 不同编辑类型有不同影响'
+        };
+
+        const afterPlan = {
+            title: 'AI编辑可能引入与人类记忆研究',
+            hypotheses: [
+                'H1：观看AI编辑的图像会导致参与者出现错误记忆或增强对错误记忆的信心',
+                'H2：AI编辑的视频内容比静态图像产生更强的错误记忆效应',
+                'H3：不同类型的AI编辑对错误记忆的影响存在差异',
+                'H4：参与者的个体特征会影响AI编辑内容对记忆的影响'
+            ],
+            experimentalDesign: `**参与者特征：**
+- 样本量估算：预估招募200名参与者，以95%的置信水平和80%的统计功效检验假设
+- 年龄与性别构成：参与者年龄范围为18-65岁，尽量保持性别均衡以减少性别偏差
+- 专业或技术背景：要求参与者具备基本的技术使用能力，无需专业AI背景
+- 招募方式：通过在线平台(如CloudResearch)招募，确保样本的多样性和代表性
+- 纳入标准：愿意参与研究并签署知情同意书，确保知情权和自愿参与
+
+**分组方式：**
+- 自变量为图像编辑类型 (未编辑、AI编辑、AI生成视频)，因变量为错误记忆的数量和信心
+- 控制变量包括参与者的年龄、性别和对AI技术的熟悉程度，以减少混杂效应
+
+**实验流程：**
+1. 预实验: 参与者接受系统介绍和注意力检查，以确保他们理解任务并排除注意力不足的个体`,
+            analysisMethod: '**数据分析：**\n- 使用SPSS进行统计分析\n- 采用重复测量方差分析\n- 显著性水平设定为α = 0.05\n- 进行效应量分析',
+            expectedResults: '**预期结果：**\n- AI编辑内容会增加错误记忆\n- 视频内容比静态图像影响更大\n- 不同编辑类型有不同影响\n- 个体特征会调节这种影响'
+        };
+
+        // 文本差异比较函数
+        function compareText(oldText, newText) {
+            const oldLines = oldText.split('\n').filter(line => line.trim() !== '');
+            const newLines = newText.split('\n').filter(line => line.trim() !== '');
+            
+            const removed = oldLines.filter(line => !newLines.includes(line));
+            const added = newLines.filter(line => !oldLines.includes(line));
+            const unchanged = oldLines.filter(line => newLines.includes(line));
+            
+            return { removed, added, unchanged };
+        }
+
+        // 数组差异比较函数
+        function compareArrays(oldArray, newArray) {
+            const removed = oldArray.filter(item => !newArray.includes(item));
+            const added = newArray.filter(item => !oldArray.includes(item));
+            const unchanged = oldArray.filter(item => newArray.includes(item));
+            
+            return { removed, added, unchanged };
+        }
+
+        // HTML转义函数
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 生成左右分栏的文本差异HTML
+        function generateLeftRightDiffHTML(oldText, newText) {
+            const diff = compareText(oldText, newText);
+            
+            let html = '<div class="left-right-diff">';
+            html += '<div class="diff-columns">';
+            
+            // 左侧：原文
+            html += '<div class="diff-column old-column">';
+            html += '<h4 class="column-title">原文</h4>';
+            html += '<div class="column-content">';
+            
+            // 显示删除的内容（红色）
+            if (diff.removed.length > 0) {
+                diff.removed.forEach(line => {
+                    html += `<div class="diff-line removed">${escapeHtml(line)}</div>`;
+                });
+            }
+            
+            // 显示保持不变的内容
+            if (diff.unchanged.length > 0) {
+                diff.unchanged.forEach(line => {
+                    html += `<div class="diff-line unchanged">${escapeHtml(line)}</div>`;
+                });
+            }
+            
+            html += '</div></div>';
+            
+            // 右侧：修改后
+            html += '<div class="diff-column new-column">';
+            html += '<h4 class="column-title">迭代后</h4>';
+            html += '<div class="column-content">';
+            
+            // 显示新增的内容（绿色）
+            if (diff.added.length > 0) {
+                diff.added.forEach(line => {
+                    html += `<div class="diff-line added">${escapeHtml(line)}</div>`;
+                });
+            }
+            
+            // 显示保持不变的内容
+            if (diff.unchanged.length > 0) {
+                diff.unchanged.forEach(line => {
+                    html += `<div class="diff-line unchanged">${escapeHtml(line)}</div>`;
+                });
+            }
+            
+            html += '</div></div>';
+            html += '</div></div>';
+            return html;
+        }
+
+        // 生成左右分栏的数组差异HTML
+        function generateLeftRightArrayDiffHTML(oldArray, newArray, title = '') {
+            const diff = compareArrays(oldArray, newArray);
+            
+            let html = `<div class="left-right-array-diff">`;
+            if (title) {
+                html += `<h3 class="array-diff-title">${title}</h3>`;
+            }
+            
+            html += '<div class="diff-columns">';
+            
+            // 左侧：原文
+            html += '<div class="diff-column old-column">';
+            html += '<h4 class="column-title">原文</h4>';
+            html += '<div class="column-content">';
+            
+            // 显示删除的项目（红色）
+            if (diff.removed.length > 0) {
+                diff.removed.forEach(item => {
+                    html += `<div class="diff-item removed">${escapeHtml(item)}</div>`;
+                });
+            }
+            
+            // 显示保持不变的项目
+            if (diff.unchanged.length > 0) {
+                diff.unchanged.forEach(item => {
+                    html += `<div class="diff-item unchanged">${escapeHtml(item)}</div>`;
+                });
+            }
+            
+            html += '</div></div>';
+            
+            // 右侧：修改后
+            html += '<div class="diff-column new-column">';
+            html += '<h4 class="column-title">迭代后</h4>';
+            html += '<div class="column-content">';
+            
+            // 显示新增的项目（绿色）
+            if (diff.added.length > 0) {
+                diff.added.forEach(item => {
+                    html += `<div class="diff-item added">${escapeHtml(item)}</div>`;
+                });
+            }
+            
+            // 显示保持不变的项目
+            if (diff.unchanged.length > 0) {
+                diff.unchanged.forEach(item => {
+                    html += `<div class="diff-item unchanged">${escapeHtml(item)}</div>`;
+                });
+            }
+            
+            html += '</div></div>';
+            html += '</div></div>';
+            return html;
+        }
+
+        // 生成完整的左右分栏方案对比HTML
+        function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
+            let html = '<div class="left-right-comparison">';
+            
+            // 标题对比
+            if (beforePlan.title !== afterPlan.title) {
+                html += '<div class="comparison-section">';
+                html += '<h3 class="section-title">方案标题</h3>';
+                html += generateLeftRightDiffHTML(beforePlan.title || '', afterPlan.title || '');
+                html += '</div>';
+            }
+            
+            // 研究假设对比
+            const hypothesesDiff = compareArrays(beforePlan.hypotheses || [], afterPlan.hypotheses || []);
+            if (hypothesesDiff.added.length > 0 || hypothesesDiff.removed.length > 0) {
+                html += '<div class="comparison-section">';
+                html += generateLeftRightArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], '研究假设');
+                html += '</div>';
+            } else if (beforePlan.hypotheses && afterPlan.hypotheses && 
+                       JSON.stringify(beforePlan.hypotheses) !== JSON.stringify(afterPlan.hypotheses)) {
+                html += '<div class="comparison-section">';
+                html += generateLeftRightArrayDiffHTML(beforePlan.hypotheses, afterPlan.hypotheses, '研究假设');
+                html += '</div>';
+            } else if (beforePlan.hypotheses || afterPlan.hypotheses) {
+                html += '<div class="comparison-section">';
+                html += generateLeftRightArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], '研究假设');
+                html += '</div>';
+            }
+            
+            // 实验设计对比
+            if (beforePlan.experimentalDesign !== afterPlan.experimentalDesign) {
+                html += '<div class="comparison-section">';
+                html += '<h3 class="section-title">实验设计</h3>';
+                html += generateLeftRightDiffHTML(beforePlan.experimentalDesign || '', afterPlan.experimentalDesign || '');
+                html += '</div>';
+            }
+            
+            // 数据分析对比
+            if (beforePlan.analysisMethod !== afterPlan.analysisMethod) {
+                html += '<div class="comparison-section">';
+                html += '<h3 class="section-title">数据分析</h3>';
+                html += generateLeftRightDiffHTML(beforePlan.analysisMethod || '', afterPlan.analysisMethod || '');
+                html += '</div>';
+            }
+            
+            // 结果呈现对比
+            if (beforePlan.expectedResults !== afterPlan.expectedResults) {
+                html += '<div class="comparison-section">';
+                html += '<h3 class="section-title">结果呈现</h3>';
+                html += generateLeftRightDiffHTML(beforePlan.expectedResults || '', afterPlan.expectedResults || '');
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 页面加载时生成对比
+        document.addEventListener('DOMContentLoaded', function() {
+            const comparisonContent = document.getElementById('comparison-content');
+            comparisonContent.innerHTML = generateLeftRightComparisonHTML(beforePlan, afterPlan);
+        });
+    </script>
+</body>
+</html> 

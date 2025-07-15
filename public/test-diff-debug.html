@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本差异比较调试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .test-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        
+        /* 左右分栏对比样式 */
+        .plan-comparison-side-by-side {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .side-by-side-diff,
+        .side-by-side-array-diff {
+            margin-bottom: 2rem;
+        }
+        
+        .diff-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .diff-column {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background: white;
+        }
+        
+        .column-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 0;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .column-title.removed {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        
+        .column-title.added {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+        
+        .column-content {
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+        
+        .diff-line {
+            padding: 0.25rem 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            border-radius: 0.25rem;
+            margin: 0.125rem 0;
+        }
+        
+        .diff-line.removed {
+            background: #fef2f2;
+            color: #dc2626;
+            text-decoration: line-through;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .diff-line.added {
+            background: #f0fdf4;
+            color: #16a34a;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .diff-line.unchanged {
+            color: #374151;
+            padding: 0.25rem 0;
+        }
+        
+        .diff-item {
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            border-radius: 0.25rem;
+            border-left: 3px solid;
+        }
+        
+        .diff-item.removed {
+            background: #fef2f2;
+            border-left-color: #dc2626;
+            color: #dc2626;
+            text-decoration: line-through;
+        }
+        
+        .diff-item.added {
+            background: #f0fdf4;
+            border-left-color: #16a34a;
+            color: #16a34a;
+        }
+        
+        .diff-item.unchanged {
+            background: #f9fafb;
+            border-left-color: #6b7280;
+            color: #374151;
+        }
+        
+        .comparison-section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            background: white;
+        }
+        
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .debug-info {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+        
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            margin: 0.5rem;
+        }
+        
+        .test-button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>文本差异比较调试工具</h1>
+        
+        <div class="test-section">
+            <div class="test-title">🔧 调试信息</div>
+            <div class="debug-info" id="debugInfo">
+                点击测试按钮查看调试信息...
+            </div>
+            <button class="test-button" onclick="testTextDiff()">测试文本差异</button>
+            <button class="test-button" onclick="testArrayDiff()">测试数组差异</button>
+            <button class="test-button" onclick="testPlanComparison()">测试方案对比</button>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">📝 测试结果</div>
+            <div id="testResult">
+                测试结果将在这里显示...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 简单的文本差异比较函数
+        function compareText(oldText, newText) {
+            if (!oldText && !newText) return { added: [], removed: [], unchanged: [] }
+            if (!oldText) return { added: [newText], removed: [], unchanged: [] }
+            if (!newText) return { added: [], removed: [oldText], unchanged: [] }
+            
+            // 将文本按行分割
+            const oldLines = oldText.split('\n')
+            const newLines = newText.split('\n')
+            
+            const result = {
+                added: [],
+                removed: [],
+                unchanged: []
+            }
+            
+            // 简单的行级比较
+            const oldSet = new Set(oldLines)
+            const newSet = new Set(newLines)
+            
+            // 找出新增的行
+            for (const line of newLines) {
+                if (!oldSet.has(line)) {
+                    result.added.push(line)
+                }
+            }
+            
+            // 找出删除的行
+            for (const line of oldLines) {
+                if (!newSet.has(line)) {
+                    result.removed.push(line)
+                }
+            }
+            
+            // 找出保持不变的行
+            for (const line of oldLines) {
+                if (newSet.has(line)) {
+                    result.unchanged.push(line)
+                }
+            }
+            
+            return result
+        }
+
+        // 比较两个对象数组
+        function compareArrays(oldArray, newArray) {
+            if (!oldArray && !newArray) return { added: [], removed: [], unchanged: [] }
+            if (!oldArray) return { added: newArray, removed: [], unchanged: [] }
+            if (!newArray) return { added: [], removed: oldArray, unchanged: [] }
+            
+            const result = {
+                added: [],
+                removed: [],
+                unchanged: []
+            }
+            
+            // 处理数组为空的情况
+            if (oldArray.length === 0 && newArray.length === 0) {
+                return result
+            }
+            
+            // 如果其中一个为空，另一个不为空，则全部为新增或删除
+            if (oldArray.length === 0) {
+                result.added = [...newArray]
+                return result
+            }
+            
+            if (newArray.length === 0) {
+                result.removed = [...oldArray]
+                return result
+            }
+            
+            const oldSet = new Set(oldArray)
+            const newSet = new Set(newArray)
+            
+            // 找出新增的项目
+            for (const item of newArray) {
+                if (!oldSet.has(item)) {
+                    result.added.push(item)
+                }
+            }
+            
+            // 找出删除的项目
+            for (const item of oldArray) {
+                if (!newSet.has(item)) {
+                    result.removed.push(item)
+                }
+            }
+            
+            // 找出保持不变的项目
+            for (const item of oldArray) {
+                if (newSet.has(item)) {
+                    result.unchanged.push(item)
+                }
+            }
+            
+            return result
+        }
+
+        // 转义HTML字符
+        function escapeHtml(text) {
+            const div = document.createElement('div')
+            div.textContent = text
+            return div.innerHTML
+        }
+
+        // 生成左右分栏的文本差异HTML
+        function generateSideBySideDiffHTML(oldText, newText) {
+            const diff = compareText(oldText, newText)
+            
+            let html = '<div class="side-by-side-diff">'
+            html += '<div class="diff-columns">'
+            
+            // 左侧：原文
+            html += '<div class="diff-column old-column">'
+            html += '<h4 class="column-title removed">原文</h4>'
+            html += '<div class="column-content">'
+            
+            // 显示删除的内容（红色）
+            if (diff.removed.length > 0) {
+                diff.removed.forEach(line => {
+                    html += `<div class="diff-line removed">${escapeHtml(line)}</div>`
+                })
+            }
+            
+            // 显示保持不变的内容
+            if (diff.unchanged.length > 0) {
+                diff.unchanged.forEach(line => {
+                    html += `<div class="diff-line unchanged">${escapeHtml(line)}</div>`
+                })
+            }
+            
+            html += '</div></div>'
+            
+            // 右侧：新文
+            html += '<div class="diff-column new-column">'
+            html += '<h4 class="column-title added">迭代后</h4>'
+            html += '<div class="column-content">'
+            
+            // 显示新增的内容（绿色）
+            if (diff.added.length > 0) {
+                diff.added.forEach(line => {
+                    html += `<div class="diff-line added">${escapeHtml(line)}</div>`
+                })
+            }
+            
+            // 显示保持不变的内容
+            if (diff.unchanged.length > 0) {
+                diff.unchanged.forEach(line => {
+                    html += `<div class="diff-line unchanged">${escapeHtml(line)}</div>`
+                })
+            }
+            
+            html += '</div></div>'
+            
+            html += '</div></div>'
+            return html
+        }
+
+        // 生成左右分栏的数组差异HTML
+        function generateSideBySideArrayDiffHTML(oldArray, newArray, title = '') {
+            const diff = compareArrays(oldArray, newArray)
+            
+            let html = `<div class="side-by-side-array-diff">`
+            if (title) {
+                html += `<h3 class="array-diff-title">${title}</h3>`
+            }
+            
+            html += '<div class="diff-columns">'
+            
+            // 左侧：原文
+            html += '<div class="diff-column old-column">'
+            html += '<h4 class="column-title removed">原文</h4>'
+            html += '<div class="column-content">'
+            
+            // 显示删除的项目（红色）
+            if (diff.removed.length > 0) {
+                diff.removed.forEach(item => {
+                    html += `<div class="diff-item removed">${escapeHtml(item)}</div>`
+                })
+            }
+            
+            // 显示保持不变的项目
+            if (diff.unchanged.length > 0) {
+                diff.unchanged.forEach(item => {
+                    html += `<div class="diff-item unchanged">${escapeHtml(item)}</div>`
+                })
+            }
+            
+            html += '</div></div>'
+            
+            // 右侧：新文
+            html += '<div class="diff-column new-column">'
+            html += '<h4 class="column-title added">迭代后</h4>'
+            html += '<div class="column-content">'
+            
+            // 显示新增的项目（绿色）
+            if (diff.added.length > 0) {
+                diff.added.forEach(item => {
+                    html += `<div class="diff-item added">${escapeHtml(item)}</div>`
+                })
+            }
+            
+            // 显示保持不变的项目
+            if (diff.unchanged.length > 0) {
+                diff.unchanged.forEach(item => {
+                    html += `<div class="diff-item unchanged">${escapeHtml(item)}</div>`
+                })
+            }
+            
+            html += '</div></div>'
+            
+            html += '</div></div>'
+            return html
+        }
+
+        // 测试文本差异
+        function testTextDiff() {
+            const oldText = `探究ai对人类记忆 - 完整迭代版本
+这是第一行内容
+这是第二行内容
+这是第三行内容`;
+
+            const newText = `人工智能与人类记忆的影响研究
+这是第一行内容
+这是修改后的第二行
+这是第三行内容
+这是新增的第四行`;
+
+            const diff = compareText(oldText, newText);
+            
+            document.getElementById('debugInfo').innerHTML = `
+                <strong>文本差异测试结果：</strong><br>
+                <strong>原文：</strong><br>${oldText.replace(/\n/g, '<br>')}<br><br>
+                <strong>新文：</strong><br>${newText.replace(/\n/g, '<br>')}<br><br>
+                <strong>差异分析：</strong><br>
+                删除: ${diff.removed.length} 行<br>
+                新增: ${diff.added.length} 行<br>
+                保持不变: ${diff.unchanged.length} 行<br>
+                <strong>删除内容：</strong> ${JSON.stringify(diff.removed)}<br>
+                <strong>新增内容：</strong> ${JSON.stringify(diff.added)}<br>
+                <strong>保持不变：</strong> ${JSON.stringify(diff.unchanged)}
+            `;
+
+            document.getElementById('testResult').innerHTML = generateSideBySideDiffHTML(oldText, newText);
+        }
+
+        // 测试数组差异
+        function testArrayDiff() {
+            const oldArray = [
+                'H1: 用户对产品的满意度会影响购买意愿',
+                'H2: 价格敏感度在不同年龄组之间存在差异'
+            ];
+
+            const newArray = [
+                'H1: 用户对产品的满意度会正向影响购买意愿，且这种影响在高价格条件下更为显著',
+                'H2: 价格敏感度在不同年龄组之间存在显著差异，年轻用户更关注价格因素',
+                'H3: 产品类型调节价格与购买意愿的关系'
+            ];
+
+            const diff = compareArrays(oldArray, newArray);
+            
+            document.getElementById('debugInfo').innerHTML = `
+                <strong>数组差异测试结果：</strong><br>
+                <strong>原文数组：</strong> ${JSON.stringify(oldArray)}<br><br>
+                <strong>新文数组：</strong> ${JSON.stringify(newArray)}<br><br>
+                <strong>差异分析：</strong><br>
+                删除: ${diff.removed.length} 项<br>
+                新增: ${diff.added.length} 项<br>
+                保持不变: ${diff.unchanged.length} 项<br>
+                <strong>删除内容：</strong> ${JSON.stringify(diff.removed)}<br>
+                <strong>新增内容：</strong> ${JSON.stringify(diff.added)}<br>
+                <strong>保持不变：</strong> ${JSON.stringify(diff.unchanged)}
+            `;
+
+            document.getElementById('testResult').innerHTML = generateSideBySideArrayDiffHTML(oldArray, newArray, '研究假设');
+        }
+
+        // 测试方案对比
+        function testPlanComparison() {
+            const beforePlan = {
+                title: '探究ai对人类记忆 - 完整迭代版本',
+                hypotheses: [
+                    'H1: AI编辑的图像会增加错误记忆的形成',
+                    'H2: 参与者对AI编辑内容的信心水平会更高',
+                    'H3: 年龄会影响对AI编辑内容的敏感性',
+                    'H4: 教育背景会调节AI编辑内容的影响'
+                ],
+                experimentalDesign: '采用组间设计，参与者随机分配到AI编辑组和对照组。'
+            };
+
+            const afterPlan = {
+                title: '人工智能与人类记忆的影响研究',
+                hypotheses: [
+                    '本研究旨在探讨人工智能编辑内容对人类记忆的影响，特别关注错误记忆的形成与信心。我们提出以下假设，以指导实验设计和实验设计'
+                ],
+                experimentalDesign: '采用组间设计，参与者随机分配到AI编辑组和对照组。'
+            };
+
+            document.getElementById('debugInfo').innerHTML = `
+                <strong>方案对比测试结果：</strong><br>
+                <strong>原文方案：</strong><br>
+                标题: ${beforePlan.title}<br>
+                假设数量: ${beforePlan.hypotheses.length}<br>
+                实验设计: ${beforePlan.experimentalDesign}<br><br>
+                <strong>新文方案：</strong><br>
+                标题: ${afterPlan.title}<br>
+                假设数量: ${afterPlan.hypotheses.length}<br>
+                实验设计: ${afterPlan.experimentalDesign}
+            `;
+
+            let html = '<div class="plan-comparison-side-by-side">';
+            
+            // 标题对比
+            if (beforePlan.title !== afterPlan.title) {
+                html += '<div class="comparison-section">';
+                html += '<h3 class="section-title">方案标题</h3>';
+                html += generateSideBySideDiffHTML(beforePlan.title || '', afterPlan.title || '');
+                html += '</div>';
+            }
+            
+            // 研究假设对比
+            const hypothesesDiff = compareArrays(beforePlan.hypotheses || [], afterPlan.hypotheses || []);
+            if (hypothesesDiff.added.length > 0 || hypothesesDiff.removed.length > 0) {
+                html += '<div class="comparison-section">';
+                html += generateSideBySideArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], '研究假设');
+                html += '</div>';
+            }
+            
+            // 实验设计对比
+            if (beforePlan.experimentalDesign !== afterPlan.experimentalDesign) {
+                html += '<div class="comparison-section">';
+                html += '<h3 class="section-title">实验设计</h3>';
+                html += generateSideBySideDiffHTML(beforePlan.experimentalDesign || '', afterPlan.experimentalDesign || '');
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            
+            document.getElementById('testResult').innerHTML = html;
+        }
+    </script>
+</body>
+</html> 

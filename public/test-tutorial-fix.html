@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新手指引修复验证</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        .warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .code {
+            background: #f1f3f4;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .highlight {
+            background: yellow;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 新手指引修复验证</h1>
+    
+        <div class="test-section success">
+      <h2>✅ 修复内容</h2>
+      <p><strong>问题：</strong>中间文献列表中紫色高亮的不是右侧展示的论文</p>
+      <p><strong>原因：</strong>新手指引中使用了两个不同的对象，且第一篇论文未被标记为参考</p>
+      <ul>
+        <li><code>tutorialSamplePaperDetail</code> - 用于右侧详情显示</li>
+        <li><code>tutorialSamplePapers[0]</code> - 用于中间列表显示</li>
+        <li>标题紫色高亮基于 <code>isReferenced(paper)</code> 函数</li>
+      </ul>
+      <p><strong>解决方案：</strong>统一使用同一个对象，并将第一篇论文标记为参考</p>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 修复详情</h2>
+        <h3>1. 修改前的问题代码：</h3>
+        <div class="code">
+// 开始新手指引
+const startTutorial = () => {
+  // 添加样例论文到推荐列表
+  addRecommendedPapers(tutorialSamplePapers)
+  
+  // ❌ 问题：使用不同的对象
+  selectPaper(tutorialSamplePaperDetail)  // 右侧显示这个
+  
+  // 中间列表高亮基于 papersState.selectedPaper === paper
+  // 但 tutorialSamplePapers[0] !== tutorialSamplePaperDetail
+  // 所以高亮不会显示
+}
+        </div>
+
+        <h3>2. 修复后的代码：</h3>
+        <div class="code">
+// 开始新手指引
+const startTutorial = () => {
+  // 添加样例论文到推荐列表
+  addRecommendedPapers(tutorialSamplePapers)
+  
+  // ✅ 修复：使用同一个对象
+  selectPaper(tutorialSamplePapers[0])  // 右侧显示这个
+  
+  // ✅ 修复：将第一篇论文标记为参考，确保标题紫色高亮
+  toggleReference(tutorialSamplePapers[0])
+  
+  // 将第二篇论文添加到引用列表（用于演示）
+  toggleReference(tutorialSamplePapers[1])
+  
+  // 中间列表高亮现在正确：
+  // papersState.selectedPaper === tutorialSamplePapers[0]
+  // 所以第一篇论文会正确高亮
+  // 标题紫色高亮也正确：
+  // isReferenced(tutorialSamplePapers[0]) === true
+}
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 数据统一</h2>
+                <h3>3. 样例数据合并：</h3>
+        <p>将 <code>tutorialSamplePaperDetail</code> 的完整信息合并到 <code>tutorialSamplePapers[0]</code> 中：</p>
+        <ul>
+          <li>✅ 完整的摘要信息</li>
+          <li>✅ 完整的研究方法内容</li>
+          <li>✅ 所有作者信息</li>
+          <li>✅ 期刊和会议信息</li>
+        </ul>
+        
+        <h3>4. 标题高亮修复：</h3>
+        <p>标题紫色高亮基于 <code>isReferenced(paper)</code> 函数：</p>
+        <div class="code">
+:class="[
+  isReferenced(paper) ? 'text-purple-600' : 'text-gray-900'
+]"
+        </div>
+        <p>通过 <code>toggleReference(tutorialSamplePapers[0])</code> 将第一篇论文标记为参考，确保标题显示紫色。</p>
+        
+        <h3>5. 删除冗余数据：</h3>
+        <p>移除了不再需要的 <code>tutorialSamplePaperDetail</code> 变量</p>
+    </div>
+
+    <div class="test-section success">
+        <h2>🎯 验证要点</h2>
+        <p>修复后，新手指引应该满足以下条件：</p>
+                <ol>
+          <li><span class="highlight">中间列表第一篇论文显示紫色高亮边框</span></li>
+          <li><span class="highlight">中间列表第一篇论文标题显示紫色高亮</span></li>
+          <li><span class="highlight">右侧详情显示相同的论文信息</span></li>
+          <li><span class="highlight">右侧详情显示"已选为参考"标签</span></li>
+          <li><span class="highlight">研究方法预览默认展开</span></li>
+          <li><span class="highlight">第二篇论文被标记为"已参考"</span></li>
+        </ol>
+    </div>
+
+    <div class="test-section warning">
+        <h2>⚠️ 测试步骤</h2>
+        <ol>
+            <li>访问 <code>http://localhost:3001/paper-detail</code></li>
+            <li>如果新手指引没有自动显示，点击右下角的"重置引导"按钮</li>
+            <li>观察中间文献列表的第一篇论文是否有紫色高亮</li>
+            <li>确认右侧显示的论文信息与高亮的论文一致</li>
+            <li>检查研究方法预览是否默认展开</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 技术实现</h2>
+        <h3>高亮逻辑：</h3>
+        <div class="code">
+:class="{ 'border-2 border-purple-500': papersState.selectedPaper === paper }"
+        </div>
+                <p>这个条件现在会正确匹配，因为：</p>
+        <ul>
+          <li><code>papersState.selectedPaper</code> = <code>tutorialSamplePapers[0]</code></li>
+          <li><code>paper</code> (在v-for循环中) = <code>tutorialSamplePapers[0]</code></li>
+          <li>所以 <code>papersState.selectedPaper === paper</code> = <code>true</code></li>
+        </ul>
+        
+        <h3>标题高亮逻辑：</h3>
+        <div class="code">
+:class="[
+  isReferenced(paper) ? 'text-purple-600' : 'text-gray-900'
+]"
+        </div>
+        <p>标题高亮现在也会正确显示，因为：</p>
+        <ul>
+          <li><code>isReferenced(tutorialSamplePapers[0])</code> = <code>true</code> (已标记为参考)</li>
+          <li>所以第一篇论文标题显示为 <code>text-purple-600</code></li>
+        </ul>
+    </div>
+
+    <div class="test-section success">
+        <h2>✅ 预期效果</h2>
+                <p>修复完成后，用户在新手指引中会看到：</p>
+        <ul>
+          <li>中间文献列表的第一篇论文（Synthetic Human Memories）有紫色高亮边框</li>
+          <li>中间文献列表的第一篇论文标题显示紫色高亮</li>
+          <li>右侧详情页面显示相同的论文信息</li>
+          <li>右侧详情页面显示"已选为参考"标签</li>
+          <li>研究方法预览部分默认展开，显示完整的研究方法内容</li>
+          <li>第二篇论文显示"已参考"标签</li>
+          <li>整体体验更加一致和直观</li>
+        </ul>
+    </div>
+
+    <script>
+        console.log('🔧 新手指引修复验证页面已加载');
+        console.log('📋 请按照上述步骤验证修复效果');
+    </script>
+</body>
+</html> 
