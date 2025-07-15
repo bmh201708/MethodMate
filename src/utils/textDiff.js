@@ -1,360 +1,582 @@
-// 文本差异对比工具
-// 基于最长公共子序列算法实现文本差异检测
+/**
+ * 文本差异比较工具
+ * 用于比较迭代前后的方案内容，生成带有颜色标记的差异显示
+ */
 
-// 判断文本是否只包含空格或换行符
-function isWhitespaceOnly(text) {
-  if (!text) return true
-  return /^\s*$/.test(text)
-}
-
-// 过滤掉只包含空格或换行符的差异项
-function filterMeaningfulDiffs(diffs) {
-  return diffs.filter(item => {
-    // 保留 unchanged 类型的项
-    if (item.type === 'unchanged') return true
-    
-    // 过滤掉只包含空格或换行符的 added 和 removed 项
-    if (item.type === 'added' || item.type === 'removed') {
-      return !isWhitespaceOnly(item.text)
-    }
-    
-    return true
-  })
-}
-
-// 计算两个文本的差异
-export function computeTextDiff(oldText, newText) {
-  if (!oldText && !newText) return []
-  if (!oldText) return isWhitespaceOnly(newText) ? [] : [{ type: 'added', text: newText }]
-  if (!newText) return isWhitespaceOnly(oldText) ? [] : [{ type: 'removed', text: oldText }]
-
-  // 按行分割文本进行比较
+// 简单的文本差异比较函数
+export function compareText(oldText, newText) {
+  if (!oldText && !newText) return { added: [], removed: [], unchanged: [] }
+  if (!oldText) return { added: [newText], removed: [], unchanged: [] }
+  if (!newText) return { added: [], removed: [oldText], unchanged: [] }
+  
+  // 将文本按行分割
   const oldLines = oldText.split('\n')
   const newLines = newText.split('\n')
   
-  const diff = computeLineDiff(oldLines, newLines)
-  return filterMeaningfulDiffs(diff)
-}
-
-// 计算行级别的差异
-function computeLineDiff(oldLines, newLines) {
-  const diff = []
-  const lcs = longestCommonSubsequence(oldLines, newLines)
+  const result = {
+    added: [],
+    removed: [],
+    unchanged: []
+  }
   
-  let oldIndex = 0
-  let newIndex = 0
-  let lcsIndex = 0
+  // 简单的行级比较
+  const oldSet = new Set(oldLines)
+  const newSet = new Set(newLines)
   
-  while (oldIndex < oldLines.length || newIndex < newLines.length) {
-    // 如果当前行在LCS中
-    if (lcsIndex < lcs.length && 
-        oldIndex < oldLines.length && 
-        newIndex < newLines.length &&
-        oldLines[oldIndex] === lcs[lcsIndex] && 
-        newLines[newIndex] === lcs[lcsIndex]) {
-      
-      diff.push({
-        type: 'unchanged',
-        text: oldLines[oldIndex]
-      })
-      oldIndex++
-      newIndex++
-      lcsIndex++
-    }
-    // 删除的行
-    else if (oldIndex < oldLines.length && 
-             (lcsIndex >= lcs.length || oldLines[oldIndex] !== lcs[lcsIndex])) {
-      diff.push({
-        type: 'removed',
-        text: oldLines[oldIndex]
-      })
-      oldIndex++
-    }
-    // 新增的行
-    else if (newIndex < newLines.length &&
-             (lcsIndex >= lcs.length || newLines[newIndex] !== lcs[lcsIndex])) {
-      diff.push({
-        type: 'added',
-        text: newLines[newIndex]
-      })
-      newIndex++
+  // 找出新增的行
+  for (const line of newLines) {
+    if (!oldSet.has(line)) {
+      result.added.push(line)
     }
   }
   
-  return diff
-}
-
-// 最长公共子序列算法
-function longestCommonSubsequence(arr1, arr2) {
-  const m = arr1.length
-  const n = arr2.length
-  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0))
-  
-  // 构建DP表
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      if (arr1[i - 1] === arr2[j - 1]) {
-        dp[i][j] = dp[i - 1][j - 1] + 1
-      } else {
-        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1])
-      }
+  // 找出删除的行
+  for (const line of oldLines) {
+    if (!newSet.has(line)) {
+      result.removed.push(line)
     }
   }
   
-  // 回溯构建LCS
-  const lcs = []
-  let i = m, j = n
-  while (i > 0 && j > 0) {
-    if (arr1[i - 1] === arr2[j - 1]) {
-      lcs.unshift(arr1[i - 1])
-      i--
-      j--
-    } else if (dp[i - 1][j] > dp[i][j - 1]) {
-      i--
-    } else {
-      j--
+  // 找出保持不变的行
+  for (const line of oldLines) {
+    if (newSet.has(line)) {
+      result.unchanged.push(line)
     }
   }
   
-  return lcs
+  return result
 }
 
-// 将差异转换为HTML
-export function diffToHtml(diff) {
-  // 过滤掉只包含空格或换行符的差异
-  const filteredDiff = filterMeaningfulDiffs(diff)
+// 生成带颜色标记的HTML差异显示
+export function generateDiffHTML(oldText, newText) {
+  const diff = compareText(oldText, newText)
   
-  // 合并连续的未修改内容
-  const mergedDiff = mergeUnchangedSections(filteredDiff)
+  let html = '<div class="text-diff">'
   
-  return mergedDiff.map(item => {
-    const text = item.text || ''
-    const escapedText = escapeHtml(text)
-    
-    switch (item.type) {
-      case 'added':
-        return `<div class="diff-added p-2 my-1 rounded-lg bg-green-50 border-l-4 border-green-400">
-          <span class="text-green-800 font-medium text-sm">+ 新增：</span>
-          <div class="text-green-700 mt-1 whitespace-pre-wrap">${escapedText}</div>
-        </div>`
-      case 'removed':
-        return `<div class="diff-removed p-2 my-1 rounded-lg bg-red-50 border-l-4 border-red-400">
-          <span class="text-red-800 font-medium text-sm">- 删除：</span>
-          <div class="text-red-700 mt-1 whitespace-pre-wrap line-through">${escapedText}</div>
-        </div>`
-      case 'unchanged':
-        return `<div class="diff-unchanged p-2 my-1 rounded-lg bg-gray-50 border-l-4 border-gray-300">
-          <span class="text-gray-600 font-medium text-sm">未修改：</span>
-          <div class="text-gray-700 mt-1 whitespace-pre-wrap">${escapedText}</div>
-        </div>`
-      case 'unchanged-merged':
-        return `<div class="diff-unchanged-merged p-2 my-1 rounded-lg bg-gray-50 border-l-4 border-gray-300">
-          <button class="unchanged-toggle w-full text-left flex items-center justify-between text-gray-600 font-medium text-sm hover:text-gray-800 transition-colors" 
-                  onclick="toggleUnchangedSection(this)">
-            <span>未修改：${item.lineCount} 行内容</span>
-            <svg class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-          <div class="unchanged-content hidden text-gray-700 mt-2 whitespace-pre-wrap border-t border-gray-200 pt-2">${escapedText}</div>
-        </div>`
-      default:
-        return `<div class="whitespace-pre-wrap">${escapedText}</div>`
-    }
-  }).join('')
-}
-
-// 合并连续的未修改内容
-function mergeUnchangedSections(diffs) {
-  const merged = []
-  let currentUnchanged = []
-  
-  for (let i = 0; i < diffs.length; i++) {
-    const item = diffs[i]
-    
-    if (item.type === 'unchanged') {
-      currentUnchanged.push(item)
-    } else {
-      // 处理累积的未修改内容
-      if (currentUnchanged.length > 0) {
-        if (currentUnchanged.length >= 3) {
-          // 合并多行未修改内容
-          const mergedText = currentUnchanged.map(u => u.text).join('\n')
-          merged.push({
-            type: 'unchanged-merged',
-            text: mergedText,
-            lineCount: currentUnchanged.length
-          })
-        } else {
-          // 少于3行的未修改内容保持原样
-          merged.push(...currentUnchanged)
-        }
-        currentUnchanged = []
-      }
-      
-      // 添加当前的修改项
-      merged.push(item)
-    }
+  // 显示删除的内容（红色）
+  if (diff.removed.length > 0) {
+    html += '<div class="diff-section">'
+    html += '<h4 class="diff-title removed">删除的内容</h4>'
+    html += '<div class="diff-content removed">'
+    diff.removed.forEach(line => {
+      html += `<div class="diff-line removed">- ${escapeHtml(line)}</div>`
+    })
+    html += '</div></div>'
   }
   
-  // 处理最后剩余的未修改内容
-  if (currentUnchanged.length > 0) {
-    if (currentUnchanged.length >= 3) {
-      const mergedText = currentUnchanged.map(u => u.text).join('\n')
-      merged.push({
-        type: 'unchanged-merged',
-        text: mergedText,
-        lineCount: currentUnchanged.length
-      })
-    } else {
-      merged.push(...currentUnchanged)
-    }
+  // 显示新增的内容（绿色）
+  if (diff.added.length > 0) {
+    html += '<div class="diff-section">'
+    html += '<h4 class="diff-title added">新增的内容</h4>'
+    html += '<div class="diff-content added">'
+    diff.added.forEach(line => {
+      html += `<div class="diff-line added">+ ${escapeHtml(line)}</div>`
+    })
+    html += '</div></div>'
   }
   
-  return merged
-}
-
-// 计算字段级别的差异
-export function computeFieldDiff(oldPlan, newPlan) {
-  const fieldMapping = {
-    'hypotheses': '研究假设',
-    'experimentalDesign': '实验设计', 
-    'analysisMethod': '数据分析',
-    'expectedResults': '结果呈现'
+  // 显示保持不变的内容（灰色）
+  if (diff.unchanged.length > 0) {
+    html += '<div class="diff-section">'
+    html += '<h4 class="diff-title unchanged">保持不变的内容</h4>'
+    html += '<div class="diff-content unchanged">'
+    diff.unchanged.forEach(line => {
+      html += `<div class="diff-line unchanged">  ${escapeHtml(line)}</div>`
+    })
+    html += '</div></div>'
   }
   
-  const diffs = {}
-  
-  Object.keys(fieldMapping).forEach(field => {
-    const oldValue = getFieldValue(oldPlan, field)
-    const newValue = getFieldValue(newPlan, field)
-    
-    if (oldValue !== newValue) {
-      diffs[field] = {
-        name: fieldMapping[field],
-        diff: computeTextDiff(oldValue, newValue),
-        hasChanges: true
-      }
-    } else {
-      diffs[field] = {
-        name: fieldMapping[field],
-        diff: [{ type: 'unchanged', text: oldValue }],
-        hasChanges: false
-      }
-    }
-  })
-  
-  return diffs
+  html += '</div>'
+  return html
 }
 
-// 获取字段值
-function getFieldValue(plan, field) {
-  if (!plan) return ''
+// 生成简化的差异摘要
+export function generateDiffSummary(oldText, newText) {
+  const diff = compareText(oldText, newText)
   
-  if (field === 'hypotheses') {
-    return Array.isArray(plan.hypotheses) ? plan.hypotheses.join('\n') : (plan.hypotheses || '')
+  const summary = {
+    addedLines: diff.added.length,
+    removedLines: diff.removed.length,
+    unchangedLines: diff.unchanged.length,
+    totalChanges: diff.added.length + diff.removed.length,
+    changePercentage: 0
   }
   
-  return plan[field] || ''
+  const totalLines = diff.added.length + diff.removed.length + diff.unchanged.length
+  if (totalLines > 0) {
+    summary.changePercentage = Math.round((summary.totalChanges / totalLines) * 100)
+  }
+  
+  return summary
 }
 
-// HTML转义
+// 转义HTML字符
 function escapeHtml(text) {
   const div = document.createElement('div')
   div.textContent = text
   return div.innerHTML
 }
 
-// 获取差异统计
-export function getDiffStats(diffs) {
-  let totalChanges = 0
-  let changedFields = 0
+// 比较两个对象数组（如研究假设）
+export function compareArrays(oldArray, newArray) {
+  if (!oldArray && !newArray) return { added: [], removed: [], unchanged: [] }
+  if (!oldArray) return { added: newArray, removed: [], unchanged: [] }
+  if (!newArray) return { added: [], removed: oldArray, unchanged: [] }
   
-  Object.values(diffs).forEach(fieldDiff => {
-    if (fieldDiff.hasChanges) {
-      changedFields++
-      totalChanges += fieldDiff.diff.filter(item => 
-        item.type === 'added' || item.type === 'removed'
-      ).length
-    }
-  })
-  
-  return {
-    totalChanges,
-    changedFields,
-    totalFields: Object.keys(diffs).length
+  const result = {
+    added: [],
+    removed: [],
+    unchanged: []
   }
-}
-
-// 计算简单的词级别差异（用于短文本）
-export function computeWordDiff(oldText, newText) {
-  if (!oldText && !newText) return []
-  if (!oldText) return isWhitespaceOnly(newText) ? [] : [{ type: 'added', text: newText }]
-  if (!newText) return isWhitespaceOnly(oldText) ? [] : [{ type: 'removed', text: oldText }]
-
-  const oldWords = oldText.split(/(\s+)/)
-  const newWords = newText.split(/(\s+)/)
   
-  const diff = []
-  const lcs = longestCommonSubsequence(oldWords, newWords)
+  // 处理数组为空的情况
+  if (oldArray.length === 0 && newArray.length === 0) {
+    return result
+  }
   
-  let oldIndex = 0
-  let newIndex = 0
-  let lcsIndex = 0
+  // 如果其中一个为空，另一个不为空，则全部为新增或删除
+  if (oldArray.length === 0) {
+    result.added = [...newArray]
+    return result
+  }
   
-  while (oldIndex < oldWords.length || newIndex < newWords.length) {
-    if (lcsIndex < lcs.length && 
-        oldIndex < oldWords.length && 
-        newIndex < newWords.length &&
-        oldWords[oldIndex] === lcs[lcsIndex] && 
-        newWords[newIndex] === lcs[lcsIndex]) {
-      
-      diff.push({
-        type: 'unchanged',
-        text: oldWords[oldIndex]
-      })
-      oldIndex++
-      newIndex++
-      lcsIndex++
-    }
-    else if (oldIndex < oldWords.length && 
-             (lcsIndex >= lcs.length || oldWords[oldIndex] !== lcs[lcsIndex])) {
-      diff.push({
-        type: 'removed',
-        text: oldWords[oldIndex]
-      })
-      oldIndex++
-    }
-    else if (newIndex < newWords.length &&
-             (lcsIndex >= lcs.length || newWords[newIndex] !== lcs[lcsIndex])) {
-      diff.push({
-        type: 'added',
-        text: newWords[newIndex]
-      })
-      newIndex++
+  if (newArray.length === 0) {
+    result.removed = [...oldArray]
+    return result
+  }
+  
+  const oldSet = new Set(oldArray)
+  const newSet = new Set(newArray)
+  
+  // 找出新增的项目
+  for (const item of newArray) {
+    if (!oldSet.has(item)) {
+      result.added.push(item)
     }
   }
   
-  return filterMeaningfulDiffs(diff)
+  // 找出删除的项目
+  for (const item of oldArray) {
+    if (!newSet.has(item)) {
+      result.removed.push(item)
+    }
+  }
+  
+  // 找出保持不变的项目
+  for (const item of oldArray) {
+    if (newSet.has(item)) {
+      result.unchanged.push(item)
+    }
+  }
+  
+  return result
 }
 
-// 将词级别差异转换为HTML
-export function wordDiffToHtml(diff) {
-  // 过滤掉只包含空格的差异
-  const filteredDiff = filterMeaningfulDiffs(diff)
+// 生成数组差异的HTML显示
+export function generateArrayDiffHTML(oldArray, newArray, title = '') {
+  const diff = compareArrays(oldArray, newArray)
   
-  return filteredDiff.map(item => {
-    const escapedText = escapeHtml(item.text)
-    
-    switch (item.type) {
-      case 'added':
-        return `<span class="text-green-700 bg-green-100 px-1 rounded">${escapedText}</span>`
-      case 'removed':
-        return `<span class="text-red-700 bg-red-100 px-1 rounded line-through">${escapedText}</span>`
-      case 'unchanged':
-        return escapedText
-      default:
-        return escapedText
-    }
-  }).join('')
+  let html = `<div class="array-diff">`
+  if (title) {
+    html += `<h3 class="array-diff-title">${title}</h3>`
+  }
+  
+  // 显示删除的项目（红色）
+  if (diff.removed.length > 0) {
+    html += '<div class="diff-section">'
+    html += '<h4 class="diff-title removed">删除的项目</h4>'
+    html += '<div class="diff-content removed">'
+    diff.removed.forEach(item => {
+      html += `<div class="diff-item removed">- ${escapeHtml(item)}</div>`
+    })
+    html += '</div></div>'
+  }
+  
+  // 显示新增的项目（绿色）
+  if (diff.added.length > 0) {
+    html += '<div class="diff-section">'
+    html += '<h4 class="diff-title added">新增的项目</h4>'
+    html += '<div class="diff-content added">'
+    diff.added.forEach(item => {
+      html += `<div class="diff-item added">+ ${escapeHtml(item)}</div>`
+    })
+    html += '</div></div>'
+  }
+  
+  // 显示保持不变的项目（灰色）
+  if (diff.unchanged.length > 0) {
+    html += '<div class="diff-section">'
+    html += '<h4 class="diff-title unchanged">保持不变的项目</h4>'
+    html += '<div class="diff-content unchanged">'
+    diff.unchanged.forEach(item => {
+      html += `<div class="diff-item unchanged">  ${escapeHtml(item)}</div>`
+    })
+    html += '</div></div>'
+  }
+  
+  html += '</div>'
+  return html
+}
+
+// 生成完整的方案对比HTML（左右分栏布局）
+export function generatePlanComparisonHTML(beforePlan, afterPlan) {
+  let html = '<div class="plan-comparison-side-by-side">'
+  
+  // 标题对比
+  if (beforePlan.title !== afterPlan.title) {
+    html += '<div class="comparison-section">'
+    html += '<h3 class="section-title">方案标题</h3>'
+    html += generateSideBySideDiffHTML(beforePlan.title || '', afterPlan.title || '')
+    html += '</div>'
+  }
+  
+  // 研究假设对比
+  const hypothesesDiff = compareArrays(beforePlan.hypotheses || [], afterPlan.hypotheses || [])
+  if (hypothesesDiff.added.length > 0 || hypothesesDiff.removed.length > 0) {
+    html += '<div class="comparison-section">'
+    html += generateSideBySideArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], '研究假设')
+    html += '</div>'
+  } else if (beforePlan.hypotheses && afterPlan.hypotheses && 
+             JSON.stringify(beforePlan.hypotheses) !== JSON.stringify(afterPlan.hypotheses)) {
+    // 如果数组内容相同但顺序不同，也显示对比
+    html += '<div class="comparison-section">'
+    html += generateSideBySideArrayDiffHTML(beforePlan.hypotheses, afterPlan.hypotheses, '研究假设')
+    html += '</div>'
+  } else if (beforePlan.hypotheses || afterPlan.hypotheses) {
+    // 如果其中一个有假设，另一个没有，也显示对比
+    html += '<div class="comparison-section">'
+    html += generateSideBySideArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], '研究假设')
+    html += '</div>'
+  }
+  
+  // 实验设计对比
+  if (beforePlan.experimentalDesign !== afterPlan.experimentalDesign) {
+    html += '<div class="comparison-section">'
+    html += '<h3 class="section-title">实验设计</h3>'
+    html += generateSideBySideDiffHTML(beforePlan.experimentalDesign || '', afterPlan.experimentalDesign || '')
+    html += '</div>'
+  }
+  
+  // 数据分析对比
+  if (beforePlan.analysisMethod !== afterPlan.analysisMethod) {
+    html += '<div class="comparison-section">'
+    html += '<h3 class="section-title">数据分析</h3>'
+    html += generateSideBySideDiffHTML(beforePlan.analysisMethod || '', afterPlan.analysisMethod || '')
+    html += '</div>'
+  }
+  
+  // 结果呈现对比
+  if (beforePlan.expectedResults !== afterPlan.expectedResults) {
+    html += '<div class="comparison-section">'
+    html += '<h3 class="section-title">结果呈现</h3>'
+    html += generateSideBySideDiffHTML(beforePlan.expectedResults || '', afterPlan.expectedResults || '')
+    html += '</div>'
+  }
+  
+  html += '</div>'
+  return html
+}
+
+// 生成左右分栏的文本差异HTML
+export function generateSideBySideDiffHTML(oldText, newText) {
+  const diff = compareText(oldText, newText)
+  
+  let html = '<div class="side-by-side-diff">'
+  html += '<div class="diff-columns">'
+  
+  // 左侧：原文
+  html += '<div class="diff-column old-column">'
+  html += '<h4 class="column-title removed">原文</h4>'
+  html += '<div class="column-content">'
+  
+  // 显示删除的内容（红色）
+  if (diff.removed.length > 0) {
+    diff.removed.forEach(line => {
+      html += `<div class="diff-line removed">${escapeHtml(line)}</div>`
+    })
+  }
+  
+  // 显示保持不变的内容
+  if (diff.unchanged.length > 0) {
+    diff.unchanged.forEach(line => {
+      html += `<div class="diff-line unchanged">${escapeHtml(line)}</div>`
+    })
+  }
+  
+  html += '</div></div>'
+  
+  // 右侧：新文
+  html += '<div class="diff-column new-column">'
+  html += '<h4 class="column-title added">迭代后</h4>'
+  html += '<div class="column-content">'
+  
+  // 显示新增的内容（绿色）
+  if (diff.added.length > 0) {
+    diff.added.forEach(line => {
+      html += `<div class="diff-line added">${escapeHtml(line)}</div>`
+    })
+  }
+  
+  // 显示保持不变的内容
+  if (diff.unchanged.length > 0) {
+    diff.unchanged.forEach(line => {
+      html += `<div class="diff-line unchanged">${escapeHtml(line)}</div>`
+    })
+  }
+  
+  html += '</div></div>'
+  
+  html += '</div></div>'
+  return html
+}
+
+// 生成左右分栏的数组差异HTML
+export function generateSideBySideArrayDiffHTML(oldArray, newArray, title = '') {
+  const diff = compareArrays(oldArray, newArray)
+  
+  let html = `<div class="side-by-side-array-diff">`
+  if (title) {
+    html += `<h3 class="array-diff-title">${title}</h3>`
+  }
+  
+  html += '<div class="diff-columns">'
+  
+  // 左侧：原文
+  html += '<div class="diff-column old-column">'
+  html += '<h4 class="column-title removed">原文</h4>'
+  html += '<div class="column-content">'
+  
+  // 显示删除的项目（红色）
+  if (diff.removed.length > 0) {
+    diff.removed.forEach(item => {
+      html += `<div class="diff-item removed">${escapeHtml(item)}</div>`
+    })
+  }
+  
+  // 显示保持不变的项目
+  if (diff.unchanged.length > 0) {
+    diff.unchanged.forEach(item => {
+      html += `<div class="diff-item unchanged">${escapeHtml(item)}</div>`
+    })
+  }
+  
+  html += '</div></div>'
+  
+  // 右侧：新文
+  html += '<div class="diff-column new-column">'
+  html += '<h4 class="column-title added">迭代后</h4>'
+  html += '<div class="column-content">'
+  
+  // 显示新增的项目（绿色）
+  if (diff.added.length > 0) {
+    diff.added.forEach(item => {
+      html += `<div class="diff-item added">${escapeHtml(item)}</div>`
+    })
+  }
+  
+  // 显示保持不变的项目
+  if (diff.unchanged.length > 0) {
+    diff.unchanged.forEach(item => {
+      html += `<div class="diff-item unchanged">${escapeHtml(item)}</div>`
+    })
+  }
+  
+  html += '</div></div>'
+  
+  html += '</div></div>'
+  return html
+}
+
+// 生成左右分栏的完整方案对比HTML（左边原文，右边修改后）
+export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
+  let html = '<div class="left-right-comparison">'
+  
+  // 标题对比
+  if (beforePlan.title !== afterPlan.title) {
+    html += '<div class="comparison-section">'
+    html += '<h3 class="section-title">方案标题</h3>'
+    html += generateLeftRightDiffHTML(beforePlan.title || '', afterPlan.title || '')
+    html += '</div>'
+  }
+  
+  // 研究假设对比
+  const hypothesesDiff = compareArrays(beforePlan.hypotheses || [], afterPlan.hypotheses || [])
+  if (hypothesesDiff.added.length > 0 || hypothesesDiff.removed.length > 0) {
+    html += '<div class="comparison-section">'
+    html += generateLeftRightArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], '研究假设')
+    html += '</div>'
+  } else if (beforePlan.hypotheses && afterPlan.hypotheses && 
+             JSON.stringify(beforePlan.hypotheses) !== JSON.stringify(afterPlan.hypotheses)) {
+    // 如果数组内容相同但顺序不同，也显示对比
+    html += '<div class="comparison-section">'
+    html += generateLeftRightArrayDiffHTML(beforePlan.hypotheses, afterPlan.hypotheses, '研究假设')
+    html += '</div>'
+  } else if (beforePlan.hypotheses || afterPlan.hypotheses) {
+    // 如果其中一个有假设，另一个没有，也显示对比
+    html += '<div class="comparison-section">'
+    html += generateLeftRightArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], '研究假设')
+    html += '</div>'
+  }
+  
+  // 实验设计对比
+  if (beforePlan.experimentalDesign !== afterPlan.experimentalDesign) {
+    html += '<div class="comparison-section">'
+    html += '<h3 class="section-title">实验设计</h3>'
+    html += generateLeftRightDiffHTML(beforePlan.experimentalDesign || '', afterPlan.experimentalDesign || '')
+    html += '</div>'
+  }
+  
+  // 数据分析对比
+  if (beforePlan.analysisMethod !== afterPlan.analysisMethod) {
+    html += '<div class="comparison-section">'
+    html += '<h3 class="section-title">数据分析</h3>'
+    html += generateLeftRightDiffHTML(beforePlan.analysisMethod || '', afterPlan.analysisMethod || '')
+    html += '</div>'
+  }
+  
+  // 结果呈现对比
+  if (beforePlan.expectedResults !== afterPlan.expectedResults) {
+    html += '<div class="comparison-section">'
+    html += '<h3 class="section-title">结果呈现</h3>'
+    html += generateLeftRightDiffHTML(beforePlan.expectedResults || '', afterPlan.expectedResults || '')
+    html += '</div>'
+  }
+  
+  html += '</div>'
+  return html
+}
+
+// 生成左右分栏的文本差异HTML（左边原文，右边修改后）
+export function generateLeftRightDiffHTML(oldText, newText) {
+  const diff = compareText(oldText, newText)
+  
+  let html = '<div class="left-right-diff">'
+  html += '<div class="diff-columns">'
+  
+  // 左侧：原文（显示删除的内容为红色，保持不变的内容为正常）
+  html += '<div class="diff-column old-column">'
+  html += '<h4 class="column-title">原文</h4>'
+  html += '<div class="column-content">'
+  
+  // 显示删除的内容（红色）
+  if (diff.removed.length > 0) {
+    diff.removed.forEach(line => {
+      html += `<div class="diff-line removed">${escapeHtml(line)}</div>`
+    })
+  }
+  
+  // 显示保持不变的内容
+  if (diff.unchanged.length > 0) {
+    diff.unchanged.forEach(line => {
+      html += `<div class="diff-line unchanged">${escapeHtml(line)}</div>`
+    })
+  }
+  
+  html += '</div></div>'
+  
+  // 右侧：修改后（显示新增的内容为绿色，保持不变的内容为正常）
+  html += '<div class="diff-column new-column">'
+  html += '<h4 class="column-title">迭代后</h4>'
+  html += '<div class="column-content">'
+  
+  // 显示新增的内容（绿色）
+  if (diff.added.length > 0) {
+    diff.added.forEach(line => {
+      html += `<div class="diff-line added">${escapeHtml(line)}</div>`
+    })
+  }
+  
+  // 显示保持不变的内容
+  if (diff.unchanged.length > 0) {
+    diff.unchanged.forEach(line => {
+      html += `<div class="diff-line unchanged">${escapeHtml(line)}</div>`
+    })
+  }
+  
+  html += '</div></div>'
+  
+  html += '</div></div>'
+  return html
+}
+
+// 生成左右分栏的数组差异HTML（左边原文，右边修改后）
+export function generateLeftRightArrayDiffHTML(oldArray, newArray, title = '') {
+  const diff = compareArrays(oldArray, newArray)
+  
+  let html = `<div class="left-right-array-diff">`
+  if (title) {
+    html += `<h3 class="array-diff-title">${title}</h3>`
+  }
+  
+  html += '<div class="diff-columns">'
+  
+  // 左侧：原文（显示删除的项目为红色，保持不变的项目为正常）
+  html += '<div class="diff-column old-column">'
+  html += '<h4 class="column-title">原文</h4>'
+  html += '<div class="column-content">'
+  
+  // 显示删除的项目（红色）
+  if (diff.removed.length > 0) {
+    diff.removed.forEach(item => {
+      html += `<div class="diff-item removed">${escapeHtml(item)}</div>`
+    })
+  }
+  
+  // 显示保持不变的项目
+  if (diff.unchanged.length > 0) {
+    diff.unchanged.forEach(item => {
+      html += `<div class="diff-item unchanged">${escapeHtml(item)}</div>`
+    })
+  }
+  
+  html += '</div></div>'
+  
+  // 右侧：修改后（显示新增的项目为绿色，保持不变的项目为正常）
+  html += '<div class="diff-column new-column">'
+  html += '<h4 class="column-title">迭代后</h4>'
+  html += '<div class="column-content">'
+  
+  // 显示新增的项目（绿色）
+  if (diff.added.length > 0) {
+    diff.added.forEach(item => {
+      html += `<div class="diff-item added">${escapeHtml(item)}</div>`
+    })
+  }
+  
+  // 显示保持不变的项目
+  if (diff.unchanged.length > 0) {
+    diff.unchanged.forEach(item => {
+      html += `<div class="diff-item unchanged">${escapeHtml(item)}</div>`
+    })
+  }
+  
+  html += '</div></div>'
+  
+  html += '</div></div>'
+  return html
+}
+
+// 生成差异统计摘要
+export function generateDiffStatistics(beforePlan, afterPlan) {
+  const stats = {
+    titleChanged: beforePlan.title !== afterPlan.title,
+    hypothesesChanged: false,
+    experimentalDesignChanged: beforePlan.experimentalDesign !== afterPlan.experimentalDesign,
+    analysisMethodChanged: beforePlan.analysisMethod !== afterPlan.analysisMethod,
+    expectedResultsChanged: beforePlan.expectedResults !== afterPlan.expectedResults,
+    totalChanges: 0
+  }
+  
+  // 检查研究假设变化
+  const hypothesesDiff = compareArrays(beforePlan.hypotheses || [], afterPlan.hypotheses || [])
+  stats.hypothesesChanged = hypothesesDiff.added.length > 0 || hypothesesDiff.removed.length > 0
+  
+  // 计算总变化数
+  if (stats.titleChanged) stats.totalChanges++
+  if (stats.hypothesesChanged) stats.totalChanges++
+  if (stats.experimentalDesignChanged) stats.totalChanges++
+  if (stats.analysisMethodChanged) stats.totalChanges++
+  if (stats.expectedResultsChanged) stats.totalChanges++
+  
+  return stats
 } 

@@ -918,6 +918,111 @@
       </div>
     </div>
   </div>
+
+  <!-- 方案对比对话框 -->
+  <div v-if="showPlanComparisonModal" 
+       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+      <!-- 对话框头部 -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+          <h2 class="text-xl font-semibold text-gray-900">方案对比</h2>
+        </div>
+        <button @click="closePlanComparison" 
+                class="text-gray-400 hover:text-gray-600 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 对话框内容 -->
+      <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+        <div v-if="planComparisonData" class="space-y-6">
+          <!-- 迭代信息 -->
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-lg font-medium text-blue-900">
+                  迭代信息
+                </h3>
+                <p class="text-sm text-blue-700 mt-1">
+                  迭代部分：{{ getSectionNameInChinese(planComparisonData.section) }}
+                </p>
+                <p class="text-sm text-blue-700">
+                  迭代建议：{{ planComparisonData.suggestion }}
+                </p>
+                <p class="text-sm text-blue-600">
+                  迭代时间：{{ new Date(planComparisonData.timestamp).toLocaleString() }}
+                </p>
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold text-blue-600">
+                  {{ planComparisonData.statistics.totalChanges }}
+                </div>
+                <div class="text-sm text-blue-600">个部分发生变化</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 变化统计 -->
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.titleChanged ? '是' : '否' }}</div>
+              <div class="text-sm text-gray-600">标题变化</div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.hypothesesChanged ? '是' : '否' }}</div>
+              <div class="text-sm text-gray-600">假设变化</div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.experimentalDesignChanged ? '是' : '否' }}</div>
+              <div class="text-sm text-gray-600">设计变化</div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.analysisMethodChanged ? '是' : '否' }}</div>
+              <div class="text-sm text-gray-600">分析变化</div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.expectedResultsChanged ? '是' : '否' }}</div>
+              <div class="text-sm text-gray-600">结果变化</div>
+            </div>
+          </div>
+
+          <!-- 详细对比内容 -->
+          <div class="bg-gray-50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">详细对比（左：原文，右：迭代后）</h3>
+            <div class="mb-4 flex items-center justify-center space-x-6 text-sm">
+              <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 bg-red-100 rounded-full border border-red-300"></div>
+                <span class="text-red-700">删除内容</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 bg-green-100 rounded-full border border-green-300"></div>
+                <span class="text-green-700">新增内容</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 bg-gray-100 rounded-full border border-gray-300"></div>
+                <span class="text-gray-700">保持不变</span>
+              </div>
+            </div>
+            <div v-html="generateLeftRightComparisonHTML(planComparisonData.before, planComparisonData.after)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 对话框底部 -->
+      <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
+        <button @click="closePlanComparison" 
+                class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+          关闭
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -925,10 +1030,11 @@ import { ref, watch, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import ChatBox from '../components/ChatBox.vue'
 import { sendMessage, chatState } from '../stores/chatStore'
-import { papersState, addHistoryPlan, historyState, clearCurrentViewingPlan, currentPlanState, updateCurrentPlan, applyPlanAsCurrentPlan, updateSourceIntroduction, getSourceIntroduction, clearSourceIntroductions, storeIterationSnapshot } from '../stores/chatStore'
+import { papersState, addHistoryPlan, historyState, clearCurrentViewingPlan, currentPlanState, updateCurrentPlan, applyPlanAsCurrentPlan, updateSourceIntroduction, getSourceIntroduction, clearSourceIntroductions, storeIterationSnapshot, completeIteration, iterationState, getIterationComparison } from '../stores/chatStore'
 import { marked } from 'marked'
 import markedKatex from 'marked-katex-extension'
 import 'katex/dist/katex.min.css'
+import { generateLeftRightComparisonHTML, generateDiffStatistics } from '../utils/textDiff.js'
 
 const router = useRouter()
 const currentSection = ref('research-plan')
@@ -957,6 +1063,11 @@ const selectedPresetSuggestion = ref('') // 当前选中的预设建议
 const showResearchPlanDialogModal = ref(false) // 是否显示研究方案生成对话框
 const researchPlanMode = ref('custom') // 研究方案生成模式：'auto' 或 'custom'
 const researchTopicInput = ref('') // 用户输入的研究主题
+
+// 方案对比相关状态
+const showPlanComparisonModal = ref(false) // 是否显示方案对比对话框
+const planComparisonData = ref(null) // 方案对比数据
+const selectedIterationRecord = ref(null) // 选中的迭代记录
 
 // 新手指引相关状态
 const showTutorial = ref(false)
@@ -3400,6 +3511,9 @@ ${conversationContext.researchContext}
     
     await parseResearchPlanResponse(response.content, iterationContext)
     
+    // 完成迭代，记录对比数据
+    await completeIteration(response.id)
+    
     // 解析成功，显示成功提示
     alert('方案迭代成功！已根据您的建议优化了完整的研究方案。')
 
@@ -3548,6 +3662,9 @@ ${conversationContext.researchContext}`
     }
     
     await parseResearchPlanResponse(response.content, iterationContext)
+    
+    // 完成迭代，记录对比数据
+    await completeIteration(response.id)
     
     // 解析成功，显示成功提示
     alert(`${sectionName}部分迭代成功！已根据您的建议优化了该部分内容。`)
@@ -4203,22 +4320,104 @@ const confirmIterate = async () => {
 }
 
 // 显示方案对比
-const showPlanComparison = () => {
-  // 检查是否有迭代历史
-  const iterationHistory = historyState.iterationSnapshots
-  if (!iterationHistory || Object.keys(iterationHistory).length === 0) {
-    alert('暂无迭代历史，请先进行方案迭代')
-    return
-  }
+const showPlanComparison = async () => {
+  console.log('🔍 开始执行方案对比功能...')
+  console.log('📊 当前方案状态:', {
+    hasPlan: !!currentPlanState,
+    planId: currentPlanState?.id,
+    planTitle: currentPlanState?.title,
+    isGenerated: currentPlanState?.isGenerated,
+    iterationHistoryCount: currentPlanState?.iterationHistory?.length || 0
+  })
   
-  // 这里可以打开方案对比对话框
-  // 暂时使用简单的提示
-  alert('方案对比功能：可以查看迭代前后的方案差异，了解改进情况。\n\n当前迭代历史：\n' + 
-    Object.keys(iterationHistory).map(key => {
-      const snapshot = iterationHistory[key]
-      return `${key}: ${snapshot.suggestion} (${new Date(snapshot.timestamp).toLocaleString()})`
-    }).join('\n'))
+  try {
+    console.log('🔄 尝试从数据库获取迭代对比数据...')
+    // 尝试从数据库获取迭代对比数据
+    const comparison = await getIterationComparison()
+    console.log('📋 数据库对比数据结果:', comparison)
+    
+    if (!comparison) {
+      console.log('⚠️ 数据库中没有对比数据，尝试从本地获取...')
+      // 检查是否有本地迭代历史
+      const iterationHistory = currentPlanState.iterationHistory || []
+      console.log('📚 本地迭代历史:', {
+        count: iterationHistory.length,
+        history: iterationHistory
+      })
+      
+      if (iterationHistory.length === 0) {
+        console.log('❌ 没有迭代历史，显示提示信息')
+        alert('暂无迭代历史，请先进行方案迭代')
+        return
+      }
+      
+      // 如果有多个迭代记录，选择最新的一个
+      const latestIteration = iterationHistory[iterationHistory.length - 1]
+      console.log('✅ 使用最新迭代记录:', latestIteration)
+      selectedIterationRecord.value = latestIteration
+      
+      // 生成对比数据
+      console.log('🔧 生成对比数据...')
+      planComparisonData.value = {
+        before: latestIteration.before,
+        after: latestIteration.after,
+        section: latestIteration.section,
+        suggestion: latestIteration.suggestion,
+        timestamp: latestIteration.timestamp,
+        statistics: generateDiffStatistics(latestIteration.before, latestIteration.after)
+      }
+      console.log('📊 生成的对比数据:', planComparisonData.value)
+    } else {
+      console.log('✅ 使用数据库获取的对比数据')
+      // 使用从数据库获取的数据
+      selectedIterationRecord.value = {
+        id: Date.now(),
+        section: comparison.section,
+        suggestion: comparison.suggestion,
+        before: comparison.before,
+        after: comparison.after,
+        timestamp: comparison.timestamp,
+        messageId: iterationState.lastIterationMessageId
+      }
+      console.log('📋 选择的迭代记录:', selectedIterationRecord.value)
+      
+      // 生成对比数据
+      console.log('🔧 生成对比数据...')
+      planComparisonData.value = {
+        before: comparison.before,
+        after: comparison.after,
+        section: comparison.section,
+        suggestion: comparison.suggestion,
+        timestamp: comparison.timestamp,
+        statistics: generateDiffStatistics(comparison.before, comparison.after)
+      }
+      console.log('📊 生成的对比数据:', planComparisonData.value)
+    }
+    
+    // 显示对比对话框
+    console.log('🎯 显示对比对话框...')
+    showPlanComparisonModal.value = true
+    console.log('✅ 方案对比功能执行完成')
+    
+  } catch (error) {
+    console.error('❌ 获取方案对比数据失败:', error)
+    console.error('🔍 错误详情:', {
+      message: error.message,
+      stack: error.stack,
+      currentPlanState: currentPlanState,
+      iterationState: iterationState
+    })
+    alert('获取方案对比数据失败，请重试')
+  }
 }
+
+// 关闭方案对比对话框
+const closePlanComparison = () => {
+  showPlanComparisonModal.value = false
+  planComparisonData.value = null
+  selectedIterationRecord.value = null
+}
+
 </script>
 
 <style scoped>
@@ -4305,6 +4504,254 @@ const showPlanComparison = () => {
 }
 
 .prose code {
+
+/* 方案对比样式 */
+.plan-comparison {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.comparison-section {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: white;
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.text-diff {
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.diff-section {
+  margin-bottom: 1.5rem;
+}
+
+.diff-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.diff-title.removed {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.diff-title.added {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.diff-title.unchanged {
+  background: #f9fafb;
+  color: #6b7280;
+}
+
+.diff-content {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid #e5e7eb;
+}
+
+.diff-content.removed {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.diff-content.added {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.diff-content.unchanged {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.diff-line {
+  padding: 0.125rem 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.diff-line.removed {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.diff-line.added {
+  color: #16a34a;
+  background: #f0fdf4;
+}
+
+.diff-line.unchanged {
+  color: #6b7280;
+  background: #f9fafb;
+}
+
+.array-diff {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.array-diff-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+.diff-item {
+  padding: 0.5rem;
+  margin: 0.25rem 0;
+  border-radius: 0.25rem;
+  border-left: 3px solid;
+}
+
+.diff-item.removed {
+  background: #fef2f2;
+  border-left-color: #dc2626;
+  color: #dc2626;
+}
+
+.diff-item.added {
+  background: #f0fdf4;
+  border-left-color: #16a34a;
+  color: #16a34a;
+}
+
+.diff-item.unchanged {
+  background: #f9fafb;
+  border-left-color: #6b7280;
+  color: #6b7280;
+}
+
+/* 左右分栏对比样式 */
+.plan-comparison-side-by-side {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.side-by-side-diff,
+.side-by-side-array-diff {
+  margin-bottom: 2rem;
+}
+
+.diff-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.diff-column {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: white;
+}
+
+.column-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.column-title.removed {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.column-title.added {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.column-content {
+  padding: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.diff-line {
+  padding: 0.25rem 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-radius: 0.25rem;
+  margin: 0.125rem 0;
+}
+
+.diff-line.removed {
+  background: #fef2f2;
+  color: #dc2626;
+  text-decoration: line-through;
+  padding: 0.25rem 0.5rem;
+}
+
+.diff-line.added {
+  background: #f0fdf4;
+  color: #16a34a;
+  padding: 0.25rem 0.5rem;
+}
+
+.diff-line.unchanged {
+  color: #374151;
+  padding: 0.25rem 0;
+}
+
+.diff-item {
+  padding: 0.5rem;
+  margin: 0.25rem 0;
+  border-radius: 0.25rem;
+  border-left: 3px solid;
+}
+
+.diff-item.removed {
+  background: #fef2f2;
+  border-left-color: #dc2626;
+  color: #dc2626;
+  text-decoration: line-through;
+}
+
+.diff-item.added {
+  background: #f0fdf4;
+  border-left-color: #16a34a;
+  color: #16a34a;
+}
+
+.diff-item.unchanged {
+  background: #f9fafb;
+  border-left-color: #6b7280;
+  color: #374151;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .diff-columns {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .column-content {
+    max-height: 300px;
+  }
+}
   background-color: #f3f4f6 !important;
   padding: 0.125rem 0.25rem !important;
   border-radius: 0.25rem !important;

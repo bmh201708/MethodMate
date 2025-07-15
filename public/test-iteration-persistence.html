@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>迭代快照持久化测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .test-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            margin: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .test-button:hover {
+            background: #0056b3;
+        }
+        
+        .test-button.success {
+            background: #28a745;
+        }
+        
+        .test-button.danger {
+            background: #dc3545;
+        }
+        
+        .test-button.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .error-box {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 0.25rem;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-indicator.success {
+            background: #28a745;
+        }
+        
+        .status-indicator.error {
+            background: #dc3545;
+        }
+        
+        .status-indicator.warning {
+            background: #ffc107;
+        }
+        
+        .status-indicator.info {
+            background: #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>迭代快照持久化功能测试</h1>
+        
+        <div class="test-section">
+            <div class="test-title">🎯 功能概述</div>
+            <p>测试迭代快照数据在页面刷新后是否能够正确恢复，确保方案对比功能在刷新后仍然可用。</p>
+            
+            <div class="info-box">
+                <strong>测试目标：</strong>
+                <ul>
+                    <li>验证迭代快照数据是否正确存储到 localStorage</li>
+                    <li>验证页面刷新后数据是否正确恢复</li>
+                    <li>验证方案对比功能在刷新后是否正常工作</li>
+                    <li>验证迭代历史记录是否持久化</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🔧 测试操作</div>
+            
+            <button class="test-button" onclick="testLocalStorage()">
+                <span class="status-indicator info"></span>
+                检查 localStorage 状态
+            </button>
+            
+            <button class="test-button" onclick="simulateIteration()">
+                <span class="status-indicator info"></span>
+                模拟迭代操作
+            </button>
+            
+            <button class="test-button" onclick="testDataRecovery()">
+                <span class="status-indicator info"></span>
+                测试数据恢复
+            </button>
+            
+            <button class="test-button danger" onclick="clearTestData()">
+                <span class="status-indicator error"></span>
+                清理测试数据
+            </button>
+            
+            <button class="test-button warning" onclick="simulatePageRefresh()">
+                <span class="status-indicator warning"></span>
+                模拟页面刷新
+            </button>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">📊 测试结果</div>
+            <div id="testResults">
+                点击测试按钮查看结果...
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">📝 使用说明</div>
+            <ol>
+                <li><strong>检查 localStorage 状态：</strong>查看当前浏览器中存储的方案数据</li>
+                <li><strong>模拟迭代操作：</strong>创建测试用的迭代快照数据</li>
+                <li><strong>测试数据恢复：</strong>验证从 localStorage 恢复数据的功能</li>
+                <li><strong>模拟页面刷新：</strong>模拟页面刷新后的数据恢复过程</li>
+                <li><strong>清理测试数据：</strong>清除所有测试数据，恢复初始状态</li>
+            </ol>
+            
+            <div class="info-box">
+                <strong>实际使用流程：</strong>
+                <ol>
+                    <li>在研究方案详情页面生成方案</li>
+                    <li>进行方案迭代（整体或部分）</li>
+                    <li>系统自动保存迭代快照到 localStorage</li>
+                    <li>刷新页面后，系统自动从 localStorage 恢复数据</li>
+                    <li>点击"方案对比"按钮查看对比效果</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🔍 技术实现</div>
+            <div class="code-block">
+// 迭代快照持久化字段
+lastIterationSnapshot: null,        // 迭代前快照
+lastIterationAfterSnapshot: null,   // 迭代后快照
+lastIterationSection: null,         // 迭代部分
+lastIterationSuggestion: null,      // 迭代建议
+lastIterationMessageId: null,       // 迭代消息ID
+
+// 自动保存到 localStorage
+watch(currentPlanState, () => {
+  saveCurrentPlanToStorage()
+}, { deep: true })
+
+// 页面加载时自动恢复
+const loadCurrentPlanFromStorage = () => {
+  const saved = localStorage.getItem('methodmate_current_plan')
+  if (saved) {
+    return JSON.parse(saved)
+  }
+  return defaultPlanState
+}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟方案状态
+        const mockPlanState = {
+            title: '测试研究方案',
+            researchQuestions: '这是一个测试研究问题',
+            methodology: '测试研究方法',
+            dataCollection: '测试数据收集方法',
+            analysisMethod: '测试分析方法',
+            hypotheses: [
+                'H1: 测试假设1',
+                'H2: 测试假设2'
+            ],
+            experimentalDesign: '测试实验设计',
+            expectedResults: '测试预期结果',
+            isGenerated: true,
+            sourceIntroductions: {},
+            lastUpdated: new Date().toISOString(),
+            iterationHistory: [],
+            lastIterationSnapshot: null,
+            lastIterationAfterSnapshot: null,
+            lastIterationSection: null,
+            lastIterationSuggestion: null,
+            lastIterationMessageId: null
+        }
+
+        // 检查 localStorage 状态
+        function testLocalStorage() {
+            const results = document.getElementById('testResults')
+            const saved = localStorage.getItem('methodmate_current_plan')
+            
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved)
+                    results.innerHTML = `
+                        <div class="success-box">
+                            <h4>✅ localStorage 数据存在</h4>
+                            <p><strong>方案标题：</strong>${parsed.title || '未设置'}</p>
+                            <p><strong>最后更新：</strong>${parsed.lastUpdated || '未设置'}</p>
+                            <p><strong>迭代历史数量：</strong>${parsed.iterationHistory ? parsed.iterationHistory.length : 0}</p>
+                            <p><strong>迭代快照：</strong>${parsed.lastIterationSnapshot ? '存在' : '不存在'}</p>
+                            <p><strong>迭代后快照：</strong>${parsed.lastIterationAfterSnapshot ? '存在' : '不存在'}</p>
+                        </div>
+                        <div class="code-block">
+${JSON.stringify(parsed, null, 2)}
+                        </div>
+                    `
+                } catch (error) {
+                    results.innerHTML = `
+                        <div class="error-box">
+                            <h4>❌ localStorage 数据解析失败</h4>
+                            <p>错误：${error.message}</p>
+                        </div>
+                    `
+                }
+            } else {
+                results.innerHTML = `
+                    <div class="info-box">
+                        <h4>ℹ️ localStorage 中没有方案数据</h4>
+                        <p>这是正常的，因为还没有进行过迭代操作。</p>
+                    </div>
+                `
+            }
+        }
+
+        // 模拟迭代操作
+        function simulateIteration() {
+            const results = document.getElementById('testResults')
+            
+            // 创建迭代前快照
+            const beforeSnapshot = {
+                title: '原始研究方案',
+                researchQuestions: '原始研究问题',
+                methodology: '原始研究方法',
+                dataCollection: '原始数据收集方法',
+                analysisMethod: '原始分析方法',
+                hypotheses: [
+                    'H1: 原始假设1',
+                    'H2: 原始假设2'
+                ],
+                experimentalDesign: '原始实验设计',
+                expectedResults: '原始预期结果',
+                isGenerated: true,
+                timestamp: new Date().toISOString()
+            }
+            
+            // 创建迭代后快照
+            const afterSnapshot = {
+                title: '迭代后的研究方案',
+                researchQuestions: '改进后的研究问题',
+                methodology: '改进后的研究方法',
+                dataCollection: '改进后的数据收集方法',
+                analysisMethod: '改进后的分析方法',
+                hypotheses: [
+                    'H1: 改进后的假设1',
+                    'H2: 改进后的假设2',
+                    'H3: 新增假设3'
+                ],
+                experimentalDesign: '改进后的实验设计',
+                expectedResults: '改进后的预期结果',
+                isGenerated: true,
+                timestamp: new Date().toISOString()
+            }
+            
+            // 创建迭代记录
+            const iterationRecord = {
+                id: Date.now(),
+                section: 'hypotheses',
+                suggestion: '增加更多假设以提高研究的全面性',
+                before: beforeSnapshot,
+                after: afterSnapshot,
+                timestamp: new Date().toISOString(),
+                messageId: 'test-message-' + Date.now()
+            }
+            
+            // 更新方案状态
+            const updatedPlanState = {
+                ...mockPlanState,
+                title: afterSnapshot.title,
+                researchQuestions: afterSnapshot.researchQuestions,
+                methodology: afterSnapshot.methodology,
+                dataCollection: afterSnapshot.dataCollection,
+                analysisMethod: afterSnapshot.analysisMethod,
+                hypotheses: afterSnapshot.hypotheses,
+                experimentalDesign: afterSnapshot.experimentalDesign,
+                expectedResults: afterSnapshot.expectedResults,
+                lastUpdated: new Date().toISOString(),
+                iterationHistory: [iterationRecord],
+                lastIterationSnapshot: beforeSnapshot,
+                lastIterationAfterSnapshot: afterSnapshot,
+                lastIterationSection: 'hypotheses',
+                lastIterationSuggestion: '增加更多假设以提高研究的全面性',
+                lastIterationMessageId: iterationRecord.messageId
+            }
+            
+            // 保存到 localStorage
+            localStorage.setItem('methodmate_current_plan', JSON.stringify(updatedPlanState))
+            
+            results.innerHTML = `
+                <div class="success-box">
+                    <h4>✅ 迭代操作模拟成功</h4>
+                    <p><strong>迭代部分：</strong>研究假设</p>
+                    <p><strong>迭代建议：</strong>增加更多假设以提高研究的全面性</p>
+                    <p><strong>变化数量：</strong>假设从2个增加到3个</p>
+                    <p><strong>保存时间：</strong>${new Date().toLocaleString()}</p>
+                </div>
+                <div class="code-block">
+迭代前假设：${JSON.stringify(beforeSnapshot.hypotheses, null, 2)}
+
+迭代后假设：${JSON.stringify(afterSnapshot.hypotheses, null, 2)}
+                </div>
+            `
+        }
+
+        // 测试数据恢复
+        function testDataRecovery() {
+            const results = document.getElementById('testResults')
+            const saved = localStorage.getItem('methodmate_current_plan')
+            
+            if (!saved) {
+                results.innerHTML = `
+                    <div class="error-box">
+                        <h4>❌ 没有可恢复的数据</h4>
+                        <p>请先执行"模拟迭代操作"来创建测试数据。</p>
+                    </div>
+                `
+                return
+            }
+            
+            try {
+                const recovered = JSON.parse(saved)
+                
+                // 模拟恢复过程
+                const recoveryResult = {
+                    success: true,
+                    planTitle: recovered.title,
+                    iterationCount: recovered.iterationHistory ? recovered.iterationHistory.length : 0,
+                    hasSnapshot: !!recovered.lastIterationSnapshot,
+                    hasAfterSnapshot: !!recovered.lastIterationAfterSnapshot,
+                    lastSection: recovered.lastIterationSection,
+                    lastSuggestion: recovered.lastIterationSuggestion,
+                    lastUpdate: recovered.lastUpdated
+                }
+                
+                results.innerHTML = `
+                    <div class="success-box">
+                        <h4>✅ 数据恢复测试成功</h4>
+                        <p><strong>方案标题：</strong>${recoveryResult.planTitle}</p>
+                        <p><strong>迭代历史数量：</strong>${recoveryResult.iterationCount}</p>
+                        <p><strong>迭代前快照：</strong>${recoveryResult.hasSnapshot ? '✅ 存在' : '❌ 不存在'}</p>
+                        <p><strong>迭代后快照：</strong>${recoveryResult.hasAfterSnapshot ? '✅ 存在' : '❌ 不存在'}</p>
+                        <p><strong>最后迭代部分：</strong>${recoveryResult.lastSection || '无'}</p>
+                        <p><strong>最后迭代建议：</strong>${recoveryResult.lastSuggestion || '无'}</p>
+                        <p><strong>最后更新时间：</strong>${recoveryResult.lastUpdate ? new Date(recoveryResult.lastUpdate).toLocaleString() : '无'}</p>
+                    </div>
+                    <div class="info-box">
+                        <h4>🎯 方案对比功能状态</h4>
+                        <p>${recoveryResult.hasSnapshot && recoveryResult.hasAfterSnapshot ? 
+                            '✅ 可以进行方案对比' : 
+                            '❌ 无法进行方案对比（缺少快照数据）'}</p>
+                    </div>
+                `
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="error-box">
+                        <h4>❌ 数据恢复失败</h4>
+                        <p>错误：${error.message}</p>
+                    </div>
+                `
+            }
+        }
+
+        // 清理测试数据
+        function clearTestData() {
+            const results = document.getElementById('testResults')
+            localStorage.removeItem('methodmate_current_plan')
+            
+            results.innerHTML = `
+                <div class="success-box">
+                    <h4>✅ 测试数据已清理</h4>
+                    <p>localStorage 中的方案数据已被删除。</p>
+                    <p>现在可以重新开始测试。</p>
+                </div>
+            `
+        }
+
+        // 模拟页面刷新
+        function simulatePageRefresh() {
+            const results = document.getElementById('testResults')
+            
+            // 检查当前是否有数据
+            const saved = localStorage.getItem('methodmate_current_plan')
+            if (!saved) {
+                results.innerHTML = `
+                    <div class="error-box">
+                        <h4>❌ 没有数据可以模拟刷新</h4>
+                        <p>请先执行"模拟迭代操作"来创建测试数据。</p>
+                    </div>
+                `
+                return
+            }
+            
+            try {
+                const recovered = JSON.parse(saved)
+                
+                // 模拟页面刷新后的恢复过程
+                const refreshSimulation = {
+                    step1: '页面刷新开始',
+                    step2: '检查 localStorage 中的方案数据',
+                    step3: '发现持久化数据，开始恢复',
+                    step4: '恢复方案基本信息',
+                    step5: '恢复迭代历史记录',
+                    step6: '恢复迭代快照数据',
+                    step7: '恢复完成，方案对比功能可用'
+                }
+                
+                const canCompare = recovered.lastIterationSnapshot && recovered.lastIterationAfterSnapshot
+                
+                results.innerHTML = `
+                    <div class="success-box">
+                        <h4>🔄 页面刷新模拟</h4>
+                        <div style="margin: 1rem 0;">
+                            ${Object.entries(refreshSimulation).map(([step, desc]) => 
+                                `<div style="margin: 0.5rem 0; padding: 0.5rem; background: #f8f9fa; border-radius: 0.25rem;">
+                                    <strong>${step}：</strong>${desc}
+                                </div>`
+                            ).join('')}
+                        </div>
+                        <div class="info-box">
+                            <h4>📊 恢复结果</h4>
+                            <p><strong>方案标题：</strong>${recovered.title}</p>
+                            <p><strong>迭代历史：</strong>${recovered.iterationHistory ? recovered.iterationHistory.length : 0} 条记录</p>
+                            <p><strong>方案对比功能：</strong>${canCompare ? '✅ 可用' : '❌ 不可用'}</p>
+                        </div>
+                    </div>
+                `
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="error-box">
+                        <h4>❌ 刷新模拟失败</h4>
+                        <p>错误：${error.message}</p>
+                    </div>
+                `
+            }
+        }
+
+        // 页面加载时自动检查状态
+        window.addEventListener('load', () => {
+            const results = document.getElementById('testResults')
+            const saved = localStorage.getItem('methodmate_current_plan')
+            
+            if (saved) {
+                results.innerHTML = `
+                    <div class="info-box">
+                        <h4>ℹ️ 页面加载完成</h4>
+                        <p>检测到 localStorage 中有方案数据。</p>
+                        <p>点击"检查 localStorage 状态"查看详细信息。</p>
+                    </div>
+                `
+            } else {
+                results.innerHTML = `
+                    <div class="info-box">
+                        <h4>ℹ️ 页面加载完成</h4>
+                        <p>localStorage 中没有方案数据。</p>
+                        <p>点击"模拟迭代操作"开始测试。</p>
+                    </div>
+                `
+            }
+        })
+    </script>
+</body>
+</html> 

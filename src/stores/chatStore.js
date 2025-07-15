@@ -344,70 +344,195 @@ export const loadUserData = async () => {
   }
 }
 
-// 当前方案状态
-export const currentPlanState = reactive({
-  title: 'AI-Edited Images and Videos Impact on Human Memory',
-  researchQuestions: 'AI编辑的图像与视频如何影响人类记忆形成和回忆的准确性？这种影响与传统媒体的影响有何不同？',
-  methodology: '采用混合研究方法，结合实验研究和问卷调查。实验组和对照组将分别接触AI编辑和传统编辑的媒体内容。',
-  dataCollection: '通过在线实验平台收集数据，参与者将完成记忆测试和问卷调查。使用眼动追踪技术记录参与者观看内容时的注意力分配。',
-  analysisMethod: '使用SPSS进行定量分析，包括方差分析(ANOVA)和多元回归分析。质性数据将通过主题分析方法进行编码和分析。',
-  hypotheses: [
-    'H1: 接触AI编辑的媒体内容会导致更高的虚假记忆形成率。',
-    'H2: AI编辑内容的不确定性特征会增加记忆失真的程度。',
-    'H3: 参与者的媒体素养水平会调节AI编辑内容对记忆的影响。'
-  ],
-  experimentalDesign: '采用2x2混合实验设计，操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）。',
-  variables: '自变量：媒体类型、呈现方式；因变量：记忆准确度、虚假记忆比率；控制变量：媒体素养、年龄、教育背景。',
-  statisticalTools: 'SPSS 26.0, R Studio, Python数据分析包（pandas, numpy, scipy）',
-  expectedResults: '预期AI编辑的媒体内容会导致更高的虚假记忆形成率，且这种效应会被参与者的媒体素养水平调节。',
-  visualization: '使用ggplot2创建交互效应图，使用Python的seaborn库绘制相关性热图和箱线图。',
-  references: [
-    {
-      id: 1,
-      title: 'The Impact of AI-Generated Content on Human Memory Formation',
-      authors: ['Smith, J.', 'Johnson, M.']
-    },
-    {
-      id: 2,
-      title: 'Digital Media and Memory: A Comprehensive Review',
-      authors: ['Brown, R.', 'Davis, K.']
+// 从localStorage恢复当前方案状态
+const loadCurrentPlanFromStorage = () => {
+  try {
+    const saved = localStorage.getItem('methodmate_current_plan')
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      return {
+        title: parsed.title || 'AI-Edited Images and Videos Impact on Human Memory',
+        researchQuestions: parsed.researchQuestions || 'AI编辑的图像与视频如何影响人类记忆形成和回忆的准确性？这种影响与传统媒体的影响有何不同？',
+        methodology: parsed.methodology || '采用混合研究方法，结合实验研究和问卷调查。实验组和对照组将分别接触AI编辑和传统编辑的媒体内容。',
+        dataCollection: parsed.dataCollection || '通过在线实验平台收集数据，参与者将完成记忆测试和问卷调查。使用眼动追踪技术记录参与者观看内容时的注意力分配。',
+        analysisMethod: parsed.analysisMethod || '使用SPSS进行定量分析，包括方差分析(ANOVA)和多元回归分析。质性数据将通过主题分析方法进行编码和分析。',
+        hypotheses: parsed.hypotheses || [
+          'H1: 接触AI编辑的媒体内容会导致更高的虚假记忆形成率。',
+          'H2: AI编辑内容的不确定性特征会增加记忆失真的程度。',
+          'H3: 参与者的媒体素养水平会调节AI编辑内容对记忆的影响。'
+        ],
+        experimentalDesign: parsed.experimentalDesign || '采用2x2混合实验设计，操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）。',
+        variables: parsed.variables || '自变量：媒体类型、呈现方式；因变量：记忆准确度、虚假记忆比率；控制变量：媒体素养、年龄、教育背景。',
+        statisticalTools: parsed.statisticalTools || 'SPSS 26.0, R Studio, Python数据分析包（pandas, numpy, scipy）',
+        expectedResults: parsed.expectedResults || '预期AI编辑的媒体内容会导致更高的虚假记忆形成率，且这种效应会被参与者的媒体素养水平调节。',
+        visualization: parsed.visualization || '使用ggplot2创建交互效应图，使用Python的seaborn库绘制相关性热图和箱线图。',
+        references: parsed.references || [
+          {
+            id: 1,
+            title: 'The Impact of AI-Generated Content on Human Memory Formation',
+            authors: ['Smith, J.', 'Johnson, M.']
+          },
+          {
+            id: 2,
+            title: 'Digital Media and Memory: A Comprehensive Review',
+            authors: ['Brown, R.', 'Davis, K.']
+          }
+        ],
+        full: parsed.full || {
+          sourceIntro: 'This paper examines the role that enchantment plays in the design of AI things by constructing a taxonomy of design approaches that increase or decrease the perception of magic and enchantment. We start from the design discourse surrounding recent developments in AI technologies, highlighting specific interaction qualities such as algorithmic uncertainties and errors and articulating relations to the rhetoric of magic and supernatural thinking.',
+          methodIntro: 'The research methodology follows a mixed-methods approach, combining experimental research with survey methods. The experimental group and control group will be exposed to AI-edited and traditionally edited media content respectively.'
+        },
+        hypothesis: parsed.hypothesis || {
+          sourceIntro: '研究假设的形成基于对现有文献的系统性回顾，特别是关于AI技术对人类认知影响的研究。我们整合了来自认知科学、人工智能和人机交互领域的最新发现。',
+          methodIntro: '假设的验证将采用实验研究方法，通过严格控制的实验环境来测试AI编辑内容对记忆形成的影响。实验设计包括前测和后测，以确保结果的可靠性。'
+        },
+        design: parsed.design || {
+          sourceIntro: '实验设计参考了多个经典的记忆研究范式，并结合了最新的AI技术发展特点。设计方案经过专家评审和预实验优化。',
+          methodIntro: '采用2x2混合实验设计，操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）。所有实验材料都经过标准化处理。'
+        },
+        analysis: parsed.analysis || {
+          sourceIntro: '数据分析方法的选择基于近期发表的类似研究，并考虑了数据的特点和研究目标。分析框架经过方法专家的审查和验证。',
+          methodIntro: '使用SPSS 26.0进行定量分析，包括描述性统计、方差分析和回归分析。质性数据采用主题编码方法，使用NVivo软件辅助分析。'
+        },
+        results: parsed.results || {
+          sourceIntro: '研究结果的呈现方式参考了领域内顶级期刊的标准，确保数据可视化的清晰性和科学性。',
+          methodIntro: '结果呈现采用多种可视化方法，包括交互效应图、热图和箱线图。所有图表都遵循APA格式规范。'
+        },
+        isGenerated: parsed.isGenerated || false,
+        sourceIntroductions: parsed.sourceIntroductions || {
+          full: '',
+          hypothesis: '',
+          design: '',
+          analysis: '',
+          results: ''
+        },
+        lastUpdated: parsed.lastUpdated || null,
+        iterationHistory: parsed.iterationHistory || [],
+        // 迭代快照持久化字段
+        lastIterationSnapshot: parsed.lastIterationSnapshot || null,
+        lastIterationAfterSnapshot: parsed.lastIterationAfterSnapshot || null,
+        lastIterationSection: parsed.lastIterationSection || null,
+        lastIterationSuggestion: parsed.lastIterationSuggestion || null,
+        lastIterationMessageId: parsed.lastIterationMessageId || null
+      }
     }
-  ],
-  full: {
-    sourceIntro: 'This paper examines the role that enchantment plays in the design of AI things by constructing a taxonomy of design approaches that increase or decrease the perception of magic and enchantment. We start from the design discourse surrounding recent developments in AI technologies, highlighting specific interaction qualities such as algorithmic uncertainties and errors and articulating relations to the rhetoric of magic and supernatural thinking.',
-    methodIntro: 'The research methodology follows a mixed-methods approach, combining experimental research with survey methods. The experimental group and control group will be exposed to AI-edited and traditionally edited media content respectively.'
-  },
-  hypothesis: {
-    sourceIntro: '研究假设的形成基于对现有文献的系统性回顾，特别是关于AI技术对人类认知影响的研究。我们整合了来自认知科学、人工智能和人机交互领域的最新发现。',
-    methodIntro: '假设的验证将采用实验研究方法，通过严格控制的实验环境来测试AI编辑内容对记忆形成的影响。实验设计包括前测和后测，以确保结果的可靠性。'
-  },
-  design: {
-    sourceIntro: '实验设计参考了多个经典的记忆研究范式，并结合了最新的AI技术发展特点。设计方案经过专家评审和预实验优化。',
-    methodIntro: '采用2x2混合实验设计，操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）。所有实验材料都经过标准化处理。'
-  },
-  analysis: {
-    sourceIntro: '数据分析方法的选择基于近期发表的类似研究，并考虑了数据的特点和研究目标。分析框架经过方法专家的审查和验证。',
-    methodIntro: '使用SPSS 26.0进行定量分析，包括描述性统计、方差分析和回归分析。质性数据采用主题编码方法，使用NVivo软件辅助分析。'
-  },
-  results: {
-    sourceIntro: '研究结果的呈现方式参考了领域内顶级期刊的标准，确保数据可视化的清晰性和科学性。',
-    methodIntro: '结果呈现采用多种可视化方法，包括交互效应图、热图和箱线图。所有图表都遵循APA格式规范。'
-  },
-  isGenerated: false, // 标记是否为AI生成的方案
-  // 来源介绍存储
-  sourceIntroductions: {
-    full: '',
-    hypothesis: '',
-    design: '',
-    analysis: '',
-    results: ''
-  },
-  // 迭代相关数据
-  lastUpdated: null, // 最后更新时间
-  iterationHistory: [] // 迭代历史记录
-})
+  } catch (error) {
+    console.error('从localStorage恢复方案状态失败:', error)
+  }
+  
+  // 返回默认值
+  return {
+    title: 'AI-Edited Images and Videos Impact on Human Memory',
+    researchQuestions: 'AI编辑的图像与视频如何影响人类记忆形成和回忆的准确性？这种影响与传统媒体的影响有何不同？',
+    methodology: '采用混合研究方法，结合实验研究和问卷调查。实验组和对照组将分别接触AI编辑和传统编辑的媒体内容。',
+    dataCollection: '通过在线实验平台收集数据，参与者将完成记忆测试和问卷调查。使用眼动追踪技术记录参与者观看内容时的注意力分配。',
+    analysisMethod: '使用SPSS进行定量分析，包括方差分析(ANOVA)和多元回归分析。质性数据将通过主题分析方法进行编码和分析。',
+    hypotheses: [
+      'H1: 接触AI编辑的媒体内容会导致更高的虚假记忆形成率。',
+      'H2: AI编辑内容的不确定性特征会增加记忆失真的程度。',
+      'H3: 参与者的媒体素养水平会调节AI编辑内容对记忆的影响。'
+    ],
+    experimentalDesign: '采用2x2混合实验设计，操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）。',
+    variables: '自变量：媒体类型、呈现方式；因变量：记忆准确度、虚假记忆比率；控制变量：媒体素养、年龄、教育背景。',
+    statisticalTools: 'SPSS 26.0, R Studio, Python数据分析包（pandas, numpy, scipy）',
+    expectedResults: '预期AI编辑的媒体内容会导致更高的虚假记忆形成率，且这种效应会被参与者的媒体素养水平调节。',
+    visualization: '使用ggplot2创建交互效应图，使用Python的seaborn库绘制相关性热图和箱线图。',
+    references: [
+      {
+        id: 1,
+        title: 'The Impact of AI-Generated Content on Human Memory Formation',
+        authors: ['Smith, J.', 'Johnson, M.']
+      },
+      {
+        id: 2,
+        title: 'Digital Media and Memory: A Comprehensive Review',
+        authors: ['Brown, R.', 'Davis, K.']
+      }
+    ],
+    full: {
+      sourceIntro: 'This paper examines the role that enchantment plays in the design of AI things by constructing a taxonomy of design approaches that increase or decrease the perception of magic and enchantment. We start from the design discourse surrounding recent developments in AI technologies, highlighting specific interaction qualities such as algorithmic uncertainties and errors and articulating relations to the rhetoric of magic and supernatural thinking.',
+      methodIntro: 'The research methodology follows a mixed-methods approach, combining experimental research with survey methods. The experimental group and control group will be exposed to AI-edited and traditionally edited media content respectively.'
+    },
+    hypothesis: {
+      sourceIntro: '研究假设的形成基于对现有文献的系统性回顾，特别是关于AI技术对人类认知影响的研究。我们整合了来自认知科学、人工智能和人机交互领域的最新发现。',
+      methodIntro: '假设的验证将采用实验研究方法，通过严格控制的实验环境来测试AI编辑内容对记忆形成的影响。实验设计包括前测和后测，以确保结果的可靠性。'
+    },
+    design: {
+      sourceIntro: '实验设计参考了多个经典的记忆研究范式，并结合了最新的AI技术发展特点。设计方案经过专家评审和预实验优化。',
+      methodIntro: '采用2x2混合实验设计，操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）。所有实验材料都经过标准化处理。'
+    },
+    analysis: {
+      sourceIntro: '数据分析方法的选择基于近期发表的类似研究，并考虑了数据的特点和研究目标。分析框架经过方法专家的审查和验证。',
+      methodIntro: '使用SPSS 26.0进行定量分析，包括描述性统计、方差分析和回归分析。质性数据采用主题编码方法，使用NVivo软件辅助分析。'
+    },
+    results: {
+      sourceIntro: '研究结果的呈现方式参考了领域内顶级期刊的标准，确保数据可视化的清晰性和科学性。',
+      methodIntro: '结果呈现采用多种可视化方法，包括交互效应图、热图和箱线图。所有图表都遵循APA格式规范。'
+    },
+    isGenerated: false,
+    sourceIntroductions: {
+      full: '',
+      hypothesis: '',
+      design: '',
+      analysis: '',
+      results: ''
+    },
+    lastUpdated: null,
+    iterationHistory: [],
+    lastIterationSnapshot: null,
+    lastIterationAfterSnapshot: null,
+    lastIterationSection: null,
+    lastIterationSuggestion: null,
+    lastIterationMessageId: null
+  }
+}
 
-// 迭代前方案状态存储
+// 保存当前方案状态到localStorage
+const saveCurrentPlanToStorage = () => {
+  try {
+    const dataToSave = {
+      title: currentPlanState.title,
+      researchQuestions: currentPlanState.researchQuestions,
+      methodology: currentPlanState.methodology,
+      dataCollection: currentPlanState.dataCollection,
+      analysisMethod: currentPlanState.analysisMethod,
+      hypotheses: currentPlanState.hypotheses,
+      experimentalDesign: currentPlanState.experimentalDesign,
+      variables: currentPlanState.variables,
+      statisticalTools: currentPlanState.statisticalTools,
+      expectedResults: currentPlanState.expectedResults,
+      visualization: currentPlanState.visualization,
+      references: currentPlanState.references,
+      full: currentPlanState.full,
+      hypothesis: currentPlanState.hypothesis,
+      design: currentPlanState.design,
+      analysis: currentPlanState.analysis,
+      results: currentPlanState.results,
+      isGenerated: currentPlanState.isGenerated,
+      sourceIntroductions: currentPlanState.sourceIntroductions,
+      lastUpdated: currentPlanState.lastUpdated,
+      iterationHistory: currentPlanState.iterationHistory,
+      lastIterationSnapshot: currentPlanState.lastIterationSnapshot,
+      lastIterationAfterSnapshot: currentPlanState.lastIterationAfterSnapshot,
+      lastIterationSection: currentPlanState.lastIterationSection,
+      lastIterationSuggestion: currentPlanState.lastIterationSuggestion,
+      lastIterationMessageId: currentPlanState.lastIterationMessageId
+    }
+    localStorage.setItem('methodmate_current_plan', JSON.stringify(dataToSave))
+  } catch (error) {
+    console.error('保存方案状态到localStorage失败:', error)
+  }
+}
+
+// 当前方案状态
+export const currentPlanState = reactive(loadCurrentPlanFromStorage())
+
+// 监听状态变化，自动保存到localStorage
+watch(currentPlanState, () => {
+  saveCurrentPlanToStorage()
+}, { deep: true })
+
+// 迭代前方案状态存储（临时状态，用于当前会话）
 export const iterationState = reactive({
   beforeIteration: null, // 存储迭代前的方案状态
   afterIteration: null, // 存储迭代后的方案状态
@@ -1573,15 +1698,22 @@ export const storeIterationSnapshot = (section = null, suggestion = null) => {
     timestamp: new Date().toISOString()
   }
   
+  // 存储到临时状态（当前会话）
   iterationState.beforeIteration = snapshot
   iterationState.iterationSection = section
   iterationState.iterationSuggestion = suggestion
   iterationState.hasComparison = false
   
-  console.log('迭代前快照已存储:', snapshot)
+  // 同时存储到持久化状态中
+  currentPlanState.lastIterationSnapshot = snapshot
+  currentPlanState.lastIterationSection = section
+  currentPlanState.lastIterationSuggestion = suggestion
+  currentPlanState.lastUpdated = new Date().toISOString()
+  
+  console.log('迭代前快照已存储（临时和持久化）:', snapshot)
 }
 
-export const completeIteration = (messageId) => {
+export const completeIteration = async (messageId) => {
   console.log('完成迭代，消息ID:', messageId)
   
   if (iterationState.beforeIteration) {
@@ -1595,13 +1727,22 @@ export const completeIteration = (messageId) => {
       hypotheses: [...(currentPlanState.hypotheses || [])],
       experimentalDesign: currentPlanState.experimentalDesign,
       expectedResults: currentPlanState.expectedResults,
+      variables: currentPlanState.variables,
+      statisticalTools: currentPlanState.statisticalTools,
+      visualization: currentPlanState.visualization,
+      sourceIntroductions: currentPlanState.sourceIntroductions,
       isGenerated: currentPlanState.isGenerated,
       timestamp: new Date().toISOString()
     }
     
+    // 更新临时状态
     iterationState.afterIteration = afterSnapshot
     iterationState.hasComparison = true
     iterationState.lastIterationMessageId = messageId
+    
+    // 更新持久化状态
+    currentPlanState.lastIterationAfterSnapshot = afterSnapshot
+    currentPlanState.lastIterationMessageId = messageId
     
     // 添加到迭代历史
     const iterationRecord = {
@@ -1617,26 +1758,128 @@ export const completeIteration = (messageId) => {
     currentPlanState.iterationHistory.push(iterationRecord)
     currentPlanState.lastUpdated = new Date().toISOString()
     
-    console.log('迭代完成，对比数据已准备好')
+    // 如果用户已登录，保存到数据库
+    if (isUserAuthenticated()) {
+      try {
+        const iterationData = {
+          planId: currentPlanState.id || null, // 如果有方案ID
+          iterationType: iterationState.iterationSection ? 'partial' : 'full',
+          iterationSection: iterationState.iterationSection,
+          iterationSuggestion: iterationState.iterationSuggestion,
+          messageId: messageId,
+          beforeSnapshot: iterationState.beforeIteration,
+          afterSnapshot: afterSnapshot
+        }
+        
+        const response = await fetch(`${getApiBaseUrl()}/api/plan-iterations`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(iterationData)
+        })
+        
+        if (response.ok) {
+          const result = await response.json()
+          console.log('✅ 迭代历史已保存到数据库，ID:', result.iterationId)
+        } else {
+          console.warn('⚠️ 保存迭代历史到数据库失败:', response.status)
+        }
+      } catch (error) {
+        console.error('❌ 保存迭代历史到数据库失败:', error)
+      }
+    }
+    
+    console.log('迭代完成，对比数据已准备好（临时、持久化和数据库）')
   }
 }
 
 export const clearIterationState = () => {
+  // 清理临时状态
   iterationState.beforeIteration = null
   iterationState.afterIteration = null
   iterationState.iterationSection = null
   iterationState.iterationSuggestion = null
   iterationState.hasComparison = false
   iterationState.lastIterationMessageId = null
+  
+  // 清理持久化状态
+  currentPlanState.lastIterationSnapshot = null
+  currentPlanState.lastIterationAfterSnapshot = null
+  currentPlanState.lastIterationSection = null
+  currentPlanState.lastIterationSuggestion = null
+  currentPlanState.lastIterationMessageId = null
+  
+  console.log('迭代状态已清理（临时和持久化）')
 }
 
-export const getIterationComparison = (messageId = null) => {
+export const getIterationComparison = async (messageId = null) => {
+  console.log('🔍 getIterationComparison 开始执行...')
+  console.log('📋 参数:', { messageId })
+  console.log('👤 用户认证状态:', isUserAuthenticated())
+  console.log('📊 当前方案状态:', {
+    hasPlan: !!currentPlanState,
+    planId: currentPlanState?.id,
+    iterationHistoryCount: currentPlanState?.iterationHistory?.length || 0
+  })
+  console.log('🔄 迭代状态:', {
+    hasComparison: iterationState.hasComparison,
+    beforeIteration: !!iterationState.beforeIteration,
+    afterIteration: !!iterationState.afterIteration,
+    lastIterationMessageId: iterationState.lastIterationMessageId
+  })
+  
+  // 如果指定了消息ID，优先从数据库获取
+  if (messageId && isUserAuthenticated()) {
+    console.log('🔄 尝试根据消息ID从数据库获取迭代数据...')
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/plan-iterations/message/${messageId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      
+      console.log('📡 API响应状态:', response.status)
+      
+      if (response.ok) {
+        const result = await response.json()
+        const iteration = result.iteration
+        console.log('✅ 从数据库获取到迭代数据:', iteration)
+        
+        // 恢复临时状态
+        iterationState.beforeIteration = iteration.before
+        iterationState.afterIteration = iteration.after
+        iterationState.iterationSection = iteration.iterationSection
+        iterationState.iterationSuggestion = iteration.iterationSuggestion
+        iterationState.hasComparison = true
+        iterationState.lastIterationMessageId = iteration.messageId
+        
+        console.log('✅ 从数据库恢复迭代对比数据')
+        
+        return {
+          before: iteration.before,
+          after: iteration.after,
+          section: iteration.iterationSection,
+          suggestion: iteration.iterationSuggestion,
+          timestamp: iteration.updatedAt
+        }
+      } else {
+        console.log('⚠️ 数据库API响应失败:', response.status)
+      }
+    } catch (error) {
+      console.error('❌ 从数据库获取迭代历史失败:', error)
+    }
+  }
+  
   // 如果指定了消息ID，尝试从历史记录中查找
   if (messageId) {
+    console.log('🔍 尝试从本地历史记录中查找消息ID:', messageId)
     const iterationRecord = currentPlanState.iterationHistory.find(
       record => record.messageId === messageId
     )
     if (iterationRecord) {
+      console.log('✅ 在本地历史记录中找到迭代数据')
       return {
         before: iterationRecord.before,
         after: iterationRecord.after,
@@ -1644,11 +1887,14 @@ export const getIterationComparison = (messageId = null) => {
         suggestion: iterationRecord.suggestion,
         timestamp: iterationRecord.timestamp
       }
+    } else {
+      console.log('⚠️ 本地历史记录中未找到该消息ID')
     }
   }
   
-  // 返回当前迭代状态
+  // 首先尝试从临时状态获取
   if (iterationState.hasComparison) {
+    console.log('✅ 从临时状态获取迭代对比数据')
     return {
       before: iterationState.beforeIteration,
       after: iterationState.afterIteration,
@@ -1658,6 +1904,71 @@ export const getIterationComparison = (messageId = null) => {
     }
   }
   
+  // 如果临时状态没有，尝试从持久化状态恢复
+  if (currentPlanState.lastIterationSnapshot && currentPlanState.lastIterationAfterSnapshot) {
+    console.log('🔄 从持久化状态恢复迭代对比数据')
+    // 恢复临时状态
+    iterationState.beforeIteration = currentPlanState.lastIterationSnapshot
+    iterationState.afterIteration = currentPlanState.lastIterationAfterSnapshot
+    iterationState.iterationSection = currentPlanState.lastIterationSection
+    iterationState.iterationSuggestion = currentPlanState.lastIterationSuggestion
+    iterationState.hasComparison = true
+    iterationState.lastIterationMessageId = currentPlanState.lastIterationMessageId
+    
+    console.log('从持久化状态恢复迭代对比数据')
+    
+    return {
+      before: currentPlanState.lastIterationSnapshot,
+      after: currentPlanState.lastIterationAfterSnapshot,
+      section: currentPlanState.lastIterationSection,
+      suggestion: currentPlanState.lastIterationSuggestion,
+      timestamp: currentPlanState.lastIterationAfterSnapshot.timestamp
+    }
+  }
+  
+  // 如果用户已登录且有方案ID，尝试从数据库获取最新迭代
+  if (isUserAuthenticated() && currentPlanState.id) {
+    console.log('🔄 尝试从数据库获取最新迭代数据...')
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/plan-iterations/latest/${currentPlanState.id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      
+      console.log('📡 最新迭代API响应状态:', response.status)
+      
+      if (response.ok) {
+        const result = await response.json()
+        const iteration = result.iteration
+        console.log('✅ 从数据库获取到最新迭代数据:', iteration)
+        
+        // 恢复临时状态
+        iterationState.beforeIteration = iteration.before
+        iterationState.afterIteration = iteration.after
+        iterationState.iterationSection = iteration.iterationSection
+        iterationState.iterationSuggestion = iteration.iterationSuggestion
+        iterationState.hasComparison = true
+        iterationState.lastIterationMessageId = iteration.messageId
+        
+        console.log('✅ 从数据库恢复最新迭代对比数据')
+        
+        return {
+          before: iteration.before,
+          after: iteration.after,
+          section: iteration.iterationSection,
+          suggestion: iteration.iterationSuggestion,
+          timestamp: iteration.updatedAt
+        }
+      } else {
+        console.log('⚠️ 获取最新迭代API响应失败:', response.status)
+      }
+    } catch (error) {
+      console.error('❌ 从数据库获取最新迭代历史失败:', error)
+    }
+  }
+  
+  console.log('❌ 未找到任何可用的迭代对比数据')
   return null
 }
 

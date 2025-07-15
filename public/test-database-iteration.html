@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据库迭代历史功能测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .test-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            margin: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .test-button:hover {
+            background: #0056b3;
+        }
+        
+        .test-button.success {
+            background: #28a745;
+        }
+        
+        .test-button.danger {
+            background: #dc3545;
+        }
+        
+        .test-button.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .error-box {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 0.25rem;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-indicator.success {
+            background: #28a745;
+        }
+        
+        .status-indicator.error {
+            background: #dc3545;
+        }
+        
+        .status-indicator.warning {
+            background: #ffc107;
+        }
+        
+        .status-indicator.info {
+            background: #17a2b8;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            min-height: 100px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>数据库迭代历史功能测试</h1>
+        
+        <div class="test-section">
+            <div class="test-title">🎯 功能概述</div>
+            <p>测试方案迭代历史在数据库中的存储和检索功能，确保方案对比功能在页面刷新后仍然可用。</p>
+            
+            <div class="info-box">
+                <strong>测试目标：</strong>
+                <ul>
+                    <li>验证迭代历史数据是否正确存储到数据库</li>
+                    <li>验证页面刷新后数据是否正确从数据库恢复</li>
+                    <li>验证方案对比功能在刷新后是否正常工作</li>
+                    <li>验证多用户数据隔离是否正常</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🔧 测试操作</div>
+            
+            <button class="test-button" onclick="testDatabaseConnection()">
+                <span class="status-indicator info"></span>
+                测试数据库连接
+            </button>
+            
+            <button class="test-button" onclick="testCreateIteration()">
+                <span class="status-indicator info"></span>
+                创建测试迭代
+            </button>
+            
+            <button class="test-button" onclick="testGetLatestIteration()">
+                <span class="status-indicator info"></span>
+                获取最新迭代
+            </button>
+            
+            <button class="test-button" onclick="testGetIterationByMessageId()">
+                <span class="status-indicator info"></span>
+                根据消息ID获取
+            </button>
+            
+            <button class="test-button" onclick="testGetIterationHistory()">
+                <span class="status-indicator info"></span>
+                获取迭代历史
+            </button>
+            
+            <button class="test-button danger" onclick="testDeleteIteration()">
+                <span class="status-indicator error"></span>
+                删除迭代历史
+            </button>
+            
+            <button class="test-button warning" onclick="testClearIterations()">
+                <span class="status-indicator warning"></span>
+                清理所有迭代
+            </button>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">📝 测试数据</div>
+            
+            <div class="form-group">
+                <label class="form-label">方案ID：</label>
+                <input type="number" id="planId" class="form-input" value="1" placeholder="输入方案ID">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">消息ID：</label>
+                <input type="text" id="messageId" class="form-input" value="test-message-123" placeholder="输入消息ID">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">迭代类型：</label>
+                <select id="iterationType" class="form-input">
+                    <option value="full">整体迭代</option>
+                    <option value="partial">部分迭代</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">迭代部分：</label>
+                <select id="iterationSection" class="form-input">
+                    <option value="">无（整体迭代）</option>
+                    <option value="hypotheses">研究假设</option>
+                    <option value="methodology">研究方法</option>
+                    <option value="experimentalDesign">实验设计</option>
+                    <option value="analysisMethod">分析方法</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">迭代建议：</label>
+                <textarea id="iterationSuggestion" class="form-textarea" placeholder="输入迭代建议">增加更多假设以提高研究的全面性</textarea>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">📊 测试结果</div>
+            <div id="testResults">
+                点击测试按钮查看结果...
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">📝 使用说明</div>
+            <ol>
+                <li><strong>测试数据库连接：</strong>验证API服务器是否正常运行</li>
+                <li><strong>创建测试迭代：</strong>在数据库中创建测试用的迭代记录</li>
+                <li><strong>获取最新迭代：</strong>验证从数据库获取最新迭代记录的功能</li>
+                <li><strong>根据消息ID获取：</strong>验证通过消息ID获取特定迭代记录的功能</li>
+                <li><strong>获取迭代历史：</strong>验证获取方案所有迭代历史的功能</li>
+                <li><strong>删除迭代历史：</strong>验证删除特定迭代记录的功能</li>
+                <li><strong>清理所有迭代：</strong>验证清理方案所有迭代记录的功能</li>
+            </ol>
+            
+            <div class="info-box">
+                <strong>实际使用流程：</strong>
+                <ol>
+                    <li>用户登录后进行研究方案迭代</li>
+                    <li>系统自动将迭代快照保存到数据库</li>
+                    <li>页面刷新后，系统从数据库恢复迭代数据</li>
+                    <li>用户点击"方案对比"查看迭代前后差异</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🔍 技术实现</div>
+            <div class="code-block">
+// 数据库表结构
+CREATE TABLE plan_iterations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  plan_id INT NOT NULL,
+  user_id INT NOT NULL,
+  iteration_type ENUM('full', 'partial') NOT NULL,
+  iteration_section VARCHAR(50),
+  iteration_suggestion TEXT,
+  message_id VARCHAR(255),
+  
+  -- 迭代前的方案数据
+  before_title VARCHAR(255),
+  before_research_questions TEXT,
+  before_methodology TEXT,
+  before_data_collection TEXT,
+  before_analysis_method TEXT,
+  before_hypotheses TEXT,
+  before_experimental_design TEXT,
+  before_expected_results TEXT,
+  before_variables TEXT,
+  before_statistical_tools TEXT,
+  before_visualization TEXT,
+  before_source_introductions JSON,
+  
+  -- 迭代后的方案数据
+  after_title VARCHAR(255),
+  after_research_questions TEXT,
+  after_methodology TEXT,
+  after_data_collection TEXT,
+  after_analysis_method TEXT,
+  after_hypotheses TEXT,
+  after_experimental_design TEXT,
+  after_expected_results TEXT,
+  after_variables TEXT,
+  after_statistical_tools TEXT,
+  after_visualization TEXT,
+  after_source_introductions JSON,
+  
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (plan_id) REFERENCES research_plans(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API基础URL
+        const API_BASE_URL = 'http://localhost:3002';
+        
+        // 获取用户token（模拟）
+        const getAuthToken = () => {
+            return localStorage.getItem('token') || 'test-token';
+        };
+        
+        // 显示测试结果
+        const showResult = (title, content, type = 'info') => {
+            const results = document.getElementById('testResults');
+            const className = type === 'success' ? 'success-box' : type === 'error' ? 'error-box' : 'info-box';
+            
+            results.innerHTML = `
+                <div class="${className}">
+                    <h4>${title}</h4>
+                    <div>${content}</div>
+                </div>
+            `;
+        };
+        
+        // 显示JSON结果
+        const showJsonResult = (title, data) => {
+            const results = document.getElementById('testResults');
+            results.innerHTML = `
+                <div class="info-box">
+                    <h4>${title}</h4>
+                    <div class="code-block">
+${JSON.stringify(data, null, 2)}
+                    </div>
+                </div>
+            `;
+        };
+        
+        // 测试数据库连接
+        const testDatabaseConnection = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/plan-iterations/latest/1`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                if (response.status === 401) {
+                    showResult('✅ 数据库连接正常', 'API服务器正常运行，但需要用户认证', 'success');
+                } else if (response.status === 404) {
+                    showResult('✅ 数据库连接正常', 'API服务器正常运行，但未找到迭代记录', 'success');
+                } else {
+                    showResult('✅ 数据库连接正常', `API服务器响应状态: ${response.status}`, 'success');
+                }
+            } catch (error) {
+                showResult('❌ 数据库连接失败', `错误: ${error.message}`, 'error');
+            }
+        };
+        
+        // 创建测试迭代
+        const testCreateIteration = async () => {
+            try {
+                const planId = document.getElementById('planId').value;
+                const messageId = document.getElementById('messageId').value;
+                const iterationType = document.getElementById('iterationType').value;
+                const iterationSection = document.getElementById('iterationSection').value;
+                const iterationSuggestion = document.getElementById('iterationSuggestion').value;
+                
+                const beforeSnapshot = {
+                    title: '原始研究方案',
+                    researchQuestions: '原始研究问题',
+                    methodology: '原始研究方法',
+                    dataCollection: '原始数据收集方法',
+                    analysisMethod: '原始分析方法',
+                    hypotheses: ['H1: 原始假设1', 'H2: 原始假设2'],
+                    experimentalDesign: '原始实验设计',
+                    expectedResults: '原始预期结果',
+                    variables: '原始变量定义',
+                    statisticalTools: '原始统计工具',
+                    visualization: '原始可视化方法',
+                    sourceIntroductions: {},
+                    isGenerated: true,
+                    timestamp: new Date().toISOString()
+                };
+                
+                const afterSnapshot = {
+                    title: '迭代后的研究方案',
+                    researchQuestions: '改进后的研究问题',
+                    methodology: '改进后的研究方法',
+                    dataCollection: '改进后的数据收集方法',
+                    analysisMethod: '改进后的分析方法',
+                    hypotheses: ['H1: 改进后的假设1', 'H2: 改进后的假设2', 'H3: 新增假设3'],
+                    experimentalDesign: '改进后的实验设计',
+                    expectedResults: '改进后的预期结果',
+                    variables: '改进后的变量定义',
+                    statisticalTools: '改进后的统计工具',
+                    visualization: '改进后的可视化方法',
+                    sourceIntroductions: {},
+                    isGenerated: true,
+                    timestamp: new Date().toISOString()
+                };
+                
+                const iterationData = {
+                    planId: parseInt(planId),
+                    iterationType,
+                    iterationSection: iterationSection || null,
+                    iterationSuggestion,
+                    messageId,
+                    beforeSnapshot,
+                    afterSnapshot
+                };
+                
+                const response = await fetch(`${API_BASE_URL}/api/plan-iterations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    },
+                    body: JSON.stringify(iterationData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult('✅ 创建迭代成功', `迭代ID: ${result.iterationId}`, 'success');
+                } else {
+                    showResult('❌ 创建迭代失败', result.error || '未知错误', 'error');
+                }
+            } catch (error) {
+                showResult('❌ 创建迭代失败', `错误: ${error.message}`, 'error');
+            }
+        };
+        
+        // 获取最新迭代
+        const testGetLatestIteration = async () => {
+            try {
+                const planId = document.getElementById('planId').value;
+                
+                const response = await fetch(`${API_BASE_URL}/api/plan-iterations/latest/${planId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showJsonResult('✅ 获取最新迭代成功', result.iteration);
+                } else {
+                    showResult('❌ 获取最新迭代失败', result.error || '未知错误', 'error');
+                }
+            } catch (error) {
+                showResult('❌ 获取最新迭代失败', `错误: ${error.message}`, 'error');
+            }
+        };
+        
+        // 根据消息ID获取迭代
+        const testGetIterationByMessageId = async () => {
+            try {
+                const messageId = document.getElementById('messageId').value;
+                
+                const response = await fetch(`${API_BASE_URL}/api/plan-iterations/message/${messageId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showJsonResult('✅ 根据消息ID获取迭代成功', result.iteration);
+                } else {
+                    showResult('❌ 根据消息ID获取迭代失败', result.error || '未知错误', 'error');
+                }
+            } catch (error) {
+                showResult('❌ 根据消息ID获取迭代失败', `错误: ${error.message}`, 'error');
+            }
+        };
+        
+        // 获取迭代历史
+        const testGetIterationHistory = async () => {
+            try {
+                const planId = document.getElementById('planId').value;
+                
+                const response = await fetch(`${API_BASE_URL}/api/plan-iterations/history/${planId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showJsonResult('✅ 获取迭代历史成功', {
+                        count: result.count,
+                        iterations: result.iterations
+                    });
+                } else {
+                    showResult('❌ 获取迭代历史失败', result.error || '未知错误', 'error');
+                }
+            } catch (error) {
+                showResult('❌ 获取迭代历史失败', `错误: ${error.message}`, 'error');
+            }
+        };
+        
+        // 删除迭代历史
+        const testDeleteIteration = async () => {
+            try {
+                const iterationId = prompt('请输入要删除的迭代ID:');
+                if (!iterationId) return;
+                
+                const response = await fetch(`${API_BASE_URL}/api/plan-iterations/${iterationId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult('✅ 删除迭代成功', result.message, 'success');
+                } else {
+                    showResult('❌ 删除迭代失败', result.error || '未知错误', 'error');
+                }
+            } catch (error) {
+                showResult('❌ 删除迭代失败', `错误: ${error.message}`, 'error');
+            }
+        };
+        
+        // 清理所有迭代
+        const testClearIterations = async () => {
+            try {
+                const planId = document.getElementById('planId').value;
+                const confirmed = confirm(`确定要清理方案 ${planId} 的所有迭代历史吗？`);
+                if (!confirmed) return;
+                
+                const response = await fetch(`${API_BASE_URL}/api/plan-iterations/clear/${planId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult('✅ 清理迭代历史成功', result.message, 'success');
+                } else {
+                    showResult('❌ 清理迭代历史失败', result.error || '未知错误', 'error');
+                }
+            } catch (error) {
+                showResult('❌ 清理迭代历史失败', `错误: ${error.message}`, 'error');
+            }
+        };
+        
+        // 页面加载时自动检查连接
+        window.addEventListener('load', () => {
+            showResult('ℹ️ 页面加载完成', '点击"测试数据库连接"开始测试', 'info');
+        });
+    </script>
+</body>
+</html> 

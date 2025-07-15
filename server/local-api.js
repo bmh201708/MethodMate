@@ -20,6 +20,14 @@ import {
   getOtherAPIConfig 
 } from './config.js';
 import { searchStatisticalMethodFromDB, getAllStatisticalMethods, getStatisticalMethodById } from './statistical-methods-db.js';
+import { 
+  storePlanIteration, 
+  getLatestPlanIteration, 
+  getIterationByMessageId, 
+  getPlanIterationHistory, 
+  deletePlanIteration, 
+  clearPlanIterations 
+} from './plan-iterations-db.js';
 import fs from 'fs';
 import path from 'path';
 import { HttpsProxyAgent } from 'https-proxy-agent';
@@ -5941,6 +5949,233 @@ app.post('/api/paper-download', async (req, res) => {
     res.status(500).json({ 
       success: false,
       error: '获取下载链接失败: ' + error.message
+    });
+  }
+});
+
+// ==================== 方案迭代历史API ====================
+
+// 存储方案迭代历史
+app.post('/api/plan-iterations', authenticateToken, async (req, res) => {
+  try {
+    const {
+      planId,
+      iterationType,
+      iterationSection,
+      iterationSuggestion,
+      messageId,
+      beforeSnapshot,
+      afterSnapshot
+    } = req.body;
+
+    if (!planId || !iterationType || !beforeSnapshot || !afterSnapshot) {
+      return res.status(400).json({
+        success: false,
+        error: '缺少必要参数：planId, iterationType, beforeSnapshot, afterSnapshot'
+      });
+    }
+
+    // 验证方案是否属于当前用户
+    const pool = getPool();
+    const [plans] = await pool.execute(
+      'SELECT id FROM research_plans WHERE id = ? AND user_id = ?',
+      [planId, req.user.id]
+    );
+
+    if (plans.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: '研究方案不存在或无权访问'
+      });
+    }
+
+    const iterationData = {
+      planId,
+      userId: req.user.id,
+      iterationType,
+      iterationSection,
+      iterationSuggestion,
+      messageId,
+      beforeSnapshot,
+      afterSnapshot
+    };
+
+    const result = await storePlanIteration(iterationData);
+
+    res.status(201).json({
+      success: true,
+      iterationId: result.iterationId,
+      message: '方案迭代历史已保存'
+    });
+
+  } catch (error) {
+    console.error('存储方案迭代历史错误:', error);
+    res.status(500).json({
+      success: false,
+      error: '服务器内部错误'
+    });
+  }
+});
+
+// 获取方案的最新迭代历史
+app.get('/api/plan-iterations/latest/:planId', authenticateToken, async (req, res) => {
+  try {
+    const planId = req.params.planId;
+
+    // 验证方案是否属于当前用户
+    const pool = getPool();
+    const [plans] = await pool.execute(
+      'SELECT id FROM research_plans WHERE id = ? AND user_id = ?',
+      [planId, req.user.id]
+    );
+
+    if (plans.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: '研究方案不存在或无权访问'
+      });
+    }
+
+    const iteration = await getLatestPlanIteration(planId, req.user.id);
+
+    if (!iteration) {
+      return res.status(404).json({
+        success: false,
+        error: '未找到迭代历史'
+      });
+    }
+
+    res.json({
+      success: true,
+      iteration
+    });
+
+  } catch (error) {
+    console.error('获取方案迭代历史错误:', error);
+    res.status(500).json({
+      success: false,
+      error: '服务器内部错误'
+    });
+  }
+});
+
+// 根据消息ID获取迭代历史
+app.get('/api/plan-iterations/message/:messageId', authenticateToken, async (req, res) => {
+  try {
+    const messageId = req.params.messageId;
+
+    const iteration = await getIterationByMessageId(messageId, req.user.id);
+
+    if (!iteration) {
+      return res.status(404).json({
+        success: false,
+        error: '未找到迭代历史'
+      });
+    }
+
+    res.json({
+      success: true,
+      iteration
+    });
+
+  } catch (error) {
+    console.error('根据消息ID获取迭代历史错误:', error);
+    res.status(500).json({
+      success: false,
+      error: '服务器内部错误'
+    });
+  }
+});
+
+// 获取方案的所有迭代历史
+app.get('/api/plan-iterations/history/:planId', authenticateToken, async (req, res) => {
+  try {
+    const planId = req.params.planId;
+
+    // 验证方案是否属于当前用户
+    const pool = getPool();
+    const [plans] = await pool.execute(
+      'SELECT id FROM research_plans WHERE id = ? AND user_id = ?',
+      [planId, req.user.id]
+    );
+
+    if (plans.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: '研究方案不存在或无权访问'
+      });
+    }
+
+    const iterations = await getPlanIterationHistory(planId, req.user.id);
+
+    res.json({
+      success: true,
+      iterations,
+      count: iterations.length
+    });
+
+  } catch (error) {
+    console.error('获取方案迭代历史列表错误:', error);
+    res.status(500).json({
+      success: false,
+      error: '服务器内部错误'
+    });
+  }
+});
+
+// 删除指定的迭代历史
+app.delete('/api/plan-iterations/:iterationId', authenticateToken, async (req, res) => {
+  try {
+    const iterationId = req.params.iterationId;
+
+    await deletePlanIteration(iterationId, req.user.id);
+
+    res.json({
+      success: true,
+      message: '迭代历史已删除'
+    });
+
+  } catch (error) {
+    console.error('删除迭代历史错误:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || '服务器内部错误'
+    });
+  }
+});
+
+// 清理方案的所有迭代历史
+app.delete('/api/plan-iterations/clear/:planId', authenticateToken, async (req, res) => {
+  try {
+    const planId = req.params.planId;
+
+    // 验证方案是否属于当前用户
+    const pool = getPool();
+    const [plans] = await pool.execute(
+      'SELECT id FROM research_plans WHERE id = ? AND user_id = ?',
+      [planId, req.user.id]
+    );
+
+    if (plans.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: '研究方案不存在或无权访问'
+      });
+    }
+
+    const result = await clearPlanIterations(planId, req.user.id);
+
+    res.json({
+      success: true,
+      message: `已清理 ${result.deletedCount} 条迭代历史`,
+      deletedCount: result.deletedCount
+    });
+
+  } catch (error) {
+    console.error('清理迭代历史错误:', error);
+    res.status(500).json({
+      success: false,
+      error: '服务器内部错误'
     });
   }
 });

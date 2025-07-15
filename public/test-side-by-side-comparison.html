@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>左右分栏方案对比测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .demo-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .demo-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        
+        /* 左右分栏对比样式 */
+        .plan-comparison-side-by-side {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .side-by-side-diff,
+        .side-by-side-array-diff {
+            margin-bottom: 2rem;
+        }
+        
+        .diff-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .diff-column {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background: white;
+        }
+        
+        .column-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 0;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .column-title.removed {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        
+        .column-title.added {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+        
+        .column-content {
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+        
+        .diff-line {
+            padding: 0.25rem 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            border-radius: 0.25rem;
+            margin: 0.125rem 0;
+        }
+        
+        .diff-line.removed {
+            background: #fef2f2;
+            color: #dc2626;
+            text-decoration: line-through;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .diff-line.added {
+            background: #f0fdf4;
+            color: #16a34a;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .diff-line.unchanged {
+            color: #374151;
+            padding: 0.25rem 0;
+        }
+        
+        .diff-item {
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            border-radius: 0.25rem;
+            border-left: 3px solid;
+        }
+        
+        .diff-item.removed {
+            background: #fef2f2;
+            border-left-color: #dc2626;
+            color: #dc2626;
+            text-decoration: line-through;
+        }
+        
+        .diff-item.added {
+            background: #f0fdf4;
+            border-left-color: #16a34a;
+            color: #16a34a;
+        }
+        
+        .diff-item.unchanged {
+            background: #f9fafb;
+            border-left-color: #6b7280;
+            color: #374151;
+        }
+        
+        .comparison-section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            background: white;
+        }
+        
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 1px solid;
+        }
+        
+        .legend-color.red {
+            background: #fef2f2;
+            border-color: #dc2626;
+        }
+        
+        .legend-color.green {
+            background: #f0fdf4;
+            border-color: #16a34a;
+        }
+        
+        .legend-color.gray {
+            background: #f9fafb;
+            border-color: #6b7280;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .diff-columns {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+            
+            .column-content {
+                max-height: 300px;
+            }
+            
+            .legend {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>左右分栏方案对比效果展示</h1>
+        
+        <div class="demo-section">
+            <div class="demo-title">🎯 功能概述</div>
+            <p>实现了左右分栏的方案对比功能，左侧显示原文，右侧显示迭代后的方案，用红色标记删除的内容，绿色标记新增的内容。</p>
+        </div>
+        
+        <div class="demo-section">
+            <div class="demo-title">🎨 视觉效果</div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color red"></div>
+                    <span>删除内容（红色）</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color green"></div>
+                    <span>新增内容（绿色）</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color gray"></div>
+                    <span>保持不变（灰色）</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <div class="demo-title">📝 文本对比示例</div>
+            <div class="plan-comparison-side-by-side">
+                <div class="comparison-section">
+                    <h3 class="section-title">实验设计对比</h3>
+                    <div class="side-by-side-diff">
+                        <div class="diff-columns">
+                            <!-- 左侧：原文 -->
+                            <div class="diff-column old-column">
+                                <h4 class="column-title removed">原文</h4>
+                                <div class="column-content">
+                                    <div class="diff-line removed">采用2x2实验设计，包含两个自变量：价格水平（高价/低价）和产品类型（功能型/享乐型）。</div>
+                                    <div class="diff-line unchanged">通过控制实验条件，测量用户的购买意愿和满意度评分。</div>
+                                    <div class="diff-line unchanged">样本量：预计招募200名大学生。</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 右侧：新文 -->
+                            <div class="diff-column new-column">
+                                <h4 class="column-title added">迭代后</h4>
+                                <div class="column-content">
+                                    <div class="diff-line added">采用2x2x2三因素实验设计，新增年龄组变量（年轻组18-35岁/成熟组36-55岁）。</div>
+                                    <div class="diff-line unchanged">通过控制实验条件，测量用户的购买意愿和满意度评分。</div>
+                                    <div class="diff-line unchanged">样本量：预计招募300名大学生，基于效应量0.25，α=0.05，检验力0.8计算得出。</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <div class="demo-title">📊 数组对比示例（研究假设）</div>
+            <div class="plan-comparison-side-by-side">
+                <div class="comparison-section">
+                    <h3 class="section-title">研究假设对比</h3>
+                    <div class="side-by-side-array-diff">
+                        <div class="diff-columns">
+                            <!-- 左侧：原文 -->
+                            <div class="diff-column old-column">
+                                <h4 class="column-title removed">原文</h4>
+                                <div class="column-content">
+                                    <div class="diff-item removed">H1: 用户对产品的满意度会影响购买意愿</div>
+                                    <div class="diff-item unchanged">H2: 价格敏感度在不同年龄组之间存在差异</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 右侧：新文 -->
+                            <div class="diff-column new-column">
+                                <h4 class="column-title added">迭代后</h4>
+                                <div class="column-content">
+                                    <div class="diff-item added">H1: 用户对产品的满意度会正向影响购买意愿，且这种影响在高价格条件下更为显著</div>
+                                    <div class="diff-item unchanged">H2: 价格敏感度在不同年龄组之间存在显著差异，年轻用户更关注价格因素</div>
+                                    <div class="diff-item added">H3: 产品类型调节价格与购买意愿的关系</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <div class="demo-title">🔧 技术特点</div>
+            <ul>
+                <li><strong>左右分栏布局：</strong>清晰展示原文和迭代后的对比</li>
+                <li><strong>颜色编码：</strong>红色表示删除，绿色表示新增，灰色表示保持不变</li>
+                <li><strong>响应式设计：</strong>在小屏幕上自动切换为上下布局</li>
+                <li><strong>滚动支持：</strong>长内容支持滚动查看</li>
+                <li><strong>文本处理：</strong>支持文本和数组的差异对比</li>
+                <li><strong>视觉层次：</strong>清晰的标题和内容区分</li>
+            </ul>
+        </div>
+        
+        <div class="demo-section">
+            <div class="demo-title">📱 响应式效果</div>
+            <p>在移动设备上，左右分栏会自动切换为上下布局，确保在小屏幕上的良好显示效果。</p>
+            <div style="background: #f0f0f0; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
+                <p><strong>移动端效果：</strong></p>
+                <ul>
+                    <li>左右分栏变为上下布局</li>
+                    <li>内容区域高度调整为300px</li>
+                    <li>图例垂直排列</li>
+                    <li>保持所有功能完整</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <div class="demo-title">🚀 使用方法</div>
+            <ol>
+                <li>在研究方案详情页面生成方案</li>
+                <li>进行方案迭代（整体或部分）</li>
+                <li>点击"方案对比"按钮</li>
+                <li>查看左右分栏的对比效果</li>
+                <li>通过颜色编码快速识别变化</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html> 
