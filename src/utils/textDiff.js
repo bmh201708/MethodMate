@@ -389,7 +389,13 @@ export function generateSideBySideArrayDiffHTML(oldArray, newArray, title = '') 
 
 // 生成左右分栏的完整方案对比HTML（左边原文，右边修改后）
 export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
+  // 参数验证
+  if (!beforePlan || !afterPlan) {
+    return '<div class="text-center text-red-500 py-8">对比数据不完整</div>'
+  }
+  
   let html = '<div class="left-right-comparison">'
+  let hasChanges = false
   
   // 标题对比
   if (beforePlan.title !== afterPlan.title) {
@@ -397,25 +403,20 @@ export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
     html += '<h3 class="section-title">方案标题</h3>'
     html += generateLeftRightDiffHTML(beforePlan.title || '', afterPlan.title || '')
     html += '</div>'
+    hasChanges = true
   }
   
   // 研究假设对比
-  const hypothesesDiff = compareArrays(beforePlan.hypotheses || [], afterPlan.hypotheses || [])
-  if (hypothesesDiff.added.length > 0 || hypothesesDiff.removed.length > 0) {
+  const beforeHypotheses = Array.isArray(beforePlan.hypotheses) ? beforePlan.hypotheses : []
+  const afterHypotheses = Array.isArray(afterPlan.hypotheses) ? afterPlan.hypotheses : []
+  const hypothesesDiff = compareArrays(beforeHypotheses, afterHypotheses)
+  
+  if (hypothesesDiff.added.length > 0 || hypothesesDiff.removed.length > 0 || 
+      JSON.stringify(beforeHypotheses) !== JSON.stringify(afterHypotheses)) {
     html += '<div class="comparison-section">'
-    html += generateLeftRightArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], '研究假设')
+    html += generateLeftRightArrayDiffHTML(beforeHypotheses, afterHypotheses, '研究假设')
     html += '</div>'
-  } else if (beforePlan.hypotheses && afterPlan.hypotheses && 
-             JSON.stringify(beforePlan.hypotheses) !== JSON.stringify(afterPlan.hypotheses)) {
-    // 如果数组内容相同但顺序不同，也显示对比
-    html += '<div class="comparison-section">'
-    html += generateLeftRightArrayDiffHTML(beforePlan.hypotheses, afterPlan.hypotheses, '研究假设')
-    html += '</div>'
-  } else if (beforePlan.hypotheses || afterPlan.hypotheses) {
-    // 如果其中一个有假设，另一个没有，也显示对比
-    html += '<div class="comparison-section">'
-    html += generateLeftRightArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], '研究假设')
-    html += '</div>'
+    hasChanges = true
   }
   
   // 实验设计对比
@@ -424,6 +425,7 @@ export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
     html += '<h3 class="section-title">实验设计</h3>'
     html += generateLeftRightDiffHTML(beforePlan.experimentalDesign || '', afterPlan.experimentalDesign || '')
     html += '</div>'
+    hasChanges = true
   }
   
   // 数据分析对比
@@ -432,6 +434,7 @@ export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
     html += '<h3 class="section-title">数据分析</h3>'
     html += generateLeftRightDiffHTML(beforePlan.analysisMethod || '', afterPlan.analysisMethod || '')
     html += '</div>'
+    hasChanges = true
   }
   
   // 结果呈现对比
@@ -440,6 +443,12 @@ export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
     html += '<h3 class="section-title">结果呈现</h3>'
     html += generateLeftRightDiffHTML(beforePlan.expectedResults || '', afterPlan.expectedResults || '')
     html += '</div>'
+    hasChanges = true
+  }
+  
+  // 如果没有变化，显示提示信息
+  if (!hasChanges) {
+    html += '<div class="text-center text-gray-500 py-8">两个方案内容相同，没有发现差异</div>'
   }
   
   html += '</div>'

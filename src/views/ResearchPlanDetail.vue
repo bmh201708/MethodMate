@@ -1009,7 +1009,7 @@
                 <span class="text-gray-700">保持不变</span>
               </div>
             </div>
-            <div v-html="generateLeftRightComparisonHTML(planComparisonData.before, planComparisonData.after)"></div>
+            <div v-html="planComparisonHTML"></div>
           </div>
         </div>
       </div>
@@ -1068,6 +1068,20 @@ const researchTopicInput = ref('') // 用户输入的研究主题
 const showPlanComparisonModal = ref(false) // 是否显示方案对比对话框
 const planComparisonData = ref(null) // 方案对比数据
 const selectedIterationRecord = ref(null) // 选中的迭代记录
+
+// 方案对比HTML计算属性
+const planComparisonHTML = computed(() => {
+  if (!planComparisonData.value || !planComparisonData.value.before || !planComparisonData.value.after) {
+    return '<div class="text-center text-gray-500 py-8">暂无对比数据</div>'
+  }
+  
+  try {
+    return generateLeftRightComparisonHTML(planComparisonData.value.before, planComparisonData.value.after)
+  } catch (error) {
+    console.error('生成方案对比HTML失败:', error)
+    return '<div class="text-center text-red-500 py-8">生成对比内容失败</div>'
+  }
+})
 
 // 新手指引相关状态
 const showTutorial = ref(false)
@@ -4331,6 +4345,12 @@ const showPlanComparison = async () => {
   })
   
   try {
+    // 首先检查是否有当前方案
+    if (!currentPlanState || !currentPlanState.isGenerated) {
+      alert('请先生成研究方案')
+      return
+    }
+    
     console.log('🔄 尝试从数据库获取迭代对比数据...')
     // 尝试从数据库获取迭代对比数据
     const comparison = await getIterationComparison()
@@ -4346,27 +4366,52 @@ const showPlanComparison = async () => {
       })
       
       if (iterationHistory.length === 0) {
-        console.log('❌ 没有迭代历史，显示提示信息')
-        alert('暂无迭代历史，请先进行方案迭代')
-        return
+        console.log('❌ 没有迭代历史，创建测试对比数据...')
+        // 创建测试对比数据用于演示
+        const testBeforePlan = {
+          title: '测试方案 - 原始版本',
+          hypotheses: ['H1：测试假设1', 'H2：测试假设2'],
+          experimentalDesign: '这是原始的实验设计内容',
+          analysisMethod: '这是原始的数据分析方法',
+          expectedResults: '这是原始的结果呈现内容'
+        }
+        
+        const testAfterPlan = {
+          title: '测试方案 - 迭代版本',
+          hypotheses: ['H1：测试假设1（优化版）', 'H2：测试假设2（优化版）', 'H3：新增假设3'],
+          experimentalDesign: '这是优化后的实验设计内容，增加了更多细节',
+          analysisMethod: '这是优化后的数据分析方法，包含更详细的统计说明',
+          expectedResults: '这是优化后的结果呈现内容，增加了可视化说明'
+        }
+        
+        planComparisonData.value = {
+          before: testBeforePlan,
+          after: testAfterPlan,
+          section: 'full',
+          suggestion: '测试迭代建议：优化方案的科学性和可操作性',
+          timestamp: new Date().toISOString(),
+          statistics: generateDiffStatistics(testBeforePlan, testAfterPlan)
+        }
+        
+        console.log('📊 生成的测试对比数据:', planComparisonData.value)
+      } else {
+        // 如果有多个迭代记录，选择最新的一个
+        const latestIteration = iterationHistory[iterationHistory.length - 1]
+        console.log('✅ 使用最新迭代记录:', latestIteration)
+        selectedIterationRecord.value = latestIteration
+        
+        // 生成对比数据
+        console.log('🔧 生成对比数据...')
+        planComparisonData.value = {
+          before: latestIteration.before,
+          after: latestIteration.after,
+          section: latestIteration.section,
+          suggestion: latestIteration.suggestion,
+          timestamp: latestIteration.timestamp,
+          statistics: generateDiffStatistics(latestIteration.before, latestIteration.after)
+        }
+        console.log('📊 生成的对比数据:', planComparisonData.value)
       }
-      
-      // 如果有多个迭代记录，选择最新的一个
-      const latestIteration = iterationHistory[iterationHistory.length - 1]
-      console.log('✅ 使用最新迭代记录:', latestIteration)
-      selectedIterationRecord.value = latestIteration
-      
-      // 生成对比数据
-      console.log('🔧 生成对比数据...')
-      planComparisonData.value = {
-        before: latestIteration.before,
-        after: latestIteration.after,
-        section: latestIteration.section,
-        suggestion: latestIteration.suggestion,
-        timestamp: latestIteration.timestamp,
-        statistics: generateDiffStatistics(latestIteration.before, latestIteration.after)
-      }
-      console.log('📊 生成的对比数据:', planComparisonData.value)
     } else {
       console.log('✅ 使用数据库获取的对比数据')
       // 使用从数据库获取的数据
@@ -4392,6 +4437,11 @@ const showPlanComparison = async () => {
         statistics: generateDiffStatistics(comparison.before, comparison.after)
       }
       console.log('📊 生成的对比数据:', planComparisonData.value)
+    }
+    
+    // 验证对比数据
+    if (!planComparisonData.value || !planComparisonData.value.before || !planComparisonData.value.after) {
+      throw new Error('对比数据不完整')
     }
     
     // 显示对比对话框
@@ -4648,39 +4698,74 @@ const closePlanComparison = () => {
   margin-bottom: 2rem;
 }
 
-.diff-columns {
+/* 方案对比样式 - 全局样式，用于v-html内容 */
+:deep(.left-right-comparison) {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+:deep(.comparison-section) {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: white;
+}
+
+:deep(.section-title) {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+:deep(.left-right-diff),
+:deep(.left-right-array-diff) {
+  margin-bottom: 1.5rem;
+}
+
+:deep(.array-diff-title) {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+:deep(.diff-columns) {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   margin-top: 1rem;
 }
 
-.diff-column {
+:deep(.diff-column) {
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
   overflow: hidden;
   background: white;
 }
 
-.column-title {
+:deep(.column-title) {
   font-size: 0.875rem;
   font-weight: 600;
   margin: 0;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
 }
 
-.column-title.removed {
+:deep(.column-title.removed) {
   background: #fef2f2;
   color: #dc2626;
 }
 
-.column-title.added {
+:deep(.column-title.added) {
   background: #f0fdf4;
   color: #16a34a;
 }
 
-.column-content {
+:deep(.column-content) {
   padding: 1rem;
   max-height: 400px;
   overflow-y: auto;
@@ -4689,7 +4774,7 @@ const closePlanComparison = () => {
   line-height: 1.5;
 }
 
-.diff-line {
+:deep(.diff-line) {
   padding: 0.25rem 0;
   white-space: pre-wrap;
   word-break: break-word;
@@ -4697,45 +4782,45 @@ const closePlanComparison = () => {
   margin: 0.125rem 0;
 }
 
-.diff-line.removed {
+:deep(.diff-line.removed) {
   background: #fef2f2;
   color: #dc2626;
   text-decoration: line-through;
   padding: 0.25rem 0.5rem;
 }
 
-.diff-line.added {
+:deep(.diff-line.added) {
   background: #f0fdf4;
   color: #16a34a;
   padding: 0.25rem 0.5rem;
 }
 
-.diff-line.unchanged {
+:deep(.diff-line.unchanged) {
   color: #374151;
   padding: 0.25rem 0;
 }
 
-.diff-item {
+:deep(.diff-item) {
   padding: 0.5rem;
   margin: 0.25rem 0;
   border-radius: 0.25rem;
   border-left: 3px solid;
 }
 
-.diff-item.removed {
+:deep(.diff-item.removed) {
   background: #fef2f2;
   border-left-color: #dc2626;
   color: #dc2626;
   text-decoration: line-through;
 }
 
-.diff-item.added {
+:deep(.diff-item.added) {
   background: #f0fdf4;
   border-left-color: #16a34a;
   color: #16a34a;
 }
 
-.diff-item.unchanged {
+:deep(.diff-item.unchanged) {
   background: #f9fafb;
   border-left-color: #6b7280;
   color: #374151;
@@ -4743,12 +4828,12 @@ const closePlanComparison = () => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .diff-columns {
+  :deep(.diff-columns) {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
   
-  .column-content {
+  :deep(.column-content) {
     max-height: 300px;
   }
 }
