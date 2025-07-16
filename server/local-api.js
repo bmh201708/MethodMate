@@ -1376,6 +1376,7 @@ const buildVenueFilter = (filterVenues = true) => {
   const venueSourceIds = [
     // 顶会
     'S4363607743', // CHI Conference on Human Factors in Computing Systems
+    'S4363607762', // CHI Conference on Human Factors in Computing Systems Extended Abstracts
     'S4306421131', // User Interface Software and Technology (UIST)
     
     // 顶刊  
@@ -1398,6 +1399,61 @@ const buildVenueFilter = (filterVenues = true) => {
   // 构建OpenAlex API的venue过滤条件
   // 使用管道符|分隔多个source ID (OpenAlex支持的语法)
   return `primary_location.source.id:${venueSourceIds.join('|')}`;
+};
+
+/**
+ * 智能判断论文是否为顶级期刊/会议
+ * 用于处理OpenAlex数据库更新延迟导致的source信息缺失问题
+ * @param {Object} openAlexWork - OpenAlex的work对象
+ * @returns {boolean} - 是否为顶级期刊/会议
+ */
+const isTopVenueByMetadata = (openAlexWork) => {
+  const primaryLocation = openAlexWork.primary_location || {};
+  const venue = primaryLocation.source?.display_name || '';
+  const landingPageUrl = primaryLocation.landing_page_url || '';
+  const doi = openAlexWork.doi || '';
+  
+  // 1. 通过DOI识别CHI论文 (ACM Digital Library)
+  if (doi && doi.includes('10.1145/')) {
+    // ACM Digital Library的DOI通常是CHI、UIST等顶会论文
+    // CHI2025的DOI: 10.1145/3706598.3714206
+    console.log(`🔍 检测到ACM DOI: ${doi}，识别为顶级会议论文`);
+    return true;
+  }
+  
+  // 2. 通过landing page URL识别ACM或IEEE论文
+  if (landingPageUrl && (landingPageUrl.includes('dl.acm.org') || landingPageUrl.includes('doi.org/10.1145/'))) {
+    console.log(`🌐 通过URL识别为ACM论文: ${landingPageUrl}`);
+    return true;
+  }
+  
+  // 3. 通过venue名称模糊匹配
+  const topVenueKeywords = [
+    'CHI', 'chi conference', 'human factors in computing',
+    'CSCW', 'computer-supported cooperative work',
+    'UbiComp', 'pervasive', 'ubiquitous computing',
+    'UIST', 'user interface software',
+    'Computers in Human Behavior',
+    'Design Studies', 'Human-Computer Interaction'
+  ];
+  
+  const venueLower = venue.toLowerCase();
+  const isTopVenue = topVenueKeywords.some(keyword => 
+    venueLower.includes(keyword.toLowerCase())
+  );
+  
+  if (isTopVenue) {
+    console.log(`🎯 通过venue名称识别为顶级期刊/会议: ${venue}`);
+    return true;
+  }
+  
+  // 4. 通过其他URL模式识别
+  if (landingPageUrl && landingPageUrl.includes('ieee.org')) {
+    console.log(`🌐 通过URL识别为IEEE论文: ${landingPageUrl}`);
+    return true;
+  }
+  
+  return false;
 };
 
 /**
@@ -1478,22 +1534,25 @@ const buildOpenAlexSearchUrl = (searchQuery, limit = 20, filterVenues = true, en
   ].join(',');
   url += `&select=${fields}`;
   
-  // 构建过滤条件
+  // 构建过滤条件 - 采用更宽松的策略
   const filters = [];
   
-  // 添加venue过滤 - 重新启用，确保只返回顶刊顶会
-  if (filterVenues) {
-    const venueFilter = buildVenueFilter(true);
-    if (venueFilter) {
-      filters.push(venueFilter);
-    }
-  }
+  // 🔧 修改策略：不再在API层面严格过滤期刊，改为在后处理中智能过滤
+  // 这样可以避免因为OpenAlex数据更新延迟导致的遗漏
+  // 注释掉严格的venue过滤，改为仅使用质量和基础过滤
+  
+  // if (filterVenues) {
+  //   const venueFilter = buildVenueFilter(true);
+  //   if (venueFilter) {
+  //     filters.push(venueFilter);
+  //   }
+  // }
   
   // 添加质量过滤条件
   filters.push('is_retracted:false');        // 排除撤回的论文
   filters.push('is_paratext:false');         // 排除非正文内容
   
-  // 添加领域过滤
+  // 添加领域过滤 - 保持领域过滤以确保相关性
   if (enableDomainFilter) {
     const domainFilter = buildDomainFilter(true, hciOnly);
     if (domainFilter) {
@@ -1571,14 +1630,17 @@ const transformOpenAlexWork = (openAlexWork, index = 0) => {
   const openAccess = openAlexWork.open_access || {};
   const downloadUrl = openAccess.oa_url || primaryLocation.pdf_url || null;
   
-  // 判断是否为顶级期刊/会议
+  // 判断是否为顶级期刊/会议 - 使用智能识别
   const topVenues = [
     'CHI', 'CSCW', 'UbiComp', 'UIST', 'TOCHI',
     'Computers in Human Behavior', 'Design Studies', 'Human-Computer Interaction'
   ];
-  const isTopVenue = topVenues.some(topVenue => 
+  const isTopVenueByName = topVenues.some(topVenue => 
     venue.toLowerCase().includes(topVenue.toLowerCase())
   );
+  
+  // 使用智能识别函数作为备选方案
+  const isTopVenue = isTopVenueByName || isTopVenueByMetadata(openAlexWork);
   
   return {
     id: `openalex_${openAlexWork.id?.replace('https://openalex.org/', '') || Date.now()}`,
@@ -1654,12 +1716,23 @@ const searchOpenAlexPapers = async (searchQuery, limit = 20, filterVenues = true
       transformOpenAlexWork(work, index)
     );
     
-    console.log(`✅ OpenAlex搜索完成，转换了 ${transformedPapers.length} 篇论文`);
+    // 🔧 应用智能期刊过滤 - 在后处理中进行
+    let filteredPapers = transformedPapers;
+    if (filterVenues) {
+      const beforeCount = transformedPapers.length;
+      filteredPapers = transformedPapers.filter(paper => paper.isTopVenue);
+      const afterCount = filteredPapers.length;
+      console.log(`🎯 智能期刊过滤：${beforeCount} → ${afterCount} 篇论文（过滤掉 ${beforeCount - afterCount} 篇非顶级期刊）`);
+    }
+    
+    console.log(`✅ OpenAlex搜索完成，转换了 ${transformedPapers.length} 篇论文，过滤后 ${filteredPapers.length} 篇`);
     
     return {
-      papers: transformedPapers,
+      papers: filteredPapers,
       total: data.meta?.count || transformedPapers.length,
-      meta: data.meta
+      meta: data.meta,
+      originalCount: transformedPapers.length,
+      filteredCount: filteredPapers.length
     };
     
   } catch (error) {
