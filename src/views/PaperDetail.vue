@@ -2447,27 +2447,32 @@ const resetTutorial = () => {
 }
 
 .prose code {
-  background-color: #f3f4f6;
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #1e40af;
   padding: 0.2em 0.4em;
   border-radius: 0.25em;
   font-family: monospace;
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .prose pre {
-  background-color: #f3f4f6;
+  background-color: rgba(59, 130, 246, 0.05);
   padding: 1em;
   border-radius: 0.5em;
   overflow-x: auto;
   margin-top: 1em;
   margin-bottom: 1em;
+  border: 1px solid rgba(59, 130, 246, 0.15);
 }
 
 .prose blockquote {
-  border-left: 4px solid #e5e7eb;
-  padding-left: 1em;
+  border-left: 4px solid #3b82f6;
+  padding: 1em;
   margin-left: 0;
-  color: #6b7280;
+  color: #374151;
   font-style: italic;
+  background-color: rgba(59, 130, 246, 0.05);
+  border-radius: 0.25rem;
 }
 
 .prose a {

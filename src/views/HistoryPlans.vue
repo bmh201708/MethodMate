@@ -1424,17 +1424,21 @@ const downloadPDF = async (plan) => {
 }
 
 .prose code {
-    background-color: #f3f4f6 !important;
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    color: #1e40af !important;
     padding: 0.125rem 0.25rem !important;
     border-radius: 0.25rem !important;
     font-size: 0.875em !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
 }
 
 .prose blockquote {
-    border-left: 4px solid #e5e7eb !important;
-    padding-left: 1rem !important;
+    border-left: 4px solid #3b82f6 !important;
+    padding: 1rem !important;
     margin: 1rem 0 !important;
-    color: #6b7280 !important;
+    color: #374151 !important;
+    background-color: rgba(59, 130, 246, 0.05) !important;
+    border-radius: 0.25rem !important;
 }
 
 /* 图片样式 */

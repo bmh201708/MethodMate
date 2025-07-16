@@ -1203,16 +1203,18 @@ const collapseInput = () => {
 }
 
 .markdown-content :deep(code) {
-  background-color: #f3f4f6;
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #1e40af;
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.9em;
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .markdown-content :deep(pre) {
-  background-color: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background-color: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.15);
   border-radius: 6px;
   padding: 1em;
   overflow-x: auto;
@@ -1226,10 +1228,12 @@ const collapseInput = () => {
 }
 
 .markdown-content :deep(blockquote) {
-  border-left: 4px solid #d1d5db;
+  border-left: 4px solid #3b82f6;
   margin: 0.8em 0;
-  padding: 0.5em 1em;
-  background-color: #f9fafb;
+  padding: 1em;
+  background-color: rgba(59, 130, 246, 0.05);
+  border-radius: 0.25rem;
+  color: #374151;
 }
 
 /* 文本截断样式 */
