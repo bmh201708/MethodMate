@@ -1136,45 +1136,16 @@ const sampleResearchPlan = {
    - 填写社交媒体使用动机问卷
    - 进行深度访谈（随机抽取30%参与者）`,
   analysisMethod: `**数据采集类型：**
-1. 主观评分数据：
-   - 学习效率自评量表（5点量表）
-   - 社交媒体使用动机问卷
-   - 注意力集中度评估
-   - 采集方式：在线问卷平台（问卷星）
-
-2. 行为数据：
-   - 社交媒体使用时长（分钟/天）
-   - 使用频率（次数/天）
-   - 学习任务完成时间
-   - 任务正确率
-   - 采集方式：实验监控软件、学习平台记录
-
-3. 系统记录数据：
-   - 应用切换频率
-   - 屏幕使用时间分布
-   - 学习软件使用时长
-   - 采集方式：手机系统日志、学习平台后台
+1. 主观评分数据：学习效率自评量表、使用动机问卷、注意力评估
+2. 行为数据：使用时长、频率、任务完成时间、正确率
+3. 系统记录：应用切换频率、屏幕使用时间分布
 
 **统计分析方法：**
-1. 描述性统计：
-   - 计算各变量的均值、标准差、分布特征
-   - 使用SPSS 26.0进行数据分析
-
-2. 相关性分析：
-   - 使用Pearson相关系数分析社交媒体使用时间与学习效率的关系
-   - 显著性水平设定为α = 0.05
-
-3. 方差分析：
-   - 采用双因素混合设计ANOVA分析社交媒体类型和使用时间的交互效应
-   - 进行事后检验（LSD法）分析组间差异
-
-4. 调节效应分析：
-   - 使用层次回归分析检验使用动机的调节作用
-   - 计算调节效应大小（ΔR²）
-
-5. 协变量控制：
-   - 将年龄、性别、专业背景作为协变量纳入分析
-   - 使用ANCOVA进行协方差分析`,
+1. 描述性统计：计算均值、标准差、分布特征
+2. 相关性分析：Pearson相关系数分析使用时间与学习效率关系
+3. 方差分析：双因素混合设计ANOVA分析交互效应
+4. 调节效应分析：层次回归分析使用动机的调节作用
+5. 协变量控制：将年龄、性别、专业背景作为协变量`,
   expectedResults: `**预期差异和趋势：**
 1. 主要因变量差异预测：
    - 高使用组的学习效率显著低于低使用组（p < 0.05）
@@ -1449,7 +1420,7 @@ const focusCurrentElement = () => {
     analysisSubSection.value = 'query'
   }
   
-  // 等待DOM更新后计算高亮区域
+  // 等待DOM更新后计算高亮区域（不滚动页面）
   nextTick(() => {
     setTimeout(() => {
       const element = currentStep.getElement ? currentStep.getElement() : currentStep.ref.value
@@ -1511,7 +1482,7 @@ const focusCurrentElement = () => {
 const prevTutorialStep = () => {
   if (currentTutorialStep.value > 0) {
     currentTutorialStep.value--
-    // 等待DOM更新后重新聚焦
+    // 等待DOM更新后重新聚焦（不滚动页面）
     nextTick(() => {
       setTimeout(() => {
         focusCurrentElement()
@@ -1528,7 +1499,7 @@ const nextTutorialStep = () => {
     // 引导完成
     completeTutorial()
   } else {
-    // 聚焦到下一个元素
+    // 聚焦到下一个元素（不滚动页面）
     nextTick(() => {
       setTimeout(() => {
         focusCurrentElement()
