@@ -3,47 +3,47 @@
     <main class="flex-1 max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="grid grid-cols-12 gap-8">
         <!-- 左侧聊天框 -->
-        <div class="col-span-4 h-[calc(100vh-8rem)]">
+        <div id="chat-box-section" class="col-span-4 h-[calc(100vh-8rem)]">
           <ChatBox ref="chatBoxRef" />
         </div>
 
         <!-- 中间文献列表 -->
         <div class="col-span-3">
-          <!-- 关键词输入和提取区域 -->
-          <div class="mb-4 space-y-3">
-            <!-- 关键词输入框 -->
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-gray-700">搜索关键词</label>
-              <div class="flex space-x-2">
-                <input
-                  ref="keywordInputRef"
-                  v-model="searchKeywords"
-                  type="text"
-                  placeholder="输入关键词，用逗号分隔"
-                  class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  @keyup.enter="getRecommendedPapers"
-                />
-                <button
-                  ref="extractKeywordsBtnRef"
-                  @click="extractKeywordsFromChat"
-                  :disabled="isExtractingKeywords"
-                  class="px-2 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1 whitespace-nowrap"
-                  title="从对话历史中提取关键词"
-                >
-                  <svg v-if="isExtractingKeywords" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                  </svg>
-                  <span class="text-xs">{{ isExtractingKeywords ? '提取中...' : '提取关键词' }}</span>
-                </button>
+                      <!-- 关键词输入和提取区域 -->
+            <div class="mb-4 space-y-3">
+              <!-- 关键词输入框 -->
+              <div id="keyword-extract-section" class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700">搜索关键词</label>
+                <div class="flex space-x-2">
+                  <input
+                    ref="keywordInputRef"
+                    v-model="searchKeywords"
+                    type="text"
+                    placeholder="输入关键词，用逗号分隔"
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    @keyup.enter="getRecommendedPapers"
+                  />
+                  <button
+                    ref="extractKeywordsBtnRef"
+                    @click="extractKeywordsFromChat"
+                    :disabled="isExtractingKeywords"
+                    class="px-2 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1 whitespace-nowrap"
+                    title="从对话历史中提取关键词"
+                  >
+                    <svg v-if="isExtractingKeywords" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    <span class="text-xs">{{ isExtractingKeywords ? '提取中...' : '提取关键词' }}</span>
+                  </button>
+                </div>
+                <p class="text-xs text-gray-500">
+                  支持中英文关键词，多个关键词用逗号分隔。点击"提取关键词"可从对话历史中智能提取相关关键词。
+                </p>
               </div>
-              <p class="text-xs text-gray-500">
-                支持中英文关键词，多个关键词用逗号分隔。点击"提取关键词"可从对话历史中智能提取相关关键词。
-              </p>
-            </div>
 
             <!-- 获取相关文献按钮和选项 -->
             <div class="space-y-2">
@@ -247,6 +247,7 @@
                             ? 'bg-purple-600 text-white hover:bg-purple-700'
                             : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
                         ]"
+                        :id="`list-reference-btn-${index}`"
                       >
                         {{ isReferenced(paper) ? '已参考' : '参考此文' }}
                       </button>
@@ -305,6 +306,7 @@
                   </span>
                   <button 
                     ref="referenceBtnRef"
+                    id="detail-reference-btn"
                     @click="toggleReference(papersState.selectedPaper)"
                     class="px-4 py-2 text-sm rounded-lg transition-colors"
                     :class="[
@@ -978,9 +980,7 @@ const handleKeydown = (event) => {
       event.preventDefault()
       if (currentTutorialStep.value > 0) {
         currentTutorialStep.value--
-        nextTick(() => {
-          focusCurrentElement()
-        })
+        // 不调用focusCurrentElement，避免滚动
       }
       break
   }
@@ -2046,14 +2046,21 @@ const tutorialSamplePapers = [
 // 引导步骤定义
 const tutorialSteps = [
   {
-    title: '输入关键词',
-    description: '在这里输入你想要搜索的关键词，支持中英文，多个关键词用逗号分隔。',
-    ref: keywordInputRef
+    title: 'AI对话助手',
+    description: '左侧是AI对话助手，您可以在这里与AI进行学术讨论，询问研究问题，获取建议。AI会根据对话内容为您推荐相关文献。',
+    ref: null,
+    customHighlight: 'chat-box-section'
   },
   {
     title: '智能提取关键词',
-    description: '点击这个按钮可以从对话历史中智能提取相关关键词，帮助你快速开始搜索。',
-    ref: extractKeywordsBtnRef
+    description: '点击"提取关键词"按钮后，系统将展示根据您对话内容提取的关键词，您也可以手动输入。',
+    ref: null,
+    customHighlight: 'keyword-extract-section'
+  },
+  {
+    title: '输入关键词',
+    description: '在这里输入你想要搜索的关键词，支持中英文，多个关键词用逗号分隔。',
+    ref: keywordInputRef
   },
   {
     title: '获取相关文献',
@@ -2082,14 +2089,20 @@ const tutorialSteps = [
     customHighlight: 'papers-list'
   },
   {
+    title: '中间列表选为参考',
+    description: '在文献列表中，每篇文献卡片底部都有"参考此文"按钮。点击后文献标题会变为紫色，表示已选为参考。',
+    ref: null,
+    customHighlight: 'list-reference-btn-0'
+  },
+  {
     title: '文献详情查看',
     description: '右侧显示选中文献的详细信息，包括摘要、研究方法、作者信息等。可以在这里进行翻译、标记参考等操作。',
     ref: null,
     customHighlight: 'paper-detail'
   },
   {
-    title: '选为参考功能',
-    description: '点击"选为参考"按钮可以将当前文献标记为参考文献，方便在研究方案中引用。已选择的文献会显示"已选为参考"标签。',
+    title: '详情页选为参考',
+    description: '在文献详情页面，点击"选为参考"按钮可以将当前文献标记为参考文献，方便在研究方案中引用。已选择的文献会显示"已选为参考"标签。',
     ref: referenceBtnRef
   },
   {
@@ -2138,6 +2151,35 @@ const tooltipStyle = computed(() => {
   if (currentTutorialStep.value >= tutorialSteps.length) return {}
   
   const currentStep = tutorialSteps[currentTutorialStep.value]
+  
+  // 特殊处理AI对话助手步骤
+  if (currentStep.customHighlight === 'chat-box-section') {
+    const element = document.getElementById(currentStep.customHighlight)
+    if (element) {
+      const rect = element.getBoundingClientRect()
+      const windowHeight = window.innerHeight
+      const windowWidth = window.innerWidth
+      
+      // 将提示框放在AI对话区域的右侧
+      let top = rect.top + 50
+      let left = rect.right + 20
+      
+      // 如果右侧空间不够，显示在左侧
+      if (left + 320 > windowWidth) {
+        left = rect.left - 340
+      }
+      
+      // 如果下方空间不够，调整垂直位置
+      if (top + 200 > windowHeight) {
+        top = windowHeight - 220
+      }
+      
+      return {
+        top: `${Math.max(20, top)}px`,
+        left: `${Math.max(20, left)}px`
+      }
+    }
+  }
   
   // 如果是自定义高亮区域
   if (currentStep.customHighlight) {
@@ -2218,28 +2260,11 @@ const startTutorial = () => {
     // 注意：使用tutorialSamplePapers[0]而不是tutorialSamplePaperDetail，确保中间列表高亮正确
     selectPaper(tutorialSamplePapers[0])
     
-    // 直接操作引用状态，避免调用toggleReference函数（防止API调用）
-    // 将第一篇论文添加到引用列表，确保标题显示紫色高亮
-    papersState.referencedPapers.add(tutorialSamplePapers[0].id)
-    papersState.referencedPapersList.push({
-      ...tutorialSamplePapers[0],
-      referencedAt: new Date().toISOString(),
-      source: 'tutorial'
-    })
-    
-    // 将第二篇论文添加到引用列表（用于演示）
-    papersState.referencedPapers.add(tutorialSamplePapers[1].id)
-    papersState.referencedPapersList.push({
-      ...tutorialSamplePapers[1],
-      referencedAt: new Date().toISOString(),
-      source: 'tutorial'
-    })
-    
     // 确保研究方法预览为展开状态
     showFullText.value = true
   }
   
-  // 等待DOM更新后聚焦到第一个元素
+  // 等待DOM更新后聚焦到第一个元素（只聚焦输入框，不滚动）
   nextTick(() => {
     focusCurrentElement()
   })
@@ -2250,15 +2275,15 @@ const focusCurrentElement = () => {
   if (currentTutorialStep.value >= tutorialSteps.length) return
   
   const currentStep = tutorialSteps[currentTutorialStep.value]
-  const element = currentStep.ref?.value
   
+  // 如果是自定义高亮区域，只聚焦输入框，不滚动页面
+  if (currentStep.customHighlight) {
+    return
+  }
+  
+  // 普通元素处理，只聚焦输入框，不滚动页面
+  const element = currentStep.ref?.value
   if (element) {
-    // 滚动到元素位置
-    element.scrollIntoView({ 
-      behavior: 'smooth', 
-      block: 'center' 
-    })
-    
     // 如果是输入框，聚焦
     if (element.tagName === 'INPUT') {
       element.focus()
@@ -2274,7 +2299,7 @@ const nextTutorialStep = () => {
     // 引导完成
     completeTutorial()
   } else {
-    // 聚焦到下一个元素
+    // 只聚焦输入框，不滚动页面
     nextTick(() => {
       focusCurrentElement()
     })
@@ -2286,7 +2311,7 @@ const skipTutorial = () => {
   showTutorial.value = false
   currentTutorialStep.value = 0
   
-  // 清除样例数据
+  // 清除样例数据和自动选为参考的文章
   if (papersState.recommendedPapers.length > 0 && 
       papersState.recommendedPapers[0].id?.startsWith('tutorial_')) {
     clearAllPapers()
@@ -2308,7 +2333,7 @@ const completeTutorial = () => {
   showTutorial.value = false
   currentTutorialStep.value = 0
   
-  // 清除样例数据
+  // 清除样例数据和自动选为参考的文章
   if (papersState.recommendedPapers.length > 0 && 
       papersState.recommendedPapers[0].id?.startsWith('tutorial_')) {
     clearAllPapers()
