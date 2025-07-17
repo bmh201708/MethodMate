@@ -89,7 +89,7 @@ const createTables = async () => {
         id INT AUTO_INCREMENT PRIMARY KEY,
         conversation_id INT NOT NULL,
         role ENUM('user', 'assistant') NOT NULL,
-        content TEXT NOT NULL,
+        content LONGTEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
         INDEX idx_conversation_id (conversation_id),
@@ -259,11 +259,47 @@ const createTables = async () => {
     `);
 
     console.log('✅ 数据库表创建成功');
+    
+    // 执行数据库迁移 - 确保messages表的content字段为LONGTEXT
+    await migrateMessagesContentField(connection);
+    
   } catch (error) {
     console.error('❌ 创建数据库表失败:', error);
     throw error;
   } finally {
     connection.release();
+  }
+};
+
+// 迁移messages表的content字段
+const migrateMessagesContentField = async (connection) => {
+  try {
+    console.log('🔄 检查messages表字段类型...');
+    
+    // 检查当前content字段的类型
+    const [columns] = await connection.execute(`
+      SHOW COLUMNS FROM messages WHERE Field = 'content'
+    `);
+    
+    if (columns.length > 0) {
+      const currentType = columns[0].Type.toLowerCase();
+      
+      if (currentType.includes('text') && !currentType.includes('longtext')) {
+        console.log('🔄 正在将content字段从TEXT升级为LONGTEXT...');
+        
+        // 执行ALTER TABLE语句
+        await connection.execute(`
+          ALTER TABLE messages 
+          MODIFY COLUMN content LONGTEXT NOT NULL
+        `);
+        
+        console.log('✅ messages表迁移完成！content字段已升级为LONGTEXT');
+      } else if (currentType.includes('longtext')) {
+        console.log('✅ content字段已经是LONGTEXT类型，无需迁移');
+      }
+    }
+  } catch (error) {
+    console.log('⚠️ 迁移messages表字段时出现问题（可能是表不存在）:', error.message);
   }
 };
 

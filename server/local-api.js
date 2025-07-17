@@ -319,7 +319,7 @@ const extractResearchMethod = async (fullText, retries = 3, aiService = 'chatgpt
     // 定义Coze API的实际处理上限（约20000字符）
     const COZE_API_LIMIT = 20000;
     // 定义ChatGPT的处理上限（可以处理更长的文本）
-    const CHATGPT_LIMIT = 250000;
+    const CHATGPT_LIMIT = 230000;
     
     // 如果使用ChatGPT，直接处理全文，不使用智能段落定位
     if (aiService === 'chatgpt') {
