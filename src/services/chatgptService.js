@@ -1,6 +1,48 @@
 import { getApiBaseUrl } from '../config/environment.js'
 
 /**
+ * 处理ChatGPT API错误，提供友好的错误信息
+ * @param {Response} response - API响应对象
+ * @param {Object} errorData - 错误数据
+ * @returns {Error} - 格式化的错误对象
+ */
+function handleChatGPTError(response, errorData = {}) {
+  const errorMessage = errorData.error?.message || response.statusText
+  
+  // 检查是否是token超限错误
+  if (errorMessage.includes('maximum context length') || 
+      errorMessage.includes('exceed') && errorMessage.includes('token')) {
+    return new Error(`💬 消息内容过长，请尝试以下解决方案：
+
+🔧 **解决方法：**
+1. **开始新对话** - 点击"新建对话"重新开始，避免历史消息过多
+2. **简化问题** - 将复杂问题拆分为多个简单问题分别询问  
+3. **切换AI服务** - 尝试切换到Coze AI服务，支持更长的对话历史
+
+📊 **技术说明：**
+当前对话历史加上您的问题总长度超过了ChatGPT的处理限制（约128,000个token）。系统已自动优化历史记录，但这次请求仍然过长。
+
+💡 **提示：** 如果您需要处理大量文本内容，建议使用Coze AI服务或分段处理。`)
+  }
+  
+  // 检查是否是其他常见错误
+  if (response.status === 401) {
+    return new Error('❌ ChatGPT API密钥无效或已过期，请检查配置')
+  }
+  
+  if (response.status === 429) {
+    return new Error('⏰ ChatGPT API调用频率超限，请稍后再试')
+  }
+  
+  if (response.status === 500) {
+    return new Error('🔧 ChatGPT服务器暂时不可用，请稍后再试')
+  }
+  
+  // 默认错误消息
+  return new Error(`ChatGPT API错误: ${response.status} - ${errorMessage}`)
+}
+
+/**
  * 发送消息到ChatGPT API
  * @param {string} message - 用户消息
  * @param {Array} history - 对话历史
@@ -49,7 +91,7 @@ export async function sendMessageToChatGPT(message, history = []) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(`ChatGPT API错误: ${response.status} - ${errorData.error?.message || response.statusText}`)
+      throw handleChatGPTError(response, errorData)
     }
 
     const data = await response.json()
@@ -129,7 +171,7 @@ export async function sendMessageToChatGPTStream(message, history = [], onChunk)
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(`ChatGPT API错误: ${response.status} - ${errorData.error?.message || response.statusText}`)
+      throw handleChatGPTError(response, errorData)
     }
 
     const reader = response.body.getReader()

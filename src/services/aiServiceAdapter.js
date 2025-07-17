@@ -21,17 +21,12 @@ export const sendStreamMessage = async (message, onChunk, chatHistory = []) => {
   if (currentService === AI_SERVICE_TYPES.COZE) {
     return await sendStreamMessageToCoze(message, onChunk, chatHistory)
   } else if (currentService === AI_SERVICE_TYPES.CHATGPT) {
-    // 转换聊天历史格式
-    const formattedHistory = chatHistory
-      .filter(msg => msg.isComplete && !msg.isError)
-      .slice(-10) // 只取最近10条消息
-      .map(msg => ({
-        role: msg.type === 'user' ? 'user' : 'assistant',
-        content: msg.content
-      }))
+    // 转换聊天历史格式并智能控制长度
+    const formattedHistory = optimizeHistoryForChatGPT(chatHistory, message)
     
     console.log('🤖 ChatGPT发送消息:', message.substring(0, 100) + '...')
     console.log('📜 聊天历史条数:', formattedHistory.length)
+    console.log('📏 总消息长度:', calculateMessageLength(message, formattedHistory), '字符')
     
     // ChatGPT不支持流式，模拟流式效果
     const response = await sendMessageToChatGPT(message, formattedHistory)
@@ -68,14 +63,11 @@ export const sendSilentMessage = async (message, chatHistory = []) => {
   if (currentService === AI_SERVICE_TYPES.COZE) {
     return await sendSilentMessageToCoze(message, chatHistory)
   } else if (currentService === AI_SERVICE_TYPES.CHATGPT) {
-    // 转换聊天历史格式
-    const formattedHistory = chatHistory
-      .filter(msg => msg.isComplete && !msg.isError)
-      .slice(-10) // 只取最近10条消息
-      .map(msg => ({
-        role: msg.type === 'user' ? 'user' : 'assistant',
-        content: msg.content
-      }))
+    // 转换聊天历史格式并智能控制长度
+    const formattedHistory = optimizeHistoryForChatGPT(chatHistory, message)
+    
+    console.log('🤖 ChatGPT静默发送消息，历史条数:', formattedHistory.length)
+    console.log('📏 总消息长度:', calculateMessageLength(message, formattedHistory), '字符')
     
     return await sendMessageToChatGPT(message, formattedHistory)
   } else {
@@ -237,4 +229,74 @@ export const queryStatisticalMethod = async (methodName) => {
   })
   
   return response
+}
+
+/**
+ * 智能优化ChatGPT的历史消息，避免token超限
+ * @param {Array} chatHistory - 原始聊天历史
+ * @param {string} currentMessage - 当前消息
+ * @returns {Array} - 优化后的历史消息
+ */
+const optimizeHistoryForChatGPT = (chatHistory, currentMessage) => {
+  // 系统提示词的大致长度
+  const SYSTEM_PROMPT_LENGTH = 200
+  // ChatGPT的token限制大约对应250000字符（预留安全边界）
+  const MAX_TOTAL_LENGTH = 250000
+  // 预留给AI回复的空间（16384 tokens ≈ 65000字符）
+  const RESERVED_FOR_RESPONSE = 65000
+  // 实际可用长度
+  const AVAILABLE_LENGTH = MAX_TOTAL_LENGTH - SYSTEM_PROMPT_LENGTH - RESERVED_FOR_RESPONSE - currentMessage.length
+
+  console.log('🔧 开始优化ChatGPT历史消息')
+  console.log('📊 当前消息长度:', currentMessage.length)
+  console.log('📊 可用历史消息长度:', AVAILABLE_LENGTH)
+
+  // 过滤有效消息
+  const validMessages = chatHistory
+    .filter(msg => msg.isComplete && !msg.isError && msg.content && msg.content.trim())
+    .map(msg => ({
+      role: msg.type === 'user' ? 'user' : 'assistant',
+      content: msg.content,
+      length: msg.content.length
+    }))
+
+  if (validMessages.length === 0) {
+    console.log('✅ 无历史消息需要处理')
+    return []
+  }
+
+  // 从最新消息开始，逐步添加历史消息直到接近长度限制
+  const optimizedHistory = []
+  let currentLength = 0
+
+  for (let i = validMessages.length - 1; i >= 0; i--) {
+    const msg = validMessages[i]
+    
+    // 检查添加这条消息是否会超出限制
+    if (currentLength + msg.length > AVAILABLE_LENGTH) {
+      console.log(`⚠️ 添加消息会超出限制，停止添加。当前长度: ${currentLength}, 消息长度: ${msg.length}`)
+      break
+    }
+    
+    optimizedHistory.unshift(msg)
+    currentLength += msg.length
+  }
+
+  console.log('✅ 历史消息优化完成')
+  console.log('📊 优化前消息数:', validMessages.length)
+  console.log('📊 优化后消息数:', optimizedHistory.length)
+  console.log('📊 优化后总长度:', currentLength)
+
+  return optimizedHistory
+}
+
+/**
+ * 计算消息总长度
+ * @param {string} currentMessage - 当前消息
+ * @param {Array} history - 历史消息
+ * @returns {number} - 总字符长度
+ */
+const calculateMessageLength = (currentMessage, history) => {
+  const historyLength = history.reduce((total, msg) => total + msg.content.length, 0)
+  return currentMessage.length + historyLength + 200 // 200为系统提示词长度估算
 } 
