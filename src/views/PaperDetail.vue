@@ -2059,7 +2059,7 @@ const tutorialSteps = [
   },
   {
     title: '扩大搜索范围',
-    description: '勾选此项会包含更多文献源，不仅限于顶级期刊和会议，但可能影响相关性。系统默认推荐计算机、设计、人机交互等相关领域的文献。',
+    description: '勾选此项会包含更多HCI的文献源，不仅限于顶级期刊和会议',
     ref: expandRangeCheckboxRef
   },
   {

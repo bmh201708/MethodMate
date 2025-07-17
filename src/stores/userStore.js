@@ -212,6 +212,11 @@ export const useUserStore = defineStore('user', () => {
       console.error('清理用户数据失败:', clearError)
     }
     
+    // 清除新手引导状态，让新账号显示新手引导
+    localStorage.removeItem('paperDetail_tutorial_shown')
+    localStorage.removeItem('researchPlanDetail_tutorial_shown')
+    console.log('已清除新手引导状态，新账号将显示新手引导')
+    
     user.value = null
     token.value = null
     localStorage.removeItem('token')
