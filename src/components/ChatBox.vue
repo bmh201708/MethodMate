@@ -288,7 +288,7 @@
 
 <script setup>
 import { ref, watch, nextTick, onMounted, computed } from 'vue'
-import { chatState, sendMessage, conversationAPI, clearMessages, updateCurrentPlan } from '../stores/chatStore'
+import { chatState, sendMessage, conversationAPI, clearMessages, updateCurrentPlan, shouldReinitialize, markAsInitialized } from '../stores/chatStore'
 import { useUserStore } from '../stores/userStore.js'
 import { sendSilentMessageToCoze } from '../services/cozeApi'
 import LoadingDots from './LoadingDots.vue'
@@ -328,7 +328,18 @@ const isAuthenticated = computed(() => userStore.isAuthenticated)
 // 初始化时加载对话列表
 onMounted(async () => {
   console.log('=== ChatBox组件初始化 ===')
+  console.log('页面上下文:', props.pageContext)
   console.log('用户认证状态:', isAuthenticated.value)
+  console.log('当前对话ID:', chatState.conversationId)
+  console.log('当前消息数量:', chatState.messages.length)
+  
+  // 检查是否需要重新初始化
+  if (!shouldReinitialize(props.pageContext)) {
+    console.log('✅ 检测到已有对话状态，跳过重新初始化')
+    console.log('当前对话ID:', chatState.conversationId)
+    console.log('当前消息数量:', chatState.messages.length)
+    return
+  }
   
   if (isAuthenticated.value) {
     await loadConversations()
@@ -358,6 +369,9 @@ onMounted(async () => {
       console.log('localStorage中没有保存的对话ID')
     }
   }
+  
+  // 标记已初始化
+  markAsInitialized(props.pageContext)
 })
 
 // 监听用户登录状态变化
