@@ -55,7 +55,10 @@ export const chatState = reactive({
   forceUpdateFlag: 0, // 强制更新标志
   currentUser: null,
   isTyping: false,
-  error: null
+  error: null,
+  // 页面切换状态保持
+  isInitialized: false, // 是否已经初始化过
+  lastPageContext: null // 上次的页面上下文
 })
 
 // 监听conversationId的变化，帮助调试
@@ -1139,6 +1142,32 @@ const buildCurrentPlanContext = () => {
   context += '\n请基于以上研究方案上下文回答用户的问题。'
   
   return context
+}
+
+// 检查是否需要重新初始化（用于页面切换时的状态保持）
+export const shouldReinitialize = (pageContext) => {
+  // 如果已经初始化过且有对话状态，检查页面上下文是否变化
+  if (chatState.isInitialized && chatState.conversationId && chatState.messages.length > 1) {
+    const contextChanged = chatState.lastPageContext !== pageContext
+    console.log('页面切换检查:', {
+      isInitialized: chatState.isInitialized,
+      hasConversation: !!chatState.conversationId,
+      messageCount: chatState.messages.length,
+      lastContext: chatState.lastPageContext,
+      currentContext: pageContext,
+      contextChanged,
+      shouldReinit: contextChanged
+    })
+    return contextChanged
+  }
+  return true
+}
+
+// 标记已初始化
+export const markAsInitialized = (pageContext) => {
+  chatState.isInitialized = true
+  chatState.lastPageContext = pageContext
+  console.log('✅ 标记ChatBox已初始化，页面上下文:', pageContext)
 }
 
 // 清空聊天记录
