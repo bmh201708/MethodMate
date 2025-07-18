@@ -2628,10 +2628,10 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
 实验流程：尽可能详细说明实验流程，包括各阶段的任务设置与执行顺序。若包含不同类型的任务（如封闭式任务与开放式创作），请分别说明任务目标、任务内容、是否提供参考信息（如示例图像）等。此外，请描述每个阶段名称、实验是否包含预实验、前测或系统说明等准备过程。在评估环节，请简介评估的具体方式（如主观问卷、半结构化访谈）以及评估内容、指标等，确保流程完整、清晰、具备可复现性。
 
 三、数据分析
-请详细说明本研究采集的用户数据类型，可考虑但不限于以下内容：主观评分数据，需明确测量的主观指标（如满意度、沉浸感等），指出采用的量表形式（如7点Likert量表、百分位滑动条、自编量表或标准量表），并简要说明各维度的测量目的与评分范围。如使用标准量表，请注明名称和来源；如为自编量表，请说明设计依据、维度划分和示例题项。建议说明是否进行信度检验（如Cronbach's α）以支持量表质量。
-行为数据方面，请列出所记录的具体指标（如点击次数、任务完成时长、生成内容数量、交互步数等），并说明这些数据如何采集（如系统日志或前端埋点），是否包括交互顺序、编辑过程等动态信息。
-系统记录数据部分，请说明是否保留用户生成的文本、图像或交互轨迹，并指出其是否用于语义分析、自动评分或内容比较等后续处理。可补充说明是否结合人工标注或作为定性分析材料。
-在数据分析部分，请针对关键因变量，说明将采用的统计方法（如t检验、单/双因素ANOVA、线性回归、ANCOVA、调节/中介分析等），并务必注意，需要将每种方法与相应研究假设（如H1、H2等）明确对应，解释其选择依据。请设定显著性标准（如α = 0.05），说明是否控制协变量（如用户背景、前测结果），以及在涉及多重比较时，是否采用Bonferroni、Holm等校正方法。整体分析框架应清晰展示变量、方法与假设之间的对应关系，以确保研究假设可通过数据系统性验证。
+请详细说明本研究采集的用户数据类型，可考虑但不限于以下内容：主观评分数据，需明确测量的主观指标（如满意度、沉浸感、认知负荷等），并指出采用的量表形式，包括但不限于Likert量表（如7点或5点评分）、百分位滑动条、自编量表或标准量表。请说明各维度的测量目的与评分范围（例如：“沉浸感维度用于评估用户在任务过程中主观的沉浸体验，采用7点评分，1代表‘完全不沉浸’，7代表‘完全沉浸’”），如为标准量表，需注明名称与来源；如为自编量表，请说明设计依据、维度划分与测量目标，并提供典型题项示例，以展现量表关注的具体方面。无论使用标准量表还是自编量表，均建议说明是否进行了信度检验（如Cronbach's α），并报告相关结果以支持量表质量与使用合理性。
+行为数据方面，请列出所记录的具体指标（如点击次数、任务完成时长、生成内容数量、交互步数等），并说明数据采集方式（如系统日志或前端埋点），明确是否包含交互顺序、编辑路径、停留时长等动态信息。若采集内容涵盖用户在任务过程中的操作流程或策略选择，也应予以说明，以支持过程分析。
+系统记录数据部分，请说明是否保留用户生成的文本、图像、提示语、交互轨迹等，以及这些内容是否用于后续分析，如自动评分、内容比较、行为建模等。如涉及自动评估，请列出所采用的指标及其评估维度（如IoU用于图像区域重叠度计算），并简要说明其原理与适用性。此外，如结合人工标注或作为定性分析材料使用，请说明标注方式与分析目的。
+在数据分析部分，请围绕关键因变量说明所采用的统计分析方法，并将各方法与相应研究假设（如H1、H2等）明确对应。请解释方法选择依据，并设定显著性标准（如α = 0.05），说明是否控制协变量（如用户背景或前测结果），以及在进行多重比较时是否使用Bonferroni、Holm等校正方法。整体分析方案应清晰展现变量、假设与方法之间的对应关系，以保证研究问题可通过系统性的数据分析得到有效验证。
 该部分不少于800字
 
 四、结果呈现
@@ -3434,6 +3434,230 @@ ${conversationContext.researchContext}
   }
 }
 
+// 根据用户建议动态生成优化要求的辅助函数
+const generateOptimizationRequirements = (suggestion) => {
+      const suggestionLower = suggestion.toLowerCase()
+      let requirements = []
+      let focusAreas = []
+      let tone = "你是一位资深的HCI研究专家"
+      
+      // 分析用户建议类型并生成相应要求
+      if (suggestionLower.includes('自动迭代优化') || suggestionLower.includes('全面优化')) {
+        tone += "，需要对研究方案进行全面的智能优化"
+        requirements = [
+          "**全面提升**：从理论基础、方法设计、数据分析、结果呈现等各个维度进行综合优化",
+          "**平衡改进**：在保持方案整体协调性的基础上，适度提升各部分的专业深度",
+          "**智能调整**：根据方案的薄弱环节，自动识别并重点强化需要改进的部分"
+        ]
+        focusAreas = ["整体协调性", "方法论完整性", "学术规范性"]
+      }
+      
+      else if (suggestionLower.includes('提高科学严谨性') || suggestionLower.includes('严谨性')) {
+        tone += "，需要重点提升研究方案的科学严谨性"
+        requirements = [
+          "**方法论严谨性**：确保研究设计的逻辑性、控制变量的完整性、因果推断的有效性",
+          "**统计严谨性**：使用正确的统计方法、设置合理的显著性水平、考虑效应量和统计功效",
+          "**伦理规范性**：确保研究符合学术伦理要求、被试权益保护、数据隐私安全"
+        ]
+        focusAreas = ["研究设计的内外部效度", "统计分析的规范性", "结果解释的客观性"]
+      }
+      
+      else if (suggestionLower.includes('增加更多细节') || suggestionLower.includes('细节') || suggestionLower.includes('详细')) {
+        tone += "，需要大幅增加研究方案的具体细节"
+        requirements = [
+          "**操作细节丰富化**：提供具体的数值参数、详细的操作步骤、明确的时间安排",
+          "**技术规范细化**：包含设备型号、软件版本、实验环境配置等技术细节",
+          "**实施指南详细化**：提供可直接执行的操作手册，包括人员配置、材料准备、质量控制"
+        ]
+        focusAreas = ["具体参数设置", "操作流程细化", "实施标准明确"]
+      }
+      
+      else if (suggestionLower.includes('简化表述') || suggestionLower.includes('简化') || suggestionLower.includes('精简')) {
+        tone += "，需要简化和精炼研究方案的表述"
+        requirements = [
+          "**表述精炼化**：去除冗余描述，保留核心要点，使表达更加简洁明了",
+          "**结构清晰化**：优化段落结构，使用更清晰的逻辑层次，便于理解和执行",
+          "**要点突出化**：突出关键信息，减少次要细节，确保重点内容一目了然"
+        ]
+        focusAreas = ["表达简洁性", "逻辑清晰度", "重点突出性"]
+      }
+      
+      else if (suggestionLower.includes('统计方法') || suggestionLower.includes('数据分析方法')) {
+        tone += "，需要重点优化统计分析方法部分"
+        requirements = [
+          "**统计方法选择优化**：确保统计方法与研究设计和假设相匹配，提供选择依据",
+          "**分析流程细化**：详细描述数据预处理、假设检验、后续分析的完整流程",
+          "**统计软件和工具**：明确使用的统计软件、具体函数包、分析代码框架"
+        ]
+        focusAreas = ["统计方法的适用性", "分析流程的完整性", "结果解释的准确性"]
+      }
+      
+      else if (suggestionLower.includes('数据处理流程') || suggestionLower.includes('数据处理')) {
+        tone += "，需要重点优化数据收集和处理流程"
+        requirements = [
+          "**数据收集优化**：完善数据收集方法、提高数据质量标准、增强数据完整性",
+          "**预处理流程细化**：详细描述数据清洗、异常值处理、缺失值处理的具体步骤",
+          "**质量控制强化**：建立数据质量检查机制、设置数据验证标准、确保数据可靠性"
+        ]
+        focusAreas = ["数据收集的标准化", "处理流程的规范性", "质量控制的有效性"]
+      }
+      
+      else if (suggestionLower.includes('效应量分析') || suggestionLower.includes('效应量')) {
+        tone += "，需要重点补充和完善效应量分析"
+        requirements = [
+          "**效应量计算**：为每个统计检验添加相应的效应量指标（如Cohen's d, η², R²等）",
+          "**效应量解释**：提供效应量的实际意义解释和临界值参考标准",
+          "**统计功效分析**：进行事前功效分析确定样本量，事后功效分析验证结果可靠性"
+        ]
+        focusAreas = ["效应量的计算方法", "实际意义的解释", "统计功效的评估"]
+      }
+      
+      else if (suggestionLower.includes('统计假设检验') || suggestionLower.includes('假设检验')) {
+        tone += "，需要完善统计假设检验部分"
+        requirements = [
+          "**假设设定规范化**：明确零假设和备择假设的具体表述，确保逻辑清晰",
+          "**检验条件验证**：检查统计检验的前提条件，如正态性、方差齐性、独立性等",
+          "**多重比较校正**：考虑多重检验问题，选择合适的校正方法（如Bonferroni、FDR等）"
+        ]
+        focusAreas = ["假设的明确性", "前提条件的满足", "多重比较的控制"]
+      }
+      
+      else {
+        // 默认情况：根据建议内容进行针对性优化
+        tone += "，需要根据具体建议进行针对性优化"
+        requirements = [
+          "**针对性改进**：重点关注建议中提到的具体问题和改进方向",
+          "**保持平衡**：在改进的同时保持方案的整体协调性和完整性",
+          "**质量提升**：确保优化后的方案在指定方面有显著的质量提升"
+        ]
+        focusAreas = ["建议的针对性实施", "整体方案的协调性", "改进效果的显著性"]
+      }
+      
+      return { tone, requirements, focusAreas }
+    }
+
+// 根据优化建议类型生成相应的验证标准的辅助函数
+const generateValidationCriteria = (suggestion) => {
+  const suggestionLower = suggestion.toLowerCase()
+  let criteria = []
+  let qualityRequirements = []
+  let checklist = []
+  
+  if (suggestionLower.includes('自动迭代优化') || suggestionLower.includes('全面优化')) {
+    criteria = [
+      "**平衡性检查**：确保各部分都有适度的改进，没有明显的薄弱环节",
+      "**整体性验证**：各部分之间的逻辑关联更加紧密，形成完整的方法论体系",
+      "**质量提升确认**：整体方案的学术水平和可操作性都有显著提升"
+    ]
+    checklist = ["整体协调性", "方法论完整性", "学术规范性"]
+  }
+  
+  else if (suggestionLower.includes('提高科学严谨性') || suggestionLower.includes('严谨性')) {
+    criteria = [
+      "**逻辑严谨性检查**：研究设计的内外部效度得到加强，因果推断更加可靠",
+      "**统计规范性验证**：统计方法选择正确，假设检验设置合理，结果解释客观",
+      "**伦理合规性确认**：研究程序符合学术伦理要求，被试权益得到充分保护"
+    ]
+    checklist = ["逻辑一致性", "统计规范性", "伦理合规性"]
+  }
+  
+  else if (suggestionLower.includes('增加更多细节') || suggestionLower.includes('细节')) {
+    criteria = [
+      "**细节丰富度验证**：包含具体的数值参数、操作步骤、技术规范等详细信息",
+      "**可操作性检查**：每个环节都有具体的执行指导，可直接用于实际研究",
+      "**完整性确认**：关键信息无遗漏，技术细节充分详细"
+    ]
+    qualityRequirements = [
+      "提供具体的数值参数（如样本量、时间安排、设备型号）",
+      "包含详细的操作步骤和质量控制标准",
+      "明确工具选择和技术规范（如软件版本、分析包名称）"
+    ]
+    checklist = ["参数具体性", "操作详细性", "技术完整性"]
+  }
+  
+  else if (suggestionLower.includes('简化表述') || suggestionLower.includes('简化')) {
+    criteria = [
+      "**简洁性检查**：表述更加精炼，去除冗余内容，重点突出",
+      "**清晰度验证**：逻辑结构更加清晰，便于理解和执行",
+      "**保质简化确认**：简化的同时保持核心内容的完整性和准确性"
+    ]
+    qualityRequirements = [
+      "去除冗余表述，保留关键信息",
+      "使用简洁明了的语言，避免复杂的术语堆砌",
+      "突出重点内容，次要信息适当简化"
+    ]
+    checklist = ["表达简洁性", "逻辑清晰度", "重点突出性"]
+  }
+  
+  else if (suggestionLower.includes('统计方法') || suggestionLower.includes('数据分析方法')) {
+    criteria = [
+      "**方法适配性检查**：统计方法与研究设计和数据类型完全匹配",
+      "**分析完整性验证**：包含完整的分析流程，从预处理到结果解释",
+      "**技术规范性确认**：统计软件、函数包、参数设置都明确具体"
+    ]
+    qualityRequirements = [
+      "明确统计方法的选择理由和适用条件",
+      "提供详细的数据分析流程和备选方案",
+      "包含具体的软件工具和分析代码框架"
+    ]
+    checklist = ["方法选择正确性", "分析流程完整性", "技术实施可行性"]
+  }
+  
+  else if (suggestionLower.includes('数据处理流程') || suggestionLower.includes('数据处理')) {
+    criteria = [
+      "**流程完整性检查**：数据收集、清洗、处理、验证的完整流程",
+      "**质量标准验证**：每个处理环节都有明确的质量控制标准",
+      "**可追溯性确认**：处理过程可记录、可重现、可验证"
+    ]
+    qualityRequirements = [
+      "详细描述数据收集的标准化流程",
+      "提供数据清洗和预处理的具体步骤",
+      "建立数据质量检查和异常处理机制"
+    ]
+    checklist = ["收集标准化", "处理规范性", "质量控制有效性"]
+  }
+  
+  else if (suggestionLower.includes('效应量分析') || suggestionLower.includes('效应量')) {
+    criteria = [
+      "**效应量完整性检查**：每个统计检验都配有相应的效应量指标",
+      "**解释准确性验证**：效应量的实际意义解释清晰、准确",
+      "**标准一致性确认**：效应量评判标准与学科惯例一致"
+    ]
+    qualityRequirements = [
+      "为每种统计方法指定合适的效应量指标",
+      "提供效应量的临界值和解释标准",
+      "结合统计功效分析进行样本量计算"
+    ]
+    checklist = ["效应量计算完整性", "解释标准准确性", "实际意义明确性"]
+  }
+  
+  else if (suggestionLower.includes('统计假设检验') || suggestionLower.includes('假设检验')) {
+    criteria = [
+      "**假设设定规范性检查**：零假设和备择假设表述清晰、逻辑正确",
+      "**检验条件验证**：统计检验的前提条件得到充分验证",
+      "**多重比较控制确认**：适当考虑并控制多重比较问题"
+    ]
+    qualityRequirements = [
+      "明确每个统计检验的假设设定",
+      "验证统计检验的前提条件（正态性、方差齐性等）",
+      "选择合适的多重比较校正方法"
+    ]
+    checklist = ["假设设定明确性", "前提条件满足性", "多重比较控制"]
+  }
+  
+  else {
+    // 默认验证标准
+    criteria = [
+      "**改进针对性检查**：优化内容准确回应了用户的具体建议",
+      "**质量提升验证**：在建议的方向上有明显的改进效果",
+      "**整体协调性确认**：改进的同时保持了方案的整体协调性"
+    ]
+    checklist = ["建议响应度", "改进显著性", "整体协调性"]
+  }
+  
+  return { criteria, qualityRequirements, checklist }
+}
+
 // 带建议的完整方案迭代
 const iteratePlanWithSuggestion = async (suggestion) => {
   if (isIterating.value || !currentPlanState) return
@@ -3449,10 +3673,12 @@ const iteratePlanWithSuggestion = async (suggestion) => {
     // 提取对话历史中的用户需求
     const conversationContext = extractConversationContext()
     
+    const optimizationSpec = generateOptimizationRequirements(suggestion)
+    
     // 构建迭代提示
-    let iterationPrompt = `请基于以下迭代建议对研究方案进行优化：
+    let iterationPrompt = `${optimizationSpec.tone}。
 
-迭代建议：${suggestion}
+**用户的具体优化建议：** ${suggestion}
 
 当前研究方案：
 ${JSON.stringify({
@@ -3461,22 +3687,27 @@ ${JSON.stringify({
   experimentalDesign: currentPlanState.experimentalDesign || '',
   analysisMethod: currentPlanState.analysisMethod || '',
   expectedResults: currentPlanState.expectedResults || ''
-}, null, 2)}`
+}, null, 2)}
+
+**针对性优化要求：**
+${optimizationSpec.requirements.map((req, index) => `${index + 1}. ${req}`).join('\n')}
+
+**重点关注领域：**
+${optimizationSpec.focusAreas.map(area => `- ${area}`).join('\n')}`
 
     // 如果有用户需求，添加到迭代提示中
     if (conversationContext.hasUserRequirements) {
       iterationPrompt += `
 
-用户研究需求：
-${conversationContext.userRequirements}
+**用户研究需求整合：**
+用户研究需求：${conversationContext.userRequirements}
+研究背景和上下文：${conversationContext.researchContext}
 
-研究背景和上下文：
-${conversationContext.researchContext}
-
-请特别注意：
-1. 确保优化后的方案更好地满足用户的具体研究需求
-2. 在保持科学严谨性的同时，优先考虑用户提到的研究目标和偏好
-3. 结合评估建议和用户需求进行综合优化`
+**需求适配要求：**
+1. 在优化过程中，必须深度整合用户的具体研究需求
+2. 针对用户背景和研究目标，设计更加贴合的研究方案
+3. 基于用户的研究场景，提供更具针对性的方法选择和参数设置
+4. 确保优化后的方案能够直接服务于用户的研究目标`
     }
 
     iterationPrompt += `
@@ -3512,13 +3743,28 @@ ${conversationContext.researchContext}
 四、结果呈现
 预测不同实验条件下，主要因变量之间可能呈现的差异或变化趋势，结合前人研究推测可能的解释机制。进一步说明将如何呈现各类实验结果，包括适合用于描述组间差异的图表（如箱线图、条形图）、用于展示交互效应或趋势的图表（如折线图、交互图）等。请说明每类图表如何辅助结果解读，并强调其与研究结论之间的逻辑映射关系。
 
-注意事项：
-1. 重点优化评估建议中指出的问题部分
-2. 保持方案的整体一致性和学术规范性
-3. 确保优化后的方案更加科学严谨、逻辑清晰
-4. 各部分需结构分明，层级清晰，避免堆砌术语或空洞表述
-5. 如果有用户需求，确保优化后的方案更好地满足这些需求
-6. 必须按照上述格式返回完整的优化方案`
+**输出验证标准：**`
+
+
+
+    const validationSpec = generateValidationCriteria(suggestion)
+    
+    iterationPrompt += `
+${validationSpec.criteria.map((criterion, index) => `${index + 1}. ${criterion}`).join('\n')}`
+
+    if (validationSpec.qualityRequirements.length > 0) {
+      iterationPrompt += `
+
+**具体质量要求：**
+${validationSpec.qualityRequirements.map(req => `- ${req}`).join('\n')}`
+    }
+
+    iterationPrompt += `
+
+**最终检查清单：**
+${validationSpec.checklist.map(item => `✓ ${item}是否得到显著改善？`).join('\n')}
+✓ 是否保持了学术规范性和表述准确性？
+✓ 是否与用户的具体建议高度匹配？`
 
     console.log('迭代提示包含用户需求:', conversationContext.hasUserRequirements)
     
@@ -3600,10 +3846,13 @@ const iterateSectionPlan = async (section, suggestion) => {
     // 提取对话历史中的用户需求
     const conversationContext = extractConversationContext()
     
+    // 使用相同的优化要求生成函数
+    const optimizationSpec = generateOptimizationRequirements(suggestion)
+    
     // 构建迭代提示
-    let iterationPrompt = `请基于以下迭代建议，对研究方案的"${sectionName}"部分进行优化，并返回完整的研究方案：
+    let iterationPrompt = `${optimizationSpec.tone}，特别需要重点优化研究方案的"${sectionName}"部分。
 
-迭代建议：${suggestion}
+**用户的具体优化建议：** ${suggestion}
 
 当前完整研究方案：
 #研究假设：
@@ -3618,23 +3867,117 @@ ${currentPlanState.analysisMethod || ''}
 #结果呈现：
 ${currentPlanState.expectedResults || ''}
 
-需要重点优化的部分：${sectionName}
+**重点优化目标：${sectionName}部分**
 
-迭代要求：
-1. 严格按照用户的迭代建议优化"${sectionName}"部分
-2. 保持其他三个部分的内容不变（可以做必要的协调调整）
-3. 确保所有部分之间的逻辑一致性`
+**针对性优化要求：**
+${optimizationSpec.requirements.map((req, index) => `${index + 1}. ${req}`).join('\n')}
+
+**重点关注领域：**
+${optimizationSpec.focusAreas.map(area => `- ${area}`).join('\n')}`
+
+    // 根据不同部分和建议类型添加特定的优化指导
+    const getSectionSpecificGuidance = (section, suggestion) => {
+      const suggestionLower = suggestion.toLowerCase()
+      let guidance = []
+      
+      switch (section) {
+        case 'hypothesis':
+          if (suggestionLower.includes('严谨性')) {
+            guidance.push("- **逻辑严谨性**：确保假设的因果逻辑清晰，避免循环论证和概念混淆")
+            guidance.push("- **可检验性**：每个假设都要具备可操作化的测量方案和验证方法")
+          }
+          if (suggestionLower.includes('细节') || suggestionLower.includes('详细')) {
+            guidance.push("- **理论依据详化**：为每个假设提供具体的理论模型引用和机制解释")
+            guidance.push("- **预期量化**：提供具体的预期效应量范围和统计显著性水平")
+          }
+          if (suggestionLower.includes('简化')) {
+            guidance.push("- **假设精炼**：去除冗余假设，保留核心关键假设，表述简洁明了")
+            guidance.push("- **重点突出**：突出主要研究假设，次要假设可适当简化表述")
+          }
+          break
+          
+        case 'design':
+          if (suggestionLower.includes('严谨性')) {
+            guidance.push("- **内外部效度**：加强实验设计的内部效度控制和外部效度考量")
+            guidance.push("- **控制变量**：完善混淆变量的识别和控制措施")
+          }
+          if (suggestionLower.includes('细节') || suggestionLower.includes('详细')) {
+            guidance.push("- **实施细节**：详细描述实验环境、设备配置、人员安排等具体信息")
+            guidance.push("- **操作标准**：为每个实验步骤制定详细的操作手册和质量标准")
+          }
+          if (suggestionLower.includes('简化')) {
+            guidance.push("- **流程简化**：优化实验流程，去除不必要的步骤，提高效率")
+            guidance.push("- **描述精炼**：简化复杂的技术描述，突出核心设计要点")
+          }
+          break
+          
+        case 'analysis':
+          if (suggestionLower.includes('统计方法')) {
+            guidance.push("- **方法选择**：详细说明统计方法的选择理由和适用条件")
+            guidance.push("- **分析策略**：制定完整的数据分析策略和备选方案")
+          }
+          if (suggestionLower.includes('效应量')) {
+            guidance.push("- **效应量计算**：为每个统计检验指定相应的效应量指标")
+            guidance.push("- **实际意义**：解释效应量的实际含义和评判标准")
+          }
+          if (suggestionLower.includes('假设检验')) {
+            guidance.push("- **假设设定**：明确每个统计检验的零假设和备择假设")
+            guidance.push("- **前提验证**：检查统计检验的前提条件和处理违反情况的方案")
+          }
+          if (suggestionLower.includes('数据处理')) {
+            guidance.push("- **预处理流程**：详细描述数据清洗、转换、标准化的具体步骤")
+            guidance.push("- **质量控制**：建立数据质量检查和异常值处理的标准流程")
+          }
+          break
+          
+        case 'results':
+          if (suggestionLower.includes('严谨性')) {
+            guidance.push("- **结果解释**：确保结果解释的客观性和逻辑性，避免过度解读")
+            guidance.push("- **局限性说明**：明确研究结果的适用范围和潜在局限性")
+          }
+          if (suggestionLower.includes('细节') || suggestionLower.includes('详细')) {
+            guidance.push("- **预期具体化**：提供具体的数值预期和统计指标范围")
+            guidance.push("- **可视化详化**：详细描述图表制作规范和解读方法")
+          }
+          if (suggestionLower.includes('简化')) {
+            guidance.push("- **重点突出**：突出关键结果，简化次要发现的描述")
+            guidance.push("- **表述清晰**：使用简洁明了的语言描述预期结果")
+          }
+          break
+      }
+      
+      return guidance
+    }
+    
+    const sectionGuidance = getSectionSpecificGuidance(section, suggestion)
+    if (sectionGuidance.length > 0) {
+      iterationPrompt += `
+
+**针对"${sectionName}"部分的具体优化指导：**
+${sectionGuidance.join('\n')}`
+    }
+
+    iterationPrompt += `
+
+**整体协调要求：**
+1. 重点优化"${sectionName}"部分，确保改进效果符合用户的具体建议
+2. 适当调整其他部分以保持逻辑一致性，但避免大幅修改
+3. 确保所有部分形成完整、协调的研究方法论体系
+4. 根据用户建议的方向，有针对性地提升方案质量`
     
     // 如果有用户需求，添加到迭代提示中
     if (conversationContext.hasUserRequirements) {
       iterationPrompt += `
-4. 确保优化后的内容符合用户的研究需求
 
-用户研究需求：
-${conversationContext.userRequirements}
+**用户研究需求深度整合：**
+用户研究需求：${conversationContext.userRequirements}
+研究背景和上下文：${conversationContext.researchContext}
 
-研究背景和上下文：
-${conversationContext.researchContext}`
+**针对"${sectionName}"的需求适配要求：**
+1. 深度分析用户需求对"${sectionName}"部分的具体影响和要求
+2. 基于用户的研究背景，为"${sectionName}"部分设计更贴合的具体方案
+3. 确保"${sectionName}"的优化能够直接服务于用户的研究目标和实际需求
+4. 在优化过程中充分考虑用户的资源条件和实施环境`
     }
     
     iterationPrompt += `
@@ -3670,13 +4013,35 @@ ${conversationContext.researchContext}`
 四、结果呈现
 预测不同实验条件下，主要因变量之间可能呈现的差异或变化趋势，结合前人研究推测可能的解释机制。进一步说明将如何呈现各类实验结果，包括适合用于描述组间差异的图表（如箱线图、条形图）、用于展示交互效应或趋势的图表（如折线图、交互图）等。请说明每类图表如何辅助结果解读，并强调其与研究结论之间的逻辑映射关系。
 
-⚠️ **重要要求：**
+**输出验证标准：**`
+
+    // 为单个部分迭代生成验证标准
+    const sectionValidationSpec = generateValidationCriteria(suggestion)
+    
+    iterationPrompt += `
+${sectionValidationSpec.criteria.map((criterion, index) => `${index + 1}. ${criterion}`).join('\n')}`
+
+    if (sectionValidationSpec.qualityRequirements.length > 0) {
+      iterationPrompt += `
+
+**具体质量要求：**
+${sectionValidationSpec.qualityRequirements.map(req => `- ${req}`).join('\n')}`
+    }
+
+    iterationPrompt += `
+
+**重要实施要求：**
 - 必须返回完整的4个部分，严格按照上述详细结构组织内容
-- 重点优化"${sectionName}"部分，其他部分保持原样或做必要的协调调整
+- 重点优化"${sectionName}"部分，确保改进效果符合用户建议
+- 其他部分保持原样或做必要的协调调整，避免大幅修改
 - 必须使用Markdown格式，内容要详细具体，符合学术规范
-- 各部分需结构分明，层级清晰，避免堆砌术语或空洞表述
 - 风格应贴近正式科研报告或论文开题材料
-- 严格按照上述格式返回，不要添加其他说明`
+
+**最终检查清单：**
+${sectionValidationSpec.checklist.map(item => `✓ "${sectionName}"部分的${item}是否得到显著改善？`).join('\n')}
+✓ 是否保持了其他部分的完整性和一致性？
+✓ 是否与用户的具体建议高度匹配？
+✓ 是否保持了学术规范性和表述准确性？`
     
     console.log(`发送${sectionName}部分迭代请求`)
     
