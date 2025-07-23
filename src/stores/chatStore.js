@@ -102,7 +102,8 @@ export const papersState = reactive({
     currentKeywords: '', // 当前关键词
     totalFetched: 0, // 已获取总数
     isPoolEmpty: false, // 论文池是否已空
-    lastFetchTime: null // 上次获取时间
+    lastFetchTime: null, // 上次获取时间
+    remainingInPool: 0 // 后端返回的精确剩余数量
   }
 })
 
@@ -1622,6 +1623,7 @@ export const clearExternalPaperPool = () => {
   papersState.externalPaperPool.totalFetched = 0
   papersState.externalPaperPool.isPoolEmpty = false
   papersState.externalPaperPool.lastFetchTime = null
+  papersState.externalPaperPool.remainingInPool = 0
   console.log('🗑️ 外部论文池已清空')
 }
 
@@ -1659,9 +1661,15 @@ export const addToExternalPaperPool = (papers, keywords, poolInfo = null) => {
     console.log(`📚 追加论文到池中，新总数: ${papersState.externalPaperPool.papers.length}`)
   }
   
+  // 更新后端返回的精确剩余数量
+  if (poolInfo && poolInfo.remainingInPool !== undefined) {
+    papersState.externalPaperPool.remainingInPool = poolInfo.remainingInPool
+    console.log(`📊 更新论文池剩余数量: ${poolInfo.remainingInPool}`)
+  }
+  
   papersState.externalPaperPool.lastFetchTime = Date.now()
   
-  console.log(`✅ 外部论文池更新完成 - 动作: ${action}, 论文数: ${papersState.externalPaperPool.papers.length}, 总获取: ${papersState.externalPaperPool.totalFetched}`)
+  console.log(`✅ 外部论文池更新完成 - 动作: ${action}, 论文数: ${papersState.externalPaperPool.papers.length}, 总获取: ${papersState.externalPaperPool.totalFetched}, 剩余: ${papersState.externalPaperPool.remainingInPool}`)
 }
 
 export const getUnusedExternalPapers = (count = 5) => {
@@ -1702,7 +1710,9 @@ export const isExternalPoolAvailable = (keywords) => {
 export const getExternalPoolStatus = () => {
   return {
     totalPapers: papersState.externalPaperPool.papers.length,
-    unusedPapers: getUnusedExternalPapers().length,
+    unusedPapers: papersState.externalPaperPool.remainingInPool !== undefined 
+      ? papersState.externalPaperPool.remainingInPool 
+      : getUnusedExternalPapers().length,
     currentKeywords: papersState.externalPaperPool.currentKeywords,
     isEmpty: papersState.externalPaperPool.isPoolEmpty,
     lastFetchTime: papersState.externalPaperPool.lastFetchTime
@@ -1710,7 +1720,7 @@ export const getExternalPoolStatus = () => {
 }
 
 // 更新外部论文池使用状态
-export const updateExternalPaperPoolUsage = (usedCount) => {
+export const updateExternalPaperPoolUsage = (usedCount, skipRemainCountUpdate = false) => {
   if (usedCount <= 0) return
   
   console.log(`📊 更新外部论文池使用状态，标记 ${usedCount} 篇论文为已使用`)
@@ -1724,6 +1734,12 @@ export const updateExternalPaperPoolUsage = (usedCount) => {
       papersState.displayedPaperTitles.add(paper.title.toLowerCase())
     }
   })
+  
+  // 只有在没有跳过剩余数量更新时才进行计算（避免重复减少）
+  if (!skipRemainCountUpdate && papersState.externalPaperPool.remainingInPool !== undefined) {
+    papersState.externalPaperPool.remainingInPool = Math.max(0, papersState.externalPaperPool.remainingInPool - usedCount)
+    console.log(`📊 更新精确剩余数量: ${papersState.externalPaperPool.remainingInPool}`)
+  }
   
   console.log(`✅ 已标记 ${unusedPapers.length} 篇论文为已使用，剩余可用论文: ${getUnusedExternalPapers().length}`)
 }

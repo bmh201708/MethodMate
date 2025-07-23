@@ -1615,9 +1615,18 @@ const getRecommendedPapers = async () => {
         // 使用了现有论文池，需要更新使用状态
         console.log('✅ 使用了现有外部论文池:', result.externalPoolInfo)
         
+        // 直接设置后端返回的精确剩余数量
+        const { papersState } = await import('../stores/chatStore')
+        const hasExactRemaining = result.externalPoolInfo.remainingCount !== undefined
+        if (hasExactRemaining) {
+          papersState.externalPaperPool.remainingInPool = result.externalPoolInfo.remainingCount
+          console.log(`📊 设置精确剩余数量: ${result.externalPoolInfo.remainingCount}`)
+        }
+        
         // 更新论文池使用状态，反映已取出的论文数量
         if (typeof updateExternalPaperPoolUsage === 'function') {
-          updateExternalPaperPoolUsage(result.externalPoolInfo.selectedCount || 0)
+          // 如果已经设置了精确的剩余数量，跳过重复计算
+          updateExternalPaperPoolUsage(result.externalPoolInfo.selectedCount || 0, hasExactRemaining)
         }
       } else if (result.externalPoolInfo.pool) {
         // 建立了新的论文池或扩展了论文池
