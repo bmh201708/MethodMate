@@ -1374,26 +1374,38 @@ const buildVenueFilter = (filterVenues = true) => {
   // 人机交互领域的顶刊顶会 OpenAlex Source ID列表
   // 通过实际查询OpenAlex API获得的准确source ID (使用简化格式)
   const venueSourceIds = [
-    // 顶会
+    // HCI顶会
     'S4363607743', // CHI Conference on Human Factors in Computing Systems
     'S4363607762', // CHI Conference on Human Factors in Computing Systems Extended Abstracts
     'S4306421131', // User Interface Software and Technology (UIST)
+    'S178916657',  // Computer-Supported Cooperative Work (CSCW)
+    'S16161090',   // Pervasive and Ubiquitous Computing (UbiComp)
     
-    // 顶刊  
+    // HCI顶刊  
     'S204030396',  // Computers in Human Behavior
     'S4210190811', // International Journal of Human-Computer Studies  
     'S165559636',  // International Journal of Human-Computer Interaction
-    'S152445846',  // Design Studies
-    'S70698675',   // Technovation
-    'S4210189112', // CoDesign
-    'S94432539',   // Applied Ergonomics
-    'S4210171473', // Computer-Aided Design
+    'S87067389',   // ACM Transactions on Computer-Human Interaction (TOCHI)
+    'S4210176815', // Human Factors
     
-    // 需要进一步验证的source ID (暂时注释)
-    // 'S178916657',  // Computer-Supported Cooperative Work (可能不准确)
-    // 'S16161090',   // Pervasive and Ubiquitous Computing (可能是期刊而非会议)
-    // 'S87067389',   // ACM Transactions on Computer-Human Interaction (可能不准确)
-    // 'S4210176815', // Human Factors (是会议proceedings而非期刊)
+    // 设计相关顶刊
+    'S152445846',  // Design Studies
+    'S4210189112', // CoDesign
+    'S4210171473', // Computer-Aided Design
+    'S70698675',   // Technovation
+    'S94432539',   // Applied Ergonomics
+    
+    // 其他相关期刊
+    'S4306432447', // International Journal of Design
+    'S135614695',  // Design Issues
+    'S70698669',   // Leonardo
+    'S4210215834', // The Design Journal
+    'S4210194738', // Journal of Mixed Methods Research
+    
+    // 增加计算机科学相关顶会顶刊
+    'S1901030313', // IEEE Transactions on Visualization and Computer Graphics
+    'S13803460',   // ACM Transactions on Graphics
+    'S4306421140', // IEEE Computer Graphics and Applications
   ];
   
   // 构建OpenAlex API的venue过滤条件
@@ -1534,19 +1546,18 @@ const buildOpenAlexSearchUrl = (searchQuery, limit = 20, filterVenues = true, en
   ].join(',');
   url += `&select=${fields}`;
   
-  // 构建过滤条件 - 采用更宽松的策略
+  // 构建过滤条件 - 在API层面进行venue过滤
   const filters = [];
   
-  // 🔧 修改策略：不再在API层面严格过滤期刊，改为在后处理中智能过滤
-  // 这样可以避免因为OpenAlex数据更新延迟导致的遗漏
-  // 注释掉严格的venue过滤，改为仅使用质量和基础过滤
-  
-  // if (filterVenues) {
-  //   const venueFilter = buildVenueFilter(true);
-  //   if (venueFilter) {
-  //     filters.push(venueFilter);
-  //   }
-  // }
+  // 🔧 重新启用API层面的venue过滤，避免后处理过滤导致论文数量不足
+  // 直接在OpenAlex API请求时就只搜索顶刊顶会论文，提高效率和准确性
+  if (filterVenues) {
+    const venueFilter = buildVenueFilter(true);
+    if (venueFilter) {
+      filters.push(venueFilter);
+      console.log('🎯 启用API级别venue过滤，限制为顶刊顶会论文');
+    }
+  }
   
   // 添加质量过滤条件
   filters.push('is_retracted:false');        // 排除撤回的论文
@@ -1716,13 +1727,19 @@ const searchOpenAlexPapers = async (searchQuery, limit = 20, filterVenues = true
       transformOpenAlexWork(work, index)
     );
     
-    // 🔧 应用智能期刊过滤 - 在后处理中进行
+    // 🔧 后处理过滤逻辑调整 - 由于已在API层面过滤，这里主要做兜底检查
     let filteredPapers = transformedPapers;
     if (filterVenues) {
       const beforeCount = transformedPapers.length;
-      filteredPapers = transformedPapers.filter(paper => paper.isTopVenue);
+      // 由于已在API层面过滤，这里主要保留智能识别到的顶级期刊作为兜底
+      // 避免过度过滤导致论文数量不足
+      filteredPapers = transformedPapers.filter(paper => {
+        // 如果API过滤工作正常，大部分论文应该已经是顶级期刊
+        // 这里主要过滤掉明显不符合条件的论文
+        return paper.isTopVenue || paper.citationCount >= 50; // 兜底：高引用论文也保留
+      });
       const afterCount = filteredPapers.length;
-      console.log(`🎯 智能期刊过滤：${beforeCount} → ${afterCount} 篇论文（过滤掉 ${beforeCount - afterCount} 篇非顶级期刊）`);
+      console.log(`🎯 后处理兜底过滤：${beforeCount} → ${afterCount} 篇论文（API已预过滤，后处理轻度调整）`);
     }
     
     console.log(`✅ OpenAlex搜索完成，转换了 ${transformedPapers.length} 篇论文，过滤后 ${filteredPapers.length} 篇`);
@@ -3186,79 +3203,7 @@ const getLatestPapers = async (limit = 10, filter_venues = false, excludeIds = [
   }
 };
 
-// 获取数据库中所有论文作为论文池的函数
-const getAllCachedPapersForPool = async (filter_venues = false, excludeIds = []) => {
-  try {
-    const pool = getPool();
-    console.log('📚 获取数据库中所有论文作为论文池...');
-    
-    let sqlQuery = `
-      SELECT id, title, authors, abstract, doi, url, download_url, year, journal, venue,
-             citation_count, research_method, full_text, translated_abstract, translated_method,
-             paper_id, source, is_top_venue, quality_score, download_sources, metadata,
-             created_at, updated_at
-      FROM paper_cache
-    `;
-    
-    const params = [];
-    const conditions = [];
-    
-    // 过滤条件
-    if (filter_venues) {
-      conditions.push('is_top_venue = 1');
-    }
-    
-    // 排除已显示的论文
-    if (excludeIds.length > 0) {
-      const placeholders = excludeIds.map(() => '?').join(',');
-      conditions.push(`id NOT IN (${placeholders})`);
-      params.push(...excludeIds);
-    }
-    
-    if (conditions.length > 0) {
-      sqlQuery += ` WHERE ${conditions.join(' AND ')}`;
-    }
-    
-    // 按质量和引用次数排序
-    sqlQuery += ` ORDER BY quality_score DESC, citation_count DESC, created_at DESC`;
-    
-    console.log('🔧 获取所有论文SQL:', sqlQuery.replace(/\s+/g, ' ').trim());
-    
-    const [results] = await pool.execute(sqlQuery, params);
-    console.log(`📚 获取到 ${results.length} 篇数据库论文作为论文池`);
-    
-    // 转换为统一格式
-    const formattedPapers = results.map((paper, index) => ({
-      id: `cache_pool_${paper.id}`,
-      title: paper.title || '',
-      abstract: paper.abstract || '',
-      downloadUrl: paper.download_url || null,
-      year: paper.year?.toString() || '',
-      citationCount: paper.citation_count || 0,
-      authors: paper.authors ? (typeof paper.authors === 'string' ? paper.authors.split(', ') : paper.authors) : [],
-      venue: paper.venue || paper.journal || '',
-      fullText: paper.full_text || null,
-      researchMethod: paper.research_method || null,
-      isTopVenue: paper.is_top_venue || false,
-      from_cache: true,
-      cache_id: paper.id,
-      translated_abstract: paper.translated_abstract,
-      translated_method: paper.translated_method,
-      source: 'cache_pool',
-      // 为本地缓存论文设置高相关性分数，与直接搜索到的相关论文一致
-      relevance_score: 0.95 - (index * 0.001), // 从0.95开始递减，确保排序稳定且保持高相关性
-      doi: paper.doi || '',
-      // 保持原始数据库ID用于去重
-      original_cache_id: paper.id
-    }));
-    
-    return formattedPapers;
-    
-  } catch (error) {
-    console.error('❌ 获取数据库论文池失败:', error);
-    return [];
-  }
-};
+
 
 // 解析Coze API响应，提取关键词
 const parseKeywordsFromCozeResponse = (reply) => {
@@ -3803,33 +3748,6 @@ app.post('/api/semantic-recommend', async (req, res) => {
       }
     }
     
-    // 当启用本地缓存时，无论缓存搜索结果如何，都要将数据库中所有论文加入论文池
-    if (use_local_cache) {
-      console.log('📚 启用本地缓存，将数据库中所有论文加入论文池...');
-      try {
-        const allCachedPapers = await getAllCachedPapersForPool(filter_venues, excludeIds);
-        console.log(`📚 获取到 ${allCachedPapers.length} 篇数据库论文作为论文池`);
-        
-        if (allCachedPapers.length > 0) {
-          // 创建本地缓存论文池信息
-          externalPoolInfo = {
-            used: false, // 暂未使用，但已准备好
-            action: 'created_local_cache_pool',
-            pool: allCachedPapers,
-            keywords: formattedSearchQuery,
-            totalPoolSize: allCachedPapers.length,
-            remainingInPool: allCachedPapers.length,
-            source: 'local_cache'
-          };
-          
-          console.log(`✅ 成功建立本地缓存论文池，包含 ${allCachedPapers.length} 篇论文`);
-        }
-      } catch (error) {
-        console.error('❌ 建立本地缓存论文池失败:', error);
-        // 失败时不影响主流程，继续推荐相关论文
-      }
-    }
-    
     // 第二步：处理外部论文池和搜索
     if (needExternalSearch) {
       const remainingCount = Math.max(0, 5 - allPapers.length);
@@ -3866,66 +3784,8 @@ app.post('/api/semantic-recommend', async (req, res) => {
         searchWords: formattedSearchQuery.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2)
       })
       
-      // 优先检查是否可以使用本地缓存论文池
-      if (use_local_cache && externalPoolInfo && 
-          externalPoolInfo.source === 'local_cache' && externalPoolInfo.pool && externalPoolInfo.pool.length > 0) {
-        
-        console.log('✅ 使用本地缓存论文池，池中论文数:', externalPoolInfo.pool.length);
-        
-        // 从本地缓存论文池中筛选未显示的论文
-        const existingTitles = new Set([
-          ...allPapers.map(r => r.title.toLowerCase()),  // 本次搜索的缓存结果
-          ...excludeTitles.map(t => t.toLowerCase())      // 全局已显示的论文标题
-        ]);
-        
-        const unusedCachePapers = externalPoolInfo.pool.filter(paper => 
-          paper.title && !existingTitles.has(paper.title.toLowerCase()) && 
-          !excludeIds.includes(paper.cache_id) // 排除已经推荐过的缓存论文
-        );
-        
-        console.log(`📋 本地缓存论文池中可用论文数: ${unusedCachePapers.length}/${externalPoolInfo.pool.length}`);
-        
-        if (unusedCachePapers.length >= remainingCount) {
-          // 本地缓存论文池中有足够的论文，直接使用
-          const selectedPapers = unusedCachePapers.slice(0, remainingCount);
-          allPapers = allPapers.concat(selectedPapers);
-          needExternalSearch = false; // 关键：标记不需要外部搜索
-          
-          externalPoolInfo = {
-            ...externalPoolInfo,
-            used: true,
-            selectedCount: selectedPapers.length,
-            remainingCount: unusedCachePapers.length - selectedPapers.length,
-            action: 'used_local_cache_pool'
-          };
-          
-          console.log('✅ 从本地缓存论文池成功获取论文:', selectedPapers.length);
-          console.log('✅ 跳过外部API调用，直接使用本地缓存论文池');
-        } else if (unusedCachePapers.length > 0) {
-          // 本地缓存论文池中有部分论文，先使用这些，然后根据需要进行外部搜索
-          allPapers = allPapers.concat(unusedCachePapers);
-          
-          externalPoolInfo = {
-            ...externalPoolInfo,
-            used: true,
-            selectedCount: unusedCachePapers.length,
-            remainingCount: 0,
-            stillNeedCount: remainingCount - unusedCachePapers.length,
-            action: 'partial_local_cache_used'
-          };
-          
-          console.log(`✅ 从本地缓存论文池获取部分论文: ${unusedCachePapers.length}，还需要 ${remainingCount - unusedCachePapers.length} 篇`);
-        } else {
-          console.log('⚠️ 本地缓存论文池已耗尽，需要外部搜索');
-          externalPoolInfo = {
-            ...externalPoolInfo,
-            used: false,
-            action: 'local_cache_pool_exhausted'
-          };
-        }
-      }
-      // 检查是否可以使用外部论文池（如果本地缓存论文池不可用或已耗尽）
-      else if (useExternalPool && externalPoolData && 
+      // 检查是否可以使用外部论文池
+      if (useExternalPool && externalPoolData && 
           externalPoolData.papers && externalPoolData.papers.length > 0) { // 简化条件：只要有论文池就尝试使用
         
         console.log('✅ 满足外部论文池使用条件，检查现有外部论文池，池中论文数:', externalPoolData.papers.length);
@@ -4037,6 +3897,16 @@ app.post('/api/semantic-recommend', async (req, res) => {
           poolLimit = 20; // 默认
         }
         
+        // 🚀 智能扩展机制：当启用venue过滤时，预估可能需要更多论文
+        // 因为venue过滤会显著减少可用论文数量
+        if (filter_venues) {
+          const originalLimit = poolLimit;
+          // 基于经验，venue过滤通常会过滤掉70-90%的论文
+          // 因此需要搜索更多论文以确保有足够的顶刊顶会论文
+          poolLimit = Math.min(poolLimit * 3, 60); // 扩展3倍，但不超过60篇
+          console.log(`🎯 启用venue过滤智能扩展：${originalLimit} → ${poolLimit} 篇（预期过滤比例较高）`);
+        }
+        
         console.log(`📏 论文池目标大小: ${poolLimit} 篇`);
         
         // 使用OpenAlex API替代Semantic Scholar
@@ -4088,8 +3958,8 @@ app.post('/api/semantic-recommend', async (req, res) => {
               from_cache: false
             };
           });
-
-           const action = externalPoolInfo?.action || 'creating_new_pool';
+          
+          
                        console.log(`🏊‍♂️ ${action === 'creating_new_pool' ? '建立新的' : '扩展'}外部论文池，总共获取 ${externalResults.length} 篇论文`);
 
             // 去重（基于标题）- 比较本地搜索结果、外部API结果和全局已显示论文

@@ -1709,6 +1709,25 @@ export const getExternalPoolStatus = () => {
   }
 }
 
+// 更新外部论文池使用状态
+export const updateExternalPaperPoolUsage = (usedCount) => {
+  if (usedCount <= 0) return
+  
+  console.log(`📊 更新外部论文池使用状态，标记 ${usedCount} 篇论文为已使用`)
+  
+  // 获取池中未使用的论文
+  const unusedPapers = getUnusedExternalPapers(usedCount)
+  
+  // 将这些论文标记为已显示（这样它们会被getUnusedExternalPapers过滤掉）
+  unusedPapers.forEach(paper => {
+    if (paper.title) {
+      papersState.displayedPaperTitles.add(paper.title.toLowerCase())
+    }
+  })
+  
+  console.log(`✅ 已标记 ${unusedPapers.length} 篇论文为已使用，剩余可用论文: ${getUnusedExternalPapers().length}`)
+}
+
 // 迭代状态管理方法
 export const storeIterationSnapshot = (section = null, suggestion = null) => {
   console.log('存储迭代快照，迭代部分:', section)

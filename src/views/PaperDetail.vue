@@ -914,7 +914,13 @@ const tagColors = [
 
 // 监听外部论文池状态变化
 const updateExternalPoolStatus = () => {
-  externalPoolStatus.value = getExternalPoolStatus()
+  const newStatus = getExternalPoolStatus()
+  // 强制Vue检测变化，创建新对象而不是直接赋值
+  externalPoolStatus.value = {
+    ...newStatus,
+    _timestamp: Date.now() // 添加时间戳确保对象引用发生变化
+  }
+  console.log('📊 更新外部论文池状态显示:', externalPoolStatus.value)
 }
 
 // 初始化时更新状态
@@ -976,6 +982,7 @@ const handleKeydown = (event) => {
 const clearExternalPool = () => {
   clearExternalPaperPool()
   updateExternalPoolStatus()
+  console.log('🗑️ 已清空外部论文池并更新状态显示')
 }
 
 // 重新分析研究方法
@@ -1602,16 +1609,26 @@ const getRecommendedPapers = async () => {
 
     // 处理外部论文池信息
     if (result.externalPoolInfo) {
-      const { addToExternalPaperPool } = await import('../stores/chatStore')
+      const { addToExternalPaperPool, updateExternalPaperPoolUsage } = await import('../stores/chatStore')
       
       if (result.externalPoolInfo.used && result.externalPoolInfo.action === 'used_existing_pool') {
-        // 使用了现有论文池，无需更新
+        // 使用了现有论文池，需要更新使用状态
         console.log('✅ 使用了现有外部论文池:', result.externalPoolInfo)
+        
+        // 更新论文池使用状态，反映已取出的论文数量
+        if (typeof updateExternalPaperPoolUsage === 'function') {
+          updateExternalPaperPoolUsage(result.externalPoolInfo.selectedCount || 0)
+        }
       } else if (result.externalPoolInfo.pool) {
         // 建立了新的论文池或扩展了论文池
         const action = result.externalPoolInfo.action || 'creating_new_pool'
         console.log(`📋 ${action === 'creating_new_pool' ? '建立新的' : action === 'expanding_pool' ? '扩展' : '更新'}外部论文池:`, result.externalPoolInfo)
         addToExternalPaperPool(result.externalPoolInfo.pool, result.externalPoolInfo.keywords, result.externalPoolInfo)
+        
+        // 如果同时使用了论文池中的论文，也需要更新使用状态
+        if (result.externalPoolInfo.selectedCount > 0 && typeof updateExternalPaperPoolUsage === 'function') {
+          updateExternalPaperPoolUsage(result.externalPoolInfo.selectedCount)
+        }
       }
     }
 
@@ -1648,6 +1665,9 @@ const getRecommendedPapers = async () => {
       console.log('累加后的文献列表:', papersState.recommendedPapers)
       console.log('总文献数量:', papersState.recommendedPapers.length)
 
+      // 立即更新外部论文池状态，让用户看到最新的可用论文数
+      updateExternalPoolStatus()
+
       if (processedPapers.length === 0) {
         setRecommendationError('未找到相关文献')
       }
@@ -1659,14 +1679,13 @@ const getRecommendedPapers = async () => {
       setRecommendationError('获取推荐文献失败，请稍后重试')
     }
 
-    // 更新外部论文池状态
-    updateExternalPoolStatus()
-
   } catch (error) {
     console.error('获取推荐文献失败:', error)
     setRecommendationError(error.message)
   } finally {
     setLoadingRecommendations(false)
+    // 确保无论成功失败都更新外部论文池状态
+    updateExternalPoolStatus()
   }
 }
 
