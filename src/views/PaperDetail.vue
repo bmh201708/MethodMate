@@ -85,19 +85,7 @@
                 </div>
               </div>
               
-              <!-- 本地缓存搜索选项 -->
-              <div class="flex items-center justify-between px-1">
-                <label class="flex items-center text-sm text-gray-600 cursor-pointer">
-                  <input 
-                    ref="localCacheCheckboxRef"
-                    type="checkbox" 
-                    v-model="useLocalCache" 
-                    class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span class="ml-2">从本地缓存获取论文</span>
-                </label>
-                <span class="text-xs text-gray-500">优先使用本地高质量缓存</span>
-              </div>
+
               
               <!-- 扩大范围选项 -->
               <div class="flex items-center justify-between px-1">
@@ -874,7 +862,7 @@ const isLoadingPaperContent = ref(false)
 // 扩大范围选项 - 默认为false（只获取顶刊顶会）
 const expandRange = ref(false)
 
-// 本地缓存搜索选项 - 默认为true（优先使用本地缓存）
+// 本地缓存搜索选项 - 默认开启，优先使用本地缓存
 const useLocalCache = ref(true)
 
 // 始终使用多领域搜索模式（计算机、设计、人机交互相关领域）
@@ -914,7 +902,13 @@ const tagColors = [
 
 // 监听外部论文池状态变化
 const updateExternalPoolStatus = () => {
-  externalPoolStatus.value = getExternalPoolStatus()
+  const newStatus = getExternalPoolStatus()
+  // 强制Vue检测变化，创建新对象而不是直接赋值
+  externalPoolStatus.value = {
+    ...newStatus,
+    _timestamp: Date.now() // 添加时间戳确保对象引用发生变化
+  }
+  console.log('📊 更新外部论文池状态显示:', externalPoolStatus.value)
 }
 
 // 初始化时更新状态
@@ -976,6 +970,7 @@ const handleKeydown = (event) => {
 const clearExternalPool = () => {
   clearExternalPaperPool()
   updateExternalPoolStatus()
+  console.log('🗑️ 已清空外部论文池并更新状态显示')
 }
 
 // 重新分析研究方法
@@ -1582,7 +1577,7 @@ const getRecommendedPapers = async () => {
        externalPoolData: requestBody.externalPoolData ? '已提供论文池数据' : '无论文池数据'
      });
      
-     console.log(`🔍 搜索模式: ${useLocalCache.value ? '本地缓存 + 外部搜索' : '仅外部搜索'}`);
+     console.log(`🔍 搜索模式: 本地缓存 + 外部搜索（默认优先使用本地缓存）`);
      console.log(`📊 文献范围: ${expandRange.value ? '扩大范围（包含非顶刊顶会）' : '仅顶刊顶会'}`);
      console.log(`🎯 推荐领域: 多领域相关（计算机、设计、人机交互等相关领域）`);
 
@@ -1602,16 +1597,35 @@ const getRecommendedPapers = async () => {
 
     // 处理外部论文池信息
     if (result.externalPoolInfo) {
-      const { addToExternalPaperPool } = await import('../stores/chatStore')
+      const { addToExternalPaperPool, updateExternalPaperPoolUsage } = await import('../stores/chatStore')
       
       if (result.externalPoolInfo.used && result.externalPoolInfo.action === 'used_existing_pool') {
-        // 使用了现有论文池，无需更新
+        // 使用了现有论文池，需要更新使用状态
         console.log('✅ 使用了现有外部论文池:', result.externalPoolInfo)
+        
+        // 直接设置后端返回的精确剩余数量
+        const { papersState } = await import('../stores/chatStore')
+        const hasExactRemaining = result.externalPoolInfo.remainingCount !== undefined
+        if (hasExactRemaining) {
+          papersState.externalPaperPool.remainingInPool = result.externalPoolInfo.remainingCount
+          console.log(`📊 设置精确剩余数量: ${result.externalPoolInfo.remainingCount}`)
+        }
+        
+        // 更新论文池使用状态，反映已取出的论文数量
+        if (typeof updateExternalPaperPoolUsage === 'function') {
+          // 如果已经设置了精确的剩余数量，跳过重复计算
+          updateExternalPaperPoolUsage(result.externalPoolInfo.selectedCount || 0, hasExactRemaining)
+        }
       } else if (result.externalPoolInfo.pool) {
         // 建立了新的论文池或扩展了论文池
         const action = result.externalPoolInfo.action || 'creating_new_pool'
         console.log(`📋 ${action === 'creating_new_pool' ? '建立新的' : action === 'expanding_pool' ? '扩展' : '更新'}外部论文池:`, result.externalPoolInfo)
         addToExternalPaperPool(result.externalPoolInfo.pool, result.externalPoolInfo.keywords, result.externalPoolInfo)
+        
+        // 如果同时使用了论文池中的论文，也需要更新使用状态
+        if (result.externalPoolInfo.selectedCount > 0 && typeof updateExternalPaperPoolUsage === 'function') {
+          updateExternalPaperPoolUsage(result.externalPoolInfo.selectedCount)
+        }
       }
     }
 
@@ -1641,12 +1655,11 @@ const getRecommendedPapers = async () => {
       console.log('📊 推荐统计: 缓存命中', result.cache_hits || 0, '篇, 外部获取', result.external_hits || 0, '篇')
       console.log('⚙️ 后端确认设置: 使用本地缓存 =', result.use_local_cache)
       
-      if (!result.use_local_cache) {
-        console.log('✅ 已按要求跳过本地缓存搜索，所有结果均来自外部API')
-      }
-      
       console.log('累加后的文献列表:', papersState.recommendedPapers)
       console.log('总文献数量:', papersState.recommendedPapers.length)
+
+      // 立即更新外部论文池状态，让用户看到最新的可用论文数
+      updateExternalPoolStatus()
 
       if (processedPapers.length === 0) {
         setRecommendationError('未找到相关文献')
@@ -1659,14 +1672,13 @@ const getRecommendedPapers = async () => {
       setRecommendationError('获取推荐文献失败，请稍后重试')
     }
 
-    // 更新外部论文池状态
-    updateExternalPoolStatus()
-
   } catch (error) {
     console.error('获取推荐文献失败:', error)
     setRecommendationError(error.message)
   } finally {
     setLoadingRecommendations(false)
+    // 确保无论成功失败都更新外部论文池状态
+    updateExternalPoolStatus()
   }
 }
 
@@ -1953,7 +1965,6 @@ const isDevelopment = computed(() => {
 const keywordInputRef = ref(null)
 const extractKeywordsBtnRef = ref(null)
 const getPapersBtnRef = ref(null)
-const localCacheCheckboxRef = ref(null)
 const expandRangeCheckboxRef = ref(null)
 const referenceBtnRef = ref(null)
 
@@ -2051,11 +2062,6 @@ const tutorialSteps = [
     title: '获取相关文献',
     description: '这是核心功能按钮，点击后会根据关键词为你推荐相关的学术文献。',
     ref: getPapersBtnRef
-  },
-  {
-    title: '本地缓存选项',
-    description: '勾选此项会优先从本地高质量缓存中搜索论文，提高搜索速度和准确性。',
-    ref: localCacheCheckboxRef
   },
   {
     title: '扩大搜索范围',
