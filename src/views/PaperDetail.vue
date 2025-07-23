@@ -85,19 +85,7 @@
                 </div>
               </div>
               
-              <!-- 本地缓存搜索选项 -->
-              <div class="flex items-center justify-between px-1">
-                <label class="flex items-center text-sm text-gray-600 cursor-pointer">
-                  <input 
-                    ref="localCacheCheckboxRef"
-                    type="checkbox" 
-                    v-model="useLocalCache" 
-                    class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span class="ml-2">从本地缓存获取论文</span>
-                </label>
-                <span class="text-xs text-gray-500">优先使用本地高质量缓存</span>
-              </div>
+
               
               <!-- 扩大范围选项 -->
               <div class="flex items-center justify-between px-1">
@@ -874,7 +862,7 @@ const isLoadingPaperContent = ref(false)
 // 扩大范围选项 - 默认为false（只获取顶刊顶会）
 const expandRange = ref(false)
 
-// 本地缓存搜索选项 - 默认为true（优先使用本地缓存）
+// 本地缓存搜索选项 - 默认开启，优先使用本地缓存
 const useLocalCache = ref(true)
 
 // 始终使用多领域搜索模式（计算机、设计、人机交互相关领域）
@@ -1589,7 +1577,7 @@ const getRecommendedPapers = async () => {
        externalPoolData: requestBody.externalPoolData ? '已提供论文池数据' : '无论文池数据'
      });
      
-     console.log(`🔍 搜索模式: ${useLocalCache.value ? '本地缓存 + 外部搜索' : '仅外部搜索'}`);
+     console.log(`🔍 搜索模式: 本地缓存 + 外部搜索（默认优先使用本地缓存）`);
      console.log(`📊 文献范围: ${expandRange.value ? '扩大范围（包含非顶刊顶会）' : '仅顶刊顶会'}`);
      console.log(`🎯 推荐领域: 多领域相关（计算机、设计、人机交互等相关领域）`);
 
@@ -1666,10 +1654,6 @@ const getRecommendedPapers = async () => {
       console.log('📋 获取到推荐文献:', processedPapers)
       console.log('📊 推荐统计: 缓存命中', result.cache_hits || 0, '篇, 外部获取', result.external_hits || 0, '篇')
       console.log('⚙️ 后端确认设置: 使用本地缓存 =', result.use_local_cache)
-      
-      if (!result.use_local_cache) {
-        console.log('✅ 已按要求跳过本地缓存搜索，所有结果均来自外部API')
-      }
       
       console.log('累加后的文献列表:', papersState.recommendedPapers)
       console.log('总文献数量:', papersState.recommendedPapers.length)
@@ -1981,7 +1965,6 @@ const isDevelopment = computed(() => {
 const keywordInputRef = ref(null)
 const extractKeywordsBtnRef = ref(null)
 const getPapersBtnRef = ref(null)
-const localCacheCheckboxRef = ref(null)
 const expandRangeCheckboxRef = ref(null)
 const referenceBtnRef = ref(null)
 
@@ -2079,11 +2062,6 @@ const tutorialSteps = [
     title: '获取相关文献',
     description: '这是核心功能按钮，点击后会根据关键词为你推荐相关的学术文献。',
     ref: getPapersBtnRef
-  },
-  {
-    title: '本地缓存选项',
-    description: '勾选此项会优先从本地高质量缓存中搜索论文，提高搜索速度和准确性。',
-    ref: localCacheCheckboxRef
   },
   {
     title: '扩大搜索范围',
