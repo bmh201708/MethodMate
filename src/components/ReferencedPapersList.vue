@@ -1138,42 +1138,48 @@ const formatDate = (timestamp) => {
 
 // 获取更多下载源
 const findDownloadSources = async (paper) => {
-  if (!paper.title) return
-  
-  loadingDownload.value = true
+  if (!paper.title) return;
+
+  loadingDownload.value = true;
   try {
-    // 这里可以调用API获取更多下载源
-    // 暂时模拟一些下载源
-    const mockSources = [
-      { source: 'ResearchGate', url: '#', free: true },
-      { source: 'Academia.edu', url: '#', free: true },
-      { source: 'PubMed Central', url: '#', free: true },
-      { source: 'ArXiv', url: '#', free: true },
-      { source: 'IEEE Xplore', url: '#', free: false },
-      { source: 'SpringerLink', url: '#', free: false }
-    ]
+    const { getApiBaseUrl } = await import('../config/environment.js');
+    const apiUrl = `${getApiBaseUrl()}/paper/download-sources`;
     
-    // 模拟API延迟
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: paper.title,
+        doi: paper.doi
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    const sources = await response.json();
+
     // 更新选中文献的下载源
     if (selectedPaper.value && selectedPaper.value.title === paper.title) {
-      selectedPaper.value.downloadSources = mockSources
+      selectedPaper.value.downloadSources = sources;
     }
-    
+
     // 也更新原始数据
-    const paperInList = referencedPapersList.value.find(p => p.title === paper.title)
+    const paperInList = referencedPapersList.value.find(p => p.title === paper.title);
     if (paperInList) {
-      paperInList.downloadSources = mockSources
+      paperInList.downloadSources = sources;
     }
-    
+
   } catch (error) {
-    console.error('获取下载源失败:', error)
-    alert('获取下载源失败，请稍后重试')
+    console.error('获取下载源失败:', error);
+    alert('获取下载源失败，请稍后重试');
   } finally {
-    loadingDownload.value = false
+    loadingDownload.value = false;
   }
-}
+};
 
 // 导出引用文献
 const exportReferences = () => {

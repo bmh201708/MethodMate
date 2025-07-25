@@ -1758,6 +1758,79 @@ const searchOpenAlexPapers = async (searchQuery, limit = 20, filterVenues = true
   }
 };
 
+// 新增：根据DOI或标题从多个来源查找下载链接
+const findDownloadSourcesForPaper = async (doi, title) => {
+  const sources = [];
+  const seenUrls = new Set();
+
+  const addSource = (source, url, free) => {
+    if (url && !seenUrls.has(url)) {
+      sources.push({ source, url, free });
+      seenUrls.add(url);
+    }
+  };
+
+  // 1. 使用OpenAlex API
+  if (doi) {
+    try {
+      const url = `${OPENALEX_API_BASE}/works/doi:${doi}?select=id,display_name,locations,open_access`;
+      const response = await fetchWithRetry(url);
+      if (response.ok) {
+        const work = await response.json();
+        if (work && work.locations) {
+          addSource('OpenAlex OA', work.open_access?.oa_url, true);
+          work.locations.forEach(loc => {
+            addSource(
+              loc.source?.display_name || 'Unknown Source',
+              loc.pdf_url || loc.landing_page_url,
+              loc.is_oa
+            );
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching from OpenAlex by DOI:', error);
+    }
+  }
+
+  // 2. 如果没有DOI或OpenAlex未找到，尝试用标题搜索
+  if (sources.length === 0 && title) {
+    try {
+      const searchUrl = `${OPENALEX_API_BASE}/works?search=${encodeURIComponent(title)}&per-page=1&select=id,display_name,locations,open_access`;
+      const response = await fetchWithRetry(searchUrl);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.results && data.results.length > 0) {
+          const work = data.results[0];
+          addSource('OpenAlex OA', work.open_access?.oa_url, true);
+          if (work.locations) {
+            work.locations.forEach(loc => {
+              addSource(
+                loc.source?.display_name || 'Unknown Source',
+                loc.pdf_url || loc.landing_page_url,
+                loc.is_oa
+              );
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error searching OpenAlex by title:', error);
+    }
+  }
+
+  // 3. 添加一些常见的其他下载源作为备用
+  if (doi) {
+    addSource('Sci-Hub', `https://sci-hub.se/${doi}`, true);
+    addSource('Google Scholar', `https://scholar.google.com/scholar?q=${encodeURIComponent(doi)}`, false);
+  }
+  addSource('ResearchGate', `https://www.researchgate.net/search/publication?q=${encodeURIComponent(title)}`, false);
+  addSource('Semantic Scholar', `https://www.semanticscholar.org/search?q=${encodeURIComponent(title)}`, false);
+
+
+  return sources;
+};
+
 // ================================
 // 中间件 - 增加请求体大小限制以支持论文全文保存
 app.use(express.json({ limit: '50mb', parameterLimit: 50000 }));
@@ -1990,6 +2063,21 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
       success: false, 
       error: '服务器内部错误' 
     });
+  }
+});
+
+app.post('/api/paper/download-sources', async (req, res) => {
+  try {
+    const { doi, title } = req.body;
+    if (!doi && !title) {
+      return res.status(400).json({ error: 'DOI or title is required' });
+    }
+
+    const sources = await findDownloadSourcesForPaper(doi, title);
+    res.json(sources);
+  } catch (error) {
+    console.error('Error finding download sources:', error);
+    res.status(500).json({ error: 'Failed to find download sources' });
   }
 });
 
