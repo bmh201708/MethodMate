@@ -1874,6 +1874,16 @@ const optionalAuth = (req, res, next) => {
   next();
 };
 
+app.post('/api/openalex-search', async (req, res) => {
+  try {
+    const { searchQuery, limit, filterVenues } = req.body;
+    const results = await searchOpenAlexPapers(searchQuery, limit, filterVenues);
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 用户注册API
 app.post('/api/auth/register', async (req, res) => {
   try {

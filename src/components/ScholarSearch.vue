@@ -3,7 +3,7 @@
     <!-- 搜索表单 -->
     <div class="search-form bg-white rounded-lg shadow-md p-6 mb-6">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-2xl font-bold text-gray-800">Semantic Scholar 文献搜索</h2>
+        <h2 class="text-2xl font-bold text-gray-800">OpenAlex 文献搜索</h2>
         <div class="text-sm text-gray-600">
           已选择 {{ referencedCount }} 篇参考文献
         </div>
@@ -451,7 +451,7 @@ export default {
 
         // 使用环境配置的API地址
         const { getApiBaseUrl } = await import('../config/environment.js')
-        const searchApiUrl = `${getApiBaseUrl()}/scholar-search`
+        const searchApiUrl = `${getApiBaseUrl()}/openalex-search`
         console.log('📤 学者搜索API请求URL:', searchApiUrl)
         
         const response = await fetch(searchApiUrl, {
@@ -460,31 +460,29 @@ export default {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            query: currentSearchQuery,
-            num_results: requestedCount, // 用户要求的最终数量
-            external_search_count: requestedCount, // 外部始终搜索用户要求的数量
-            filter_venues: !this.filterTopVenues // 默认只获取顶会顶刊，勾选扩大范围后获取所有文献
+            searchQuery: currentSearchQuery,
+            limit: requestedCount,
+            filterVenues: !this.filterTopVenues
           })
         })
 
         const data = await response.json()
 
-        if (data.success) {
+        if (response.ok) {
           // 确保每个结果都有isTopVenue属性和唯一ID，保留原始的relevance_score
-          const processedResults = data.results.map((result, index) => ({
+          const processedResults = data.papers.map((result, index) => ({
             ...result,
-            id: result.title, // 使用标题作为唯一ID
+            id: result.id || result.title, // 使用id或标题作为唯一ID
             downloadSources: null,
             downloadMessage: '',
-            isTopVenue: result.isTopVenue || false // 确保isTopVenue属性存在
-            // 保留原始的relevance_score，不设置relevanceLevel
+            isTopVenue: result.isTopVenue || false, // 确保isTopVenue属性存在
+            summary: result.abstract
           }))
           
           // 保存到全局状态
           setSearchResults(processedResults, this.searchQuery)
           
           console.log('搜索结果已保存到全局状态:', processedResults)
-          console.log(`📊 搜索统计: 本地缓存 ${data.cache_hits || 0} 篇, 外部获取 ${data.external_hits || 0} 篇, 最终展示 ${processedResults.length} 篇`)
         } else {
           setSearchError(data.error || '搜索失败，请重试')
           setSearchResults([], this.searchQuery)
