@@ -64,7 +64,7 @@ initServer();
 // CORS配置 - 支持生产环境
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://method-mate.vercel.app', 'http://175.27.251.132:3004','http://175.27.251.132','http://175.27.251.132:3002', 'https://175.27.251.132:3004', 'https://175.27.251.132'] 
+    ? ['https://method-mate.vercel.app', 'http://119.45.20.245:3004','http://119.45.20.245','http://119.45.20.245:3002', 'https://119.45.20.245:3004', 'https://119.45.20.245'] 
     : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

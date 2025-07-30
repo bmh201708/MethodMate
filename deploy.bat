@@ -2,7 +2,7 @@
 echo 开始部署到云端服务器...
 
 REM 设置服务器信息
-set SERVER_HOST=root@175.27.251.132
+set SERVER_HOST=root@119.45.20.245
 set SERVER_PATH=/www/wwwroot/MethodMate/backend
 
 echo 正在上传修改后的文件...

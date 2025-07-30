@@ -8,13 +8,13 @@ echo "开始更新云端服务器代码..."
 # 检查是否有SSH配置
 if [ ! -f ~/.ssh/config ] && [ -z "$SSH_HOST" ]; then
     echo "请设置SSH连接信息："
-    echo "方法1: 设置环境变量 export SSH_HOST=root@175.27.251.132"
+    echo "方法1: 设置环境变量 export SSH_HOST=root@119.45.20.245"
     echo "方法2: 在~/.ssh/config中配置连接信息"
     exit 1
 fi
 
 # 设置服务器信息
-SERVER_HOST=${SSH_HOST:-"root@175.27.251.132"}
+SERVER_HOST=${SSH_HOST:-"root@119.45.20.245"}
 SERVER_PATH="/www/wwwroot/MethodMate/backend"
 
 echo "连接到服务器: $SERVER_HOST"

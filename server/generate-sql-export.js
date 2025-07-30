@@ -96,7 +96,7 @@ const main = async () => {
     // 生成完整的SQL
     let fullSQL = '-- MethodMate 统计方法数据库导出\n';
     fullSQL += `-- 生成时间: ${new Date().toISOString()}\n`;
-    fullSQL += '-- 远程服务器: http://175.27.251.132/\n\n';
+    fullSQL += '-- 远程服务器: http://119.45.20.245/\n\n';
     
     fullSQL += generateCreateTableSQL();
     fullSQL += await generateInsertSQL();

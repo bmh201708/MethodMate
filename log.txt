@@ -1,0 +1,11 @@
+ScholarSearch.vue:457 
+ 
+ POST http://localhost:3000/api/api/openalex-search 404 (Not Found)
+searchPapers	@	ScholarSearch.vue:457
+await in searchPapers		
+(匿名)	@	ScholarSearch.vue:12
+ScholarSearch.vue:491 
+ Search error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+searchPapers	@	ScholarSearch.vue:491
+await in searchPapers		
+(匿名)	@	ScholarSearch.vue:12

@@ -1,6 +1,6 @@
 -- MethodMate 统计方法数据库导出
 -- 生成时间: 2025-07-14T08:11:31.147Z
--- 远程服务器: http://175.27.251.132/
+-- 远程服务器: http://119.45.20.245/
 
 -- 创建统计方法表
 CREATE TABLE IF NOT EXISTS statistical_methods (
