@@ -34,6 +34,24 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 
 const PROXY_URL = process.env.PROXY_URL || '';
 
+// 调试代理配置
+if (PROXY_URL) {
+  console.log('🌐 代理配置已加载:', PROXY_URL.replace(/\/\/[^:]+:[^@]+@/, '//***:***@')); // 隐藏敏感信息
+  
+  // 验证代理URL格式
+  try {
+    const proxyUrl = new URL(PROXY_URL);
+    const ipParts = proxyUrl.hostname.split('.');
+    if (ipParts.length === 4 && ipParts.some(part => parseInt(part) > 255)) {
+      console.warn('⚠️ 代理IP地址格式异常，某些段超过255:', proxyUrl.hostname);
+    }
+  } catch (error) {
+    console.warn('⚠️ 代理URL格式验证失败:', error.message);
+  }
+} else {
+  console.log('⚠️ 未找到代理配置 (PROXY_URL)');
+}
+
 // 获取当前文件的目录
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -1314,7 +1332,33 @@ const fetchWithRetry = async (url, options = {}, retries = 3, delay = 1000) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
     
-    const agent = PROXY_URL ? new HttpsProxyAgent(PROXY_URL) : null;
+    let agent = null;
+    
+    // 安全地创建代理agent
+    if (PROXY_URL) {
+      try {
+        console.log('🔍 尝试创建代理agent，PROXY_URL长度:', PROXY_URL.length);
+        console.log('🔍 PROXY_URL前50字符:', PROXY_URL.substring(0, 50));
+        
+        // 验证URL格式
+        new URL(PROXY_URL); // 测试URL是否有效
+        
+        agent = new HttpsProxyAgent(PROXY_URL);
+        console.log('✅ 代理agent创建成功');
+      } catch (proxyError) {
+        console.error('❌ 创建代理agent失败:', proxyError.message);
+        console.error('🔍 完整PROXY_URL:', JSON.stringify(PROXY_URL));
+        console.log('⚠️ 回退到直连模式');
+        agent = null;
+      }
+    }
+    
+    // 调试代理使用情况
+    if (agent) {
+      console.log('🌐 正在通过代理发送请求:', url.substring(0, 50) + '...');
+    } else {
+      console.log('🔗 直连发送请求:', url.substring(0, 50) + '...');
+    }
 
     const fetchOptions = {
       method: 'GET',

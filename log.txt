@@ -1,11 +1,5 @@
-ScholarSearch.vue:457 
- 
- POST http://localhost:3000/api/api/openalex-search 404 (Not Found)
-searchPapers	@	ScholarSearch.vue:457
-await in searchPapers		
-(匿名)	@	ScholarSearch.vue:12
-ScholarSearch.vue:491 
- Search error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-searchPapers	@	ScholarSearch.vue:491
-await in searchPapers		
-(匿名)	@	ScholarSearch.vue:12
+OpenAlex API错误响应 (407): Not authenticated or invalid authentication credentials. Make sure to update your proxy address, proxy username and port.
+OpenAlex搜索失败: Error: OpenAlex API responded with status: 407
+at searchOpenAlexPapers (file:///www/wwwroot/MethodMate/backend/local-api.js:1712:13)
+at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+at async file:///www/wwwroot/MethodMate/backend/local-api.js:1880:21
