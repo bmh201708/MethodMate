@@ -1,5 +1,6 @@
-OpenAlex API错误响应 (407): Not authenticated or invalid authentication credentials. Make sure to update your proxy address, proxy username and port.
-OpenAlex搜索失败: Error: OpenAlex API responded with status: 407
-at searchOpenAlexPapers (file:///www/wwwroot/MethodMate/backend/local-api.js:1712:13)
-at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-at async file:///www/wwwroot/MethodMate/backend/local-api.js:1880:21
+TypeDance: Creating Semantic Typographic Logos from Image through Personalized Generation
+Understanding and Supporting Formal Email Exchange by Answering AI-Generated Questions
+Synthetic Human Memories: AI-Edited Images and Videos Can Implant False Memories and Distort Recollection
+Human Creativity in the Age of LLMs: Randomized Experiments on Divergent and Convergent Thinking
+SketchFlex: Facilitating Spatial-Semantic Coherence in Text-to-Image Generation with Region-Based Sketches
+Letters from Future Self: Augmenting the Letter-Exchange Exercise with LLM-based Agents to Enhance Young Adults’ Career Exploration
