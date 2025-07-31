@@ -1325,73 +1325,93 @@ const extractKeywords = (messages) => {
   return keywords.join(' ');
 };
 
-// 简单的重试函数
+// 增强的重试函数，支持代理回退和更好的超时处理
 const fetchWithRetry = async (url, options = {}, retries = 3, delay = 1000) => {
-  try {
-    // 创建AbortController来处理超时
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
-    
-    let agent = null;
-    
-    // 安全地创建代理agent
-    if (PROXY_URL) {
-      try {
-        console.log('🔍 尝试创建代理agent，PROXY_URL长度:', PROXY_URL.length);
-        console.log('🔍 PROXY_URL前50字符:', PROXY_URL.substring(0, 50));
-        
-        // 验证URL格式
-        new URL(PROXY_URL); // 测试URL是否有效
-        
-        agent = new HttpsProxyAgent(PROXY_URL);
-        console.log('✅ 代理agent创建成功');
-      } catch (proxyError) {
-        console.error('❌ 创建代理agent失败:', proxyError.message);
-        console.error('🔍 完整PROXY_URL:', JSON.stringify(PROXY_URL));
-        console.log('⚠️ 回退到直连模式');
+  let lastError = null;
+  
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      console.log(`🔍 第${attempt}/${retries}次尝试请求`);
+      
+      // 创建AbortController来处理超时
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45秒超时
+      
+      let agent = null;
+      
+      // 安全地创建代理agent
+      if (PROXY_URL && attempt <= 2) { // 前两次尝试使用代理
+        try {
+          console.log('🔍 尝试创建代理agent，PROXY_URL长度:', PROXY_URL.length);
+          console.log('🔍 PROXY_URL前50字符:', PROXY_URL.substring(0, 50));
+          
+          // 验证URL格式
+          new URL(PROXY_URL); // 测试URL是否有效
+          
+          agent = new HttpsProxyAgent(PROXY_URL);
+          console.log('✅ 代理agent创建成功');
+        } catch (proxyError) {
+          console.error('❌ 创建代理agent失败:', proxyError.message);
+          console.log('⚠️ 回退到直连模式');
+          agent = null;
+        }
+      } else if (attempt > 2) {
+        console.log('🔄 前两次尝试失败，强制使用直连模式');
         agent = null;
       }
-    }
-    
-    // 调试代理使用情况
-    if (agent) {
-      console.log('🌐 正在通过代理发送请求:', url.substring(0, 50) + '...');
-    } else {
-      console.log('🔗 直连发送请求:', url.substring(0, 50) + '...');
-    }
+      
+      // 调试代理使用情况
+      if (agent) {
+        console.log('🌐 正在通过代理发送请求:', url.substring(0, 50) + '...');
+      } else {
+        console.log('🔗 直连发送请求:', url.substring(0, 50) + '...');
+      }
 
-    const fetchOptions = {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'MethodMate/1.0 (Research Tool)',
-        'Accept': 'application/json',
-        ...options.headers
-      },
-      signal: controller.signal,
-      agent: agent,
-      ...options
-    };
-    
-    const response = await fetch(url, fetchOptions);
-    clearTimeout(timeoutId);
-    
-    return response;
-  } catch (err) {
-    console.log(`❌ Fetch失败 (剩余重试: ${retries - 1}):`, err.message);
-    
-    // 针对不同错误类型的处理
-    if (err.name === 'AbortError') {
-      console.log('⏰ 请求超时');
-    } else if (err.code === 'ENOTFOUND') {
-      console.log('🌐 DNS解析失败');
-    } else if (err.code === 'ECONNREFUSED') {
-      console.log('🚫 连接被拒绝');
+      const fetchOptions = {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'MethodMate/1.0 (Research Tool)',
+          'Accept': 'application/json',
+          ...options.headers
+        },
+        signal: controller.signal,
+        agent: agent,
+        ...options
+      };
+      
+      const response = await fetch(url, fetchOptions);
+      clearTimeout(timeoutId);
+      
+      console.log(`✅ 第${attempt}次请求成功`);
+      return response;
+      
+    } catch (err) {
+      lastError = err;
+      console.log(`❌ 第${attempt}次请求失败:`, err.message);
+      
+      // 针对不同错误类型的处理
+      if (err.name === 'AbortError') {
+        console.log('⏰ 请求超时');
+      } else if (err.code === 'ENOTFOUND') {
+        console.log('🌐 DNS解析失败');
+      } else if (err.code === 'ECONNREFUSED') {
+        console.log('🚫 连接被拒绝');
+      } else if (err.message.includes('aborted')) {
+        console.log('⏰ 请求被中止');
+      }
+      
+      // 如果不是最后一次尝试，等待后重试
+      if (attempt < retries) {
+        console.log(`⏳ ${delay}ms后重试...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 1.5; // 递增延迟
+      }
     }
-    
-    if (retries <= 1) throw err;
-    await new Promise(resolve => setTimeout(resolve, delay));
-    return fetchWithRetry(url, options, retries - 1, delay * 2);
   }
+  
+  // 如果所有尝试都失败了，抛出最后一个错误
+  console.error(`❌ 所有${retries}次尝试都失败了`);
+  throw lastError;
 };
 
 if (!CORE_API_KEY) {
@@ -1568,6 +1588,43 @@ const buildDomainFilter = (enableDomainFilter = true, hciOnly = false) => {
 };
 
 /**
+ * 构建增强的过滤条件：设计相关领域 OR arXiv来源 OR CHI会议
+ * 由于OpenAlex不支持跨字段OR，返回多个过滤条件分别查询
+ * @param {boolean} enableDomainFilter - 是否启用领域过滤
+ * @param {boolean} hciOnly - 是否只推荐人机交互领域文献（默认false）
+ * @returns {Array} - 过滤条件数组，需要分别查询然后合并结果
+ */
+const buildEnhancedDomainFilters = (enableDomainFilter = true, hciOnly = false) => {
+  if (!enableDomainFilter) {
+    return ['']; // 不启用领域过滤时返回空字符串数组
+  }
+
+  const filters = [];
+  
+  // 1. 设计相关领域过滤
+  if (hciOnly) {
+    filters.push('primary_topic.subfield.id:1709'); // HCI专门领域
+    console.log('🎯 添加HCI专门领域过滤');
+  } else {
+    // 多领域过滤：Computer Science, Arts & Humanities, Psychology, Social Sciences
+    const fieldIds = ['17', '12', '32', '33'];
+    filters.push(`primary_topic.field.id:${fieldIds.join('|')}`);
+    console.log('🌐 添加多领域过滤 (CS+Arts+Psychology+Social)');
+  }
+
+  // 2. arXiv来源过滤
+  filters.push('primary_location.source.id:S4306400194');
+  console.log('📋 添加arXiv来源过滤');
+
+  // 3. CHI会议过滤
+  filters.push('primary_location.source.id:S4363607743');
+  console.log('🏛️ 添加CHI会议过滤');
+
+  console.log(`🔗 构建${filters.length}个独立过滤条件，将分别查询并合并结果`);
+  return filters;
+};
+
+/**
  * 构建OpenAlex API查询URL
  * @param {string} searchQuery - 搜索查询
  * @param {number} limit - 结果数量限制
@@ -1576,7 +1633,7 @@ const buildDomainFilter = (enableDomainFilter = true, hciOnly = false) => {
  * @param {boolean} hciOnly - 是否只推荐人机交互领域文献
  * @returns {string} - 完整的API查询URL
  */
-const buildOpenAlexSearchUrl = (searchQuery, limit = 20, filterVenues = true, enableDomainFilter = true, hciOnly = false) => {
+const buildOpenAlexSearchUrl = (searchQuery, limit = 20, filterVenues = true, enableDomainFilter = true, hciOnly = false, customDomainFilter = null) => {
   let url = `${OPENALEX_API_BASE}/works?search=${encodeURIComponent(searchQuery)}`;
   url += `&per-page=${limit}`;
   url += `&sort=relevance_score:desc`;
@@ -1607,11 +1664,19 @@ const buildOpenAlexSearchUrl = (searchQuery, limit = 20, filterVenues = true, en
   filters.push('is_retracted:false');        // 排除撤回的论文
   filters.push('is_paratext:false');         // 排除非正文内容
   
-  // 添加领域过滤 - 保持领域过滤以确保相关性
+  // 添加领域过滤条件
   if (enableDomainFilter) {
-    const domainFilter = buildDomainFilter(true, hciOnly);
-    if (domainFilter) {
-      filters.push(domainFilter);
+    if (customDomainFilter) {
+      // 使用自定义过滤条件（用于多次查询策略）
+      filters.push(customDomainFilter);
+      console.log('🔧 使用自定义领域过滤条件:', customDomainFilter);
+    } else {
+      // 使用原始的单一领域过滤（向后兼容）
+      const domainFilter = buildDomainFilter(true, hciOnly);
+      if (domainFilter) {
+        filters.push(domainFilter);
+        console.log('🌐 使用原始领域过滤条件');
+      }
     }
   }
   
@@ -1740,36 +1805,65 @@ const searchOpenAlexPapers = async (searchQuery, limit = 20, filterVenues = true
   try {
     console.log(`🔍 OpenAlex搜索开始: "${searchQuery}", 限制: ${limit}篇, 顶级期刊过滤: ${filterVenues}, 领域过滤: ${enableDomainFilter}, 仅HCI: ${hciOnly}`);
     
-    const searchUrl = buildOpenAlexSearchUrl(searchQuery, limit, filterVenues, enableDomainFilter, hciOnly);
-    console.log(`📡 完整API URL: ${searchUrl}`); // 添加URL调试日志
+    // 获取增强过滤条件数组
+    const enhancedFilters = buildEnhancedDomainFilters(enableDomainFilter, hciOnly);
+    console.log(`🔗 将执行${enhancedFilters.length}次查询以模拟OR逻辑`);
     
-    const response = await fetchWithRetry(searchUrl, {
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'MethodMate/1.0 (mailto:support@methodmate.org)'
+    const allPapers = new Map(); // 使用Map去重，key为论文ID
+    let totalCount = 0;
+    
+    // 为每个过滤条件分别查询
+    for (let i = 0; i < enhancedFilters.length; i++) {
+      const filter = enhancedFilters[i];
+      console.log(`📡 执行第${i + 1}/${enhancedFilters.length}次查询...`);
+      
+      try {
+        const searchUrl = buildOpenAlexSearchUrl(searchQuery, limit, filterVenues, false, hciOnly, filter);
+        console.log(`📡 查询${i + 1} URL: ${searchUrl.substring(0, 150)}...`);
+        
+        const response = await fetchWithRetry(searchUrl, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'MethodMate/1.0 (mailto:support@methodmate.org)'
+          }
+        }, 3, 2000);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`查询${i + 1}失败 (${response.status}):`, errorText);
+          continue; // 继续下一个查询
+        }
+        
+        const data = await response.json();
+        console.log(`查询${i + 1}结果: ${data.results?.length || 0}篇论文`);
+        
+        if (data.results && Array.isArray(data.results)) {
+          // 转换并去重添加到结果中
+          data.results.forEach((work, index) => {
+            const paper = transformOpenAlexWork(work, index);
+            const paperId = paper.openalex_id || paper.id;
+            if (!allPapers.has(paperId)) {
+              allPapers.set(paperId, paper);
+            }
+          });
+          totalCount += data.meta?.count || 0;
+        }
+        
+        // 添加延迟避免API限制
+        if (i < enhancedFilters.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+      } catch (error) {
+        console.error(`查询${i + 1}发生错误:`, error.message);
+        continue; // 继续下一个查询
       }
-    }, 3, 2000);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`OpenAlex API错误响应 (${response.status}):`, errorText);
-      throw new Error(`OpenAlex API responded with status: ${response.status}`);
     }
     
-    const data = await response.json();
-    console.log('OpenAlex API响应论文数量:', data.results?.length || 0);
-    console.log('OpenAlex API总计数量:', data.meta?.count || 0);
-    console.log('🔍 调试: API响应元数据:', JSON.stringify(data.meta, null, 2)); // 添加元数据调试
+    console.log(`🎯 合并结果: 共${allPapers.size}篇去重论文`);
     
-    if (!data.results || !Array.isArray(data.results)) {
-      console.warn('OpenAlex API返回的数据格式不正确');
-      return { papers: [], total: 0 };
-    }
-    
-    // 转换结果格式
-    const transformedPapers = data.results.map((work, index) => 
-      transformOpenAlexWork(work, index)
-    );
+    // 转换Map为数组
+    const transformedPapers = Array.from(allPapers.values());
     
     // 🔧 后处理过滤逻辑调整 - 由于已在API层面过滤，这里主要做兜底检查
     let filteredPapers = transformedPapers;
@@ -1790,8 +1884,8 @@ const searchOpenAlexPapers = async (searchQuery, limit = 20, filterVenues = true
     
     return {
       papers: filteredPapers,
-      total: data.meta?.count || transformedPapers.length,
-      meta: data.meta,
+      total: totalCount || transformedPapers.length,
+      meta: { count: totalCount, merged_queries: enhancedFilters.length },
       originalCount: transformedPapers.length,
       filteredCount: filteredPapers.length
     };

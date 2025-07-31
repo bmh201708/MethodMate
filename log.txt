@@ -1,6 +1,8 @@
-TypeDance: Creating Semantic Typographic Logos from Image through Personalized Generation
-Understanding and Supporting Formal Email Exchange by Answering AI-Generated Questions
-Synthetic Human Memories: AI-Edited Images and Videos Can Implant False Memories and Distort Recollection
-Human Creativity in the Age of LLMs: Randomized Experiments on Divergent and Convergent Thinking
-SketchFlex: Facilitating Spatial-Semantic Coherence in Text-to-Image Generation with Region-Based Sketches
-Letters from Future Self: Augmenting the Letter-Exchange Exercise with LLM-based Agents to Enhance Young Adults’ Career Exploration
+好问题！从日志中我可以看到问题所在。让我分析一下：
+从日志可以看到：
+✅ 多次查询策略工作正常：执行了3次查询，每次都成功
+✅ 403错误已解决：直连请求成功
+❌ 但每次查询只返回4篇论文，最终去重后也只有4篇
+问题出现在几个地方：
+1. 每次查询的limit设置太小
+找到问题了！当用户请求10篇论文时，代码将其分配给3个查询：Math.ceil(10/3) = 4篇每个查询。
