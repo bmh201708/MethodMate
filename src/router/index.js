@@ -37,7 +37,7 @@ const router = createRouter({
       name: 'scholar-search',
       component: ScholarSearchView,
       meta: {
-        title: 'Google Scholar 文献搜索'
+        title: 'Google Scholar Literature Search'
       }
     },
     {
@@ -45,7 +45,7 @@ const router = createRouter({
       name: 'references',
       component: ReferencesView,
       meta: {
-        title: '引用文献管理'
+        title: 'Reference Management'
       }
     },
     {
@@ -53,7 +53,7 @@ const router = createRouter({
       name: 'login',
       component: LoginView,
       meta: {
-        title: '用户登录'
+        title: 'User Login'
       }
     },
     {
@@ -61,7 +61,7 @@ const router = createRouter({
       name: 'register',
       component: RegisterView,
       meta: {
-        title: '用户注册'
+        title: 'User Registration'
       }
     },
     {
@@ -69,7 +69,7 @@ const router = createRouter({
       name: 'chatgpt',
       component: ChatGPTView,
       meta: {
-        title: 'ChatGPT 对话'
+        title: 'ChatGPT Conversation'
       }
     }
   ]

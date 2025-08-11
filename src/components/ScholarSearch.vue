@@ -3,9 +3,9 @@
     <!-- 搜索表单 -->
     <div class="search-form bg-white rounded-lg shadow-md p-6 mb-6">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-2xl font-bold text-gray-800">OpenAlex 文献搜索</h2>
+        <h2 class="text-2xl font-bold text-gray-800">OpenAlex Literature Search</h2>
         <div class="text-sm text-gray-600">
-          已选择 {{ referencedCount }} 篇参考文献
+          {{ referencedCount }} reference papers selected
         </div>
       </div>
       
@@ -15,7 +15,7 @@
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="输入搜索关键词，如：深度学习、机器学习、自然语言处理..."
+              placeholder="Enter search keywords, e.g.: deep learning, machine learning, natural language processing..."
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               required
             />
@@ -27,7 +27,7 @@
                 v-model="filterTopVenues"
                 class="form-checkbox h-5 w-5 text-blue-600"
               />
-              <span class="ml-2 text-gray-700">扩大范围，不限顶刊顶会文献</span>
+              <span class="ml-2 text-gray-700">Expand range, include non-top venue papers</span>
             </label>
           </div>
           
@@ -36,10 +36,10 @@
               v-model="numResults"
               class="px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             >
-              <option value="5">5篇</option>
-              <option value="10">10篇</option>
-              <option value="20">20篇</option>
-              <option value="50">50篇</option>
+              <option value="5">5 papers</option>
+              <option value="10">10 papers</option>
+              <option value="20">20 papers</option>
+              <option value="50">50 papers</option>
             </select>
             
 
@@ -54,9 +54,9 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                搜索中...
+                Searching...
               </span>
-              <span v-else>搜索</span>
+              <span v-else>Search</span>
             </button>
             
             <!-- 新搜索按钮 -->
@@ -65,12 +65,12 @@
               type="button"
               @click="startNewSearch"
               class="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-2"
-              title="清空当前搜索结果，开始新搜索"
+              title="Clear current search results and start new search"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
               </svg>
-              <span>新搜索</span>
+              <span>New Search</span>
             </button>
           </div>
         </div>
@@ -84,13 +84,13 @@
           <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
           </svg>
-          已参考文献 ({{ referencedCount }} 篇)
+          Referenced Papers ({{ referencedCount }} papers)
         </h3>
         <button
           @click="clearAllReferences"
           class="text-sm text-gray-500 hover:text-red-500 transition-colors"
         >
-          清空全部
+          Clear All
         </button>
       </div>
       <div class="grid gap-3">
@@ -125,7 +125,7 @@
               <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-4">
                   <h3 class="text-xl font-semibold text-gray-800">
-                    搜索结果 (共 {{ searchResults.length }} 篇)
+                    Search Results ({{ searchResults.length }} papers total)
                   </h3>
                   <label class="inline-flex items-center">
                     <input
@@ -133,11 +133,11 @@
                       v-model="showOnlyTopVenues"
                       class="form-checkbox h-4 w-4 text-blue-600"
                     />
-                    <span class="ml-2 text-sm text-gray-700">只显示顶会顶刊</span>
+                    <span class="ml-2 text-sm text-gray-700">Show only top venues</span>
                   </label>
                 </div>
                 <div class="text-sm text-gray-600">
-                  搜索关键词: "{{ lastSearchQuery }}"
+                  Search keywords: "{{ lastSearchQuery }}"
                 </div>
               </div>
 
@@ -158,7 +158,7 @@
                 {{ paper.title }}
               </h4>
               <span v-if="paper.isTopVenue" class="ml-2 px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
-                顶会顶刊
+                Top Venue
               </span>
             </div>
             
@@ -167,7 +167,7 @@
                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                作者: {{ paper.authors.join(', ') }}
+                Authors: {{ paper.authors.join(', ') }}
               </span>
               
               <span v-if="paper.journal" class="flex items-center">
@@ -175,21 +175,21 @@
                   <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
                   <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
                 </svg>
-                期刊: {{ paper.journal }}
+                Journal: {{ paper.journal }}
               </span>
               
               <span v-if="paper.year" class="flex items-center">
                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
                 </svg>
-                年份: {{ paper.year }}
+                Year: {{ paper.year }}
               </span>
               
               <span v-if="paper.citations" class="flex items-center">
                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                 </svg>
-                引用: {{ paper.citations }}
+                Citations: {{ paper.citations }}
               </span>
             </div>
           </div>
@@ -211,7 +211,7 @@
                 <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/>
                 <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"/>
               </svg>
-              查看原文
+              View Original
             </a>
 
             <button
@@ -221,12 +221,12 @@
             >
               <svg v-if="loadingDownload === index" class="animate-spin w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
               <svg v-else class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
               </svg>
-              获取全文
+              Get Full Text
             </button>
 
             <button
@@ -241,7 +241,7 @@
                 <path v-if="isReferenced(paper)" fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                 <path v-else fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
               </svg>
-              {{ isReferenced(paper) ? '已参考' : '参考此文' }}
+              {{ isReferenced(paper) ? 'Referenced' : 'Reference' }}
             </button>
 
             <span
@@ -265,9 +265,9 @@
                   }"
                 ></div>
                 <span>
-                  {{ getRelevanceLevel(paper.relevance_score) === 'high' ? '高相关性' : 
-                     getRelevanceLevel(paper.relevance_score) === 'medium' ? '中等相关性' : 
-                     getRelevanceLevel(paper.relevance_score) === 'low' ? '低相关性' : '极低相关性' }}
+                  {{ getRelevanceLevel(paper.relevance_score) === 'high' ? 'High Relevance' : 
+                     getRelevanceLevel(paper.relevance_score) === 'medium' ? 'Medium Relevance' : 
+                     getRelevanceLevel(paper.relevance_score) === 'low' ? 'Low Relevance' : 'Very Low Relevance' }}
                 </span>
               </div>
             </span>
@@ -275,7 +275,7 @@
 
           <!-- 下载链接 -->
           <div v-if="paper.downloadSources && paper.downloadSources.length > 0" class="download-sources mt-4 pt-4 border-t border-gray-200">
-            <h5 class="text-sm font-medium text-gray-800 mb-2">可用下载源:</h5>
+            <h5 class="text-sm font-medium text-gray-800 mb-2">Available Download Sources:</h5>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
               <a
                 v-for="(source, sourceIndex) in paper.downloadSources"
@@ -290,7 +290,7 @@
               >
                 <div class="flex items-center">
                   <span class="font-medium">{{ source.source }}</span>
-                  <span v-if="source.free" class="ml-1 text-green-600 text-xs">(免费)</span>
+                  <span v-if="source.free" class="ml-1 text-green-600 text-xs">(Free)</span>
                 </div>
                 <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/>
@@ -311,8 +311,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
       </div>
-      <h3 class="text-lg font-medium text-gray-900 mb-2">暂无搜索结果</h3>
-      <p class="text-gray-500">请尝试使用不同的关键词进行搜索</p>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">No Search Results</h3>
+      <p class="text-gray-500">Please try searching with different keywords</p>
     </div>
 
     <!-- 错误信息 -->

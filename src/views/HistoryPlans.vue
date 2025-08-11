@@ -244,7 +244,7 @@
                                 </button>
                             </div>
 
-                            <!-- 完整方案 -->
+                            <!-- Complete Plan -->
                             <div v-if="activeSection === 'full'">
                                 <div class="flex justify-between items-center mb-6">
                                     <h2 class="text-2xl font-bold text-gray-900 flex-1 mr-4">{{ selectedPlan.title }}</h2>
@@ -307,7 +307,7 @@
                                 </div>
                             </div>
 
-                            <!-- 研究假设部分 -->
+                            <!-- Research Hypothesis Section -->
                             <div v-if="activeSection === 'hypothesis'" class="w-full">
                                 <h2 class="text-2xl font-bold text-gray-900 mb-6">Research Hypothesis</h2>
                                 <div v-if="selectedPlan.fullPlan.hypotheses && selectedPlan.fullPlan.hypotheses.length > 0"
@@ -330,7 +330,7 @@
                                 </div>
                             </div>
 
-                            <!-- 实验设计部分 -->
+                            <!-- Experimental Design Section -->
                             <div v-if="activeSection === 'design'" class="w-full">
                                 <h2 class="text-2xl font-bold text-gray-900 mb-6">Experimental Design</h2>
                                 <div v-if="selectedPlan.fullPlan.experimentalDesign" class="space-y-6 w-full">
@@ -349,7 +349,7 @@
                                 </div>
                             </div>
 
-                            <!-- 数据分析部分 -->
+                            <!-- Data Analysis Section -->
                             <div v-if="activeSection === 'analysis'" class="w-full">
                                 <h2 class="text-2xl font-bold text-gray-900 mb-6">Data Analysis</h2>
                                 <div v-if="selectedPlan.fullPlan.analysisMethod" class="space-y-6 w-full">
@@ -368,7 +368,7 @@
                                 </div>
                             </div>
 
-                            <!-- 结果呈现部分 -->
+                            <!-- Results Presentation Section -->
                             <div v-if="activeSection === 'results'" class="w-full">
                                 <h2 class="text-2xl font-bold text-gray-900 mb-6">Results Presentation</h2>
                                 <div v-if="selectedPlan.fullPlan.expectedResults" class="space-y-6 w-full">
@@ -698,22 +698,22 @@ const downloadTXT = async (plan) => {
         // 添加方案内容
         if (plan.fullPlan) {
             if (plan.fullPlan.hypotheses && plan.fullPlan.hypotheses.length > 0) {
-                content += '\n研究假设：\n'
+                content += '\nResearch Hypothesis:\n'
                 plan.fullPlan.hypotheses.forEach((hypothesis, index) => {
                     content += `${index + 1}. ${hypothesis}\n`
                 })
             }
             
             if (plan.fullPlan.experimentalDesign) {
-                content += '\n实验设计：\n' + plan.fullPlan.experimentalDesign + '\n'
+                content += '\nExperimental Design:\n' + plan.fullPlan.experimentalDesign + '\n'
             }
             
             if (plan.fullPlan.analysisMethod) {
-                content += '\n数据分析：\n' + plan.fullPlan.analysisMethod + '\n'
+                content += '\nData Analysis:\n' + plan.fullPlan.analysisMethod + '\n'
             }
             
             if (plan.fullPlan.expectedResults) {
-                content += '\n结果呈现：\n' + plan.fullPlan.expectedResults + '\n'
+                content += '\nResults Presentation:\n' + plan.fullPlan.expectedResults + '\n'
             }
         } else {
             content += '\n注意：此方案暂无详细内容。\n'
@@ -939,30 +939,30 @@ const generateTitleFromPlan = (plan) => {
     
     console.log('开始从方案内容生成标题...')
     
-    // 策略1：从研究假设中提取关键词
+    // Strategy 1: Extract keywords from research hypothesis
     if (plan.fullPlan.hypotheses && plan.fullPlan.hypotheses.length > 0) {
         const hypothesesText = plan.fullPlan.hypotheses.join(' ')
         const titleFromHypotheses = extractTitleFromContent(hypothesesText)
         if (titleFromHypotheses) {
-            console.log('从研究假设提取标题:', titleFromHypotheses)
+            console.log('Title extracted from research hypothesis:', titleFromHypotheses)
             return titleFromHypotheses
         }
     }
     
-    // 策略2：从实验设计中提取关键词
+    // Strategy 2: Extract keywords from experimental design
     if (plan.fullPlan.experimentalDesign) {
         const titleFromDesign = extractTitleFromContent(plan.fullPlan.experimentalDesign)
         if (titleFromDesign) {
-            console.log('从实验设计提取标题:', titleFromDesign)
+            console.log('Title extracted from experimental design:', titleFromDesign)
             return titleFromDesign
         }
     }
     
-    // 策略3：从数据分析中提取关键词
+    // Strategy 3: Extract keywords from data analysis
     if (plan.fullPlan.analysisMethod) {
         const titleFromAnalysis = extractTitleFromContent(plan.fullPlan.analysisMethod)
         if (titleFromAnalysis) {
-            console.log('从数据分析提取标题:', titleFromAnalysis)
+            console.log('Title extracted from data analysis:', titleFromAnalysis)
             return titleFromAnalysis
         }
     }
@@ -1205,11 +1205,11 @@ const downloadPDF = async (plan) => {
                 </div>
         `
         
-        // 添加研究假设
+        // Add research hypothesis
         if (plan.fullPlan && plan.fullPlan.hypotheses && plan.fullPlan.hypotheses.length > 0) {
             htmlContent += `
                 <div class="content-section">
-                    <h2>研究假设</h2>
+                    <h2>Research Hypothesis</h2>
             `
             plan.fullPlan.hypotheses.forEach((hypothesis, index) => {
                 const cleanHypothesis = hypothesis.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -1223,7 +1223,7 @@ const downloadPDF = async (plan) => {
             htmlContent += `</div>`
         }
         
-        // 添加实验设计
+        // Add experimental design
         if (plan.fullPlan && plan.fullPlan.experimentalDesign) {
             const cleanDesign = plan.fullPlan.experimentalDesign
                 .replace(/\n/g, '<br>')
@@ -1231,13 +1231,13 @@ const downloadPDF = async (plan) => {
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
             htmlContent += `
                 <div class="content-section">
-                    <h2>实验设计</h2>
+                    <h2>Experimental Design</h2>
                     <p>${cleanDesign}</p>
                 </div>
             `
         }
         
-        // 添加数据分析
+        // Add data analysis
         if (plan.fullPlan && plan.fullPlan.analysisMethod) {
             const cleanAnalysis = plan.fullPlan.analysisMethod
                 .replace(/\n/g, '<br>')
@@ -1245,13 +1245,13 @@ const downloadPDF = async (plan) => {
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
             htmlContent += `
                 <div class="content-section">
-                    <h2>数据分析</h2>
+                    <h2>Data Analysis</h2>
                     <p>${cleanAnalysis}</p>
                 </div>
             `
         }
         
-        // 添加结果呈现
+        // Add results presentation
         if (plan.fullPlan && plan.fullPlan.expectedResults) {
             const cleanResults = plan.fullPlan.expectedResults
                 .replace(/\n/g, '<br>')
@@ -1259,7 +1259,7 @@ const downloadPDF = async (plan) => {
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
             htmlContent += `
                 <div class="content-section">
-                    <h2>结果呈现</h2>
+                    <h2>Results Presentation</h2>
                     <p>${cleanResults}</p>
                 </div>
             `

@@ -21,7 +21,7 @@
               <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
               </svg>
-              <span>{{ isGenerating ? '生成中...' : '生成定量研究方案' }}</span>
+              <span>{{ isGenerating ? 'Generating...' : 'Generate quantitative research plan' }}</span>
             </button>
             
             <!-- 参考文献状态显示 -->
@@ -31,20 +31,20 @@
                 <svg class="w-4 h-4 inline mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                 </svg>
-                正在等待智能体回复，请稍候...
+                Please wait while the agent replies ...
               </div>
               
               <div v-if="papersState.referencedPapers.size > 0" class="text-purple-600">
                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                已选择 {{ papersState.referencedPapers.size }} 篇参考文献
+                {{ papersState.referencedPapers.size }} references were selected
               </div>
               <div v-else class="text-gray-500">
                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                暂无参考文献（可在相关文献页面选择）
+                No references (can be selected on the relevant literature page)
               </div>
             </div>
           </div>
@@ -68,9 +68,9 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <div>
-                  <h4 class="text-sm font-medium text-blue-900">正在查看历史方案</h4>
+                  <h4 class="text-sm font-medium text-blue-900">Viewing historical research plan</h4>
                   <p class="text-sm text-blue-700">{{ historyState.currentViewingPlan.title }}</p>
-                  <p class="text-xs text-blue-600">创建时间：{{ historyState.currentViewingPlan.createdAt }}</p>
+                  <p class="text-xs text-blue-600">Creation time:{{ historyState.currentViewingPlan.createdAt }}</p>
                 </div>
               </div>
               <div class="flex items-center space-x-3">
@@ -78,13 +78,13 @@
                   @click="applyHistoryPlan"
                   class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
                 >
-                  应用此方案
+                  Apply
                 </button>
                 <button 
                   @click="exitHistoryView"
                   class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                 >
-                  返回当前方案
+                  Return to current
                 </button>
               </div>
             </div>
@@ -115,7 +115,7 @@
                 <!-- 各部分内容 -->
                 <div v-if="activeSection === 'full'">
                   <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">{{ hasGeneratedPlan ? currentPlanState.title : '定量研究方案' }}</h2>
+                    <h2 class="text-2xl font-bold text-gray-900">{{ hasGeneratedPlan ? currentPlanState.title : 'Quantitative research plan' }}</h2>
                     <!-- 简约的评估和迭代按钮 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
                       <button
@@ -131,7 +131,7 @@
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>{{ isEvaluating ? '评估中...' : '整体评估' }}</span>
+                        <span>{{ isEvaluating ? 'Evaluating...' : 'Overall Evaluation' }}</span>
                       </button>
                       <button
                         ref="iterateBtnRef"
@@ -146,7 +146,7 @@
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
-                        <span>{{ isIterating ? '迭代中...' : '方案迭代' }}</span>
+                        <span>{{ isIterating ? 'Iterating...' : 'Iterate plan' }}</span>
                       </button>
                       
                       <!-- 方案对比按钮 -->
@@ -166,7 +166,7 @@
                     <!-- 如果有解析的plan数据，显示四个字段的内容 -->
                     <div v-if="hasGeneratedPlan">
                       <div v-if="currentPlanState.hypotheses && currentPlanState.hypotheses.length > 0">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-3">研究假设</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Research Hypothesis </h3>
                         <div class="space-y-2">
                           <div v-for="(hypothesis, index) in renderedHypotheses" :key="index" 
                                class="p-4 bg-gray-50 rounded-lg">
@@ -176,17 +176,17 @@
                       </div>
                       
                       <div v-if="currentPlanState.experimentalDesign">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-3">实验设计</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Experimental Design</h3>
                         <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedExperimentalDesign"></div>
                       </div>
                       
                       <div v-if="currentPlanState.analysisMethod">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-3">数据分析</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Data Analysis</h3>
                         <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedAnalysisMethod"></div>
                       </div>
                       
                       <div v-if="currentPlanState.expectedResults">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-3">结果呈现</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Result Presentation</h3>
                         <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedExpectedResults"></div>
                       </div>
                     </div>
@@ -198,28 +198,28 @@
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                       </div>
-                      <h3 class="text-lg font-medium text-gray-900 mb-2">还未生成实验方案，请先生成研究方案</h3>
+                      <h3 class="text-lg font-medium text-gray-900 mb-2">The experimental scheme has not been generated yet. Please make a research scheme</h3>
                       <p class="text-gray-500 mb-6 max-w-md mx-auto">
-                        您可以点击左侧的"生成定量研究方案"按钮，或在聊天框中输入相关需求来生成个性化的研究方案。
+                        You can click the "generate quantitative research scheme" button on the left, or enter relevant requirements in the chat box to generate a personalized research scheme.
                       </p>
                       <div class="flex justify-center space-x-4 text-sm text-gray-400">
                         <div class="flex items-center">
                           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                           </svg>
-                          智能生成
+                          Intelligent generation
                         </div>
                         <div class="flex items-center">
                           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                           </svg>
-                          基于文献
+                          Based on literature
                         </div>
                         <div class="flex items-center">
                           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                           </svg>
-                          结构化输出
+                          Structured output
                         </div>
                       </div>
                     </div>
@@ -227,7 +227,7 @@
                 </div>
                 <div v-if="activeSection === 'hypothesis'">
                   <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">研究假设</h2>
+                    <h2 class="text-2xl font-bold text-gray-900">Research Hypothesis </h2>
                     <!-- 简约的部分评估按钮 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
                       <button

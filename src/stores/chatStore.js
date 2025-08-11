@@ -365,9 +365,9 @@ const loadCurrentPlanFromStorage = () => {
           'H2: AI编辑内容的不确定性特征会增加记忆失真的程度。',
           'H3: 参与者的媒体素养水平会调节AI编辑内容对记忆的影响。'
         ],
-        experimentalDesign: parsed.experimentalDesign || '采用2x2混合实验设计，操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）。',
+        experimentalDesign: parsed.experimentalDesign || 'Adopt a 2x2 mixed experimental design, manipulating media type (AI-edited vs. traditional editing) and presentation style (static vs. dynamic).',
         variables: parsed.variables || '自变量：媒体类型、呈现方式；因变量：记忆准确度、虚假记忆比率；控制变量：媒体素养、年龄、教育背景。',
-        statisticalTools: parsed.statisticalTools || 'SPSS 26.0, R Studio, Python数据分析包（pandas, numpy, scipy）',
+        statisticalTools: parsed.statisticalTools || 'SPSS 26.0, R Studio, Python data analysis packages (pandas, numpy, scipy)',
         expectedResults: parsed.expectedResults || '预期AI编辑的媒体内容会导致更高的虚假记忆形成率，且这种效应会被参与者的媒体素养水平调节。',
         visualization: parsed.visualization || '使用ggplot2创建交互效应图，使用Python的seaborn库绘制相关性热图和箱线图。',
         references: parsed.references || [
@@ -387,20 +387,20 @@ const loadCurrentPlanFromStorage = () => {
           methodIntro: 'The research methodology follows a mixed-methods approach, combining experimental research with survey methods. The experimental group and control group will be exposed to AI-edited and traditionally edited media content respectively.'
         },
         hypothesis: parsed.hypothesis || {
-          sourceIntro: '研究假设的形成基于对现有文献的系统性回顾，特别是关于AI技术对人类认知影响的研究。我们整合了来自认知科学、人工智能和人机交互领域的最新发现。',
-          methodIntro: '假设的验证将采用实验研究方法，通过严格控制的实验环境来测试AI编辑内容对记忆形成的影响。实验设计包括前测和后测，以确保结果的可靠性。'
+          sourceIntro: 'The formation of research hypotheses is based on a systematic review of existing literature, particularly research on the impact of AI technology on human cognition. We integrated the latest findings from cognitive science, artificial intelligence, and human-computer interaction.',
+          methodIntro: 'Hypothesis validation will use experimental research methods to test the impact of AI-edited content on memory formation through a strictly controlled experimental environment. The experimental design includes pre-tests and post-tests to ensure result reliability.'
         },
         design: parsed.design || {
-          sourceIntro: '实验设计参考了多个经典的记忆研究范式，并结合了最新的AI技术发展特点。设计方案经过专家评审和预实验优化。',
-          methodIntro: '采用2x2混合实验设计，操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）。所有实验材料都经过标准化处理。'
+          sourceIntro: 'The experimental design references multiple classic memory research paradigms and incorporates the latest AI technology development characteristics. The design plan has been optimized through expert reviews and pilot experiments.',
+          methodIntro: 'Adopt a 2x2 mixed experimental design, manipulating media type (AI-edited vs. traditional editing) and presentation style (static vs. dynamic). All experimental materials have been standardized.'
         },
         analysis: parsed.analysis || {
-          sourceIntro: '数据分析方法的选择基于近期发表的类似研究，并考虑了数据的特点和研究目标。分析框架经过方法专家的审查和验证。',
-          methodIntro: '使用SPSS 26.0进行定量分析，包括描述性统计、方差分析和回归分析。质性数据采用主题编码方法，使用NVivo软件辅助分析。'
+          sourceIntro: 'The selection of data analysis methods is based on recently published similar studies and considers the characteristics of the data and research objectives. The analysis framework has been reviewed and validated by methodological experts.',
+          methodIntro: 'Use SPSS 26.0 for quantitative analysis, including descriptive statistics, analysis of variance, and regression analysis. Qualitative data uses thematic coding methods with NVivo software for assisted analysis.'
         },
         results: parsed.results || {
-          sourceIntro: '研究结果的呈现方式参考了领域内顶级期刊的标准，确保数据可视化的清晰性和科学性。',
-          methodIntro: '结果呈现采用多种可视化方法，包括交互效应图、热图和箱线图。所有图表都遵循APA格式规范。'
+          sourceIntro: 'The presentation of research results references standards from top journals in the field, ensuring clarity and scientific rigor in data visualization.',
+          methodIntro: 'Results presentation uses multiple visualization methods, including interaction effect plots, heat maps, and box plots. All charts follow APA formatting standards.'
         },
         isGenerated: parsed.isGenerated || false,
         sourceIntroductions: parsed.sourceIntroductions || {
@@ -436,9 +436,9 @@ const loadCurrentPlanFromStorage = () => {
       'H2: AI编辑内容的不确定性特征会增加记忆失真的程度。',
       'H3: 参与者的媒体素养水平会调节AI编辑内容对记忆的影响。'
     ],
-    experimentalDesign: '采用2x2混合实验设计，操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）。',
+    experimentalDesign: 'Adopt a 2x2 mixed experimental design, manipulating media type (AI-edited vs. traditional editing) and presentation style (static vs. dynamic).',
     variables: '自变量：媒体类型、呈现方式；因变量：记忆准确度、虚假记忆比率；控制变量：媒体素养、年龄、教育背景。',
-    statisticalTools: 'SPSS 26.0, R Studio, Python数据分析包（pandas, numpy, scipy）',
+    statisticalTools: 'SPSS 26.0, R Studio, Python data analysis packages (pandas, numpy, scipy)',
     expectedResults: '预期AI编辑的媒体内容会导致更高的虚假记忆形成率，且这种效应会被参与者的媒体素养水平调节。',
     visualization: '使用ggplot2创建交互效应图，使用Python的seaborn库绘制相关性热图和箱线图。',
     references: [
@@ -458,20 +458,20 @@ const loadCurrentPlanFromStorage = () => {
       methodIntro: 'The research methodology follows a mixed-methods approach, combining experimental research with survey methods. The experimental group and control group will be exposed to AI-edited and traditionally edited media content respectively.'
     },
     hypothesis: {
-      sourceIntro: '研究假设的形成基于对现有文献的系统性回顾，特别是关于AI技术对人类认知影响的研究。我们整合了来自认知科学、人工智能和人机交互领域的最新发现。',
-      methodIntro: '假设的验证将采用实验研究方法，通过严格控制的实验环境来测试AI编辑内容对记忆形成的影响。实验设计包括前测和后测，以确保结果的可靠性。'
+      sourceIntro: 'The formation of research hypotheses is based on a systematic review of existing literature, particularly research on the impact of AI technology on human cognition. We integrated the latest findings from cognitive science, artificial intelligence, and human-computer interaction.',
+      methodIntro: 'Hypothesis validation will use experimental research methods to test the impact of AI-edited content on memory formation through a strictly controlled experimental environment. The experimental design includes pre-tests and post-tests to ensure result reliability.'
     },
     design: {
-      sourceIntro: '实验设计参考了多个经典的记忆研究范式，并结合了最新的AI技术发展特点。设计方案经过专家评审和预实验优化。',
-      methodIntro: '采用2x2混合实验设计，操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）。所有实验材料都经过标准化处理。'
+      sourceIntro: 'The experimental design references multiple classic memory research paradigms and incorporates the latest AI technology development characteristics. The design plan has been optimized through expert reviews and pilot experiments.',
+      methodIntro: 'Adopt a 2x2 mixed experimental design, manipulating media type (AI-edited vs. traditional editing) and presentation style (static vs. dynamic). All experimental materials have been standardized.'
     },
     analysis: {
-      sourceIntro: '数据分析方法的选择基于近期发表的类似研究，并考虑了数据的特点和研究目标。分析框架经过方法专家的审查和验证。',
-      methodIntro: '使用SPSS 26.0进行定量分析，包括描述性统计、方差分析和回归分析。质性数据采用主题编码方法，使用NVivo软件辅助分析。'
+      sourceIntro: 'The selection of data analysis methods is based on recently published similar studies and considers the characteristics of the data and research objectives. The analysis framework has been reviewed and validated by methodological experts.',
+      methodIntro: 'Use SPSS 26.0 for quantitative analysis, including descriptive statistics, analysis of variance, and regression analysis. Qualitative data uses thematic coding methods with NVivo software for assisted analysis.'
     },
     results: {
-      sourceIntro: '研究结果的呈现方式参考了领域内顶级期刊的标准，确保数据可视化的清晰性和科学性。',
-      methodIntro: '结果呈现采用多种可视化方法，包括交互效应图、热图和箱线图。所有图表都遵循APA格式规范。'
+      sourceIntro: 'The presentation of research results references standards from top journals in the field, ensuring clarity and scientific rigor in data visualization.',
+      methodIntro: 'Results presentation uses multiple visualization methods, including interaction effect plots, heat maps, and box plots. All charts follow APA formatting standards.'
     },
     isGenerated: false,
     sourceIntroductions: {
@@ -1125,15 +1125,15 @@ const buildCurrentPlanContext = () => {
   }
   
   if (currentPlanState.hypotheses && currentPlanState.hypotheses.length > 0) {
-    context += `研究假设：\n${currentPlanState.hypotheses.map((h, i) => `${i + 1}. ${h}`).join('\n')}\n`
+    context += `Research Hypothesis:\n${currentPlanState.hypotheses.map((h, i) => `${i + 1}. ${h}`).join('\n')}\n`
   }
   
   if (currentPlanState.experimentalDesign) {
-    context += `实验设计：${currentPlanState.experimentalDesign}\n`
+    context += `Experimental Design: ${currentPlanState.experimentalDesign}\n`
   }
   
   if (currentPlanState.analysisMethod) {
-    context += `数据分析方法：${currentPlanState.analysisMethod}\n`
+    context += `Data Analysis Method: ${currentPlanState.analysisMethod}\n`
   }
   
   if (currentPlanState.expectedResults) {
@@ -1220,7 +1220,7 @@ export const addHistoryPlan = async (planData, generationContext = null) => {
   if (!hasSubstantialContent) {
     console.log('新方案内容不足，直接添加（可能是默认数据）')
   } else {
-    // 检查是否已经存在相同的方案（基于完整方案内容和创建时间范围）
+    // Check if an identical plan already exists (based on complete plan content and creation time range)
     const now = new Date()
     const threeMinutesAgo = new Date(now.getTime() - 3 * 60 * 1000) // 3分钟前
     
@@ -1241,7 +1241,7 @@ export const addHistoryPlan = async (planData, generationContext = null) => {
         return false
       }
       
-      // 比较完整方案的核心内容
+      // Compare core content of complete plans
       const existingFullPlan = existingPlan.fullPlan
       if (!existingFullPlan) {
         console.log('- 跳过：历史方案无完整数据')
@@ -1297,7 +1297,7 @@ export const addHistoryPlan = async (planData, generationContext = null) => {
     updatedAt: new Date().toLocaleString('zh-CN'),
     author: 'AI智能体',
     status: '已生成',
-    fullPlan: JSON.parse(JSON.stringify(planData)), // 保存完整方案数据的深拷贝
+    fullPlan: JSON.parse(JSON.stringify(planData)), // Save deep copy of complete plan data
     generationContext: generationContext, // 保存生成时的上下文
     sourceIntroductions: currentPlanState.sourceIntroductions ? 
       JSON.parse(JSON.stringify(currentPlanState.sourceIntroductions)) : {}, // 保存来源介绍
@@ -1465,7 +1465,7 @@ export const resetCurrentPlan = () => {
     'H2: AI编辑内容的不确定性特征会增加记忆失真的程度。',
     'H3: 参与者的媒体素养水平会调节AI编辑内容对记忆的影响。'
   ]
-  currentPlanState.experimentalDesign = '采用2x2混合实验设计，操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）。'
+  currentPlanState.experimentalDesign = 'Adopt a 2x2 mixed experimental design, manipulating media type (AI-edited vs. traditional editing) and presentation style (static vs. dynamic).'
   currentPlanState.expectedResults = '预期AI编辑的媒体内容会导致更高的虚假记忆形成率，且这种效应会被参与者的媒体素养水平调节。'
   currentPlanState.isGenerated = false
   
