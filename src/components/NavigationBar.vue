@@ -26,7 +26,7 @@
             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
             </svg>
-            文献推荐
+            Literature
           </router-link>
 
           <router-link
@@ -37,7 +37,7 @@
             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zM3 15a1 1 0 011-1h1a1 1 0 011 1v1a1 1 0 01-1 1H4a1 1 0 01-1-1v-1zm7-14a2 2 0 012-2h2a2 2 0 012 2v11a3 3 0 11-6 0V1zm2 13a1 1 0 011-1h1a1 1 0 011 1v1a1 1 0 01-1 1h-1a1 1 0 01-1-1v-1z" clip-rule="evenodd"/>
             </svg>
-            研究方案
+            Research Plan
           </router-link>
         </nav>
 
@@ -52,7 +52,7 @@
             <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
             </svg>
-            搜索
+            Search
           </router-link>
 
           <!-- 引用文献（低频功能） -->
@@ -64,7 +64,7 @@
             <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
             </svg>
-            引用
+            References
             <span v-if="referencedCount > 0" class="ml-1 px-1.5 py-0.5 text-xs bg-purple-500 text-white rounded-full">{{ referencedCount }}</span>
           </router-link>
 
@@ -89,14 +89,14 @@
             <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
             </svg>
-            历史
+            History
           </button>
 
           <!-- 主题切换按钮 -->
           <button
             @click="themeStore.toggleTheme"
             class="flex items-center px-2.5 py-2 text-sm text-gray-600 hover:text-blue-600 border border-gray-300 rounded-md hover:border-blue-300 transition-colors"
-            :title="themeStore.isDark ? '切换到浅色模式' : '切换到暗黑模式'"
+            :title="themeStore.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
           >
             <svg v-if="themeStore.isDark" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <!-- 太阳图标 (浅色模式) -->
@@ -137,7 +137,7 @@
                   <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 001-1h10.586l-2.293-2.293a1 1 0 10-1.414 1.414L14.586 3H3zm11.707 4.707L16.414 9H11a1 1 0 100 2h5.414l-1.707 1.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 00-1.414 1.414z" clip-rule="evenodd"/>
                   </svg>
-                  退出登录
+                  Logout
                 </button>
               </div>
             </div>
@@ -149,13 +149,13 @@
               to="/login"
               class="px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors"
             >
-              登录
+              Login
             </router-link>
             <router-link
               to="/register"
               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              注册
+              Sign Up
             </router-link>
           </div>
         </div>
@@ -182,14 +182,14 @@
             class="mobile-nav-link"
             @click="closeMobileMenu"
           >
-            文献推荐
+            Literature
           </router-link>
           <router-link
             to="/research-plan"
             class="mobile-nav-link"
             @click="closeMobileMenu"
           >
-            研究方案
+            Research Plan
           </router-link>
           
           <!-- 分隔线 -->
@@ -201,14 +201,14 @@
             class="mobile-nav-link"
             @click="closeMobileMenu"
           >
-            文献搜索
+            Literature Search
           </router-link>
           <router-link
             to="/references"
             class="mobile-nav-link"
             @click="closeMobileMenu"
           >
-            引用文献 ({{ referencedCount }})
+            Referenced Papers ({{ referencedCount }})
           </router-link>
           <!-- <router-link
             to="/chatgpt"
@@ -222,7 +222,7 @@
             class="mobile-nav-link"
             @click="closeMobileMenu"
           >
-            历史记录
+            History
           </router-link>
           
           <!-- 主题切换按钮 (移动端) -->
@@ -236,7 +236,7 @@
             <svg v-else class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
             </svg>
-            {{ themeStore.isDark ? '浅色模式' : '暗黑模式' }}
+            {{ themeStore.isDark ? 'Light Mode' : 'Dark Mode' }}
           </button>
           
           <!-- 移动端用户菜单分隔线 -->
@@ -250,7 +250,7 @@
                 @click="handleLogout"
                 class="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
               >
-                退出登录
+                Logout
               </button>
             </div>
             <div v-else class="space-y-1">
@@ -259,14 +259,14 @@
                 class="mobile-nav-link"
                 @click="closeMobileMenu"
               >
-                登录
+                Login
               </router-link>
               <router-link
                 to="/register"
                 class="mobile-nav-link"
                 @click="closeMobileMenu"
               >
-                注册
+                Sign Up
               </router-link>
             </div>
           </div>

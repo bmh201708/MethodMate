@@ -4,7 +4,7 @@
       <!-- Logo 和标题 -->
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">MethodMate</h1>
-        <p class="text-gray-600">登录您的账户</p>
+        <p class="text-gray-600">Log in to your account</p>
       </div>
 
       <!-- 登录表单 -->
@@ -12,7 +12,7 @@
         <!-- 用户名/邮箱输入 -->
         <div>
           <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
-            用户名或邮箱
+            Username or Email
           </label>
           <input
             id="username"
@@ -21,15 +21,15 @@
             required
             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 
                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="请输入用户名或邮箱"
+            placeholder="Please enter username or email"
           />
-          <p class="mt-1 text-xs text-gray-500">可以使用用户名或邮箱登录（如果注册时提供了邮箱）</p>
+          <p class="mt-1 text-xs text-gray-500">You can log in with username or email (if email was provided during registration)</p>
         </div>
 
         <!-- 密码输入 -->
         <div>
           <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-            密码
+            Password
           </label>
           <input
             id="password"
@@ -38,7 +38,7 @@
             required
             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 
                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="请输入密码"
+            placeholder="Please enter password"
           />
         </div>
 
@@ -60,21 +60,21 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            登录中...
+            Logging in...
           </span>
-          <span v-else>登录</span>
+          <span v-else>Login</span>
         </button>
       </form>
 
       <!-- 注册链接 -->
       <div class="mt-6 text-center">
         <p class="text-gray-600">
-          还没有账户？
+          Don't have an account?
           <router-link 
             to="/register" 
             class="text-blue-600 hover:text-blue-500 font-medium"
           >
-            立即注册
+            Sign up now
           </router-link>
         </p>
       </div>
@@ -85,7 +85,7 @@
           to="/" 
           class="text-gray-500 hover:text-gray-700 text-sm"
         >
-          ← 返回首页
+          ← Back to Home
         </router-link>
       </div>
     </div>
@@ -113,7 +113,7 @@ export default {
     
     const handleLogin = async () => {
       if (!loginForm.value.username || !loginForm.value.password) {
-        error.value = '请填写所有必填字段'
+        error.value = 'Please fill in all required fields'
         return
       }
       
@@ -126,7 +126,7 @@ export default {
         // 登录成功，重定向到首页
         router.push('/')
       } catch (err) {
-        error.value = err.message || '登录失败，请检查用户名和密码'
+        error.value = err.message || 'Login failed, please check username and password'
       } finally {
         loading.value = false
       }

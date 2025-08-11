@@ -16,7 +16,7 @@
         @click="handleRefresh"
         class="flex items-center space-x-1 px-3 py-1.5 border border-purple-300 text-purple-600 hover:bg-purple-50 text-sm rounded-full transition-colors whitespace-nowrap ml-2"
       >
-        <span>换一批</span>
+        <span>Refresh</span>
         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
@@ -32,27 +32,27 @@ import { ref, computed } from 'vue'
 const emit = defineEmits(['sendPrompt'])
 
 // 首页必显示的提示词
-const firstPrompt = '定量研究是什么？'
+const firstPrompt = 'What is quantitative research?'
 
 // 其他提示词
 const otherPrompts = [
-  '推荐有关 HCI 的最新研究',
-  '常见的变量有哪些类型？',
-  '数据收集方法有哪些？',
-  '适合新手的定量研究案例',
-  '推荐HCI领域的经典定量研究',
-  '人机交互中常见的实验设计',
-  '有哪些适合HCI的测量指标？',
-  '如何评估用户体验的差异？',
-  '帮我找一篇关于用户行为的实验研究',
-  '哪些统计方法适合分析组间差异？',
-  '如何选择合适的显著性检验？',
-  '描述性统计和推论统计的区别？',
-  '实验结果怎么可视化？',
-  '如何报告p值和效应量？',
-  '帮我起草研究背景',
-  '如何描述参与者信息？',
-  '撰写方法部分有哪些要点？'
+  'Recommend latest HCI research',
+  'What are the common types of variables?',
+  'What are the data collection methods?',
+  'Beginner-friendly quantitative research examples',
+  'Recommend classic quantitative research in HCI',
+  'Common experimental designs in human-computer interaction',
+  'What measurement indicators are suitable for HCI?',
+  'How to evaluate differences in user experience?',
+  'Help me find an experimental study on user behavior',
+  'Which statistical methods are suitable for analyzing group differences?',
+  'How to choose appropriate significance tests?',
+  'Difference between descriptive and inferential statistics?',
+  'How to visualize experimental results?',
+  'How to report p-values and effect sizes?',
+  'Help me draft research background',
+  'How to describe participant information?',
+  'What are the key points in writing the methods section?'
 ]
 
 // 所有提示词（用于轮换显示）

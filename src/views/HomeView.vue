@@ -5,8 +5,8 @@
       <!-- Header Section -->
       <header class="text-center mb-16 sm:mb-20">
         <h1 class="text-5xl md:text-6xl font-bold text-gray-900">MethodMate</h1>
-        <p class="mt-4 text-lg md:text-xl text-gray-600">让科研方法与文献推荐更智能</p>
-        <p class="mt-2 text-base text-gray-500">一站式学术研究助手，助力高效科研</p>
+        <p class="mt-4 text-lg md:text-xl text-gray-600">Intelligent Research Methods and Literature Recommendations</p>
+        <p class="mt-2 text-base text-gray-500">One-stop Academic Research Assistant for Efficient Research</p>
       </header>
 
       <!-- Features Section -->
@@ -21,7 +21,7 @@
             <div class="flex justify-between items-center">
               <!-- Left Content -->
               <div>
-                <h2 class="text-3xl font-bold text-gray-800">文献推荐</h2>
+                <h2 class="text-3xl font-bold text-gray-800">Literature Recommendation</h2>
                 <ul class="mt-4 space-y-2 text-gray-600 text-lg">
                   <li v-for="(item, index) in literatureFeatures" :key="index" class="flex items-center">
                     <svg class="w-6 h-6 text-purple-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
@@ -31,13 +31,13 @@
               </div>
               <!-- Right Button -->
               <button @click="goTo('/papers')" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center text-base flex-shrink-0">
-                立刻体验
+                Try Now
                 <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
               </button>
             </div>
           </div>
           <div class="bg-gray-50 p-4 mt-auto z-10">
-            <img :src="homeFeature1" alt="文献推荐功能截图" class="rounded-lg shadow-inner w-full">
+            <img :src="homeFeature1" alt="Literature Recommendation Feature Screenshot" class="rounded-lg shadow-inner w-full">
           </div>
         </div>
 
@@ -50,7 +50,7 @@
              <div class="flex justify-between items-center">
               <!-- Left Content -->
               <div>
-                <h2 class="text-3xl font-bold text-gray-800">研究方案</h2>
+                <h2 class="text-3xl font-bold text-gray-800">Research Plan</h2>
                 <ul class="mt-4 space-y-2 text-gray-600 text-lg">
                   <li v-for="(item, index) in planFeatures" :key="index" class="flex items-center">
                     <svg class="w-6 h-6 text-indigo-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
@@ -60,13 +60,13 @@
               </div>
               <!-- Right Button -->
               <button @click="goTo('/research-plan')" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center text-base flex-shrink-0">
-                立刻体验
+                Try Now
                 <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
               </button>
             </div>
           </div>
           <div class="bg-gray-50 p-4 mt-auto z-10">
-            <img :src="homeFeature2" alt="研究方案功能截图" class="rounded-lg shadow-inner w-full">
+            <img :src="homeFeature2" alt="Research Plan Feature Screenshot" class="rounded-lg shadow-inner w-full">
           </div>
         </div>
 
@@ -85,15 +85,15 @@ import homeFeature2 from '../images/home-feature-2.png'
 const router = useRouter()
 
 const literatureFeatures = [
-  '用户输入研究目的与内容',
-  '系统自动推荐相关文献并生成列表',
-  '支持点击查看摘要与 AI 提炼的定量研究信息'
+  'Input research objectives and content',
+  'Automatically recommend relevant literature with generated lists',
+  'View abstracts and AI-extracted quantitative research information'
 ]
 
 const planFeatures = [
-  '自动生成定量研究方案',
-  '支持多轮评估与模块级优化',
-  '提供文献对应关系，保障可溯源性'
+  'Automatically generate quantitative research plans',
+  'Support multi-round evaluation and module-level optimization',
+  'Provide literature correspondence for traceability'
 ]
 
 const goTo = (path) => {

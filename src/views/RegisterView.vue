@@ -4,7 +4,7 @@
       <!-- Logo 和标题 -->
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">MethodMate</h1>
-        <p class="text-gray-600">创建您的账户</p>
+        <p class="text-gray-600">Create your account</p>
       </div>
 
       <!-- 注册表单 -->
@@ -12,7 +12,7 @@
         <!-- 用户名输入 -->
         <div>
           <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
-            用户名 *
+            Username *
           </label>
           <input
             id="username"
@@ -21,14 +21,14 @@
             required
             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 
                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="请输入用户名"
+            placeholder="Please enter username"
           />
         </div>
 
         <!-- 邮箱输入（可选） -->
         <div>
           <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-            邮箱 <span class="text-gray-400">(可选)</span>
+            Email <span class="text-gray-400">(Optional)</span>
           </label>
           <input
             id="email"

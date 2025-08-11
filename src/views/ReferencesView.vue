@@ -2,8 +2,8 @@
   <div class="references-view min-h-screen bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">引用文献管理</h1>
-        <p class="text-gray-600">管理您在文献搜索和推荐中选择的参考文献</p>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Referenced Papers Management</h1>
+        <p class="text-gray-600">Manage your selected reference papers from literature search and recommendations</p>
       </div>
       
       <ReferencedPapersList />

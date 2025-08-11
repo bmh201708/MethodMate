@@ -5,7 +5,7 @@
                         <!-- 左侧历史方案列表 -->
         <div class="w-96 h-[calc(100vh-10rem)] overflow-y-auto custom-scrollbar flex-shrink-0">
           <div class="bg-white rounded-xl shadow-sm p-6">
-                        <h2 class="text-xl font-semibold text-gray-900 mb-6">历史方案列表</h2>
+                        <h2 class="text-xl font-semibold text-gray-900 mb-6">History Plan List</h2>
 
                         <!-- 加载状态 -->
                         <div v-if="isLoading" class="text-center py-12">
@@ -16,19 +16,19 @@
                                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
                             </div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">正在加载历史方案...</h3>
-                            <p class="text-gray-500">请稍候，正在从数据库获取您的研究方案</p>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">Loading History Plans...</h3>
+                            <p class="text-gray-500">Please wait, fetching your research plans from the database</p>
                         </div>
 
                         <!-- 顶部操作按钮 -->
                         <div v-else-if="historyState.historyPlans.length > 0"
                             class="flex justify-between items-center mb-6">
                             <p class="text-sm text-gray-600">
-                                共 {{ historyState.historyPlans.length }} 个历史方案
+                                Total {{ historyState.historyPlans.length }} history plans
                             </p>
                             <button @click="confirmClearAll"
                                 class="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm">
-                                清除所有
+                                Clear All
                             </button>
                         </div>
 
@@ -47,7 +47,7 @@
                                         <div class="flex items-center space-x-2 ml-2 flex-shrink-0">
                                             <span v-if="historyState.currentAppliedPlanId === plan.id"
                                                 class="px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium whitespace-nowrap">
-                                                应用中
+                                                Applied
                                             </span>
                                             <span v-else
                                                 class="px-2.5 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium whitespace-nowrap">
@@ -83,7 +83,7 @@
                                         <div class="flex space-x-2">
                                             <button @click.stop="applyPlan(plan)"
                                                 class="w-20 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs font-medium flex items-center justify-center">
-                                                应用方案
+                                                Apply Plan
                                             </button>
                                             <button @click.stop="downloadPDF(plan)"
                                                 :disabled="isGeneratingPDF"
@@ -114,7 +114,7 @@
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
                                                     </svg>
-                                                    <span>更多</span>
+                                                    <span>More</span>
                                                 </button>
                                                 
                                                 <!-- 下拉菜单 -->
@@ -131,7 +131,7 @@
                                                             <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                                             </svg>
-                                                            <span>{{ isRegeneratingTitle ? '生成中' : '重新命名' }}</span>
+                                                            <span>{{ isRegeneratingTitle ? 'Generating' : 'Rename' }}</span>
                                                         </button>
                                                         <div class="border-t border-gray-100"></div>
                                                         <button @click.stop="confirmDelete(plan)"
@@ -139,7 +139,7 @@
                                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                             </svg>
-                                                            <span>删除</span>
+                                                            <span>Delete</span>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -153,7 +153,7 @@
                             <div v-if="historyState.historyPlans.length > 0" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm text-gray-600">
-                                        共 {{ historyState.historyPlans.length }} 个研究方案
+                                        Total {{ historyState.historyPlans.length }} research plans
                                     </span>
                                     <button @click.stop="regenerateAllTitles()"
                                         :disabled="isRegeneratingTitle || historyState.historyPlans.length === 0"
@@ -161,7 +161,7 @@
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                         </svg>
-                                        <span>批量重新命名</span>
+                                        <span>Batch Rename</span>
                                     </button>
                                 </div>
                             </div>
@@ -176,9 +176,9 @@
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                             </div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">暂无历史方案</h3>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No History Plans</h3>
                             <p class="text-gray-500 mb-6">
-                                您还没有生成过任何研究方案。请前往研究方案页面开始创建您的第一个方案。
+                                You haven't generated any research plans yet. Please go to the research plan page to start creating your first plan.
                             </p>
 
                             <!-- 调试信息区域 -->
@@ -190,37 +190,37 @@
                                             d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
                                             clip-rule="evenodd" />
                                     </svg>
-                                    <span class="text-yellow-800 font-medium">您尚未登录</span>
+                                    <span class="text-yellow-800 font-medium">You are not logged in</span>
                                 </div>
                                 <p class="text-yellow-700 mt-2">
-                                    历史方案功能需要登录后使用。请先登录您的账户。
+                                    History plans feature requires login. Please log in to your account first.
                                 </p>
                                 <button @click="router.push('/login')"
                                     class="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors">
-                                    立即登录
+                                    Login Now
                                 </button>
                             </div>
 
                             <!-- 开发者调试信息 -->
                             <div v-if="isDev && debugInfo.errorMessage"
                                 class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-left">
-                                <h4 class="text-red-800 font-medium mb-2">调试信息:</h4>
+                                <h4 class="text-red-800 font-medium mb-2">Debug Info:</h4>
                                 <ul class="text-red-700 text-sm space-y-1">
-                                    <li>用户已登录: {{ debugInfo.userAuthenticated ? '是' : '否' }}</li>
-                                    <li>方案数量: {{ debugInfo.planCount }}</li>
-                                    <li v-if="debugInfo.errorMessage">错误信息: {{ debugInfo.errorMessage }}</li>
-                                    <li v-if="debugInfo.apiResponse">API响应: {{ debugInfo.apiResponse }}</li>
+                                    <li>User logged in: {{ debugInfo.userAuthenticated ? 'Yes' : 'No' }}</li>
+                                    <li>Plan count: {{ debugInfo.planCount }}</li>
+                                    <li v-if="debugInfo.errorMessage">Error message: {{ debugInfo.errorMessage }}</li>
+                                    <li v-if="debugInfo.apiResponse">API response: {{ debugInfo.apiResponse }}</li>
                                 </ul>
                             </div>
 
                             <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
                                 <button @click="router.push('/research-plan')"
                                     class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-                                    开始创建方案
+                                    Start Creating Plan
                                 </button>
                                 <button @click="refreshData"
                                     class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                                    刷新数据
+                                    Refresh Data
                                 </button>
                             </div>
                         </div>
@@ -259,25 +259,25 @@
                                             <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                             </svg>
-                                            <span class="text-sm">{{ isGeneratingPDF ? '生成中...' : '下载PDF' }}</span>
+                                            <span class="text-sm">{{ isGeneratingPDF ? 'Generating...' : 'Download PDF' }}</span>
                                         </button>
                                         <button @click="downloadTXT(selectedPlan)"
                                             class="w-32 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                             </svg>
-                                            <span class="text-sm">导出TXT</span>
+                                            <span class="text-sm">Export TXT</span>
                                         </button>
                                         <button @click="applyPlan(selectedPlan)"
                                             class="w-32 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center">
-                                            <span class="text-sm">应用此方案</span>
+                                            <span class="text-sm">Apply This Plan</span>
                                         </button>
                                     </div>
                                 </div>
                                 <div class="space-y-6">
                                     <div
                                         v-if="selectedPlan.fullPlan.hypotheses && selectedPlan.fullPlan.hypotheses.length > 0">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">研究假设</h3>
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Research Hypothesis</h3>
                                         <div class="space-y-2">
                                             <div v-for="(hypothesis, index) in selectedPlan.fullPlan.hypotheses"
                                                 :key="index" class="p-4 bg-gray-50 rounded-lg">
@@ -288,19 +288,19 @@
                                     </div>
 
                                     <div v-if="selectedPlan.fullPlan.experimentalDesign">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">实验设计</h3>
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Experimental Design</h3>
                                         <div class="text-gray-600 leading-relaxed prose prose-sm"
                                             v-html="safeMarkdownRender(selectedPlan.fullPlan.experimentalDesign)"></div>
                                     </div>
 
                                     <div v-if="selectedPlan.fullPlan.analysisMethod">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">数据分析</h3>
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Data Analysis</h3>
                                         <div class="text-gray-600 leading-relaxed prose prose-sm"
                                             v-html="safeMarkdownRender(selectedPlan.fullPlan.analysisMethod)"></div>
                                     </div>
 
                                     <div v-if="selectedPlan.fullPlan.expectedResults">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">结果呈现</h3>
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Results Presentation</h3>
                                         <div class="text-gray-600 leading-relaxed prose prose-sm"
                                             v-html="safeMarkdownRender(selectedPlan.fullPlan.expectedResults)"></div>
                                     </div>
@@ -309,7 +309,7 @@
 
                             <!-- 研究假设部分 -->
                             <div v-if="activeSection === 'hypothesis'" class="w-full">
-                                <h2 class="text-2xl font-bold text-gray-900 mb-6">研究假设</h2>
+                                <h2 class="text-2xl font-bold text-gray-900 mb-6">Research Hypothesis</h2>
                                 <div v-if="selectedPlan.fullPlan.hypotheses && selectedPlan.fullPlan.hypotheses.length > 0"
                                     class="space-y-4 w-full">
                                     <div v-for="(hypothesis, index) in selectedPlan.fullPlan.hypotheses" :key="index"
@@ -326,13 +326,13 @@
                                                 d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                                         </svg>
                                     </div>
-                                    <p class="text-gray-500">该方案暂无研究假设内容</p>
+                                    <p class="text-gray-500">This plan has no research hypothesis content</p>
                                 </div>
                             </div>
 
                             <!-- 实验设计部分 -->
                             <div v-if="activeSection === 'design'" class="w-full">
-                                <h2 class="text-2xl font-bold text-gray-900 mb-6">实验设计</h2>
+                                <h2 class="text-2xl font-bold text-gray-900 mb-6">Experimental Design</h2>
                                 <div v-if="selectedPlan.fullPlan.experimentalDesign" class="space-y-6 w-full">
                                     <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none w-full min-w-[600px]"
                                         v-html="safeMarkdownRender(selectedPlan.fullPlan.experimentalDesign)"></div>
@@ -345,13 +345,13 @@
                                                 d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                                         </svg>
                                     </div>
-                                    <p class="text-gray-500">该方案暂无实验设计内容</p>
+                                    <p class="text-gray-500">This plan has no experimental design content</p>
                                 </div>
                             </div>
 
                             <!-- 数据分析部分 -->
                             <div v-if="activeSection === 'analysis'" class="w-full">
-                                <h2 class="text-2xl font-bold text-gray-900 mb-6">数据分析</h2>
+                                <h2 class="text-2xl font-bold text-gray-900 mb-6">Data Analysis</h2>
                                 <div v-if="selectedPlan.fullPlan.analysisMethod" class="space-y-6 w-full">
                                     <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none w-full min-w-[600px]"
                                         v-html="safeMarkdownRender(selectedPlan.fullPlan.analysisMethod)"></div>
@@ -364,13 +364,13 @@
                                                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                         </svg>
                                     </div>
-                                    <p class="text-gray-500">该方案暂无数据分析内容</p>
+                                    <p class="text-gray-500">This plan has no data analysis content</p>
                                 </div>
                             </div>
 
                             <!-- 结果呈现部分 -->
                             <div v-if="activeSection === 'results'" class="w-full">
-                                <h2 class="text-2xl font-bold text-gray-900 mb-6">结果呈现</h2>
+                                <h2 class="text-2xl font-bold text-gray-900 mb-6">Results Presentation</h2>
                                 <div v-if="selectedPlan.fullPlan.expectedResults" class="space-y-6 w-full">
                                     <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none w-full min-w-[600px]"
                                         v-html="safeMarkdownRender(selectedPlan.fullPlan.expectedResults)"></div>
@@ -383,7 +383,7 @@
                                                 d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                                         </svg>
                                     </div>
-                                    <p class="text-gray-500">该方案暂无结果呈现内容</p>
+                                    <p class="text-gray-500">This plan has no results presentation content</p>
                                 </div>
                             </div>
                         </div>
@@ -398,9 +398,9 @@
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                         </div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-2">请选择一个方案查看详情</h3>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Please select a plan to view details</h3>
                         <p class="text-gray-500">
-                            点击左侧列表中的任一方案，即可在此处查看完整的方案内容和详细信息。
+                            Click on any plan in the left list to view the complete plan content and detailed information here.
                         </p>
                     </div>
                 </div>
@@ -430,11 +430,11 @@ const showMoreActions = ref(null) // 控制下拉菜单显示
 
 // 方案导航部分
 const sections = [
-    { id: 'full', name: '完整方案' },
-    { id: 'hypothesis', name: '研究假设' },
-    { id: 'design', name: '实验设计' },
-    { id: 'analysis', name: '数据分析' },
-    { id: 'results', name: '结果呈现' }
+    { id: 'full', name: 'Complete Plan' },
+    { id: 'hypothesis', name: 'Research Hypothesis' },
+    { id: 'design', name: 'Experimental Design' },
+    { id: 'analysis', name: 'Data Analysis' },
+    { id: 'results', name: 'Results Presentation' }
 ]
 
 // 配置marked选项，支持LaTeX数学公式
