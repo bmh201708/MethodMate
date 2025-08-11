@@ -1,10 +1,10 @@
 <template>
   <div class="bg-white rounded-xl shadow-sm p-6 h-full chat-container">
     <div class="flex flex-col h-full">
-      <!-- 对话管理头部 -->
+      <!-- Conversation Management Header -->
       <div class="mb-4 border-b border-gray-200 pb-4">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-lg font-semibold text-gray-900">对话管理</h3>
+          <h3 class="text-lg font-semibold text-gray-900">Conversation Management</h3>
           <div class="flex items-center space-x-2">
             <button
               @click="showConversationsList = !showConversationsList"
@@ -13,7 +13,7 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.013 8.013 0 01-7-4c0-4.418 3.582-8 8-8s8 3.582 8 8z"/>
               </svg>
-              <span>{{ showConversationsList ? '隐藏' : '查看' }}历史对话</span>
+              <span>{{ showConversationsList ? 'Hide' : 'View' }} History</span>
             </button>
             <button
               @click="createNewConversation"
@@ -23,12 +23,12 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
               </svg>
-              <span>{{ isCreatingConversation ? '创建中...' : '新对话' }}</span>
+              <span>{{ isCreatingConversation ? 'Creating...' : 'New Chat' }}</span>
             </button>
           </div>
         </div>
 
-        <!-- 当前对话信息 -->
+        <!-- Current Conversation Info -->
         <div class="flex items-center justify-between">
           <div v-if="currentConversation" class="flex items-center space-x-2">
             <div class="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -37,34 +37,34 @@
           </div>
           <div v-else-if="isAuthenticated" class="flex items-center space-x-2">
             <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
-            <span class="text-sm text-gray-500">临时对话（发送消息后自动保存）</span>
+            <span class="text-sm text-gray-500">Temporary chat (auto-saved after sending message)</span>
           </div>
           <div v-else class="flex items-center space-x-2">
             <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
-            <span class="text-sm text-gray-500">临时对话（请先登录以保存对话）</span>
+            <span class="text-sm text-gray-500">Temporary chat (please login to save conversations)</span>
           </div>
           
           <div class="text-xs text-gray-400 flex items-center space-x-2">
-            <span>{{ Math.max(0, chatState.messages.length - 1) }} 条消息</span>
-            <span v-if="isAuthenticated && (chatState.conversationId || currentConversation)" class="text-green-600">已保存</span>
-            <span v-else-if="isAuthenticated" class="text-orange-500">未保存</span>
-            <span v-else class="text-gray-400">未登录</span>
+            <span>{{ Math.max(0, chatState.messages.length - 1) }} messages</span>
+            <span v-if="isAuthenticated && (chatState.conversationId || currentConversation)" class="text-green-600">Saved</span>
+            <span v-else-if="isAuthenticated" class="text-orange-500">Unsaved</span>
+            <span v-else class="text-gray-400">Not logged in</span>
           </div>
         </div>
 
-        <!-- 历史对话列表 -->
+        <!-- Historical Conversation List -->
         <div v-if="showConversationsList" class="mt-4 max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
           <div v-if="conversationsLoading" class="p-4 text-center text-gray-500">
             <div class="inline-flex items-center space-x-2">
               <svg class="animate-spin w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
-              <span>加载中...</span>
+              <span>Loading...</span>
             </div>
           </div>
           
           <div v-else-if="conversations.length === 0" class="p-4 text-center text-gray-500">
-            暂无历史对话
+            No conversation history
           </div>
           
           <div v-else class="divide-y divide-gray-200">
@@ -79,14 +79,14 @@
             >
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-gray-900 truncate">{{ conversation.title }}</p>
-                <p class="text-xs text-gray-500 truncate">{{ conversation.description || '暂无描述' }}</p>
+                <p class="text-xs text-gray-500 truncate">{{ conversation.description || 'No description' }}</p>
                 <p class="text-xs text-gray-400">{{ new Date(conversation.updated_at).toLocaleString('zh-CN') }}</p>
               </div>
               <div class="flex items-center space-x-1">
                 <button
                   @click.stop="deleteConversation(conversation)"
                   class="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                  title="删除对话"
+                  title="Delete conversation"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -98,22 +98,22 @@
         </div>
       </div>
 
-      <!-- 聊天记录 -->
+      <!-- Chat History -->
       <div class="flex-1 overflow-y-auto mb-4 space-y-4" ref="chatContainer">
-        <!-- 调试信息 -->
+        <!-- Debug Info -->
         <div v-if="true" class="text-xs text-gray-400 p-2 bg-yellow-50 border border-yellow-200 rounded">
-          调试：消息总数 {{ chatState.messages.length }}，最后更新时间 {{ new Date().toLocaleTimeString() }}，强制更新标志: {{ chatState.forceUpdateFlag }}
+          Debug: Total messages {{ chatState.messages.length }}, Last updated {{ new Date().toLocaleTimeString() }}, Force update flag: {{ chatState.forceUpdateFlag }}
         </div>
         <div v-for="message in chatState.messages" :key="`msg_${message.id}_${message.content?.length || 0}`" 
              :class="['flex', message.type === 'user' ? 'justify-end' : 'justify-start']">
           <div :class="['max-w-[70%] rounded-lg p-4 relative', 
                        message.type === 'user' ? 'bg-purple-100' : 
                        message.isError ? 'bg-red-50 border border-red-200' : 'bg-gray-100']">
-            <!-- 用户消息：纯文本显示 -->
+            <!-- User Message: Plain Text Display -->
             <div v-if="message.type === 'user'">
               <p class="whitespace-pre-wrap text-gray-800">{{ getDisplayContent(message) }}</p>
               
-              <!-- 用户消息的展开按钮 -->
+              <!-- User Message Expand Button -->
               <div v-if="message.fullContent && message.isTruncated" 
                    class="mt-3 pt-3 border-t border-purple-200">
                 <button 
@@ -126,41 +126,41 @@
                   <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                   </svg>
-                  <span>{{ message.isExpanded ? '收起' : '展开完整内容' }}</span>
+                  <span>{{ message.isExpanded ? 'Collapse' : 'Show Full Content' }}</span>
                 </button>
               </div>
             </div>
             
-            <!-- 助手消息：markdown渲染 -->
+            <!-- Assistant Message: Markdown Rendering -->
             <div v-else-if="message.type === 'assistant'" 
                  :class="['markdown-content', message.isError ? 'text-red-700' : 'text-gray-800']">
-              <!-- 调试信息 -->
+              <!-- Debug Info -->
               <div class="text-xs text-blue-500 mb-2 border-b border-blue-200 pb-1">
-                ID: {{ message.id }}, 长度: {{ message.content?.length || 0 }}, 完成: {{ message.isComplete }}
+                ID: {{ message.id }}, Length: {{ message.content?.length || 0 }}, Complete: {{ message.isComplete }}
               </div>
               <div v-html="renderMarkdown(getDisplayContent(message))"></div>
             </div>
             
-            <!-- 研究方案相关按钮（右上角） -->
+            <!-- Research Plan Related Buttons (Top Right) -->
             <div v-if="message.type === 'assistant' && !message.isError && message.isComplete && isResearchPlan(getOriginalContent(message))"
                  class="absolute top-2 right-2 flex items-center space-x-2">
               
 
               
-              <!-- 在右侧查看按钮 -->
+              <!-- View in Right Panel Button -->
               <button 
                 @click="handleViewInRightPanel(message)"
                 class="flex items-center space-x-1 px-1.5 py-1 text-xs text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors border border-green-200 bg-white/80 backdrop-blur-sm"
-                title="将研究方案显示在右侧面板"
+                title="Display research plan in right panel"
               >
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                <span>右侧查看</span>
+                <span>View in Panel</span>
               </button>
             </div>
             
-            <!-- 展开按钮（用于长回答） -->
+            <!-- Expand Button (for long responses) -->
             <div v-if="message.type === 'assistant' && message.fullContent && message.isTruncated" 
                  class="mt-3 pt-3 border-t border-gray-200">
               <button 
@@ -173,12 +173,12 @@
                 <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                 </svg>
-                <span>{{ message.isExpanded ? '收起' : '展开完整内容' }}</span>
+                <span>{{ message.isExpanded ? 'Collapse' : 'Show Full Content' }}</span>
               </button>
             </div>
           </div>
         </div>
-        <!-- 加载动画 -->
+        <!-- Loading Animation -->
         <div v-if="chatState.isLoading" class="flex justify-start">
           <div class="max-w-[70%] rounded-lg p-4 bg-gray-100">
             <LoadingDots />
@@ -186,12 +186,12 @@
         </div>
       </div>
 
-      <!-- 对话引导 -->
+      <!-- Conversation Guide -->
       <ConversationGuide @sendPrompt="handlePromptMessage" />
 
-      <!-- 聊天输入区域 -->
+      <!-- Chat Input Area -->
       <div class="mt-4">
-                <!-- 收起状态：展开聊天按钮 -->
+                <!-- Collapsed State: Expand Chat Button -->
         <button v-if="!isInputExpanded" 
                 @click="expandInput"
                 class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-3 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all duration-300 flex items-center justify-center space-x-2"
@@ -199,28 +199,28 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.013 8.013 0 01-7-4c0-4.418 3.582-8 8-8s8 3.582 8 8z"/>
           </svg>
-          <span class="font-medium">与AI助手对话</span>
+          <span class="font-medium">Chat with AI Assistant</span>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
           </svg>
         </button>
 
-        <!-- 展开状态：聊天输入界面 -->
+        <!-- Expanded State: Chat Input Interface -->
         <div v-else 
              class="bg-white border border-gray-200 rounded-lg transition-all duration-300"
              :class="{ 'animate-expand-in': isInputExpanded }"
         >
-          <!-- 输入区域 -->
+          <!-- Input Area -->
           <div class="p-4 space-y-3">
-            <!-- 头部信息 -->
+            <!-- Header Info -->
             <div class="mb-3">
             </div>
 
-            <!-- 输入框 -->
+            <!-- Input Box -->
             <div class="relative">
               <textarea
                 v-model="newMessage"
-                placeholder="请输入您的问题..."
+                placeholder="Please enter your question..."
                 class="w-full rounded-lg bg-white px-3 py-2 focus:outline-none resize-none text-sm"
                 rows="3"
                 @keyup.enter.ctrl="handleSendMessage"
@@ -230,7 +230,7 @@
               />
             </div>
 
-            <!-- 按钮组 -->
+            <!-- Button Group -->
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-2">
                 <button
@@ -241,7 +241,7 @@
                   <svg class="w-4 h-4" fill="none" stroke="white" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
-                  <span>润色</span>
+                  <span>Polish</span>
                 </button>
               </div>
               <div class="flex items-center space-x-2">
@@ -256,9 +256,9 @@
                   <svg v-else class="w-4 h-4" fill="none" stroke="white" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                   </svg>
-                  <span>{{ chatState.isLoading ? '发送中...' : '发送' }}</span>
+                  <span>{{ chatState.isLoading ? 'Sending...' : 'Send' }}</span>
                 </button>
-                <!-- 收起按钮移到右下角 -->
+                <!-- Collapse Button moved to bottom right -->
                 <button 
                   @click="collapseInput"
                   class="text-black hover:text-gray-700 transition-colors p-1"
@@ -274,7 +274,7 @@
       </div>
     </div>
 
-    <!-- 润色提示词对话框 -->
+    <!-- Polish Prompt Dialog -->
     <PromptOptimizeDialog 
       :visible="showOptimizeDialog" 
       :originalPrompt="newMessage"
@@ -407,15 +407,15 @@ const loadConversations = async () => {
 // 创建新对话
 const createNewConversation = async () => {
   if (!isAuthenticated.value) {
-    alert('请先登录后再创建对话')
+    alert('Please login first to create conversations')
     return
   }
 
   isCreatingConversation.value = true
   try {
     // 生成对话标题（基于当前时间或消息内容）
-    const title = `新对话 ${new Date().toLocaleString('zh-CN')}`
-    const description = '用户创建的新对话'
+    const title = `New Chat ${new Date().toLocaleString('en-US')}`
+    const description = 'User created conversation'
     
     console.log('正在创建新对话:', { title, description })
     
@@ -442,13 +442,13 @@ const createNewConversation = async () => {
       await nextTick()
       
       console.log('新对话创建成功:', newConversation.title, 'ID:', newConversation.id)
-      alert('新对话创建成功！')
+      alert('New conversation created successfully!')
     } else {
-      throw new Error(result.error || '创建对话失败')
+      throw new Error(result.error || 'Failed to create conversation')
     }
   } catch (error) {
     console.error('创建新对话失败:', error)
-    alert('创建对话失败：' + error.message)
+    alert('Failed to create conversation: ' + error.message)
   } finally {
     isCreatingConversation.value = false
   }
@@ -479,7 +479,7 @@ const switchToConversation = async (conversation) => {
         {
           id: 1,
           type: 'assistant',
-          content: '你好！我是 MethodMate AI 助手，请问有什么我可以帮助你的吗？',
+          content: 'Hello! I am the MethodMate AI assistant. How can I help you today?',
           isComplete: true
         }
       ]
@@ -518,7 +518,7 @@ const switchToConversation = async (conversation) => {
     }
   } catch (error) {
     console.error('切换对话失败:', error)
-    alert('切换对话失败：' + error.message)
+    alert('Failed to switch conversation: ' + error.message)
   }
 }
 
@@ -526,7 +526,7 @@ const switchToConversation = async (conversation) => {
 const deleteConversation = async (conversation) => {
   if (!isAuthenticated.value) return
   
-  if (!confirm(`确定要删除对话"${conversation.title}"吗？此操作不可撤销。`)) {
+  if (!confirm(`Are you sure you want to delete the conversation "${conversation.title}"? This action cannot be undone.`)) {
     return
   }
   
@@ -561,7 +561,7 @@ const deleteConversation = async (conversation) => {
     }
   } catch (error) {
     console.error('删除对话失败:', error)
-    alert('删除对话失败：' + error.message)
+    alert('Failed to delete conversation: ' + error.message)
   }
 }
 
@@ -815,7 +815,7 @@ const parseAndDisplayResearchPlan = (content) => {
       
       // 显示成功提示
       setTimeout(() => {
-        alert('研究方案已更新到右侧！请查看各个模块的内容。')
+        alert('Research plan has been updated to the right panel! Please check the content of each module.')
       }, 500)
       
       return true
@@ -844,7 +844,7 @@ const handleViewInRightPanel = (message) => {
   
   if (!success) {
     console.log('解析失败，原始内容前500字符:', originalContent.substring(0, 500))
-    alert('解析研究方案失败，请检查方案格式是否正确。')
+    alert('Failed to parse research plan. Please check if the plan format is correct.')
   }
 }
 
@@ -1062,7 +1062,7 @@ const handleSendMessage = async () => {
   if (isAuthenticated.value && !currentConversation.value && !chatState.conversationId) {
     // 生成基于第一条消息的对话标题
     const title = message.length > 20 ? message.substring(0, 20) + '...' : message
-    const description = '基于用户消息自动创建的对话'
+    const description = 'Auto-created conversation based on user message'
     
     try {
       const result = await conversationAPI.create(title, description)
@@ -1078,8 +1078,8 @@ const handleSendMessage = async () => {
       }
     } catch (error) {
       console.error('自动创建对话失败:', error)
-      alert('创建对话失败：' + error.message)
-      // 继续发送消息，即使对话创建失败
+      alert('Failed to create conversation: ' + error.message)
+      // Continue sending message even if conversation creation failed
     }
   }
   
