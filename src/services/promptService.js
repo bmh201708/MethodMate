@@ -1,8 +1,8 @@
 /**
- * 提示词服务类
+ * Prompt Service Class
  * 
- * 负责处理提示词模板的填充和动态生成
- * 使用简单的模板引擎来替换占位符
+ * Responsible for handling prompt template filling and dynamic generation
+ * Uses a simple template engine to replace placeholders
  */
 
 import {
@@ -25,7 +25,7 @@ import {
 } from './promptTemplates.js'
 
 /**
- * 改进的模板引擎，支持嵌套的条件语句和变量替换
+ * Improved template engine that supports nested conditional statements and variable replacement
  */
 class SimpleTemplateEngine {
   /**
@@ -238,7 +238,7 @@ class SimpleTemplateEngine {
 }
 
 /**
- * 提示词服务类
+ * Prompt Service Class
  */
 export class PromptService {
   /**
@@ -484,9 +484,9 @@ export class PromptService {
   }
 
   /**
-   * 获取预设建议列表
-   * @param {string} section - 部分名称
-   * @returns {array} - 建议列表
+   * Get preset suggestion list
+   * @param {string} section - Section name
+   * @returns {array} - Suggestion list
    */
   static getPresetSuggestions(section = 'full') {
     const baseSuggestions = PRESET_SUGGESTIONS.base || []
@@ -495,17 +495,17 @@ export class PromptService {
   }
 
   /**
-   * 获取部分名称的中文映射
-   * @param {string} section - 英文部分名称
-   * @returns {string} - 中文名称
+   * Get English mapping of section names
+   * @param {string} section - English section name
+   * @returns {string} - English name
    */
-  static getSectionNameInChinese(section) {
+  static getSectionNameInEnglish(section) {
     const sectionMap = {
-      'full': '完整方案',
-      'hypothesis': '研究假设',
-      'design': '实验设计',
-      'analysis': '数据分析',
-      'results': '结果呈现'
+      'full': 'Complete Plan',
+      'hypothesis': 'Research Hypotheses',
+      'design': 'Experimental Design',
+      'analysis': 'Data Analysis',
+      'results': 'Results Presentation'
     }
     return sectionMap[section] || section
   }

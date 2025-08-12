@@ -1,796 +1,796 @@
 /**
- * 研究方案详情页面提示词模板
+ * Research Plan Detail Page Prompt Templates
  * 
- * 这个文件包含了所有与研究方案生成、评估、迭代相关的提示词模板
- * 使用变量占位符来实现动态内容填充
+ * This file contains all prompt templates related to research plan generation, evaluation, and iteration
+ * Uses variable placeholders for dynamic content filling
  */
 
-// 基础研究方案生成提示词模板
-export const RESEARCH_PLAN_GENERATION_TEMPLATE = `请帮我生成定量实验方案。
+// Basic research plan generation prompt template
+export const RESEARCH_PLAN_GENERATION_TEMPLATE = `Please help me generate a quantitative experimental research plan.
 
 {{#if customTopic}}
-**研究主题/问题：**
+**Research Topic/Question:**
 {{customTopic}}
 
-请基于以上研究主题生成详细的定量研究方案。
+Please generate a detailed quantitative research plan based on the above research topic.
 {{else}}
 {{#if hasUserRequirements}}
-根据我们的对话历史，我了解到以下研究需求：
+Based on our conversation history, I understand the following research requirements:
 {{userRequirements}}
 
-研究背景和上下文：
+Research background and context:
 {{researchContext}}
 {{/if}}
 {{/if}}
 
 {{#if hasPapers}}
-我将为你提供以下{{paperCount}}篇参考文献的内容：
+I will provide you with the content of the following {{paperCount}} reference papers:
 
 {{paperContents}}
 
 {{#if customTopic}}
-请基于以上{{paperCount}}篇参考文献的全文内容，结合上述研究主题，生成一个详细的定量研究方案。
+Please generate a detailed quantitative research plan based on the full text content of the above {{paperCount}} reference papers, combined with the aforementioned research topic.
 {{else}}
 {{#if hasUserRequirements}}
-请基于以上{{paperCount}}篇参考文献的全文内容，结合我提到的研究需求，生成一个详细的定量研究方案。
+Please generate a detailed quantitative research plan based on the full text content of the above {{paperCount}} reference papers, combined with the research requirements I mentioned.
 {{else}}
-请基于以上{{paperCount}}篇参考文献的全文内容生成一个详细的定量研究方案。
+Please generate a detailed quantitative research plan based on the full text content of the above {{paperCount}} reference papers.
 {{/if}}
 {{/if}}
 {{else}}
 {{#if customTopic}}
-请生成一个详细的定量研究方案。
+Please generate a detailed quantitative research plan.
 {{else}}
 {{#if hasUserRequirements}}
-请基于我提到的研究需求，生成一个详细的定量研究方案。
+Please generate a detailed quantitative research plan based on the research requirements I mentioned.
 {{else}}
-请生成一个详细的定量研究方案。
+Please generate a detailed quantitative research plan.
 {{/if}}
 {{/if}}
 {{/if}}
 
-请严格按照以下格式返回，必须使用以下精确的标题格式：
+Please return strictly according to the following format, and must use the following precise title format:
 
-# 研究假设：
-<此处填写具体研究假设内容>
+# Research Hypotheses:
+<Insert specific research hypotheses content here>
 
-# 实验设计：
-<此处填写实验设计详细方案>
+# Experimental Design:
+<Insert detailed experimental design plan here>
 
-# 数据分析：
-<此处描述数据分析方法>
+# Data Analysis:
+<Insert data analysis methods here>
 
-# 结果呈现：
-<此处说明结果展示形式>
+# Results Presentation:
+<Insert results presentation format here>
 
-请基于我提供的研究背景与研究目标/研究问题以及参考文献，撰写一份面向人机交互（HCI）领域的高质量定量研究方案。该方案需结构清晰、逻辑严谨、内容详实，避免泛泛而谈或堆砌术语。请严格按照以下结构组织内容，并在每一部分展开具体描述（每项不少于3句话）：
+Please write a high-quality quantitative research plan for the Human-Computer Interaction (HCI) field based on the research background, research objectives/research questions, and reference literature I provided. The plan should be structurally clear, logically rigorous, and substantive, avoiding generalities or jargon accumulation. Please organize the content strictly according to the following structure and provide detailed descriptions in each section (at least 3 sentences per item):
 
-一、研究假设
-简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
+I. Research Hypotheses
+Briefly describe the experimental purpose and propose research hypotheses that correspond highly to the research objectives. Each hypothesis should be numbered (H1, H2...).
 
-二、实验设计
-参与者特征：可考虑但不限于样本量估算、年龄与性别构成、专业或技术背景、招募方式、纳入与排除标准，以及样本的代表性或研究适配性等，分点详细罗列。 
-分组方式：可描述分组方式与研究设计类型（如组内设计、组间设计等），明确自变量与因变量的定义及其操作化方式等，列出所有实验条件与控制变量。此外，分组方式可借鉴引用的参考文献，以确保分组的合理性。若涉及不同系统或技术条件的实验时，需详细说明或举例对照组所使用的工具（如Adobe Illustrator等），避免仅用"传统系统"或"baseline"等模糊表述。在设定对照组时，应充分考虑其内部是否存在可进一步区分的类型，结合参考文献进行发散思考，确保对照条件设置充分且具代表性，以提升结果的解释力与外部效度。
-实验流程：尽可能详细说明实验流程，包括各阶段的任务设置与执行顺序。若包含不同类型的任务（如封闭式任务与开放式创作），请分别说明任务目标、任务内容、是否提供参考信息（如示例图像）等。此外，请描述每个阶段名称、实验是否包含预实验、前测或系统说明等准备过程。在评估环节，请简介评估的具体方式（如主观问卷、半结构化访谈）以及评估内容、指标等，确保流程完整、清晰、具备可复现性。
+II. Experimental Design
+Participant characteristics: Consider but not limited to sample size estimation, age and gender composition, professional or technical background, recruitment methods, inclusion and exclusion criteria, as well as sample representativeness or research adaptability, etc., listed in detail.
+Grouping method: Describe the grouping method and research design type (such as within-subject design, between-subject design, etc.), clarify the definition and operationalization of independent and dependent variables, list all experimental conditions and control variables. In addition, the grouping method can refer to cited reference literature to ensure the rationality of grouping. When involving experiments with different systems or technical conditions, it is necessary to describe in detail or give examples of the tools used by the control group (such as Adobe Illustrator, etc.), avoiding vague expressions such as "traditional systems" or "baseline" only. When setting up control groups, full consideration should be given to whether there are types that can be further distinguished internally, combined with reference literature for divergent thinking, to ensure that the control conditions are set sufficiently and representatively, to improve the interpretability and external validity of the results.
+Experimental procedure: Describe the experimental procedure in as much detail as possible, including the task settings and execution sequence of each stage. If it includes different types of tasks (such as closed tasks and open creative tasks), please explain the task objectives, task content, whether reference information is provided (such as example images), etc. In addition, please describe the name of each stage, whether the experiment includes pre-experiments, pre-tests or system explanations and other preparation processes. In the evaluation section, please briefly introduce the specific evaluation methods (such as subjective questionnaires, semi-structured interviews) and evaluation content, indicators, etc., to ensure that the process is complete, clear, and reproducible.
 
-三、数据分析
-请详细说明本研究采集的用户数据类型，可考虑但不限于以下内容：主观评分数据，需明确测量的主观指标（如满意度、沉浸感、认知负荷等），并指出采用的量表形式，包括但不限于Likert量表（如7点或5点评分）、百分位滑动条、自编量表或标准量表。请说明各维度的测量目的与评分范围（例如："沉浸感维度用于评估用户在任务过程中主观的沉浸体验，采用7点评分，1代表'完全不沉浸'，7代表'完全沉浸'"），如为标准量表，需注明名称与来源；如为自编量表，请说明设计依据、维度划分与测量目标，并提供典型题项示例，以展现量表关注的具体方面。无论使用标准量表还是自编量表，均建议说明是否进行了信度检验（如Cronbach's α），并报告相关结果以支持量表质量与使用合理性。
-行为数据方面，请列出所记录的具体指标（如点击次数、任务完成时长、生成内容数量、交互步数等），并说明数据采集方式（如系统日志或前端埋点），明确是否包含交互顺序、编辑路径、停留时长等动态信息。若采集内容涵盖用户在任务过程中的操作流程或策略选择，也应予以说明，以支持过程分析。
-系统记录数据部分，请说明是否保留用户生成的文本、图像、提示语、交互轨迹等，以及这些内容是否用于后续分析，如自动评分、内容比较、行为建模等。如涉及自动评估，请列出所采用的指标及其评估维度（如IoU用于图像区域重叠度计算），并简要说明其原理与适用性。此外，如结合人工标注或作为定性分析材料使用，请说明标注方式与分析目的。
-在数据分析部分，请围绕关键因变量说明所采用的统计分析方法，并将各方法与相应研究假设（如H1、H2等）明确对应。请解释方法选择依据，并设定显著性标准（如α = 0.05），说明是否控制协变量（如用户背景或前测结果），以及在进行多重比较时是否使用Bonferroni、Holm等校正方法。整体分析方案应清晰展现变量、假设与方法之间的对应关系，以保证研究问题可通过系统性的数据分析得到有效验证。
-该部分不少于800字
+III. Data Analysis
+Please describe in detail the types of user data collected in this study, which may include but are not limited to the following: Subjective rating data, need to clarify the measured subjective indicators (such as satisfaction, immersion, cognitive load, etc.), and point out the scale form used, including but not limited to Likert scales (such as 7-point or 5-point rating), percentile sliders, self-designed scales or standard scales. Please explain the measurement purpose and rating range of each dimension (for example: "The immersion dimension is used to evaluate the user's subjective immersion experience during the task process, using a 7-point rating, where 1 represents 'completely not immersed' and 7 represents 'completely immersed'"). If it is a standard scale, the name and source need to be noted; if it is a self-designed scale, please explain the design basis, dimension division and measurement objectives, and provide typical item examples to show the specific aspects that the scale focuses on. Regardless of whether standard scales or self-designed scales are used, it is recommended to explain whether reliability tests (such as Cronbach's α) have been conducted and report relevant results to support scale quality and usage rationality.
+For behavioral data, please list the specific indicators recorded (such as click count, task completion time, generated content quantity, interaction steps, etc.), and explain the data collection method (such as system logs or front-end buried points), clarifying whether it includes dynamic information such as interaction sequence, editing path, and dwell time. If the collected content covers the user's operation process or strategy selection during the task, it should also be explained to support process analysis.
+For system recorded data, please explain whether user-generated text, images, prompts, interaction trajectories, etc. are retained, and whether this content is used for subsequent analysis, such as automatic scoring, content comparison, behavioral modeling, etc. If automatic evaluation is involved, please list the indicators used and their evaluation dimensions (such as IoU for image region overlap calculation), and briefly explain their principles and applicability. In addition, if combined with manual annotation or used as qualitative analysis materials, please explain the annotation method and analysis purpose.
+In the data analysis section, please explain the statistical analysis methods used around key dependent variables and clearly correspond each method to the corresponding research hypotheses (such as H1, H2, etc.). Please explain the basis for method selection and set significance standards (such as α = 0.05), explain whether to control covariates (such as user background or pre-test results), and whether to use Bonferroni, Holm and other correction methods when conducting multiple comparisons. The overall analysis plan should clearly show the correspondence between variables, hypotheses and methods to ensure that research questions can be effectively verified through systematic data analysis.
+This section should be no less than 800 words
 
-四、结果呈现
-预测不同实验条件下，主要因变量之间可能呈现的差异或变化趋势，结合前人研究推测可能的解释机制。输出需结构化呈现，每段内容应明确对应一个假设（如 H1、H2 等），并包含以下三点：
-1. 预期的差异或效应方向（如哪种条件更高/更易发生）
-2. 对应的假设编号（如"支持 H1"）
-3. 差异背后的机制解释（如注意分配、加工方式、信任感等）
-进一步说明将如何呈现各类实验结果，包括适合用于描述组间差异的图表（如箱线图、条形图）、用于展示交互效应或趋势的图表（如折线图、交互图）等。请说明每类图表如何辅助结果解读，并强调其与研究结论之间的逻辑映射关系。
+IV. Results Presentation
+Predict the possible differences or trends among the main dependent variables under different experimental conditions, and speculate on possible explanatory mechanisms based on previous research. The output needs to be presented in a structured manner, and each paragraph should clearly correspond to a hypothesis (such as H1, H2, etc.) and include the following three points:
+1. Expected direction of difference or effect (such as which condition is higher/more likely to occur)
+2. Corresponding hypothesis number (such as "supports H1")
+3. Mechanism explanation behind the difference (such as attention allocation, processing method, trust, etc.)
+Further explain how to present various experimental results, including charts suitable for describing between-group differences (such as box plots, bar charts), charts for showing interaction effects or trends (such as line charts, interaction charts), etc. Please explain how each type of chart assists in result interpretation and emphasize the logical mapping relationship between it and research conclusions.
 
-要求与注意事项
-● 全文不少于1800字
-● 全文请使用中文撰写，风格应贴近正式科研报告或论文开题材料；
-● 各部分需结构分明，层级清晰，避免堆砌术语或空洞表述；
-● 所有内容必须围绕输入研究构建，信息需准确、具体、有逻辑；
-● 若输入材料不完整，可基于合理学术常识作出假设，但需明确标注前提假设。`;
+Requirements and Notes
+● The full text should be no less than 1800 words
+● The full text should be written in English and the style should be close to formal research reports or thesis proposal materials;
+● Each section needs to be structurally distinct with clear hierarchies, avoiding jargon accumulation or empty expressions;
+● All content must be constructed around the input research, with accurate, specific, and logical information;
+● If the input materials are incomplete, reasonable academic assumptions can be made based on common sense, but prerequisite assumptions must be clearly marked.`;
 
-// 方案评估提示词模板
-export const PLAN_EVALUATION_TEMPLATE = `你是一位最严苛、最具批判性、同时也是经验最丰富的HCI领域专家，来审视目前的这个研究方案，从逻辑性、合理性、可行性、需求匹配度等方面分析，请给出切实可行和具体的改进建议，不要泛泛而谈，需要精简、准确且足够专业
+// Plan evaluation prompt template
+export const PLAN_EVALUATION_TEMPLATE = `You are the most rigorous, critical, and experienced HCI expert, examining the current research plan from aspects such as logic, rationality, feasibility, and requirement matching, please provide practical and specific improvement suggestions, not generalizations, need to be concise, accurate and sufficiently professional
 
-请对以下研究方案进行系统评估，分别从以下三方面进行分析：
-1. 逻辑性：评估研究目的、研究假设、评估指标等的前后对应关系
-2. 合理性：评估各评估指标、评估工具、评估方法等是否有效且合适
-3. 可行性：评估用户实验的任务量、时间、成本等是否可行
+Please systematically evaluate the following research plan, analyzing from the following three aspects:
+1. Logic: Evaluate the correspondence between research purposes, research hypotheses, evaluation indicators, etc.
+2. Rationality: Evaluate whether various evaluation indicators, evaluation tools, evaluation methods, etc. are effective and appropriate
+3. Feasibility: Evaluate whether the task load, time, cost, etc. of user experiments are feasible
 
 {{#if hasUserRequirements}}
-4. 需求匹配度：评估方案是否充分满足用户的具体研究需求和目标
+4. Requirement matching: Evaluate whether the plan fully meets the user's specific research needs and objectives
 {{/if}}
 
-最后请总结指出方案的优点和可改进之处。
+Finally, please summarize and point out the advantages and areas for improvement of the plan.
 
-当前研究方案：
+Current research plan:
 {{planContent}}
 
 {{#if hasUserRequirements}}
-用户研究需求：
+User research requirements:
 {{userRequirements}}
 
-研究背景和上下文：
+Research background and context:
 {{researchContext}}
 
-请特别注意评估：
-1. 方案是否充分考虑了用户提到的具体研究目标
-2. 研究假设是否与用户的需求高度匹配
-3. 实验设计是否适合用户的研究场景和偏好
-4. 数据分析方法是否能够有效回答用户的研究问题
+Please pay special attention to evaluating:
+1. Whether the plan fully considers the specific research objectives mentioned by the user
+2. Whether the research hypotheses highly match the user's needs
+3. Whether the experimental design is suitable for the user's research scenario and preferences
+4. Whether the data analysis methods can effectively answer the user's research questions
 {{/if}}`;
 
-// 部分评估提示词模板
-export const SECTION_EVALUATION_TEMPLATE = `请对以下研究方案中的"{{sectionName}}"部分进行专项评估。
+// Section evaluation prompt template
+export const SECTION_EVALUATION_TEMPLATE = `Please conduct a special evaluation of the "{{sectionName}}" section in the following research plan.
 
-当前完整研究方案：
+Current complete research plan:
 {{fullPlanContent}}
 
-需要重点评估的"{{sectionName}}"部分内容：
+"{{sectionName}}" section content that needs focused evaluation:
 {{sectionContent}}
 
-请针对"{{sectionName}}"部分进行以下方面的评估：
-1. 逻辑性：评估该部分内容的逻辑结构是否清晰，与整体方案的协调性
-2. 合理性：评估该部分的设计是否科学合理，方法选择是否恰当
-3. 可行性：评估该部分的实施难度、时间成本和资源需求
-4. 完整性：评估该部分内容是否充分详细，是否缺少重要要素
+Please evaluate the "{{sectionName}}" section in the following aspects:
+1. Logic: Evaluate whether the logical structure of this section is clear and its coordination with the overall plan
+2. Rationality: Evaluate whether the design of this section is scientifically reasonable and whether the method selection is appropriate
+3. Feasibility: Evaluate the implementation difficulty, time cost and resource requirements of this section
+4. Completeness: Evaluate whether the content of this section is sufficiently detailed and whether important elements are missing
 
 {{#if hasUserRequirements}}
-5. 需求匹配度：评估该部分是否充分满足用户的具体研究需求和目标
+5. Requirement matching: Evaluate whether this section fully meets the user's specific research needs and objectives
 {{/if}}
 
-请重点分析：
-- 该部分的优点和亮点
-- 存在的问题和不足
-- 具体的改进建议和优化方向
+Please focus on analyzing:
+- Advantages and highlights of this section
+- Existing problems and deficiencies
+- Specific improvement suggestions and optimization directions
 
 {{#if hasUserRequirements}}
-用户研究需求：
+User research requirements:
 {{userRequirements}}
 
-研究背景和上下文：
+Research background and context:
 {{researchContext}}
 
-请特别注意评估：
-- 该部分是否充分考虑了用户提到的具体研究目标
-- 设计是否适合用户的研究场景和偏好
-- 如何更好地满足用户的研究需求
+Please pay special attention to evaluating:
+- Whether this section fully considers the specific research objectives mentioned by the user
+- Whether the design is suitable for the user's research scenario and preferences
+- How to better meet the user's research needs
 {{/if}}
 
-请提供针对性的评估意见，重点关注"{{sectionName}}"部分的质量和改进空间。`;
+Please provide targeted evaluation opinions, focusing on the quality and improvement space of the "{{sectionName}}" section.`;
 
-// 完整方案迭代提示词模板
-export const FULL_PLAN_ITERATION_TEMPLATE = `{{tone}}。
+// Complete plan iteration prompt template
+export const FULL_PLAN_ITERATION_TEMPLATE = `{{tone}}.
 
-**用户的具体优化建议：** {{suggestion}}
+**User's specific optimization suggestions:** {{suggestion}}
 
-当前研究方案：
+Current research plan:
 {{planContent}}
 
-**针对性优化要求：**
+**Targeted optimization requirements:**
 {{requirements}}
 
-**重点关注领域：**
+**Key focus areas:**
 {{focusAreas}}
 
 {{#if hasUserRequirements}}
-**用户研究需求整合：**
-用户研究需求：{{userRequirements}}
-研究背景和上下文：{{researchContext}}
+**User research requirements integration:**
+User research requirements: {{userRequirements}}
+Research background and context: {{researchContext}}
 
-**需求适配要求：**
-1. 在优化过程中，必须深度整合用户的具体研究需求
-2. 针对用户背景和研究目标，设计更加贴合的研究方案
-3. 基于用户的研究场景，提供更具针对性的方法选择和参数设置
-4. 确保优化后的方案能够直接服务于用户的研究目标
+**Requirements adaptation requirements:**
+1. In the optimization process, user's specific research needs must be deeply integrated
+2. Design a more targeted research plan based on user background and research objectives
+3. Based on the user's research scenario, provide more targeted method selection and parameter settings
+4. Ensure that the optimized plan can directly serve the user's research objectives
 {{/if}}
 
-请按照以下格式返回完整的优化后方案，必须使用以下精确的标题格式：
+Please return the complete optimized plan according to the following format, and must use the following precise title format:
 
-# 研究假设：
-<研究假设内容>
+# Research Hypotheses:
+<Research hypotheses content>
 
-# 实验设计：
-<实验设计内容>
+# Experimental Design:
+<Experimental design content>
 
-# 数据分析：
-<数据分析内容>
+# Data Analysis:
+<Data analysis content>
 
-# 结果呈现：
-<结果呈现内容>
+# Results Presentation:
+<Results presentation content>
 
-请按照以下详细结构优化方案，确保每一部分内容详实具体（每项不少于3句话）：
+Please optimize the plan according to the following detailed structure, ensuring that each part is detailed and specific (at least 3 sentences per item):
 
-一、研究假设
-简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
+I. Research Hypotheses
+Briefly describe the experimental purpose and propose research hypotheses that correspond highly to the research objectives. Each hypothesis should be numbered (H1, H2...).
 
-二、实验设计
-参与者特征：可考虑但不限于样本量估算、年龄与性别构成、专业或技术背景、招募方式、纳入与排除标准，以及样本的代表性或研究适配性等，分点详细罗列。 
-分组方式：可描述分组方式与研究设计类型（如组间设计、组内设计、混合设计），明确自变量与因变量的定义及其操作化方式等，列出所有实验条件与控制变量。
-实验流程：尽可能详细说明实验流程，可描述各阶段的名称、任务内容、执行顺序等，确保流程完整、清晰、具备可复现性。
+II. Experimental Design
+Participant characteristics: Consider but not limited to sample size estimation, age and gender composition, professional or technical background, recruitment methods, inclusion and exclusion criteria, as well as sample representativeness or research adaptability, etc., listed in detail.
+Grouping method: Describe the grouping method and research design type (such as between-subject design, within-subject design, mixed design), clarify the definition and operationalization of independent and dependent variables, list all experimental conditions and control variables.
+Experimental procedure: Describe the experimental procedure in as much detail as possible, describe the names, task content, execution sequence of each stage, etc., to ensure that the process is complete, clear, and reproducible.
 
-三、数据分析
-详述将采集的用户数据类型，可参考但不限于主观评分数据（如问卷量表、用户偏好评估）、行为数据（如点击次数、任务完成时长、操作路径）与系统记录数据（如日志、交互轨迹等），并解释每类数据的采集方式（如问卷平台、实验系统、后台日志）。
-针对每一类关键因变量，明确采用的统计分析方法（如t检验、单/双因素ANOVA、回归分析、调节/中介效应分析等），并说明分析方法与研究假设的匹配关系、假设检验标准（如α = .05）及是否纳入协变量控制。
+III. Data Analysis
+Detail the types of user data to be collected, which may refer to but not limited to subjective rating data (such as questionnaire scales, user preference evaluation), behavioral data (such as click count, task completion time, operation path) and system recorded data (such as logs, interaction trajectories, etc.), and explain the collection method of each type of data (such as questionnaire platform, experimental system, background log).
+For each type of key dependent variable, clarify the statistical analysis methods used (such as t-test, one/two-way ANOVA, regression analysis, moderation/mediation effect analysis, etc.), and explain the matching relationship between analysis methods and research hypotheses, hypothesis testing standards (such as α = .05) and whether to include covariate control.
 
-四、结果呈现
-预测不同实验条件下，主要因变量之间可能呈现的差异或变化趋势，结合前人研究推测可能的解释机制。进一步说明将如何呈现各类实验结果，包括适合用于描述组间差异的图表（如箱线图、条形图）、用于展示交互效应或趋势的图表（如折线图、交互图）等。请说明每类图表如何辅助结果解读，并强调其与研究结论之间的逻辑映射关系。
+IV. Results Presentation
+Predict the possible differences or trends among the main dependent variables under different experimental conditions, and speculate on possible explanatory mechanisms based on previous research. Further explain how to present various experimental results, including charts suitable for describing between-group differences (such as box plots, bar charts), charts for showing interaction effects or trends (such as line charts, interaction charts), etc. Please explain how each type of chart assists in result interpretation and emphasize the logical mapping relationship between it and research conclusions.
 
-**输出验证标准：**
+**Output validation criteria:**
 {{validationCriteria}}
 
 {{#if qualityRequirements}}
-**具体质量要求：**
+**Specific quality requirements:**
 {{qualityRequirements}}
 {{/if}}
 
-**最终检查清单：**
+**Final checklist:**
 {{checklist}}
-✓ 是否保持了学术规范性和表述准确性？
-✓ 是否与用户的具体建议高度匹配？`;
+✓ Does it maintain academic normativity and expression accuracy?
+✓ Does it highly match the user's specific suggestions?`;
 
-// 部分迭代提示词模板
-export const SECTION_ITERATION_TEMPLATE = `{{tone}}，特别需要重点优化研究方案的"{{sectionName}}"部分。
+// Section iteration prompt template
+export const SECTION_ITERATION_TEMPLATE = `{{tone}}, especially need to focus on optimizing the "{{sectionName}}" section of the research plan.
 
-**用户的具体优化建议：** {{suggestion}}
+**User's specific optimization suggestions:** {{suggestion}}
 
-当前完整研究方案：
-#研究假设：
+Current complete research plan:
+# Research Hypotheses:
 {{hypotheses}}
 
-#实验设计：
+# Experimental Design:
 {{experimentalDesign}}
 
-#数据分析：
+# Data Analysis:
 {{analysisMethod}}
 
-#结果呈现：
+# Results Presentation:
 {{expectedResults}}
 
-**重点优化目标：{{sectionName}}部分**
+**Key optimization target: {{sectionName}} section**
 
-**针对性优化要求：**
+**Targeted optimization requirements:**
 {{requirements}}
 
-**重点关注领域：**
+**Key focus areas:**
 {{focusAreas}}
 
 {{#if sectionGuidance}}
-**针对"{{sectionName}}"部分的具体优化指导：**
+**Specific optimization guidance for "{{sectionName}}" section:**
 {{sectionGuidance}}
 {{/if}}
 
-**整体协调要求：**
-1. 重点优化"{{sectionName}}"部分，确保改进效果符合用户的具体建议
-2. 适当调整其他部分以保持逻辑一致性，但避免大幅修改
-3. 确保所有部分形成完整、协调的研究方法论体系
-4. 根据用户建议的方向，有针对性地提升方案质量
+**Overall coordination requirements:**
+1. Focus on optimizing the "{{sectionName}}" section to ensure improvement effects meet user's specific suggestions
+2. Appropriately adjust other sections to maintain logical consistency, but avoid major modifications
+3. Ensure all sections form a complete, coordinated research methodology system
+4. According to the direction of user suggestions, improve plan quality in a targeted manner
 
 {{#if hasUserRequirements}}
-**用户研究需求深度整合：**
-用户研究需求：{{userRequirements}}
-研究背景和上下文：{{researchContext}}
+**Deep integration of user research requirements:**
+User research requirements: {{userRequirements}}
+Research background and context: {{researchContext}}
 
-**针对"{{sectionName}}"的需求适配要求：**
-1. 深度分析用户需求对"{{sectionName}}"部分的具体影响和要求
-2. 基于用户的研究背景，为"{{sectionName}}"部分设计更贴合的具体方案
-3. 确保"{{sectionName}}"的优化能够直接服务于用户的研究目标和实际需求
-4. 在优化过程中充分考虑用户的资源条件和实施环境
+**Requirements adaptation requirements for "{{sectionName}}":**
+1. Deeply analyze the specific impact and requirements of user needs on the "{{sectionName}}" section
+2. Based on the user's research background, design more fitting specific plans for the "{{sectionName}}" section
+3. Ensure that the optimization of "{{sectionName}}" can directly serve the user's research objectives and actual needs
+4. Fully consider the user's resource conditions and implementation environment during the optimization process
 {{/if}}
 
-请按照以下格式返回完整的优化后方案，必须使用以下精确的标题格式：
+Please return the complete optimized plan according to the following format, and must use the following precise title format:
 
-# 研究假设：
-<研究假设内容>
+# Research Hypotheses:
+<Research hypotheses content>
 
-# 实验设计：
-<实验设计内容>
+# Experimental Design:
+<Experimental design content>
 
-# 数据分析：
-<数据分析内容>
+# Data Analysis:
+<Data analysis content>
 
-# 结果呈现：
-<结果呈现内容>
+# Results Presentation:
+<Results presentation content>
 
-请按照以下详细结构优化方案，确保每一部分内容详实具体（每项不少于3句话）：
+Please optimize the plan according to the following detailed structure, ensuring that each part is detailed and specific (at least 3 sentences per item):
 
-一、研究假设
-简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
+I. Research Hypotheses
+Briefly describe the experimental purpose and propose research hypotheses that correspond highly to the research objectives. Each hypothesis should be numbered (H1, H2...).
 
-二、实验设计
-参与者特征：可考虑但不限于样本量估算、年龄与性别构成、专业或技术背景、招募方式、纳入与排除标准，以及样本的代表性或研究适配性等，分点详细罗列。 
-分组方式：可描述分组方式与研究设计类型（如组间设计、组内设计、混合设计），明确自变量与因变量的定义及其操作化方式等，列出所有实验条件与控制变量。
-实验流程：尽可能详细说明实验流程，可描述各阶段的名称、任务内容、执行顺序等，确保流程完整、清晰、具备可复现性。
+II. Experimental Design
+Participant characteristics: Consider but not limited to sample size estimation, age and gender composition, professional or technical background, recruitment methods, inclusion and exclusion criteria, as well as sample representativeness or research adaptability, etc., listed in detail.
+Grouping method: Describe the grouping method and research design type (such as between-subject design, within-subject design, mixed design), clarify the definition and operationalization of independent and dependent variables, list all experimental conditions and control variables.
+Experimental procedure: Describe the experimental procedure in as much detail as possible, describe the names, task content, execution sequence of each stage, etc., to ensure that the process is complete, clear, and reproducible.
 
-三、数据分析
-详述将采集的用户数据类型，可参考但不限于主观评分数据（如问卷量表、用户偏好评估）、行为数据（如点击次数、任务完成时长、操作路径）与系统记录数据（如日志、交互轨迹等），并解释每类数据的采集方式（如问卷平台、实验系统、后台日志）。
-针对每一类关键因变量，明确采用的统计分析方法（如t检验、单/双因素ANOVA、回归分析、调节/中介效应分析等），并说明分析方法与研究假设的匹配关系、假设检验标准（如α = .05）及是否纳入协变量控制。
+III. Data Analysis
+Detail the types of user data to be collected, which may refer to but not limited to subjective rating data (such as questionnaire scales, user preference evaluation), behavioral data (such as click count, task completion time, operation path) and system recorded data (such as logs, interaction trajectories, etc.), and explain the collection method of each type of data (such as questionnaire platform, experimental system, background log).
+For each type of key dependent variable, clarify the statistical analysis methods used (such as t-test, one/two-way ANOVA, regression analysis, moderation/mediation effect analysis, etc.), and explain the matching relationship between analysis methods and research hypotheses, hypothesis testing standards (such as α = .05) and whether to include covariate control.
 
-四、结果呈现
-预测不同实验条件下，主要因变量之间可能呈现的差异或变化趋势，结合前人研究推测可能的解释机制。进一步说明将如何呈现各类实验结果，包括适合用于描述组间差异的图表（如箱线图、条形图）、用于展示交互效应或趋势的图表（如折线图、交互图）等。请说明每类图表如何辅助结果解读，并强调其与研究结论之间的逻辑映射关系。
+IV. Results Presentation
+Predict the possible differences or trends among the main dependent variables under different experimental conditions, and speculate on possible explanatory mechanisms based on previous research. Further explain how to present various experimental results, including charts suitable for describing between-group differences (such as box plots, bar charts), charts for showing interaction effects or trends (such as line charts, interaction charts), etc. Please explain how each type of chart assists in result interpretation and emphasize the logical mapping relationship between it and research conclusions.
 
-**输出验证标准：**
+**Output validation criteria:**
 {{validationCriteria}}
 
 {{#if qualityRequirements}}
-**具体质量要求：**
+**Specific quality requirements:**
 {{qualityRequirements}}
 {{/if}}
 
-**重要实施要求：**
-- 必须返回完整的4个部分，严格按照上述详细结构组织内容
-- 重点优化"{{sectionName}}"部分，确保改进效果符合用户建议
-- 其他部分保持原样或做必要的协调调整，避免大幅修改
-- 必须使用Markdown格式，内容要详细具体，符合学术规范
-- 风格应贴近正式科研报告或论文开题材料
+**Important implementation requirements:**
+- Must return complete 4 sections, strictly organize content according to the above detailed structure
+- Focus on optimizing the "{{sectionName}}" section to ensure improvement effects meet user suggestions
+- Other sections remain the same or make necessary coordination adjustments, avoid major modifications
+- Must use Markdown format, content should be detailed and specific, conform to academic standards
+- Style should be close to formal research reports or thesis proposal materials
 
-**最终检查清单：**
+**Final checklist:**
 {{checklist}}
-✓ 是否保持了其他部分的完整性和一致性？
-✓ 是否与用户的具体建议高度匹配？
-✓ 是否保持了学术规范性和表述准确性？`;
+✓ Does it maintain the integrity and consistency of other sections?
+✓ Does it highly match the user's specific suggestions?
+✓ Does it maintain academic normativity and expression accuracy?`;
 
-// 来源介绍生成模板 - 研究假设部分
-export const SOURCE_INTRODUCTION_HYPOTHESIS_TEMPLATE = `**请根据当前研究方案中的"研究假设"部分内容，结合所引用的一篇或多篇参考文献，分析并指出研究假设的具体设计在哪些方面受到已有文献的启发或借鉴。**
+// Source introduction generation template - Research Hypotheses section
+export const SOURCE_INTRODUCTION_HYPOTHESIS_TEMPLATE = `**Please analyze and point out how the specific design of research hypotheses in the current research plan is inspired by or borrowed from existing literature, based on the "Research Hypotheses" section content and the referenced literature.**
 
-请生成一个表格，最多包含5行，每行分析一个借鉴关系。请直接输出markdown表格格式，不要用代码块包裹。表格应严格按照以下格式：
+Please generate a table with a maximum of 5 rows, each row analyzing a borrowing relationship. Please output directly in markdown table format without code block wrapping. The table should strictly follow the following format:
 
-| 当前方案中的做法 | 参考文献对应内容 | 借鉴关系说明 |
+| Current Plan Approach | Corresponding Reference Content | Borrowing Relationship Description |
 |---|---|---|
-| 简明陈述本研究中"研究假设"的具体内容或核心假设点 | 【必须给出英文原文】明确标注参考文献中相关内容所在的位置，并摘录能够体现其核心思想的英文原文语句，标明出处 | 简要说明本研究假设如何受到该文献的启发，具体体现在哪些方面，强调借鉴的思路、结构或推理路径 |
+| Briefly state the specific content or core hypothesis points of "Research Hypotheses" in this study | 【Must provide English original text】Clearly mark the location of relevant content in the reference literature and extract English original sentences that reflect its core ideas, with source indicated | Briefly explain how the current research hypotheses are inspired by this literature, specifically reflected in which aspects, emphasizing the borrowed ideas, structure or reasoning path |
 
-若同一条目借鉴了多篇文献，请在"参考文献对应内容"部分，采用类似"参考文献1（标题前两个单词…）、参考文献2（标题前两个单词…）"的简称方式进行区分说明。
+If the same item borrows from multiple literature, please distinguish and explain in the "Corresponding Reference Content" section using abbreviations like "Reference 1 (first two words of title...), Reference 2 (first two words of title...)".
 
-**重要要求：**
-- 表格前请添加一句话作为总体概述
-- 直接输出markdown表格，不要使用代码块包裹
-- "参考文献对应内容"列必须给出英文原文，格式如："原文：'English original text here' (来自：参考文献X - 标题简称)"
-- 每个单元格内容简洁明了，避免过长
+**Important requirements:**
+- Add one sentence as an overall overview before the table
+- Output markdown table directly without code block wrapping
+- The "Corresponding Reference Content" column must provide English original text, format like: "Original text: 'English original text here' (From: Reference X - Title abbreviation)"
+- Each cell content should be concise and clear, avoid being too long
 
-**## 1. 研究方案的当前部分内容：**
+**## 1. Current section content of the research plan:**
 {{currentSectionContent}}
 
-**## 2. 参考文献信息：**
+**## 2. Reference literature information:**
 {{referencesInfo}}
 
-**## 3. 用户的研究需求和背景（如果提供）：**
+**## 3. User's research requirements and background (if provided):**
 {{#if hasUserRequirements}}
-- **用户需求:** {{userRequirements}}
-- **研究背景:** {{researchContext}}
+- **User requirements:** {{userRequirements}}
+- **Research background:** {{researchContext}}
 {{else}}
-无特定用户需求，请仅基于文献进行分析。
+No specific user requirements, please analyze based on literature only.
 {{/if}}
 
-**## 4. 你的任务和输出要求：**`;
+**## 4. Your task and output requirements:**`;
 
-// 来源介绍生成模板 - 实验设计部分
-export const SOURCE_INTRODUCTION_DESIGN_TEMPLATE = `**请根据当前研究方案中的"实验设计"部分内容，结合所引用的一篇或多篇参考文献，分析并指出实验设计中的具体做法在哪些方面受到已有文献的启发或借鉴。**
+// Source introduction generation template - Experimental Design section
+export const SOURCE_INTRODUCTION_DESIGN_TEMPLATE = `**Please analyze and point out how the specific practices in the experimental design are inspired by or borrowed from existing literature, based on the "Experimental Design" section content and the referenced literature.**
 
-请生成一个表格，最多包含5行，每行分析一个借鉴关系。请直接输出markdown表格格式，不要用代码块包裹。表格应严格按照以下格式：
+Please generate a table with a maximum of 5 rows, each row analyzing a borrowing relationship. Please output directly in markdown table format without code block wrapping. The table should strictly follow the following format:
 
-| 当前方案中的做法 | 参考文献对应内容 | 借鉴关系说明 |
+| Current Plan Approach | Corresponding Reference Content | Borrowing Relationship Description |
 |---|---|---|
-| 简要说明本研究在实验设计中的具体做法，例如分组方式、变量设置、任务类型或操作流程等 | 【必须给出英文原文】明确标注参考文献中相关内容所在的位置，并摘录能够体现其核心思想的英文原文语句，标明出处 | 简要说明当前实验设计在何种程度上受到该文献的启发，具体体现在何种设计思路、变量操作、对照逻辑或流程结构等方面 |
+| Briefly explain the specific practices in experimental design of this study, such as grouping methods, variable settings, task types or operation procedures | 【Must provide English original text】Clearly mark the location of relevant content in the reference literature and extract English original sentences that reflect its core ideas, with source indicated | Briefly explain to what extent the current experimental design is inspired by this literature, specifically reflected in what design ideas, variable operations, control logic or process structure |
 
-若同一条目借鉴了多篇文献，请在"参考文献对应内容"部分，采用类似"参考文献1、参考文献2"的简称方式进行区分说明。
+If the same item borrows from multiple literature, please distinguish and explain in the "Corresponding Reference Content" section using abbreviations like "Reference 1, Reference 2".
 
-**重要要求：**
-- 表格前请添加一句话作为总体概述
-- 直接输出markdown表格，不要使用代码块包裹
-- "参考文献对应内容"列必须给出英文原文，格式如："原文：'English original text here' (来自：参考文献X - 标题简称)"
-- 每个单元格内容简洁明了，避免过长
+**Important requirements:**
+- Add one sentence as an overall overview before the table
+- Output markdown table directly without code block wrapping
+- The "Corresponding Reference Content" column must provide English original text, format like: "Original text: 'English original text here' (From: Reference X - Title abbreviation)"
+- Each cell content should be concise and clear, avoid being too long
 
-**## 1. 研究方案的当前部分内容：**
+**## 1. Current section content of the research plan:**
 {{currentSectionContent}}
 
-**## 2. 参考文献信息：**
+**## 2. Reference literature information:**
 {{referencesInfo}}
 
-**## 3. 用户的研究需求和背景（如果提供）：**
+**## 3. User's research requirements and background (if provided):**
 {{#if hasUserRequirements}}
-- **用户需求:** {{userRequirements}}
-- **研究背景:** {{researchContext}}
+- **User requirements:** {{userRequirements}}
+- **Research background:** {{researchContext}}
 {{else}}
-无特定用户需求，请仅基于文献进行分析。
+No specific user requirements, please analyze based on literature only.
 {{/if}}
 
-**## 4. 你的任务和输出要求：**`;
+**## 4. Your task and output requirements:**`;
 
-// 来源介绍生成模板 - 数据分析部分
-export const SOURCE_INTRODUCTION_ANALYSIS_TEMPLATE = `**请根据当前研究方案中的"数据分析"部分内容，结合所引用的一篇或多篇参考文献，分析并指出数据分析方法的选择在哪些方面受到已有文献的启发或借鉴。**
+// Source introduction generation template - Data Analysis section
+export const SOURCE_INTRODUCTION_ANALYSIS_TEMPLATE = `**Please analyze and point out how the selection of data analysis methods is inspired by or borrowed from existing literature, based on the "Data Analysis" section content and the referenced literature.**
 
-请生成一个表格，最多包含5行，每行分析一个借鉴关系。请直接输出markdown表格格式，不要用代码块包裹。表格应严格按照以下格式：
+Please generate a table with a maximum of 5 rows, each row analyzing a borrowing relationship. Please output directly in markdown table format without code block wrapping. The table should strictly follow the following format:
 
-| 当前方案中的做法 | 参考文献对应内容 | 借鉴关系说明 |
+| Current Plan Approach | Corresponding Reference Content | Borrowing Relationship Description |
 |---|---|---|
-| 简要说明本研究在数据分析中的具体方法，例如统计方法、分析步骤、变量处理或模型构建等 | 【必须给出英文原文】明确标注参考文献中相关内容所在的位置，并摘录能够体现其核心思想的英文原文语句，标明出处 | 简要说明当前数据分析方法如何受到该文献的启发，具体体现在何种分析思路、统计选择、处理步骤或结果解读等方面 |
+| Briefly explain the specific methods in data analysis of this study, such as statistical methods, analysis steps, variable processing or model construction | 【Must provide English original text】Clearly mark the location of relevant content in the reference literature and extract English original sentences that reflect its core ideas, with source indicated | Briefly explain how the current data analysis methods are inspired by this literature, specifically reflected in what analysis ideas, statistical choices, processing steps or result interpretation |
 
-若同一条目借鉴了多篇文献，请在"参考文献对应内容"部分，采用类似"参考文献1、参考文献2"的简称方式进行区分说明。
+If the same item borrows from multiple literature, please distinguish and explain in the "Corresponding Reference Content" section using abbreviations like "Reference 1, Reference 2".
 
-**重要要求：**
-- 表格前请添加一句话作为总体概述
-- 直接输出markdown表格，不要使用代码块包裹
-- "参考文献对应内容"列必须给出英文原文，格式如："原文：'English original text here' (来自：参考文献X - 标题简称)"
-- 每个单元格内容简洁明了，避免过长
+**Important requirements:**
+- Add one sentence as an overall overview before the table
+- Output markdown table directly without code block wrapping
+- The "Corresponding Reference Content" column must provide English original text, format like: "Original text: 'English original text here' (From: Reference X - Title abbreviation)"
+- Each cell content should be concise and clear, avoid being too long
 
-**## 1. 研究方案的当前部分内容：**
+**## 1. Current section content of the research plan:**
 {{currentSectionContent}}
 
-**## 2. 参考文献信息：**
+**## 2. Reference literature information:**
 {{referencesInfo}}
 
-**## 3. 用户的研究需求和背景（如果提供）：**
+**## 3. User's research requirements and background (if provided):**
 {{#if hasUserRequirements}}
-- **用户需求:** {{userRequirements}}
-- **研究背景:** {{researchContext}}
+- **User requirements:** {{userRequirements}}
+- **Research background:** {{researchContext}}
 {{else}}
-无特定用户需求，请仅基于文献进行分析。
+No specific user requirements, please analyze based on literature only.
 {{/if}}
 
-**## 4. 你的任务和输出要求：**`;
+**## 4. Your task and output requirements:**`;
 
-// 来源介绍生成模板 - 结果呈现部分
-export const SOURCE_INTRODUCTION_RESULTS_TEMPLATE = `**请根据当前研究方案中的"结果呈现"部分内容，结合所引用的一篇或多篇参考文献，分析并指出结果呈现方式的设计在哪些方面受到已有文献的启发或借鉴。**
+// Source introduction generation template - Results Presentation section
+export const SOURCE_INTRODUCTION_RESULTS_TEMPLATE = `**Please analyze and point out how the design of results presentation methods is inspired by or borrowed from existing literature, based on the "Results Presentation" section content and the referenced literature.**
 
-请生成一个表格，最多包含5行，每行分析一个借鉴关系。请直接输出markdown表格格式，不要用代码块包裹。表格应严格按照以下格式：
+Please generate a table with a maximum of 5 rows, each row analyzing a borrowing relationship. Please output directly in markdown table format without code block wrapping. The table should strictly follow the following format:
 
-| 当前方案中的做法 | 参考文献对应内容 | 借鉴关系说明 |
+| Current Plan Approach | Corresponding Reference Content | Borrowing Relationship Description |
 |---|---|---|
-| 简要说明本研究对结果呈现的设计，例如预期结果或结论、以及所拟采用的图表类型 | 【必须给出英文原文】明确标注参考文献中相关内容所在的位置，并摘录能够体现其核心思想的英文原文语句，标明出处 | 简要说明当前方案在结果呈现方面如何受到该文献的启发，具体体现在哪些方面，如预期差异的表达方式、图表设计风格、指标对比结构或结论推理框架等 |
+| Briefly explain the design of results presentation in this study, such as expected results or conclusions, and the proposed chart types | 【Must provide English original text】Clearly mark the location of relevant content in the reference literature and extract English original sentences that reflect its core ideas, with source indicated | Briefly explain how the current plan in results presentation is inspired by this literature, specifically reflected in which aspects, such as expression methods of expected differences, chart design styles, indicator comparison structures or conclusion reasoning frameworks |
 
-若同一条目借鉴了多篇文献，请在"参考文献对应内容"部分，采用类似"参考文献1、参考文献2"的简称方式进行区分说明。
+If the same item borrows from multiple literature, please distinguish and explain in the "Corresponding Reference Content" section using abbreviations like "Reference 1, Reference 2".
 
-**重要要求：**
-- 表格前请添加一句话作为总体概述
-- 直接输出markdown表格，不要使用代码块包裹
-- "参考文献对应内容"列必须给出英文原文，格式如："原文：'English original text here' (来自：参考文献X - 标题简称)"
-- 每个单元格内容简洁明了，避免过长
+**Important requirements:**
+- Add one sentence as an overall overview before the table
+- Output markdown table directly without code block wrapping
+- The "Corresponding Reference Content" column must provide English original text, format like: "Original text: 'English original text here' (From: Reference X - Title abbreviation)"
+- Each cell content should be concise and clear, avoid being too long
 
-**## 1. 研究方案的当前部分内容：**
+**## 1. Current section content of the research plan:**
 {{currentSectionContent}}
 
-**## 2. 参考文献信息：**
+**## 2. Reference literature information:**
 {{referencesInfo}}
 
-**## 3. 用户的研究需求和背景（如果提供）：**
+**## 3. User's research requirements and background (if provided):**
 {{#if hasUserRequirements}}
-- **用户需求:** {{userRequirements}}
-- **研究背景:** {{researchContext}}
+- **User requirements:** {{userRequirements}}
+- **Research background:** {{researchContext}}
 {{else}}
-无特定用户需求，请仅基于文献进行分析。
+No specific user requirements, please analyze based on literature only.
 {{/if}}
 
-**## 4. 你的任务和输出要求：**`;
+**## 4. Your task and output requirements:**`;
 
-// 来源介绍生成模板 - 默认通用模板
-export const SOURCE_INTRODUCTION_DEFAULT_TEMPLATE = `你是一位专业的学术助手。你的任务是严谨地分析一组参考文献如何为一个研究计划的特定部分提供支撑。
+// Source introduction generation template - Default general template
+export const SOURCE_INTRODUCTION_DEFAULT_TEMPLATE = `You are a professional academic assistant. Your task is to rigorously analyze how a group of reference literature provides support for a specific section of a research plan.
 
-你的目标是生成一份"来源介绍"，逐篇清晰地解释每篇文献对计划的"{{sectionName}}"部分有何贡献，并用直接的原文引述作为论据。
+Your goal is to generate a "Source Introduction" that clearly explains how each piece of literature contributes to the "{{sectionName}}" section of the plan, using direct original text citations as evidence.
 
-请生成一个表格格式的来源介绍，请直接输出markdown表格格式，不要用代码块包裹。表格应包含以下列：
+Please generate a source introduction in table format, output directly in markdown table format without code block wrapping. The table should include the following columns:
 
-| 参考文献 | 核心贡献 | 具体引用内容 | 对当前研究的启发 |
+| Reference Literature | Core Contribution | Specific Citation Content | Inspiration for Current Research |
 |---|---|---|---|
-| 文献标题 | 该文献对当前研究部分的核心贡献 | 【必须给出英文原文】文献中的具体内容和英文原文引用，标明出处 | 如何启发了当前研究的设计 |
+| Literature Title | Core contribution of this literature to the current research section | 【Must provide English original text】Specific content and English original citations from the literature, with source indicated | How it inspired the design of the current research |
 
-**重要要求：**
-- 表格前请添加一句话作为总体概述
-- 直接输出markdown表格，不要使用代码块包裹
-- "具体引用内容"列必须给出英文原文，格式如："原文：'English original text here' (来自：参考文献X - 标题简称)"
-- 每个单元格内容简洁明了，避免过长
+**Important requirements:**
+- Add one sentence as an overall overview before the table
+- Output markdown table directly without code block wrapping
+- The "Specific Citation Content" column must provide English original text, format like: "Original text: 'English original text here' (From: Reference X - Title abbreviation)"
+- Each cell content should be concise and clear, avoid being too long
 
-**## 1. 研究方案的当前部分内容：**
+**## 1. Current section content of the research plan:**
 {{currentSectionContent}}
 
-**## 2. 参考文献信息：**
+**## 2. Reference literature information:**
 {{referencesInfo}}
 
-**## 3. 用户的研究需求和背景（如果提供）：**
+**## 3. User's research requirements and background (if provided):**
 {{#if hasUserRequirements}}
-- **用户需求:** {{userRequirements}}
-- **研究背景:** {{researchContext}}
+- **User requirements:** {{userRequirements}}
+- **Research background:** {{researchContext}}
 {{else}}
-无特定用户需求，请仅基于文献进行分析。
+No specific user requirements, please analyze based on literature only.
 {{/if}}
 
-**## 4. 你的任务和输出要求：**
+**## 4. Your task and output requirements:**
 
-请严格按照表格格式生成约300-500字的来源介绍。`;
+Please generate a source introduction of about 300-500 words strictly according to the table format.`;
 
-// 方法介绍生成模板 - ChatGPT模式
-export const METHOD_INTRODUCTION_CHATGPT_TEMPLATE = `我将为你提供一个研究方案的数据分析部分内容。请分析其中使用的研究方法和统计分析方法，并生成一个详细的方法介绍。
+// Method introduction generation template - ChatGPT mode
+export const METHOD_INTRODUCTION_CHATGPT_TEMPLATE = `I will provide you with the data analysis section content of a research plan. Please analyze the research methods and statistical analysis methods used in it, and generate a detailed method introduction.
 
-研究方案的数据分析部分：
+Data analysis section of the research plan:
 {{analysisContent}}
 
 {{#if hasUserRequirements}}
-用户研究需求：
+User research requirements:
 {{userRequirements}}
 
-研究背景和上下文：
+Research background and context:
 {{researchContext}}
 {{/if}}
 
-请分析上述数据分析内容中提到的统计方法，并为每种方法单独生成专业介绍。
+Please analyze the statistical methods mentioned in the above data analysis content and generate professional introductions for each method separately.
 
-要求：
-1. 识别数据分析部分中提到的所有统计方法
-2. 对每种统计方法分别进行简单但专业的介绍
-3. 使用学术性语言，确保内容准确且易懂
-4. 必须严格按照以下格式组织内容
+Requirements:
+1. Identify all statistical methods mentioned in the data analysis section
+2. Provide simple but professional introductions for each statistical method separately
+3. Use academic language to ensure content is accurate and understandable
+4. Must strictly organize content according to the following format
 
-格式要求：
-每个统计方法按以下结构介绍：
+Format requirements:
+Each statistical method should be introduced according to the following structure:
 
-**方法名称**
-方法的定义和基本作用，说明它适用于什么情况。
+**Method Name**
+Definition and basic function of the method, explaining what situations it is suitable for.
 
-**常见类型：**
-- 类型1：具体说明和应用场景
-- 类型2：具体说明和应用场景  
-- 类型3：具体说明和应用场景（如果有）
+**Common Types:**
+- Type 1: Specific explanation and application scenarios
+- Type 2: Specific explanation and application scenarios
+- Type 3: Specific explanation and application scenarios (if any)
 
-**输出结果：**
-说明该方法会产生什么统计量（如t值、F值、p值等），以及如何解释结果和判断显著性。
+**Output Results:**
+Explain what statistics the method will produce (such as t-value, F-value, p-value, etc.), and how to interpret results and judge significance.
 
-示例格式：
-**t检验**
-t检验(t-test)是一种常用的统计方法，用于比较两个样本之间的平均值是否存在显著差异。它适用于样本量较小、总体标准差未知的情况。
+Example format:
+**t-test**
+The t-test is a commonly used statistical method for comparing whether there is a significant difference between the means of two samples. It is suitable for situations with small sample sizes and unknown population standard deviations.
 
-**常见类型：**
-- 独立样本t检验：比较两个独立群体的均值(如男性和女性的考试成绩)
-- 配对样本t检验：比较同一组个体在不同条件下的均值(如干预前后)
-- 单样本t检验：检验一个样本的均值是否显著不同于某个已知值
+**Common Types:**
+- Independent samples t-test: Compare the means of two independent groups (such as male and female test scores)
+- Paired samples t-test: Compare the means of the same group of individuals under different conditions (such as before and after intervention)
+- One-sample t-test: Test whether the mean of a sample is significantly different from a known value
 
-**输出结果：**
-t检验会计算一个t值，结合自由度，通过查表或统计软件得到p值，用来判断差异是否显著(通常以p<0.05为标准)。如果p值小于显著性水平，就可以认为两组之间存在统计学显著差异。
+**Output Results:**
+The t-test will calculate a t-value, combined with degrees of freedom, to obtain a p-value through table lookup or statistical software, used to judge whether the difference is significant (usually using p<0.05 as the standard). If the p-value is less than the significance level, it can be considered that there is a statistically significant difference between the two groups.
 
 {{#if hasUserRequirements}}
-**特别要求：**
-结合用户的研究需求，重点解释这些统计方法如何服务于用户的具体研究目标。
+**Special requirements:**
+Combined with the user's research needs, focus on explaining how these statistical methods serve the user's specific research objectives.
 {{/if}}
 
-请按照上述格式，为数据分析部分中提到的每种统计方法生成介绍。`;
+Please generate introductions for each statistical method mentioned in the data analysis section according to the above format.`;
 
-// 方法介绍生成模板 - Coze模式
-export const METHOD_INTRODUCTION_COZE_TEMPLATE = `我将为你提供一个研究方案的数据分析部分内容。请分析其中使用的研究方法和统计分析方法，并生成一个详细的方法介绍。
+// Method introduction generation template - Coze mode
+export const METHOD_INTRODUCTION_COZE_TEMPLATE = `I will provide you with the data analysis section content of a research plan. Please analyze the research methods and statistical analysis methods used in it, and generate a detailed method introduction.
 
-研究方案的数据分析部分：
+Data analysis section of the research plan:
 {{analysisContent}}
 
 {{#if hasUserRequirements}}
-用户研究需求：
+User research requirements:
 {{userRequirements}}
 
-研究背景和上下文：
+Research background and context:
 {{researchContext}}
 {{/if}}
 
-请分析上述数据分析内容中提到的统计方法，并为每种方法单独生成专业介绍。
+Please analyze the statistical methods mentioned in the above data analysis content and generate professional introductions for each method separately.
 
-要求：
-1. 识别数据分析部分中提到的所有统计方法
-2. 对每种统计方法分别进行简单但专业的介绍
-3. 按照以下格式为每个方法生成介绍：
+Requirements:
+1. Identify all statistical methods mentioned in the data analysis section
+2. Provide simple but professional introductions for each statistical method separately
+3. Generate introductions for each method according to the following format:
 
-格式：
-**方法名称**
-方法的定义和基本作用，说明适用情况。
+Format:
+**Method Name**
+Definition and basic function of the method, explaining applicable situations.
 
-**常见类型：**
-列出该方法的主要类型和各自的应用场景。
+**Common Types:**
+List the main types of this method and their respective application scenarios.
 
-**输出结果：**
-说明统计量、判断标准和结果解释。
+**Output Results:**
+Explain statistics, judgment criteria and result interpretation.
 
-示例：
+Example:
 **ANOVA**
-ANOVA(方差分析，Analysis of Variance)是一种用于比较三个或以上组的均值是否存在显著差异的统计方法。它是t检验的扩展，适用于多组情况。
+ANOVA (Analysis of Variance) is a statistical method used to compare whether there are significant differences among the means of three or more groups. It is an extension of the t-test, suitable for multi-group situations.
 
-**常见类型：**
-- 单因素方差分析(One-way ANOVA)：适用于一个自变量，有多个水平。例如：比较三种教学方法对考试成绩的影响。
-- 双因素方差分析(Two-way ANOVA)：同时考察两个自变量及其交互作用。
+**Common Types:**
+- One-way ANOVA: Suitable for one independent variable with multiple levels. For example: comparing the effects of three teaching methods on test scores.
+- Two-way ANOVA: Simultaneously examine two independent variables and their interaction effects.
 
-**输出结果：**
-ANOVA输出一个F值，再根据F分布计算p值，用于判断组间差异是否显著(通常以p<0.05为显著)。如果显著，还需进行事后检验(如Tukey HSD)来找出具体哪些组之间有差异。
+**Output Results:**
+ANOVA outputs an F-value, then calculates a p-value based on the F-distribution to judge whether between-group differences are significant (usually using p<0.05 as significant). If significant, post-hoc tests (such as Tukey HSD) are needed to find out which specific groups have differences.
 
 {{#if hasUserRequirements}}
-特别说明：请结合用户的研究需求，重点解释这些统计方法的适用性。
+Special note: Please combine the user's research needs to focus on explaining the applicability of these statistical methods.
 {{/if}}
 
-请按照上述格式，为数据分析部分中的每种统计方法生成介绍。`;
+Please generate introductions for each statistical method in the data analysis section according to the above format.`;
 
-// 优化建议配置
+// Optimization suggestion configurations
 export const OPTIMIZATION_SPECS = {
-  '自动迭代优化': {
-    tone: '你是一位资深的HCI研究专家，需要对研究方案进行全面的智能优化',
+  'Automatic Iterative Optimization': {
+    tone: 'You are a senior HCI research expert who needs to conduct comprehensive intelligent optimization of the research plan',
     requirements: [
-      '**全面提升**：从理论基础、方法设计、数据分析、结果呈现等各个维度进行综合优化',
-      '**平衡改进**：在保持方案整体协调性的基础上，适度提升各部分的专业深度',
-      '**智能调整**：根据方案的薄弱环节，自动识别并重点强化需要改进的部分'
+      '**Comprehensive Enhancement**: Conduct comprehensive optimization from theoretical foundation, method design, data analysis, result presentation and other dimensions',
+      '**Balanced Improvement**: Moderately enhance the professional depth of each part while maintaining the overall coordination of the plan',
+      '**Intelligent Adjustment**: Automatically identify and focus on strengthening parts that need improvement based on weak points of the plan'
     ],
-    focusAreas: ['整体协调性', '方法论完整性', '学术规范性']
+    focusAreas: ['Overall coordination', 'Methodological completeness', 'Academic normativity']
   },
-  '提高科学严谨性': {
-    tone: '你是一位资深的HCI研究专家，需要重点提升研究方案的科学严谨性',
+  'Improve Scientific Rigor': {
+    tone: 'You are a senior HCI research expert who needs to focus on improving the scientific rigor of the research plan',
     requirements: [
-      '**方法论严谨性**：确保研究设计的逻辑性、控制变量的完整性、因果推断的有效性',
-      '**统计严谨性**：使用正确的统计方法、设置合理的显著性水平、考虑效应量和统计功效',
-      '**伦理规范性**：确保研究符合学术伦理要求、被试权益保护、数据隐私安全'
+      '**Methodological Rigor**: Ensure the logic of research design, completeness of control variables, and validity of causal inference',
+      '**Statistical Rigor**: Use correct statistical methods, set reasonable significance levels, consider effect size and statistical power',
+      '**Ethical Normativity**: Ensure research complies with academic ethical requirements, participant rights protection, data privacy security'
     ],
-    focusAreas: ['研究设计的内外部效度', '统计分析的规范性', '结果解释的客观性']
+    focusAreas: ['Internal and external validity of research design', 'Normativity of statistical analysis', 'Objectivity of result interpretation']
   },
-  '增加更多细节': {
-    tone: '你是一位资深的HCI研究专家，需要大幅增加研究方案的具体细节',
+  'Add More Details': {
+    tone: 'You are a senior HCI research expert who needs to significantly increase specific details of the research plan',
     requirements: [
-      '**操作细节丰富化**：提供具体的数值参数、详细的操作步骤、明确的时间安排',
-      '**技术规范细化**：包含设备型号、软件版本、实验环境配置等技术细节',
-      '**实施指南详细化**：提供可直接执行的操作手册，包括人员配置、材料准备、质量控制'
+      '**Operational Detail Enrichment**: Provide specific numerical parameters, detailed operation steps, clear time arrangements',
+      '**Technical Specification Refinement**: Include device models, software versions, experimental environment configurations and other technical details',
+      '**Implementation Guide Detailing**: Provide directly executable operation manuals, including personnel allocation, material preparation, quality control'
     ],
-    focusAreas: ['具体参数设置', '操作流程细化', '实施标准明确']
+    focusAreas: ['Specific parameter settings', 'Operation process refinement', 'Implementation standard clarification']
   },
-  '简化表述': {
-    tone: '你是一位资深的HCI研究专家，需要简化和精炼研究方案的表述',
+  'Simplify Expression': {
+    tone: 'You are a senior HCI research expert who needs to simplify and refine the expression of the research plan',
     requirements: [
-      '**表述精炼化**：去除冗余描述，保留核心要点，使表达更加简洁明了',
-      '**结构清晰化**：优化段落结构，使用更清晰的逻辑层次，便于理解和执行',
-      '**要点突出化**：突出关键信息，减少次要细节，确保重点内容一目了然'
+      '**Expression Refinement**: Remove redundant descriptions, retain key points, make expression more concise and clear',
+      '**Structure Clarification**: Optimize paragraph structure, use clearer logical hierarchies, facilitate understanding and execution',
+      '**Key Point Highlighting**: Highlight key information, reduce secondary details, ensure key content is clear at a glance'
     ],
-    focusAreas: ['表达简洁性', '逻辑清晰度', '重点突出性']
+    focusAreas: ['Expression conciseness', 'Logical clarity', 'Key point prominence']
   }
 };
 
-// 验证标准配置
+// Validation criteria configurations
 export const VALIDATION_SPECS = {
-  '自动迭代优化': {
+  'Automatic Iterative Optimization': {
     criteria: [
-      '**平衡性检查**：确保各部分都有适度的改进，没有明显的薄弱环节',
-      '**整体性验证**：各部分之间的逻辑关联更加紧密，形成完整的方法论体系',
-      '**质量提升确认**：整体方案的学术水平和可操作性都有显著提升'
+      '**Balance Check**: Ensure all parts have moderate improvements without obvious weak points',
+      '**Integrity Verification**: Logical connections between parts are closer, forming a complete methodological system',
+      '**Quality Enhancement Confirmation**: Overall academic level and operability of the plan have significantly improved'
     ],
-    checklist: ['整体协调性', '方法论完整性', '学术规范性']
+    checklist: ['Overall coordination', 'Methodological completeness', 'Academic normativity']
   },
-  '提高科学严谨性': {
+  'Improve Scientific Rigor': {
     criteria: [
-      '**逻辑严谨性检查**：研究设计的内外部效度得到加强，因果推断更加可靠',
-      '**统计规范性验证**：统计方法选择正确，假设检验设置合理，结果解释客观',
-      '**伦理合规性确认**：研究程序符合学术伦理要求，被试权益得到充分保护'
+      '**Logical Rigor Check**: Internal and external validity of research design are strengthened, causal inference is more reliable',
+      '**Statistical Normativity Verification**: Statistical method selection is correct, hypothesis testing settings are reasonable, result interpretation is objective',
+      '**Ethical Compliance Confirmation**: Research procedures comply with academic ethical requirements, participant rights are fully protected'
     ],
-    checklist: ['逻辑一致性', '统计规范性', '伦理合规性']
+    checklist: ['Logical consistency', 'Statistical normativity', 'Ethical compliance']
   },
-  '增加更多细节': {
+  'Add More Details': {
     criteria: [
-      '**细节丰富度验证**：包含具体的数值参数、操作步骤、技术规范等详细信息',
-      '**可操作性检查**：每个环节都有具体的执行指导，可直接用于实际研究',
-      '**完整性确认**：关键信息无遗漏，技术细节充分详细'
+      '**Detail Richness Verification**: Contains specific numerical parameters, operation steps, technical specifications and other detailed information',
+      '**Operability Check**: Each link has specific execution guidance and can be directly used for actual research',
+      '**Completeness Confirmation**: Key information is complete, technical details are sufficiently detailed'
     ],
     qualityRequirements: [
-      '提供具体的数值参数（如样本量、时间安排、设备型号）',
-      '包含详细的操作步骤和质量控制标准',
-      '明确工具选择和技术规范（如软件版本、分析包名称）'
+      'Provide specific numerical parameters (such as sample size, time arrangement, device models)',
+      'Include detailed operation steps and quality control standards',
+      'Clarify tool selection and technical specifications (such as software versions, analysis package names)'
     ],
-    checklist: ['参数具体性', '操作详细性', '技术完整性']
+    checklist: ['Parameter specificity', 'Operation detail', 'Technical completeness']
   },
-  '简化表述': {
+  'Simplify Expression': {
     criteria: [
-      '**简洁性检查**：表述更加精炼，去除冗余内容，重点突出',
-      '**清晰度验证**：逻辑结构更加清晰，便于理解和执行',
-      '**保质简化确认**：简化的同时保持核心内容的完整性和准确性'
+      '**Conciseness Check**: Expression is more refined, redundant content removed, key points highlighted',
+      '**Clarity Verification**: Logical structure is clearer, facilitating understanding and execution',
+      '**Quality Simplification Confirmation**: Simplification maintains completeness and accuracy of core content'
     ],
     qualityRequirements: [
-      '去除冗余表述，保留关键信息',
-      '使用简洁明了的语言，避免复杂的术语堆砌',
-      '突出重点内容，次要信息适当简化'
+      'Remove redundant expressions, retain key information',
+      'Use concise and clear language, avoid complex terminology accumulation',
+      'Highlight key content, appropriately simplify secondary information'
     ],
-    checklist: ['表达简洁性', '逻辑清晰度', '重点突出性']
+    checklist: ['Expression conciseness', 'Logical clarity', 'Key point prominence']
   }
 };
 
-// 预设建议配置
+// Preset suggestion configurations
 export const PRESET_SUGGESTIONS = {
   base: [
-    '自动迭代优化',
-    '提高科学严谨性',
-    '增加更多细节',
-    '简化表述'
+    'Automatic Iterative Optimization',
+    'Improve Scientific Rigor',
+    'Add More Details',
+    'Simplify Expression'
   ],
   full: [
-    '整体优化各部分的一致性',
-    '强化研究的创新性',
-    '提升方案的可操作性',
-    '增强理论依据'
+    'Overall optimize consistency of all parts',
+    'Strengthen research innovation',
+    'Improve plan operability',
+    'Enhance theoretical basis'
   ],
   hypothesis: [
-    '使假设更加具体明确',
-    '增加理论支撑',
-    '提高假设的可验证性',
-    '优化变量定义'
+    'Make hypotheses more specific and clear',
+    'Add theoretical support',
+    'Improve hypothesis testability',
+    'Optimize variable definitions'
   ],
   design: [
-    '细化实验步骤',
-    '优化样本选择策略',
-    '改进控制变量设置',
-    '增加实验的可重复性'
+    'Detail experimental steps',
+    'Optimize sample selection strategy',
+    'Improve control variable settings',
+    'Increase experimental reproducibility'
   ],
   analysis: [
-    '增加统计方法的详细说明',
-    '优化数据处理流程',
-    '补充效应量分析',
-    '完善统计假设检验'
+    'Add detailed statistical method explanations',
+    'Optimize data processing workflow',
+    'Supplement effect size analysis',
+    'Improve statistical hypothesis testing'
   ],
   results: [
-    '增加可视化呈现方式',
-    '优化结果解释的逻辑',
-    '补充结果的实践意义',
-    '完善结论的表述'
+    'Add visualization presentation methods',
+    'Optimize result interpretation logic',
+    'Supplement practical significance of results',
+    'Improve conclusion expression'
   ]
 };
 
-// 部分特定指导配置
+// Section-specific guidance configurations
 export const SECTION_GUIDANCE = {
   hypothesis: {
-    '严谨性': [
-      '- **逻辑严谨性**：确保假设的因果逻辑清晰，避免循环论证和概念混淆',
-      '- **可检验性**：每个假设都要具备可操作化的测量方案和验证方法'
+    'Rigor': [
+      '- **Logical Rigor**: Ensure clear causal logic of hypotheses, avoid circular reasoning and conceptual confusion',
+      '- **Testability**: Each hypothesis must have operationalizable measurement schemes and verification methods'
     ],
-    '细节': [
-      '- **理论依据详化**：为每个假设提供具体的理论模型引用和机制解释',
-      '- **预期量化**：提供具体的预期效应量范围和统计显著性水平'
+    'Details': [
+      '- **Theoretical Basis Detail**: Provide specific theoretical model references and mechanism explanations for each hypothesis',
+      '- **Expected Quantification**: Provide specific expected effect size ranges and statistical significance levels'
     ],
-    '简化': [
-      '- **假设精炼**：去除冗余假设，保留核心关键假设，表述简洁明了',
-      '- **重点突出**：突出主要研究假设，次要假设可适当简化表述'
+    'Simplification': [
+      '- **Hypothesis Refinement**: Remove redundant hypotheses, retain core key hypotheses, express concisely and clearly',
+      '- **Focus Highlighting**: Highlight main research hypotheses, secondary hypotheses can be appropriately simplified in expression'
     ]
   },
   design: {
-    '严谨性': [
-      '- **内外部效度**：加强实验设计的内部效度控制和外部效度考量',
-      '- **控制变量**：完善混淆变量的识别和控制措施'
+    'Rigor': [
+      '- **Internal and External Validity**: Strengthen internal validity control and external validity considerations of experimental design',
+      '- **Control Variables**: Improve identification and control measures of confounding variables'
     ],
-    '细节': [
-      '- **实施细节**：详细描述实验环境、设备配置、人员安排等具体信息',
-      '- **操作标准**：为每个实验步骤制定详细的操作手册和质量标准'
+    'Details': [
+      '- **Implementation Details**: Describe experimental environment, equipment configuration, personnel arrangement and other specific information in detail',
+      '- **Operation Standards**: Develop detailed operation manuals and quality standards for each experimental step'
     ],
-    '简化': [
-      '- **流程简化**：优化实验流程，去除不必要的步骤，提高效率',
-      '- **描述精炼**：简化复杂的技术描述，突出核心设计要点'
+    'Simplification': [
+      '- **Process Simplification**: Optimize experimental procedures, remove unnecessary steps, improve efficiency',
+      '- **Description Refinement**: Simplify complex technical descriptions, highlight core design points'
     ]
   },
   analysis: {
-    '统计方法': [
-      '- **方法选择**：详细说明统计方法的选择理由和适用条件',
-      '- **分析策略**：制定完整的数据分析策略和备选方案'
+    'Statistical Methods': [
+      '- **Method Selection**: Explain in detail the selection reasons and applicable conditions of statistical methods',
+      '- **Analysis Strategy**: Develop complete data analysis strategies and alternative plans'
     ],
-    '效应量': [
-      '- **效应量计算**：为每个统计检验指定相应的效应量指标',
-      '- **实际意义**：解释效应量的实际含义和评判标准'
+    'Effect Size': [
+      '- **Effect Size Calculation**: Specify corresponding effect size indicators for each statistical test',
+      '- **Practical Significance**: Explain the practical meaning and evaluation criteria of effect sizes'
     ],
-    '假设检验': [
-      '- **假设设定**：明确每个统计检验的零假设和备择假设',
-      '- **前提验证**：检查统计检验的前提条件和处理违反情况的方案'
+    'Hypothesis Testing': [
+      '- **Hypothesis Setting**: Clarify null and alternative hypotheses for each statistical test',
+      '- **Prerequisite Verification**: Check prerequisite conditions of statistical tests and plans for handling violations'
     ],
-    '数据处理': [
-      '- **预处理流程**：详细描述数据清洗、转换、标准化的具体步骤',
-      '- **质量控制**：建立数据质量检查和异常值处理的标准流程'
+    'Data Processing': [
+      '- **Preprocessing Workflow**: Describe specific steps of data cleaning, transformation, standardization in detail',
+      '- **Quality Control**: Establish standard procedures for data quality checking and outlier handling'
     ]
   },
   results: {
-    '严谨性': [
-      '- **结果解释**：确保结果解释的客观性和逻辑性，避免过度解读',
-      '- **局限性说明**：明确研究结果的适用范围和潜在局限性'
+    'Rigor': [
+      '- **Result Interpretation**: Ensure objectivity and logic of result interpretation, avoid over-interpretation',
+      '- **Limitation Explanation**: Clarify the applicable scope and potential limitations of research results'
     ],
-    '细节': [
-      '- **预期具体化**：提供具体的数值预期和统计指标范围',
-      '- **可视化详化**：详细描述图表制作规范和解读方法'
+    'Details': [
+      '- **Expectation Specification**: Provide specific numerical expectations and statistical indicator ranges',
+      '- **Visualization Detail**: Describe chart production standards and interpretation methods in detail'
     ],
-    '简化': [
-      '- **重点突出**：突出关键结果，简化次要发现的描述',
-      '- **表述清晰**：使用简洁明了的语言描述预期结果'
+    'Simplification': [
+      '- **Focus Highlighting**: Highlight key results, simplify description of secondary findings',
+      '- **Clear Expression**: Use concise and clear language to describe expected results'
     ]
   }
 }; 

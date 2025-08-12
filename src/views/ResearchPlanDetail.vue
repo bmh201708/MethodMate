@@ -21,7 +21,7 @@
               <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
               </svg>
-              <span>{{ isGenerating ? '生成中...' : '生成定量研究方案' }}</span>
+              <span>{{ isGenerating ? 'Generating...' : 'Generate Quantitative Research Plan' }}</span>
             </button>
             
             <!-- 参考文献状态显示 -->
@@ -31,20 +31,20 @@
                 <svg class="w-4 h-4 inline mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                 </svg>
-                正在等待智能体回复，请稍候...
+                Waiting for AI response, please wait...
               </div>
               
               <div v-if="papersState.referencedPapers.size > 0" class="text-purple-600">
                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                已选择 {{ papersState.referencedPapers.size }} 篇参考文献
+                Selected {{ papersState.referencedPapers.size }} reference papers
               </div>
               <div v-else class="text-gray-500">
                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                暂无参考文献（可在相关文献页面选择）
+                No reference papers (can be selected from the related papers page)
               </div>
             </div>
           </div>
@@ -68,9 +68,9 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <div>
-                  <h4 class="text-sm font-medium text-blue-900">正在查看历史方案</h4>
+                  <h4 class="text-sm font-medium text-blue-900">Viewing Historical Plan</h4>
                   <p class="text-sm text-blue-700">{{ historyState.currentViewingPlan.title }}</p>
-                  <p class="text-xs text-blue-600">创建时间：{{ historyState.currentViewingPlan.createdAt }}</p>
+                                      <p class="text-xs text-blue-600">Created: {{ historyState.currentViewingPlan.createdAt }}</p>
                 </div>
               </div>
               <div class="flex items-center space-x-3">
@@ -78,13 +78,13 @@
                   @click="applyHistoryPlan"
                   class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
                 >
-                  应用此方案
+                  Apply This Plan
                 </button>
                 <button 
                   @click="exitHistoryView"
                   class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                 >
-                  返回当前方案
+                  Return to Current Plan
                 </button>
               </div>
             </div>
@@ -115,7 +115,7 @@
                 <!-- 各部分内容 -->
                 <div v-if="activeSection === 'full'">
                   <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">{{ hasGeneratedPlan ? currentPlanState.title : '定量研究方案' }}</h2>
+                    <h2 class="text-2xl font-bold text-gray-900">{{ hasGeneratedPlan ? currentPlanState.title : 'Quantitative Research Plan' }}</h2>
                     <!-- 简约的评估和迭代按钮 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
                       <button
@@ -131,7 +131,7 @@
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>{{ isEvaluating ? '评估中...' : '整体评估' }}</span>
+                        <span>{{ isEvaluating ? 'Evaluating...' : 'Overall Evaluation' }}</span>
                       </button>
                       <button
                         ref="iterateBtnRef"
@@ -146,7 +146,7 @@
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
-                        <span>{{ isIterating ? '迭代中...' : '方案迭代' }}</span>
+                        <span>{{ isIterating ? 'Iterating...' : 'Plan Iteration' }}</span>
                       </button>
                       
                       <!-- 方案对比按钮 -->
@@ -158,7 +158,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                         </svg>
-                        <span>方案对比</span>
+                        <span>Plan Comparison</span>
                       </button>
                     </div>
                   </div>
@@ -166,7 +166,7 @@
                     <!-- 如果有解析的plan数据，显示四个字段的内容 -->
                     <div v-if="hasGeneratedPlan">
                       <div v-if="currentPlanState.hypotheses && currentPlanState.hypotheses.length > 0">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-3">研究假设</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Research Hypotheses</h3>
                         <div class="space-y-2">
                           <div v-for="(hypothesis, index) in renderedHypotheses" :key="index" 
                                class="p-4 bg-gray-50 rounded-lg">
@@ -176,17 +176,17 @@
                       </div>
                       
                       <div v-if="currentPlanState.experimentalDesign">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-3">实验设计</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Experimental Design</h3>
                         <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedExperimentalDesign"></div>
                       </div>
                       
                       <div v-if="currentPlanState.analysisMethod">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-3">数据分析</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Data Analysis</h3>
                         <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedAnalysisMethod"></div>
                       </div>
                       
                       <div v-if="currentPlanState.expectedResults">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-3">结果呈现</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Results Presentation</h3>
                         <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedExpectedResults"></div>
                       </div>
                     </div>
@@ -198,28 +198,28 @@
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                       </div>
-                      <h3 class="text-lg font-medium text-gray-900 mb-2">还未生成实验方案，请先生成研究方案</h3>
+                      <h3 class="text-lg font-medium text-gray-900 mb-2">No experimental plan generated yet, please generate a research plan first</h3>
                       <p class="text-gray-500 mb-6 max-w-md mx-auto">
-                        您可以点击左侧的"生成定量研究方案"按钮，或在聊天框中输入相关需求来生成个性化的研究方案。
+                        You can click the "Generate Quantitative Research Plan" button on the left, or enter relevant requirements in the chat box to generate a personalized research plan.
                       </p>
                       <div class="flex justify-center space-x-4 text-sm text-gray-400">
                         <div class="flex items-center">
                           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                           </svg>
-                          智能生成
+                          AI Generation
                         </div>
                         <div class="flex items-center">
                           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                           </svg>
-                          基于文献
+                          Literature-Based
                         </div>
                         <div class="flex items-center">
                           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                           </svg>
-                          结构化输出
+                          Structured Output
                         </div>
                       </div>
                     </div>
@@ -227,7 +227,7 @@
                 </div>
                 <div v-if="activeSection === 'hypothesis'">
                   <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">研究假设</h2>
+                    <h2 class="text-2xl font-bold text-gray-900">Research Hypotheses</h2>
                     <!-- 简约的部分评估按钮 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
                       <button
@@ -242,7 +242,7 @@
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>{{ (isEvaluatingSection && evaluatingSection === 'hypothesis') ? '评估中...' : '部分评估' }}</span>
+                        <span>{{ (isEvaluatingSection && evaluatingSection === 'hypothesis') ? 'Evaluating...' : 'Section Evaluation' }}</span>
                       </button>
                       <button
                         @click="showIterateDialog('hypothesis')"
@@ -257,7 +257,7 @@
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
-                        <span>{{ isIterating ? '迭代中...' : '方案迭代' }}</span>
+                        <span>{{ isIterating ? 'Iterating...' : 'Section Iteration' }}</span>
                       </button>
                     </div>
                   </div>
@@ -273,12 +273,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                       </svg>
                     </div>
-                    <p class="text-gray-500">还未生成实验方案，请先生成研究方案</p>
+                    <p class="text-gray-500">No research hypotheses generated yet, please generate a research plan first</p>
                   </div>
                 </div>
                 <div v-if="activeSection === 'design'">
                   <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">实验设计</h2>
+                    <h2 class="text-2xl font-bold text-gray-900">Experimental Design</h2>
                     <!-- 简约的部分评估按钮 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
                       <button
@@ -293,7 +293,7 @@
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>{{ (isEvaluatingSection && evaluatingSection === 'design') ? '评估中...' : '部分评估' }}</span>
+                        <span>{{ (isEvaluatingSection && evaluatingSection === 'design') ? 'Evaluating...' : 'Section Evaluation' }}</span>
                       </button>
                       <button
                         @click="showIterateDialog('design')"
@@ -308,7 +308,7 @@
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
-                        <span>{{ isIterating ? '迭代中...' : '方案迭代' }}</span>
+                        <span>{{ isIterating ? 'Iterating...' : 'Section Iteration' }}</span>
                       </button>
                     </div>
                   </div>
@@ -323,12 +323,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
                       </svg>
                     </div>
-                    <p class="text-gray-500">还未生成实验方案，请先生成研究方案</p>
+                    <p class="text-gray-500">No experimental design generated yet, please generate a research plan first</p>
                   </div>
                 </div>
                 <div v-if="activeSection === 'analysis'">
                   <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">数据分析</h2>
+                    <h2 class="text-2xl font-bold text-gray-900">Data Analysis</h2>
                     <!-- 简约的部分评估按钮 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
                       <button
@@ -343,7 +343,7 @@
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>{{ (isEvaluatingSection && evaluatingSection === 'analysis') ? '评估中...' : '部分评估' }}</span>
+                        <span>{{ (isEvaluatingSection && evaluatingSection === 'analysis') ? 'Evaluating...' : 'Section Evaluation' }}</span>
                       </button>
                       <button
                         @click="showIterateDialog('analysis')"
@@ -358,7 +358,7 @@
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
-                        <span>{{ isIterating ? '迭代中...' : '方案迭代' }}</span>
+                        <span>{{ isIterating ? 'Iterating...' : 'Section Iteration' }}</span>
                       </button>
                     </div>
                   </div>
@@ -373,12 +373,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                       </svg>
                     </div>
-                    <p class="text-gray-500">还未生成实验方案，请先生成研究方案</p>
+                    <p class="text-gray-500">No data analysis plan generated yet, please generate a research plan first</p>
                   </div>
                 </div>
                 <div v-if="activeSection === 'results'">
                   <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">结果呈现</h2>
+                    <h2 class="text-2xl font-bold text-gray-900">Results Presentation</h2>
                     <!-- 简约的部分评估按钮 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
                       <button
@@ -393,7 +393,7 @@
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>{{ (isEvaluatingSection && evaluatingSection === 'results') ? '评估中...' : '部分评估' }}</span>
+                        <span>{{ (isEvaluatingSection && evaluatingSection === 'results') ? 'Evaluating...' : 'Section Evaluation' }}</span>
                       </button>
                       <button
                         @click="showIterateDialog('results')"
@@ -408,7 +408,7 @@
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
-                        <span>{{ isIterating ? '迭代中...' : '方案迭代' }}</span>
+                        <span>{{ isIterating ? 'Iterating...' : 'Section Iteration' }}</span>
                       </button>
                     </div>
                   </div>
@@ -423,7 +423,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
                       </svg>
                     </div>
-                    <p class="text-gray-500">还未生成实验方案，请先生成研究方案</p>
+                    <p class="text-gray-500">No results presentation plan generated yet, please generate a research plan first</p>
                   </div>
                 </div>
               </div>
@@ -432,10 +432,10 @@
 
               <!-- 来源和方法介绍卡片 -->
               <div class="bg-white rounded-xl shadow-sm p-8">
-                <!-- 来源介绍内容（只显示研究假设、实验设计、结果呈现，数据分析通过子导航控制） -->
+                <!-- Source introduction content (only shown for research hypotheses, experimental design, results presentation; data analysis is controlled through sub-navigation) -->
                 <div v-if="['hypothesis', 'design', 'results'].includes(activeSection)" class="space-y-4">
                   <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-lg font-semibold text-gray-900">来源介绍</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Source Introduction</h3>
                     <button
                       ref="sourceIntroBtnRef"
                       @click="generateSourceIntroduction"
@@ -449,12 +449,12 @@
                       <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                       </svg>
-                      <span>{{ isGeneratingSource ? '生成中...' : '生成来源介绍' }}</span>
+                      <span>{{ isGeneratingSource ? 'Generating...' : 'Generate Source Introduction' }}</span>
                     </button>
                   </div>
                   <div v-if="currentSourceIntroduction" class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedSourceIntroduction"></div>
                   <div v-else class="text-gray-500 italic">
-                    点击"生成来源介绍"按钮，基于参考文献生成当前部分的来源说明
+                    Click the "Generate Source Introduction" button to generate source description for the current section based on reference literature
                   </div>
                 </div>
 
@@ -478,10 +478,10 @@
                     </button>
                   </div>
 
-                  <!-- 来源介绍内容 -->
+                  <!-- Source introduction content -->
                   <div v-if="analysisSubSection === 'source'" class="space-y-4">
                     <div class="flex items-center justify-between mb-3">
-                      <h3 class="text-lg font-semibold text-gray-900">来源介绍</h3>
+                      <h3 class="text-lg font-semibold text-gray-900">Source Introduction</h3>
                       <button
                         ref="sourceIntroBtnRef2"
                         @click="generateSourceIntroduction"
@@ -495,19 +495,19 @@
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
-                        <span>{{ isGeneratingSource ? '生成中...' : '生成来源介绍' }}</span>
+                        <span>{{ isGeneratingSource ? 'Generating...' : 'Generate Source Introduction' }}</span>
                       </button>
                     </div>
                     <div v-if="currentSourceIntroduction" class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedSourceIntroduction"></div>
                     <div v-else class="text-gray-500 italic">
-                      点击"生成来源介绍"按钮，基于参考文献生成当前部分的来源说明
+                      Click the "Generate Source Introduction" button to generate source description for the current section based on reference literature
                     </div>
                   </div>
 
-                  <!-- 方法介绍内容 -->
+                  <!-- Method introduction content -->
                   <div v-if="analysisSubSection === 'method'" class="space-y-4">
                     <div class="flex items-center justify-between mb-3">
-                      <h3 class="text-lg font-semibold text-gray-900">方法介绍</h3>
+                      <h3 class="text-lg font-semibold text-gray-900">Method Introduction</h3>
                       <button
                         ref="methodIntroBtnRef"
                         @click="generateMethodIntroduction"
@@ -521,27 +521,27 @@
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                         </svg>
-                        <span>{{ isGeneratingMethod ? '生成中...' : '生成方法介绍' }}</span>
+                        <span>{{ isGeneratingMethod ? 'Generating...' : 'Generate Method Introduction' }}</span>
                       </button>
                     </div>
                     
                     <!-- 显示生成的方法介绍或默认提示 -->
                     <div v-if="generatedMethodIntro" class="text-gray-600 leading-relaxed prose prose-sm max-w-none" v-html="renderedGeneratedMethodIntro"></div>
                     <div v-else class="text-gray-500 italic">
-                      点击"生成方法介绍"按钮，基于研究方案的数据分析部分内容，智能生成详细的研究方法介绍和统计分析方法说明
+                      Click the "Generate Method Introduction" button to intelligently generate detailed research method introduction and statistical analysis method description based on the data analysis section content of the research plan
                     </div>
                   </div>
 
-                  <!-- 统计方法查询内容 -->
+                  <!-- Statistical method query content -->
                   <div v-if="analysisSubSection === 'query'" class="space-y-6" id="statistical-method-query">
                     <div class="bg-gray-50 p-6 rounded-lg">
-                      <h3 class="text-lg font-semibold text-gray-900 mb-4">统计方法查询</h3>
+                      <h3 class="text-lg font-semibold text-gray-900 mb-4">Statistical Method Query</h3>
                       <div class="flex space-x-4">
                         <input
                           ref="statisticalQueryInputRef"
                           v-model="statisticalMethodQuery"
                           type="text"
-                          placeholder="输入统计方法名称，如：t检验、方差分析、回归分析等"
+                          placeholder="Enter statistical method name, e.g.: t-test, ANOVA, regression analysis, etc."
                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                           @keyup.enter="queryStatisticalMethod"
                         />
@@ -555,21 +555,21 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
-                          <span>{{ isQuerying ? '查询中...' : '查询' }}</span>
+                          <span>{{ isQuerying ? 'Querying...' : 'Query' }}</span>
                         </button>
                       </div>
                       
-                      <!-- 测试按钮区域 -->
+                      <!-- Test button area -->
                       <div class="flex flex-wrap gap-2 mb-4">
                         <button
-                          @click="() => { statisticalMethodQuery = '单样本t检验'; queryStatisticalMethod(); }"
+                          @click="() => { statisticalMethodQuery = 'one-sample t-test'; queryStatisticalMethod(); }"
                           class="px-3 py-1 text-sm bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
                         >
-                          测试：单样本t检验
+                          Test: One-sample t-test
                         </button>
                       </div>
                       
-                      <!-- 查询结果 -->
+                      <!-- Query results -->
                       <div v-if="statisticalMethodResult" class="mt-4">
                         <div class="bg-white p-4 rounded-lg shadow-sm">
                           <div class="prose prose-sm max-w-none" v-html="renderedStatisticalMethodResult"></div>
@@ -853,28 +853,28 @@
               </svg>
             </div>
             <div>
-              <h4 class="font-medium text-purple-900 mb-2">智能分析用户需求</h4>
+              <h4 class="font-medium text-purple-900 mb-2">AI Analysis of User Requirements</h4>
               <p class="text-sm text-purple-700 leading-relaxed">
-                系统将自动分析您在聊天历史中提到的研究需求、背景和目标，结合已选择的参考文献，生成个性化的定量研究方案。
+                The system will automatically analyze research requirements, background and objectives mentioned in your chat history, combined with selected reference literature, to generate personalized quantitative research plans.
               </p>
               <div class="mt-3 flex items-center space-x-4 text-xs text-purple-600">
                 <div class="flex items-center space-x-1">
                   <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                   </svg>
-                  <span>分析对话历史</span>
+                  <span>Analyze Chat History</span>
                 </div>
                 <div class="flex items-center space-x-1">
                   <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                   </svg>
-                  <span>结合参考文献</span>
+                  <span>Combine References</span>
                 </div>
                 <div class="flex items-center space-x-1">
                   <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                   </svg>
-                  <span>智能生成方案</span>
+                  <span>Generate Plan</span>
                 </div>
               </div>
             </div>
@@ -888,11 +888,11 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253"/>
             </svg>
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-700">参考文献状态</p>
+              <p class="text-sm font-medium text-gray-700">Reference Papers Status</p>
               <p class="text-xs text-gray-500 mt-0.5">
                 {{ papersState.referencedPapers.size > 0 
-                  ? `已选择 ${papersState.referencedPapers.size} 篇参考文献` 
-                  : '暂无参考文献（可在相关文献页面选择）' }}
+                  ? `Selected ${papersState.referencedPapers.size} reference papers` 
+                  : 'No reference papers (can be selected from related papers page)' }}
               </p>
             </div>
             <div v-if="papersState.referencedPapers.size > 0" class="text-green-600">
@@ -1208,7 +1208,7 @@ const planComparisonBtnRef = ref(null) // 方案对比按钮
 // 引导步骤定义
 const tutorialSteps = [
   {
-    title: '生成定量研究方案',
+            title: 'Generate Quantitative Research Plan',
     description: '点击这个按钮可以生成定量的研究方案，AI会根据您的需求和参考文献智能生成完整的研究设计。',
     ref: generatePlanBtnRef
   },
@@ -1680,17 +1680,17 @@ const jumpToStatisticalMethodQuery = async (methodName) => {
 
 
 const sections = [
-  { id: 'full', name: '完整方案' },
-  { id: 'hypothesis', name: '研究假设' },
-  { id: 'design', name: '实验设计' },
-  { id: 'analysis', name: '数据分析' },
-  { id: 'results', name: '结果呈现' }
+  { id: 'full', name: 'Complete Plan' },
+  { id: 'hypothesis', name: 'Research Hypotheses' },
+  { id: 'design', name: 'Experimental Design' },
+  { id: 'analysis', name: 'Data Analysis' },
+  { id: 'results', name: 'Results Presentation' }
 ]
 
 const analysisSubSections = [
-  { id: 'source', name: '来源介绍' },
-  { id: 'method', name: '方法介绍' },
-  { id: 'query', name: '统计方法查询' }
+  { id: 'source', name: 'Source Introduction' },
+  { id: 'method', name: 'Method Introduction' },
+  { id: 'query', name: 'Statistical Method Query' }
 ]
 
 // 检测是否有AI生成的研究方案数据
@@ -2109,20 +2109,44 @@ const saveToHistoryPlans = async (context = {}) => {
   }
 }
 
-// 解析智能体返回的研究方案Markdown（严格模式）
+// Parse AI-generated research plan Markdown (strict mode)
 const parseResearchPlanResponse = async (content, context = {}) => {
   try {
-    console.log('开始解析研究方案，内容长度:', content.length)
+    console.log('Starting to parse research plan, content length:', content.length)
     
     if (!content || typeof content !== 'string') {
-      throw new Error('AI响应内容为空或格式无效')
+      throw new Error('AI response content is empty or invalid format')
     }
     
-    // 严格检查是否包含必要的研究方案结构
-    const requiredSections = ['研究假设', '实验设计', '数据分析', '结果呈现']
+    // Strict check for required research plan structure (support both English and Chinese)
+    const requiredSections = {
+      english: ['Research Hypotheses', 'Experimental Design', 'Data Analysis', 'Results Presentation'],
+      chinese: ['研究假设', '实验设计', '数据分析', '结果呈现']
+    }
+    
+    // Check if content contains English or Chinese sections
+    let isEnglish = false
+    let isChinese = false
+    
+    for (const section of requiredSections.english) {
+      if (content.includes(section) || content.includes(`#${section}`) || content.includes(`# ${section}`)) {
+        isEnglish = true
+        break
+      }
+    }
+    
+    for (const section of requiredSections.chinese) {
+      if (content.includes(section) || content.includes(`#${section}`) || content.includes(`# ${section}`)) {
+        isChinese = true
+        break
+      }
+    }
+    
+    // Use appropriate language sections for validation
+    const sectionsToCheck = isEnglish ? requiredSections.english : requiredSections.chinese
     const missingSections = []
     
-    for (const section of requiredSections) {
+    for (const section of sectionsToCheck) {
       const hasSection = content.includes(section) || 
                         content.includes(`#${section}`) ||
                         content.includes(`# ${section}`)
@@ -2133,225 +2157,244 @@ const parseResearchPlanResponse = async (content, context = {}) => {
     }
     
     if (missingSections.length > 0) {
-      throw new Error(`AI响应缺少必要的研究方案部分：${missingSections.join('、')}。请确保响应包含完整的研究方案格式。`)
+      throw new Error(`AI response missing required research plan sections: ${missingSections.join(', ')}. Please ensure the response contains complete research plan format.`)
     }
     
-    // 使用更简单且准确的解析方法
+        // Use simpler and more accurate parsing method
     const extractAllSections = () => {
-      console.log('开始提取所有部分内容...')
+      console.log('Starting to extract all section contents...')
       
-      // 先找到所有的部分标题位置
-      const sectionTitles = ['研究假设', '实验设计', '数据分析', '结果呈现']
+      // Find all section title positions - support both English and Chinese
+      const sectionTitles = isEnglish ? requiredSections.english : requiredSections.chinese
       const sectionPositions = []
       
-             sectionTitles.forEach(title => {
-         // 查找各种可能的格式
-         const patterns = [
-           `#\\s*${title}\\s*[：:：]?\\s*$`, // # 研究假设：或 # 研究假设（行结尾）
-           `#\\s*${title}\\s*[：:：]?\\s*\\n`, // # 研究假设：换行 或 # 研究假设换行
-           `${title}\\s*[：:：]\\s*$`, // 研究假设：（行结尾）
-           `${title}\\s*[：:：]\\s*\\n` // 研究假设：换行
-         ]
-         
-         for (const pattern of patterns) {
-           const regex = new RegExp(pattern, 'gim') // 添加m标志支持多行
-           let match
-           while ((match = regex.exec(content)) !== null) {
-             sectionPositions.push({
-               title: title,
-               start: match.index,
-               end: match.index + match[0].length,
-               fullMatch: match[0]
-             })
-             console.log(`找到${title}在位置${match.index}，匹配内容: "${match[0]}"`)
-             break // 只取第一个匹配
-           }
-         }
-       })
+      sectionTitles.forEach(title => {
+        // Search for various possible formats
+        const patterns = [
+          `#\\s*${title}\\s*[：:：]?\\s*$`, // # Research Hypotheses: or # Research Hypotheses (end of line)
+          `#\\s*${title}\\s*[：:：]?\\s*\\n`, // # Research Hypotheses: newline or # Research Hypotheses newline
+          `${title}\\s*[：:：]\\s*$`, // Research Hypotheses: (end of line)
+          `${title}\\s*[：:：]\\s*\\n` // Research Hypotheses: newline
+        ]
+        
+        for (const pattern of patterns) {
+          const regex = new RegExp(pattern, 'gim') // Add m flag for multiline support
+          let match
+          while ((match = regex.exec(content)) !== null) {
+            sectionPositions.push({
+              title: title,
+              start: match.index,
+              end: match.index + match[0].length,
+              fullMatch: match[0]
+            })
+            console.log(`Found ${title} at position ${match.index}, matched content: "${match[0]}"`)
+            break // Only take the first match
+          }
+        }
+      })
       
-      // 按位置排序
+      // Sort by position
       sectionPositions.sort((a, b) => a.start - b.start)
-      console.log('找到的部分位置:', sectionPositions.map(p => ({ title: p.title, start: p.start })))
+      console.log('Found section positions:', sectionPositions.map(p => ({ title: p.title, start: p.start })))
       
-      // 提取每个部分的内容
+      // Extract content for each section
       const extractedSections = {}
       
       for (let i = 0; i < sectionPositions.length; i++) {
         const currentSection = sectionPositions[i]
         const nextSection = sectionPositions[i + 1]
         
-        // 确定内容的起始和结束位置
+        // Determine content start and end positions
         const contentStart = currentSection.end
         const contentEnd = nextSection ? nextSection.start : content.length
         
-        // 提取内容
+        // Extract content
         let sectionContent = content.substring(contentStart, contentEnd).trim()
         
-        // 清理内容
+        // Clean content
         sectionContent = sectionContent
-          .replace(/^[：:：;\s]+/, '') // 移除开头的冒号和分号
-          .replace(/[；;]+\s*$/, '') // 移除结尾的分号
+          .replace(/^[：:：;\s]+/, '') // Remove leading colons and semicolons
+          .replace(/[；;]+\s*$/, '') // Remove trailing semicolons
           .trim()
         
-        // 移除可能的markdown标记开头
+        // Remove possible markdown markers at the beginning
         sectionContent = sectionContent.replace(/^#+\s*/, '').trim()
         
         if (sectionContent) {
           extractedSections[currentSection.title] = sectionContent
-          console.log(`提取${currentSection.title}成功:`, sectionContent.substring(0, 100) + '...')
+          console.log(`Successfully extracted ${currentSection.title}:`, sectionContent.substring(0, 100) + '...')
         }
       }
       
       return extractedSections
     }
     
-    // 提取所有部分
+    // Extract all sections
     const extractedSections = extractAllSections()
     
-    // 获取各个部分的内容
-    const hypothesis = extractedSections['研究假设'] || ''
-    const design = extractedSections['实验设计'] || ''
-    const analysis = extractedSections['数据分析'] || ''
-    const results = extractedSections['结果呈现'] || ''
+    // Get content for each section based on language
+    const sectionKeys = isEnglish ? {
+      hypothesis: 'Research Hypotheses',
+      design: 'Experimental Design', 
+      analysis: 'Data Analysis',
+      results: 'Results Presentation'
+    } : {
+      hypothesis: '研究假设',
+      design: '实验设计',
+      analysis: '数据分析', 
+      results: '结果呈现'
+    }
     
-    console.log('提取结果汇总:')
-    console.log('- 研究假设:', hypothesis ? '✓ 已提取' : '✗ 未提取', hypothesis ? `(${hypothesis.length}字符)` : '')
-    console.log('- 实验设计:', design ? '✓ 已提取' : '✗ 未提取', design ? `(${design.length}字符)` : '')
-    console.log('- 数据分析:', analysis ? '✓ 已提取' : '✗ 未提取', analysis ? `(${analysis.length}字符)` : '')
-    console.log('- 结果呈现:', results ? '✓ 已提取' : '✗ 未提取', results ? `(${results.length}字符)` : '')
+    const hypothesis = extractedSections[sectionKeys.hypothesis] || ''
+    const design = extractedSections[sectionKeys.design] || ''
+    const analysis = extractedSections[sectionKeys.analysis] || ''
+    const results = extractedSections[sectionKeys.results] || ''
     
-    // 检查是否提取到至少一个有效内容
+    console.log('Extraction results summary:')
+    console.log(`- ${sectionKeys.hypothesis}:`, hypothesis ? '✓ Extracted' : '✗ Not extracted', hypothesis ? `(${hypothesis.length} chars)` : '')
+    console.log(`- ${sectionKeys.design}:`, design ? '✓ Extracted' : '✗ Not extracted', design ? `(${design.length} chars)` : '')
+    console.log(`- ${sectionKeys.analysis}:`, analysis ? '✓ Extracted' : '✗ Not extracted', analysis ? `(${analysis.length} chars)` : '')
+    console.log(`- ${sectionKeys.results}:`, results ? '✓ Extracted' : '✗ Not extracted', results ? `(${results.length} chars)` : '')
+    
+    // Check if at least one valid content is extracted
     const hasValidContent = hypothesis || design || analysis || results
     if (!hasValidContent) {
-      console.log('未提取到任何有效的研究方案内容，原始内容前500字符：', content.substring(0, 500))
-      // 输出更详细的调试信息
-      console.log('尝试查找的关键词：')
-      console.log('- 是否包含"研究假设":', content.includes('研究假设'))
-      console.log('- 是否包含"实验设计":', content.includes('实验设计'))
-      console.log('- 是否包含"数据分析":', content.includes('数据分析'))
-      console.log('- 是否包含"结果呈现":', content.includes('结果呈现'))
+      console.log('No valid research plan content extracted, first 500 characters of original content:', content.substring(0, 500))
+      // Output more detailed debug information
+      console.log('Attempting to find keywords:')
+      if (isEnglish) {
+        console.log('- Contains "Research Hypotheses":', content.includes('Research Hypotheses'))
+        console.log('- Contains "Experimental Design":', content.includes('Experimental Design'))
+        console.log('- Contains "Data Analysis":', content.includes('Data Analysis'))
+        console.log('- Contains "Results Presentation":', content.includes('Results Presentation'))
+      } else {
+        console.log('- Contains "研究假设":', content.includes('研究假设'))
+        console.log('- Contains "实验设计":', content.includes('实验设计'))
+        console.log('- Contains "数据分析":', content.includes('数据分析'))
+        console.log('- Contains "结果呈现":', content.includes('结果呈现'))
+      }
       return false
     }
     
-    // 先保存当前状态，然后清空字段
+    // Save current state first, then clear fields
     const wasGenerated = currentPlanState.isGenerated
     
-    // 清空字段并重置状态
+    // Clear fields and reset state
     currentPlanState.hypotheses = []
     currentPlanState.experimentalDesign = ''
     currentPlanState.analysisMethod = ''
     currentPlanState.expectedResults = ''
     
-    console.log('已清空旧数据，开始更新新方案...')
+    console.log('Cleared old data, starting to update new plan...')
     
-    // 计数实际更新的字段
+    // Count actually updated fields
     let updatedFields = 0
     
-    // 更新研究假设（支持多个假设）
+    // Update research hypotheses (support multiple hypotheses)
     if (hypothesis) {
-      // 如果包含多个假设（用数字序号分隔），则分割成数组
+      // If containing multiple hypotheses (separated by numbers), split into array
       const hypothesesArray = hypothesis.split(/\n\d+\.|\n[•·]\s*/).filter(h => h.trim())
       if (hypothesesArray.length > 1) {
         currentPlanState.hypotheses = hypothesesArray.map(h => h.trim())
       } else {
         currentPlanState.hypotheses = [hypothesis]
       }
-      // 初始化研究假设部分的来源介绍
+      // Initialize source introduction for research hypotheses section
       currentPlanState.hypothesis = {
-        sourceIntro: '本研究假设基于现有文献和理论基础，结合研究目标和具体情境制定。'
+        sourceIntro: 'This research hypotheses are based on existing literature and theoretical foundations, combined with research objectives and specific contexts.'
       }
-      console.log('更新研究假设:', currentPlanState.hypotheses)
+      console.log('Updated research hypotheses:', currentPlanState.hypotheses)
       updatedFields++
     }
     
-    // 更新实验设计
+    // Update experimental design
     if (design) {
       currentPlanState.experimentalDesign = design
-      // 初始化实验设计部分的来源介绍
+      // Initialize source introduction for experimental design section
       currentPlanState.design = {
-        sourceIntro: '实验设计方案参考了相关领域的经典实验范式和最新研究方法。'
+        sourceIntro: 'The experimental design plan references classic experimental paradigms and latest research methods in related fields.'
       }
-      console.log('更新实验设计:', design.substring(0, 100) + '...')
+      console.log('Updated experimental design:', design.substring(0, 100) + '...')
       updatedFields++
     }
     
-    // 更新数据分析
+    // Update data analysis
     if (analysis) {
       currentPlanState.analysisMethod = analysis
-      // 初始化数据分析部分的来源介绍和方法介绍
+      // Initialize source introduction and method introduction for data analysis section
       currentPlanState.analysis = {
-        sourceIntro: '数据分析方法基于研究目标和数据特征，采用适当的统计分析方法。',
-        methodIntro: '本研究采用的统计方法包括描述性统计和推论统计。您可以使用下方的查询功能了解具体统计方法的详细信息。'
+        sourceIntro: 'Data analysis methods are based on research objectives and data characteristics, using appropriate statistical analysis methods.',
+        methodIntro: 'The statistical methods used in this study include descriptive statistics and inferential statistics. You can use the query function below to learn detailed information about specific statistical methods.'
       }
-      console.log('更新数据分析:', analysis.substring(0, 100) + '...')
+      console.log('Updated data analysis:', analysis.substring(0, 100) + '...')
       updatedFields++
     }
     
-    // 更新结果呈现
+    // Update results presentation
     if (results) {
       currentPlanState.expectedResults = results
-      // 初始化结果呈现部分的来源介绍
+      // Initialize source introduction for results presentation section
       currentPlanState.results = {
-        sourceIntro: '结果呈现方式遵循学术论文的标准格式，确保研究发现清晰易懂。'
+        sourceIntro: 'Results presentation follows the standard format of academic papers, ensuring research findings are clear and understandable.'
       }
-      console.log('更新结果呈现:', results.substring(0, 100) + '...')
+      console.log('Updated results presentation:', results.substring(0, 100) + '...')
       updatedFields++
     }
     
-    // 更新基本信息
-    const timestamp = new Date().toLocaleString('zh-CN')
+    // Update basic information
+    const timestamp = new Date().toLocaleString('en-US')
     const generatedTitle = generatePlanTitle()
     currentPlanState.title = generatedTitle
-    currentPlanState.researchQuestions = 'AI生成的研究方案'
-    currentPlanState.methodology = `基于参考文献生成的研究方法 (生成时间: ${timestamp})`
-    currentPlanState.dataCollection = '根据研究设计制定的数据收集方案'
+    currentPlanState.researchQuestions = 'AI-generated research plan'
+    currentPlanState.methodology = `Research methodology generated based on reference literature (Generated: ${timestamp})`
+    currentPlanState.dataCollection = 'Data collection plan formulated according to research design'
     
-    console.log('生成的方案标题:', generatedTitle)
+    console.log('Generated plan title:', generatedTitle)
     
-    // 初始化完整方案部分的来源介绍
+    // Initialize source introduction for complete plan section
     currentPlanState.full = {
-      sourceIntro: '本研究方案综合了多种研究方法和文献资源，旨在提供一个全面、科学的定量研究框架。'
+      sourceIntro: 'This research plan integrates various research methods and literature resources, aiming to provide a comprehensive and scientific quantitative research framework.'
     }
     
-    // 如果至少更新了一个字段，就认为成功
+    // If at least one field is updated, consider it successful
     if (updatedFields >= 1) {
-      // 设置为已生成状态
+      // Set to generated state
       currentPlanState.isGenerated = true
       currentPlanState.lastUpdated = new Date().toISOString()
       
-      console.log(`成功更新 ${updatedFields} 个字段`)
-      console.group('最终解析结果')
-      console.log('研究假设:', currentPlanState.hypotheses)
-      console.log('实验设计:', currentPlanState.experimentalDesign ? '已更新' : '未更新') 
-      console.log('数据分析:', currentPlanState.analysisMethod ? '已更新' : '未更新')
-      console.log('结果呈现:', currentPlanState.expectedResults ? '已更新' : '未更新')
+      console.log(`Successfully updated ${updatedFields} fields`)
+      console.group('Final parsing results')
+      console.log('Research hypotheses:', currentPlanState.hypotheses)
+      console.log('Experimental design:', currentPlanState.experimentalDesign ? 'Updated' : 'Not updated') 
+      console.log('Data analysis:', currentPlanState.analysisMethod ? 'Updated' : 'Not updated')
+      console.log('Results presentation:', currentPlanState.expectedResults ? 'Updated' : 'Not updated')
       console.log('isGenerated:', currentPlanState.isGenerated)
       console.groupEnd()
       
-      // 强制更新响应式状态
+      // Force update reactive state
       const forceUpdate = {
         ...currentPlanState,
-        _timestamp: Date.now() // 添加时间戳强制更新
+        _timestamp: Date.now() // Add timestamp to force update
       }
       Object.assign(currentPlanState, forceUpdate)
       
-      // 自动切换到完整方案视图
+      // Automatically switch to complete plan view
       activeSection.value = 'full'
       
-      // 显示成功提示
-      console.log('成功解析并更新研究方案')
+      // Show success message
+      console.log('Successfully parsed and updated research plan')
       
-      // 自动保存到历史方案
+      // Automatically save to history plans
       await saveToHistoryPlans(context)
       
-      return true // 成功解析并更新了研究方案
+      return true // Successfully parsed and updated research plan
     } else {
-      throw new Error('解析失败：未能从AI响应中提取到有效的研究方案内容。请检查AI响应格式是否正确。')
+      throw new Error('Parsing failed: Unable to extract valid research plan content from AI response. Please check if the AI response format is correct.')
     }
   } catch (error) {
-    console.error('解析研究方案时出现错误:', error)
-    console.log('原始内容:', content.substring(0, 500))
-    throw error // 重新抛出错误，让调用者处理
+    console.error('Error occurred while parsing research plan:', error)
+    console.log('Original content:', content.substring(0, 500))
+    throw error // Re-throw error for caller to handle
   }
 }
 

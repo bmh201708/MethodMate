@@ -594,22 +594,36 @@ const isResearchPlan = (content) => {
     return researchPlanCache.get(contentHash)
   }
   
-  // 检查关键词组合，提高检测准确性
+  // 检查关键词组合，提高检测准确性（支持中英文）
   const researchKeywords = [
+    // Chinese keywords
     '研究假设', '实验设计', '数据分析', '结果呈现',
     '研究方案', '实验方案', '定量研究', '研究方法',
     '研究目标', '研究问题', '实验组', '对照组',
-    'H1:', 'H2:', 'H3:', '假设一', '假设二', '假设三'
+    'H1:', 'H2:', 'H3:', '假设一', '假设二', '假设三',
+    // English keywords
+    'Research Hypotheses', 'Experimental Design', 'Data Analysis', 'Results Presentation',
+    'research plan', 'experimental plan', 'quantitative research', 'research method',
+    'research objective', 'research question', 'experimental group', 'control group',
+    'hypothesis', 'hypotheses'
   ]
   
   const designKeywords = [
+    // Chinese keywords
     '2x2设计', '实验设计', '自变量', '因变量', '控制变量',
-    '随机分组', '实验条件', '实验程序', '被试'
+    '随机分组', '实验条件', '实验程序', '被试',
+    // English keywords
+    '2x2 design', 'experimental design', 'independent variable', 'dependent variable', 'control variable',
+    'random assignment', 'experimental condition', 'experimental procedure', 'participants'
   ]
   
   const analysisKeywords = [
+    // Chinese keywords
     'SPSS', 'R Studio', '方差分析', 'ANOVA', '回归分析',
-    't检验', '卡方检验', '统计分析', '数据处理'
+    't检验', '卡方检验', '统计分析', '数据处理',
+    // English keywords
+    'data analysis', 'statistical analysis', 'regression analysis',
+    't-test', 'chi-square test', 'ANOVA', 'data processing'
   ]
   
   // 计算匹配的关键词数量
@@ -641,7 +655,7 @@ const isResearchPlan = (content) => {
   
   // 只在检测到研究方案时输出日志，减少控制台噪音
   if (isValidPlan) {
-    console.log('检测到研究方案:', {
+    console.log('Detected research plan:', {
       totalMatches,
       categoryCount,
       researchMatches,
@@ -657,7 +671,7 @@ const isResearchPlan = (content) => {
 // 解析研究方案内容并更新右侧显示
 const parseAndDisplayResearchPlan = (content) => {
   try {
-    console.log('开始解析研究方案...')
+    console.log('Starting to parse research plan...')
     
     // 首先尝试从JSON中提取内容
     let actualContent = content
@@ -674,100 +688,116 @@ const parseAndDisplayResearchPlan = (content) => {
         }
       }
     } catch (jsonError) {
-      console.log('JSON解析失败，使用原始内容')
+      console.log('JSON parsing failed, using original content')
     }
     
     // 提取各个部分
     const extractSection = (text, patterns, sectionName) => {
-      console.log(`开始提取${sectionName}...`)
+      console.log(`Starting to extract ${sectionName}...`)
       for (let i = 0; i < patterns.length; i++) {
         const pattern = patterns[i]
         const match = text.match(pattern)
-        console.log(`${sectionName} 模式 ${i + 1} 匹配结果:`, match ? '匹配成功' : '未匹配')
+        console.log(`${sectionName} pattern ${i + 1} match result:`, match ? 'Matched' : 'No match')
         if (match) {
           let content = match[1] || match[2] || match[0]
-          console.log(`${sectionName} 原始匹配内容:`, content.substring(0, 200) + '...')
+          console.log(`${sectionName} original matched content:`, content.substring(0, 200) + '...')
           // 清理内容：移除多余的标点和换行
           content = content.replace(/^[：:\s]+/, '').replace(/\s+$/, '').trim()
           if (content.length > 10) { // 确保提取到有意义的内容
-            console.log(`${sectionName} 清理后内容长度:`, content.length)
+            console.log(`${sectionName} cleaned content length:`, content.length)
             return content
           }
         }
       }
-      console.log(`${sectionName} 所有模式都未匹配成功`)
+      console.log(`${sectionName} all patterns failed to match`)
       return null
     }
     
-    // 研究假设提取模式（支持markdown格式）
+    // 研究假设提取模式（支持markdown格式和中英文）
     const hypothesisPatterns = [
-      // Markdown标题格式: # 研究假设
-      /(?:#+\s*(?:研究假设|实验假设|假设).*?)\n((?:(?!#+\s*(?:实验设计|数据分析|结果呈现|研究设计|统计分析|预期结果)).)+?)(?=\n#+\s*(?:实验设计|数据分析|结果呈现|研究设计|统计分析|预期结果)|$)/is,
-      // 传统冒号格式
+      // English Markdown format: # Research Hypotheses
+      /(?:#+\s*(?:Research Hypotheses|Experimental Hypotheses|Hypotheses).*?)\n((?:(?!#+\s*(?:Experimental Design|Data Analysis|Results Presentation|Research Design|Statistical Analysis|Expected Results)).)+?)(?=\n#+\s*(?:Experimental Design|Data Analysis|Results Presentation|Research Design|Statistical Analysis|Expected Results)|$)/is,
+      // Chinese Markdown format: # 研究假设
+      /(?:#+\s*(?:研究假设|实验假设|假设).*?)\n((?:(?!#+\s*(?:实验设计|数据分析|结果呈现|研究设计|统计分析|预期结果|Experimental Design|Data Analysis|Results Presentation)).)+?)(?=\n#+\s*(?:实验设计|数据分析|结果呈现|研究设计|统计分析|预期结果|Experimental Design|Data Analysis|Results Presentation)|$)/is,
+      // English colon format
+      /(?:Research Hypotheses|Experimental Hypotheses)[：:\s]*\n?((?:(?:H\d+[:：]|Hypothesis\s+\d+[:：]|\d+[\.、]|[•·*-]\s*).*\n?)+)/i,
+      // Chinese colon format
       /(?:研究假设|实验假设)[：:\s]*\n?((?:(?:H\d+[:：]|假设\d+[:：]|\d+[\.、]|[•·*-]\s*).*\n?)+)/i,
       /(?:假设|hypothesis)[：:\s]*\n?((?:(?:H\d+[:：]|假设\d+[:：]|\d+[\.、]|[•·*-]\s*).*\n?)+)/i,
       /((?:H\d+[:：]|假设\d+[:：]).*(?:\n(?:H\d+[:：]|假设\d+[:：]).*)*)/i
     ]
     
-    // 实验设计提取模式（支持markdown格式）
+    // 实验设计提取模式（支持markdown格式和中英文）
     const designPatterns = [
-      // Markdown标题格式: # 实验设计
-      /(?:#+\s*(?:实验设计|研究设计|设计方案).*?)\n((?:(?!#+\s*(?:数据分析|结果呈现|研究假设|统计分析|预期结果)).)+?)(?=\n#+\s*(?:数据分析|结果呈现|研究假设|统计分析|预期结果)|$)/is,
-      // 传统冒号格式
-      /(?:实验设计|研究设计)[：:\s]*\n?((?:(?!(?:数据分析|结果呈现|研究假设)).)+?)(?=(?:\n\s*(?:数据分析|结果呈现|研究假设|$)))/is,
-      /(?:设计方案|实验方法)[：:\s]*\n?((?:(?!(?:数据分析|结果呈现|研究假设)).)+?)(?=(?:\n\s*(?:数据分析|结果呈现|研究假设|$)))/is
+      // English Markdown format: # Experimental Design
+      /(?:#+\s*(?:Experimental Design|Research Design|Design Plan).*?)\n((?:(?!#+\s*(?:Data Analysis|Results Presentation|Research Hypotheses|Statistical Analysis|Expected Results)).)+?)(?=\n#+\s*(?:Data Analysis|Results Presentation|Research Hypotheses|Statistical Analysis|Expected Results)|$)/is,
+      // Chinese Markdown format: # 实验设计
+      /(?:#+\s*(?:实验设计|研究设计|设计方案).*?)\n((?:(?!#+\s*(?:数据分析|结果呈现|研究假设|统计分析|预期结果|Data Analysis|Results Presentation|Research Hypotheses)).)+?)(?=\n#+\s*(?:数据分析|结果呈现|研究假设|统计分析|预期结果|Data Analysis|Results Presentation|Research Hypotheses)|$)/is,
+      // English colon format
+      /(?:Experimental Design|Research Design)[：:\s]*\n?((?:(?!(?:Data Analysis|Results Presentation|Research Hypotheses|数据分析|结果呈现|研究假设)).)+?)(?=(?:\n\s*(?:Data Analysis|Results Presentation|Research Hypotheses|数据分析|结果呈现|研究假设|$)))/is,
+      // Chinese colon format
+      /(?:实验设计|研究设计)[：:\s]*\n?((?:(?!(?:数据分析|结果呈现|研究假设|Data Analysis|Results Presentation|Research Hypotheses)).)+?)(?=(?:\n\s*(?:数据分析|结果呈现|研究假设|Data Analysis|Results Presentation|Research Hypotheses|$)))/is,
+      /(?:设计方案|实验方法)[：:\s]*\n?((?:(?!(?:数据分析|结果呈现|研究假设|Data Analysis|Results Presentation|Research Hypotheses)).)+?)(?=(?:\n\s*(?:数据分析|结果呈现|研究假设|Data Analysis|Results Presentation|Research Hypotheses|$)))/is
     ]
     
-    // 数据分析提取模式（支持markdown格式）
+    // 数据分析提取模式（支持markdown格式和中英文）
     const analysisPatterns = [
-      // Markdown标题格式: # 数据分析
-      /(?:#+\s*(?:数据分析|统计分析|分析方法).*?)\n((?:(?!#+\s*(?:结果呈现|研究假设|实验设计|预期结果)).)+?)(?=\n#+\s*(?:结果呈现|研究假设|实验设计|预期结果)|$)/is,
-      // 传统冒号格式
-      /(?:数据分析|统计分析|分析方法)[：:\s]*\n?((?:(?!(?:结果呈现|研究假设|实验设计)).)+?)(?=(?:\n\s*(?:结果呈现|研究假设|实验设计|$)))/is,
-      /(?:分析工具|统计方法|数据处理)[：:\s]*\n?((?:(?!(?:结果呈现|研究假设|实验设计)).)+?)(?=(?:\n\s*(?:结果呈现|研究假设|实验设计|$)))/is
+      // English Markdown format: # Data Analysis
+      /(?:#+\s*(?:Data Analysis|Statistical Analysis|Analysis Method).*?)\n((?:(?!#+\s*(?:Results Presentation|Research Hypotheses|Experimental Design|Expected Results)).)+?)(?=\n#+\s*(?:Results Presentation|Research Hypotheses|Experimental Design|Expected Results)|$)/is,
+      // Chinese Markdown format: # 数据分析
+      /(?:#+\s*(?:数据分析|统计分析|分析方法).*?)\n((?:(?!#+\s*(?:结果呈现|研究假设|实验设计|预期结果|Results Presentation|Research Hypotheses|Experimental Design)).)+?)(?=\n#+\s*(?:结果呈现|研究假设|实验设计|预期结果|Results Presentation|Research Hypotheses|Experimental Design)|$)/is,
+      // English colon format
+      /(?:Data Analysis|Statistical Analysis|Analysis Method)[：:\s]*\n?((?:(?!(?:Results Presentation|Research Hypotheses|Experimental Design|结果呈现|研究假设|实验设计)).)+?)(?=(?:\n\s*(?:Results Presentation|Research Hypotheses|Experimental Design|结果呈现|研究假设|实验设计|$)))/is,
+      // Chinese colon format
+      /(?:数据分析|统计分析|分析方法)[：:\s]*\n?((?:(?!(?:结果呈现|研究假设|实验设计|Results Presentation|Research Hypotheses|Experimental Design)).)+?)(?=(?:\n\s*(?:结果呈现|研究假设|实验设计|Results Presentation|Research Hypotheses|Experimental Design|$)))/is,
+      /(?:分析工具|统计方法|数据处理)[：:\s]*\n?((?:(?!(?:结果呈现|研究假设|实验设计|Results Presentation|Research Hypotheses|Experimental Design)).)+?)(?=(?:\n\s*(?:结果呈现|研究假设|实验设计|Results Presentation|Research Hypotheses|Experimental Design|$)))/is
     ]
     
-    // 结果呈现提取模式（支持markdown格式）
+    // 结果呈现提取模式（支持markdown格式和中英文）
     const resultsPatterns = [
-      // Markdown标题格式: # 结果呈现
-      /(?:#+\s*(?:结果呈现|预期结果|研究结果).*?)\n((?:(?!#+\s*(?:研究假设|实验设计|数据分析)).)+?)(?=\n#+\s*(?:研究假设|实验设计|数据分析)|$)/is,
-      // 传统冒号格式
-      /(?:结果呈现|预期结果|研究结果)[：:\s]*\n?((?:(?!(?:研究假设|实验设计|数据分析)).)+?)(?=(?:\n\s*(?:研究假设|实验设计|数据分析|$)))/is,
-      /(?:预期|预计|期望).*?(?:结果|发现|效应)[：:\s]*\n?((?:(?!(?:研究假设|实验设计|数据分析)).)+?)(?=(?:\n\s*(?:研究假设|实验设计|数据分析|$)))/is
+      // English Markdown format: # Results Presentation
+      /(?:#+\s*(?:Results Presentation|Expected Results|Research Results).*?)\n((?:(?!#+\s*(?:Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=\n#+\s*(?:Research Hypotheses|Experimental Design|Data Analysis)|$)/is,
+      // Chinese Markdown format: # 结果呈现
+      /(?:#+\s*(?:结果呈现|预期结果|研究结果).*?)\n((?:(?!#+\s*(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=\n#+\s*(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis)|$)/is,
+      // English colon format
+      /(?:Results Presentation|Expected Results|Research Results)[：:\s]*\n?((?:(?!(?:Research Hypotheses|Experimental Design|Data Analysis|研究假设|实验设计|数据分析)).)+?)(?=(?:\n\s*(?:Research Hypotheses|Experimental Design|Data Analysis|研究假设|实验设计|数据分析|$)))/is,
+      // Chinese colon format
+      /(?:结果呈现|预期结果|研究结果)[：:\s]*\n?((?:(?!(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=(?:\n\s*(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis|$)))/is,
+      /(?:预期|预计|期望).*?(?:结果|发现|效应)[：:\s]*\n?((?:(?!(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=(?:\n\s*(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis|$)))/is
     ]
     
     // 提取各部分内容
-    const hypothesis = extractSection(actualContent, hypothesisPatterns, '研究假设')
-    const design = extractSection(actualContent, designPatterns, '实验设计')
-    const analysis = extractSection(actualContent, analysisPatterns, '数据分析')
-    const results = extractSection(actualContent, resultsPatterns, '结果呈现')
+    const hypothesis = extractSection(actualContent, hypothesisPatterns, 'Research Hypotheses')
+    const design = extractSection(actualContent, designPatterns, 'Experimental Design')
+    const analysis = extractSection(actualContent, analysisPatterns, 'Data Analysis')
+    const results = extractSection(actualContent, resultsPatterns, 'Results Presentation')
     
-    console.log('提取结果:')
-    console.log('- 研究假设:', hypothesis ? '✓ 已提取' : '✗ 未提取', hypothesis ? `(${hypothesis.length}字符)` : '')
-    console.log('- 实验设计:', design ? '✓ 已提取' : '✗ 未提取', design ? `(${design.length}字符)` : '')
-    console.log('- 数据分析:', analysis ? '✓ 已提取' : '✗ 未提取', analysis ? `(${analysis.length}字符)` : '')
-    console.log('- 结果呈现:', results ? '✓ 已提取' : '✗ 未提取', results ? `(${results.length}字符)` : '')
+    console.log('Extraction Results:')
+    console.log('- Research Hypotheses:', hypothesis ? '✓ Extracted' : '✗ Not extracted', hypothesis ? `(${hypothesis.length} characters)` : '')
+    console.log('- Experimental Design:', design ? '✓ Extracted' : '✗ Not extracted', design ? `(${design.length} characters)` : '')
+    console.log('- Data Analysis:', analysis ? '✓ Extracted' : '✗ Not extracted', analysis ? `(${analysis.length} characters)` : '')
+    console.log('- Results Presentation:', results ? '✓ Extracted' : '✗ Not extracted', results ? `(${results.length} characters)` : '')
     
     // 检查是否提取到至少一个有效内容
     const hasValidContent = hypothesis || design || analysis || results
     if (!hasValidContent) {
-      console.log('未提取到任何有效的研究方案内容')
-      console.log('完整内容长度:', actualContent.length)
-      console.log('内容包含的关键词:')
-      console.log('- 研究假设:', actualContent.includes('研究假设'))
-      console.log('- 实验设计:', actualContent.includes('实验设计'))
-      console.log('- 数据分析:', actualContent.includes('数据分析'))
-      console.log('- 结果呈现:', actualContent.includes('结果呈现'))
-      console.log('实际内容前1000字符:', actualContent.substring(0, 1000))
+      console.log('No valid research plan content extracted')
+      console.log('Full content length:', actualContent.length)
+      console.log('Content includes keywords:')
+      console.log('- Research Hypotheses:', actualContent.includes('Research Hypotheses') || actualContent.includes('研究假设'))
+      console.log('- Experimental Design:', actualContent.includes('Experimental Design') || actualContent.includes('实验设计'))
+      console.log('- Data Analysis:', actualContent.includes('Data Analysis') || actualContent.includes('数据分析'))
+      console.log('- Results Presentation:', actualContent.includes('Results Presentation') || actualContent.includes('结果呈现'))
+      console.log('First 1000 characters of actual content:', actualContent.substring(0, 1000))
       return false
     }
     
     // 构建新的研究方案数据
     const planData = {
-      title: `基于Coze生成的研究方案`,
-      researchQuestions: 'Coze智能体生成的研究方案',
-      methodology: `基于用户需求生成的研究方法 (生成时间: ${new Date().toLocaleString('zh-CN')})`,
-      dataCollection: '根据研究设计制定的数据收集方案',
+      title: `Research Plan Generated by AI`,
+      researchQuestions: 'AI-generated research plan',
+      methodology: `Research methodology generated based on user requirements (Generated: ${new Date().toLocaleString('en-US')})`,
+      dataCollection: 'Data collection plan formulated according to research design',
       hypotheses: [],
       experimentalDesign: '',
       analysisMethod: '',
@@ -811,21 +841,21 @@ const parseAndDisplayResearchPlan = (content) => {
       // 使用 updateCurrentPlan 更新当前方案状态
       updateCurrentPlan(planData)
       
-      console.log(`成功解析并更新研究方案，更新了 ${updatedFields} 个字段`)
+      console.log(`Successfully parsed and updated research plan, updated ${updatedFields} fields`)
       
       // 显示成功提示
       setTimeout(() => {
-        alert('研究方案已更新到右侧！请查看各个模块的内容。')
+        alert('Research plan has been updated on the right panel! Please check the content of each module.')
       }, 500)
       
       return true
     } else {
-      console.log('未更新任何字段，解析失败')
+      console.log('No fields updated, parsing failed')
       return false
     }
     
   } catch (error) {
-    console.error('解析研究方案时出现错误:', error)
+    console.error('Error occurred while parsing research plan:', error)
     return false
   }
 }
@@ -843,8 +873,8 @@ const handleViewInRightPanel = (message) => {
   const success = parseAndDisplayResearchPlan(originalContent)
   
   if (!success) {
-    console.log('解析失败，原始内容前500字符:', originalContent.substring(0, 500))
-    alert('解析研究方案失败，请检查方案格式是否正确。')
+    console.log('Parsing failed, first 500 characters of original content:', originalContent.substring(0, 500))
+    alert('Failed to parse research plan. Please check if the plan format is correct.')
   }
 }
 
