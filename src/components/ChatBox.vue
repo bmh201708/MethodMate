@@ -1,10 +1,10 @@
 <template>
   <div class="bg-white rounded-xl shadow-sm p-6 h-full chat-container">
     <div class="flex flex-col h-full">
-      <!-- Conversation Management Header -->
+      <!-- 对话管理头部 -->
       <div class="mb-4 border-b border-gray-200 pb-4">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-lg font-semibold text-gray-900">Conversation Management</h3>
+          <h3 class="text-lg font-semibold text-gray-900">对话管理</h3>
           <div class="flex items-center space-x-2">
             <button
               @click="showConversationsList = !showConversationsList"
@@ -13,7 +13,7 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.013 8.013 0 01-7-4c0-4.418 3.582-8 8-8s8 3.582 8 8z"/>
               </svg>
-              <span>{{ showConversationsList ? 'Hide' : 'View' }} History</span>
+              <span>{{ showConversationsList ? '隐藏' : '查看' }}历史对话</span>
             </button>
             <button
               @click="createNewConversation"
@@ -23,12 +23,12 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
               </svg>
-              <span>{{ isCreatingConversation ? 'Creating...' : 'New Chat' }}</span>
+              <span>{{ isCreatingConversation ? '创建中...' : '新对话' }}</span>
             </button>
           </div>
         </div>
 
-        <!-- Current Conversation Info -->
+        <!-- 当前对话信息 -->
         <div class="flex items-center justify-between">
           <div v-if="currentConversation" class="flex items-center space-x-2">
             <div class="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -37,34 +37,34 @@
           </div>
           <div v-else-if="isAuthenticated" class="flex items-center space-x-2">
             <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
-            <span class="text-sm text-gray-500">Temporary chat (auto-saved after sending message)</span>
+            <span class="text-sm text-gray-500">临时对话（发送消息后自动保存）</span>
           </div>
           <div v-else class="flex items-center space-x-2">
             <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
-            <span class="text-sm text-gray-500">Temporary chat (please login to save conversations)</span>
+            <span class="text-sm text-gray-500">临时对话（请先登录以保存对话）</span>
           </div>
           
           <div class="text-xs text-gray-400 flex items-center space-x-2">
-            <span>{{ Math.max(0, chatState.messages.length - 1) }} messages</span>
-            <span v-if="isAuthenticated && (chatState.conversationId || currentConversation)" class="text-green-600">Saved</span>
-            <span v-else-if="isAuthenticated" class="text-orange-500">Unsaved</span>
-            <span v-else class="text-gray-400">Not logged in</span>
+            <span>{{ Math.max(0, chatState.messages.length - 1) }} 条消息</span>
+            <span v-if="isAuthenticated && (chatState.conversationId || currentConversation)" class="text-green-600">已保存</span>
+            <span v-else-if="isAuthenticated" class="text-orange-500">未保存</span>
+            <span v-else class="text-gray-400">未登录</span>
           </div>
         </div>
 
-        <!-- Historical Conversation List -->
+        <!-- 历史对话列表 -->
         <div v-if="showConversationsList" class="mt-4 max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
           <div v-if="conversationsLoading" class="p-4 text-center text-gray-500">
             <div class="inline-flex items-center space-x-2">
               <svg class="animate-spin w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
-              <span>Loading...</span>
+              <span>加载中...</span>
             </div>
           </div>
           
           <div v-else-if="conversations.length === 0" class="p-4 text-center text-gray-500">
-            No conversation history
+            暂无历史对话
           </div>
           
           <div v-else class="divide-y divide-gray-200">
@@ -79,14 +79,14 @@
             >
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-gray-900 truncate">{{ conversation.title }}</p>
-                <p class="text-xs text-gray-500 truncate">{{ conversation.description || 'No description' }}</p>
+                <p class="text-xs text-gray-500 truncate">{{ conversation.description || '暂无描述' }}</p>
                 <p class="text-xs text-gray-400">{{ new Date(conversation.updated_at).toLocaleString('zh-CN') }}</p>
               </div>
               <div class="flex items-center space-x-1">
                 <button
                   @click.stop="deleteConversation(conversation)"
                   class="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                  title="Delete conversation"
+                  title="删除对话"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -98,22 +98,22 @@
         </div>
       </div>
 
-      <!-- Chat History -->
+      <!-- 聊天记录 -->
       <div class="flex-1 overflow-y-auto mb-4 space-y-4" ref="chatContainer">
-        <!-- Debug Info -->
+        <!-- 调试信息 -->
         <div v-if="true" class="text-xs text-gray-400 p-2 bg-yellow-50 border border-yellow-200 rounded">
-          Debug: Total messages {{ chatState.messages.length }}, Last updated {{ new Date().toLocaleTimeString() }}, Force update flag: {{ chatState.forceUpdateFlag }}
+          调试：消息总数 {{ chatState.messages.length }}，最后更新时间 {{ new Date().toLocaleTimeString() }}，强制更新标志: {{ chatState.forceUpdateFlag }}
         </div>
         <div v-for="message in chatState.messages" :key="`msg_${message.id}_${message.content?.length || 0}`" 
              :class="['flex', message.type === 'user' ? 'justify-end' : 'justify-start']">
           <div :class="['max-w-[70%] rounded-lg p-4 relative', 
                        message.type === 'user' ? 'bg-purple-100' : 
                        message.isError ? 'bg-red-50 border border-red-200' : 'bg-gray-100']">
-            <!-- User Message: Plain Text Display -->
+            <!-- 用户消息：纯文本显示 -->
             <div v-if="message.type === 'user'">
               <p class="whitespace-pre-wrap text-gray-800">{{ getDisplayContent(message) }}</p>
               
-              <!-- User Message Expand Button -->
+              <!-- 用户消息的展开按钮 -->
               <div v-if="message.fullContent && message.isTruncated" 
                    class="mt-3 pt-3 border-t border-purple-200">
                 <button 
@@ -126,41 +126,41 @@
                   <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                   </svg>
-                  <span>{{ message.isExpanded ? 'Collapse' : 'Show Full Content' }}</span>
+                  <span>{{ message.isExpanded ? '收起' : '展开完整内容' }}</span>
                 </button>
               </div>
             </div>
             
-            <!-- Assistant Message: Markdown Rendering -->
+            <!-- 助手消息：markdown渲染 -->
             <div v-else-if="message.type === 'assistant'" 
                  :class="['markdown-content', message.isError ? 'text-red-700' : 'text-gray-800']">
-              <!-- Debug Info -->
+              <!-- 调试信息 -->
               <div class="text-xs text-blue-500 mb-2 border-b border-blue-200 pb-1">
-                ID: {{ message.id }}, Length: {{ message.content?.length || 0 }}, Complete: {{ message.isComplete }}
+                ID: {{ message.id }}, 长度: {{ message.content?.length || 0 }}, 完成: {{ message.isComplete }}
               </div>
               <div v-html="renderMarkdown(getDisplayContent(message))"></div>
             </div>
             
-            <!-- Research Plan Related Buttons (Top Right) -->
+            <!-- 研究方案相关按钮（右上角） -->
             <div v-if="message.type === 'assistant' && !message.isError && message.isComplete && isResearchPlan(getOriginalContent(message))"
                  class="absolute top-2 right-2 flex items-center space-x-2">
               
 
               
-              <!-- View in Right Panel Button -->
+              <!-- 在右侧查看按钮 -->
               <button 
                 @click="handleViewInRightPanel(message)"
                 class="flex items-center space-x-1 px-1.5 py-1 text-xs text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors border border-green-200 bg-white/80 backdrop-blur-sm"
-                title="Display research plan in right panel"
+                title="将研究方案显示在右侧面板"
               >
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                <span>View in Panel</span>
+                <span>右侧查看</span>
               </button>
             </div>
             
-            <!-- Expand Button (for long responses) -->
+            <!-- 展开按钮（用于长回答） -->
             <div v-if="message.type === 'assistant' && message.fullContent && message.isTruncated" 
                  class="mt-3 pt-3 border-t border-gray-200">
               <button 
@@ -173,12 +173,12 @@
                 <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                 </svg>
-                <span>{{ message.isExpanded ? 'Collapse' : 'Show Full Content' }}</span>
+                <span>{{ message.isExpanded ? '收起' : '展开完整内容' }}</span>
               </button>
             </div>
           </div>
         </div>
-        <!-- Loading Animation -->
+        <!-- 加载动画 -->
         <div v-if="chatState.isLoading" class="flex justify-start">
           <div class="max-w-[70%] rounded-lg p-4 bg-gray-100">
             <LoadingDots />
@@ -186,12 +186,12 @@
         </div>
       </div>
 
-      <!-- Conversation Guide -->
+      <!-- 对话引导 -->
       <ConversationGuide @sendPrompt="handlePromptMessage" />
 
-      <!-- Chat Input Area -->
+      <!-- 聊天输入区域 -->
       <div class="mt-4">
-                <!-- Collapsed State: Expand Chat Button -->
+                <!-- 收起状态：展开聊天按钮 -->
         <button v-if="!isInputExpanded" 
                 @click="expandInput"
                 class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-3 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all duration-300 flex items-center justify-center space-x-2"
@@ -199,28 +199,28 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.013 8.013 0 01-7-4c0-4.418 3.582-8 8-8s8 3.582 8 8z"/>
           </svg>
-          <span class="font-medium">Chat with AI Assistant</span>
+          <span class="font-medium">与AI助手对话</span>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
           </svg>
         </button>
 
-        <!-- Expanded State: Chat Input Interface -->
+        <!-- 展开状态：聊天输入界面 -->
         <div v-else 
              class="bg-white border border-gray-200 rounded-lg transition-all duration-300"
              :class="{ 'animate-expand-in': isInputExpanded }"
         >
-          <!-- Input Area -->
+          <!-- 输入区域 -->
           <div class="p-4 space-y-3">
-            <!-- Header Info -->
+            <!-- 头部信息 -->
             <div class="mb-3">
             </div>
 
-            <!-- Input Box -->
+            <!-- 输入框 -->
             <div class="relative">
               <textarea
                 v-model="newMessage"
-                placeholder="Please enter your question..."
+                placeholder="请输入您的问题..."
                 class="w-full rounded-lg bg-white px-3 py-2 focus:outline-none resize-none text-sm"
                 rows="3"
                 @keyup.enter.ctrl="handleSendMessage"
@@ -230,7 +230,7 @@
               />
             </div>
 
-            <!-- Button Group -->
+            <!-- 按钮组 -->
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-2">
                 <button
@@ -241,7 +241,7 @@
                   <svg class="w-4 h-4" fill="none" stroke="white" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
-                  <span>Polish</span>
+                  <span>润色</span>
                 </button>
               </div>
               <div class="flex items-center space-x-2">
@@ -256,9 +256,9 @@
                   <svg v-else class="w-4 h-4" fill="none" stroke="white" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                   </svg>
-                  <span>{{ chatState.isLoading ? 'Sending...' : 'Send' }}</span>
+                  <span>{{ chatState.isLoading ? '发送中...' : '发送' }}</span>
                 </button>
-                <!-- Collapse Button moved to bottom right -->
+                <!-- 收起按钮移到右下角 -->
                 <button 
                   @click="collapseInput"
                   class="text-black hover:text-gray-700 transition-colors p-1"
@@ -274,7 +274,7 @@
       </div>
     </div>
 
-    <!-- Polish Prompt Dialog -->
+    <!-- 润色提示词对话框 -->
     <PromptOptimizeDialog 
       :visible="showOptimizeDialog" 
       :originalPrompt="newMessage"
@@ -407,15 +407,15 @@ const loadConversations = async () => {
 // 创建新对话
 const createNewConversation = async () => {
   if (!isAuthenticated.value) {
-    alert('Please login first to create conversations')
+    alert('请先登录后再创建对话')
     return
   }
 
   isCreatingConversation.value = true
   try {
     // 生成对话标题（基于当前时间或消息内容）
-    const title = `New Chat ${new Date().toLocaleString('en-US')}`
-    const description = 'User created conversation'
+    const title = `新对话 ${new Date().toLocaleString('zh-CN')}`
+    const description = '用户创建的新对话'
     
     console.log('正在创建新对话:', { title, description })
     
@@ -442,13 +442,13 @@ const createNewConversation = async () => {
       await nextTick()
       
       console.log('新对话创建成功:', newConversation.title, 'ID:', newConversation.id)
-      alert('New conversation created successfully!')
+      alert('新对话创建成功！')
     } else {
-      throw new Error(result.error || 'Failed to create conversation')
+      throw new Error(result.error || '创建对话失败')
     }
   } catch (error) {
     console.error('创建新对话失败:', error)
-    alert('Failed to create conversation: ' + error.message)
+    alert('创建对话失败：' + error.message)
   } finally {
     isCreatingConversation.value = false
   }
@@ -479,7 +479,7 @@ const switchToConversation = async (conversation) => {
         {
           id: 1,
           type: 'assistant',
-          content: 'Hello! I am the MethodMate AI assistant. How can I help you today?',
+          content: '你好！我是 MethodMate AI 助手，请问有什么我可以帮助你的吗？',
           isComplete: true
         }
       ]
@@ -518,7 +518,7 @@ const switchToConversation = async (conversation) => {
     }
   } catch (error) {
     console.error('切换对话失败:', error)
-    alert('Failed to switch conversation: ' + error.message)
+    alert('切换对话失败：' + error.message)
   }
 }
 
@@ -526,7 +526,7 @@ const switchToConversation = async (conversation) => {
 const deleteConversation = async (conversation) => {
   if (!isAuthenticated.value) return
   
-  if (!confirm(`Are you sure you want to delete the conversation "${conversation.title}"? This action cannot be undone.`)) {
+  if (!confirm(`确定要删除对话"${conversation.title}"吗？此操作不可撤销。`)) {
     return
   }
   
@@ -561,7 +561,7 @@ const deleteConversation = async (conversation) => {
     }
   } catch (error) {
     console.error('删除对话失败:', error)
-    alert('Failed to delete conversation: ' + error.message)
+    alert('删除对话失败：' + error.message)
   }
 }
 
@@ -594,22 +594,36 @@ const isResearchPlan = (content) => {
     return researchPlanCache.get(contentHash)
   }
   
-  // 检查关键词组合，提高检测准确性
+  // 检查关键词组合，提高检测准确性（支持中英文）
   const researchKeywords = [
+    // Chinese keywords
     '研究假设', '实验设计', '数据分析', '结果呈现',
     '研究方案', '实验方案', '定量研究', '研究方法',
     '研究目标', '研究问题', '实验组', '对照组',
-    'H1:', 'H2:', 'H3:', '假设一', '假设二', '假设三'
+    'H1:', 'H2:', 'H3:', '假设一', '假设二', '假设三',
+    // English keywords
+    'Research Hypotheses', 'Experimental Design', 'Data Analysis', 'Results Presentation',
+    'research plan', 'experimental plan', 'quantitative research', 'research method',
+    'research objective', 'research question', 'experimental group', 'control group',
+    'hypothesis', 'hypotheses'
   ]
   
   const designKeywords = [
+    // Chinese keywords
     '2x2设计', '实验设计', '自变量', '因变量', '控制变量',
-    '随机分组', '实验条件', '实验程序', '被试'
+    '随机分组', '实验条件', '实验程序', '被试',
+    // English keywords
+    '2x2 design', 'experimental design', 'independent variable', 'dependent variable', 'control variable',
+    'random assignment', 'experimental condition', 'experimental procedure', 'participants'
   ]
   
   const analysisKeywords = [
+    // Chinese keywords
     'SPSS', 'R Studio', '方差分析', 'ANOVA', '回归分析',
-    't检验', '卡方检验', '统计分析', '数据处理'
+    't检验', '卡方检验', '统计分析', '数据处理',
+    // English keywords
+    'data analysis', 'statistical analysis', 'regression analysis',
+    't-test', 'chi-square test', 'ANOVA', 'data processing'
   ]
   
   // 计算匹配的关键词数量
@@ -641,7 +655,7 @@ const isResearchPlan = (content) => {
   
   // 只在检测到研究方案时输出日志，减少控制台噪音
   if (isValidPlan) {
-    console.log('检测到研究方案:', {
+    console.log('Detected research plan:', {
       totalMatches,
       categoryCount,
       researchMatches,
@@ -657,7 +671,7 @@ const isResearchPlan = (content) => {
 // 解析研究方案内容并更新右侧显示
 const parseAndDisplayResearchPlan = (content) => {
   try {
-    console.log('开始解析研究方案...')
+    console.log('Starting to parse research plan...')
     
     // 首先尝试从JSON中提取内容
     let actualContent = content
@@ -674,100 +688,116 @@ const parseAndDisplayResearchPlan = (content) => {
         }
       }
     } catch (jsonError) {
-      console.log('JSON解析失败，使用原始内容')
+      console.log('JSON parsing failed, using original content')
     }
     
     // 提取各个部分
     const extractSection = (text, patterns, sectionName) => {
-      console.log(`开始提取${sectionName}...`)
+      console.log(`Starting to extract ${sectionName}...`)
       for (let i = 0; i < patterns.length; i++) {
         const pattern = patterns[i]
         const match = text.match(pattern)
-        console.log(`${sectionName} 模式 ${i + 1} 匹配结果:`, match ? '匹配成功' : '未匹配')
+        console.log(`${sectionName} pattern ${i + 1} match result:`, match ? 'Matched' : 'No match')
         if (match) {
           let content = match[1] || match[2] || match[0]
-          console.log(`${sectionName} 原始匹配内容:`, content.substring(0, 200) + '...')
+          console.log(`${sectionName} original matched content:`, content.substring(0, 200) + '...')
           // 清理内容：移除多余的标点和换行
           content = content.replace(/^[：:\s]+/, '').replace(/\s+$/, '').trim()
           if (content.length > 10) { // 确保提取到有意义的内容
-            console.log(`${sectionName} 清理后内容长度:`, content.length)
+            console.log(`${sectionName} cleaned content length:`, content.length)
             return content
           }
         }
       }
-      console.log(`${sectionName} 所有模式都未匹配成功`)
+      console.log(`${sectionName} all patterns failed to match`)
       return null
     }
     
-    // 研究假设提取模式（支持markdown格式）
+    // 研究假设提取模式（支持markdown格式和中英文）
     const hypothesisPatterns = [
-      // Markdown标题格式: # 研究假设
-      /(?:#+\s*(?:研究假设|实验假设|假设).*?)\n((?:(?!#+\s*(?:实验设计|数据分析|结果呈现|研究设计|统计分析|预期结果)).)+?)(?=\n#+\s*(?:实验设计|数据分析|结果呈现|研究设计|统计分析|预期结果)|$)/is,
-      // 传统冒号格式
+      // English Markdown format: # Research Hypotheses
+      /(?:#+\s*(?:Research Hypotheses|Experimental Hypotheses|Hypotheses).*?)\n((?:(?!#+\s*(?:Experimental Design|Data Analysis|Results Presentation|Research Design|Statistical Analysis|Expected Results)).)+?)(?=\n#+\s*(?:Experimental Design|Data Analysis|Results Presentation|Research Design|Statistical Analysis|Expected Results)|$)/is,
+      // Chinese Markdown format: # 研究假设
+      /(?:#+\s*(?:研究假设|实验假设|假设).*?)\n((?:(?!#+\s*(?:实验设计|数据分析|结果呈现|研究设计|统计分析|预期结果|Experimental Design|Data Analysis|Results Presentation)).)+?)(?=\n#+\s*(?:实验设计|数据分析|结果呈现|研究设计|统计分析|预期结果|Experimental Design|Data Analysis|Results Presentation)|$)/is,
+      // English colon format
+      /(?:Research Hypotheses|Experimental Hypotheses)[：:\s]*\n?((?:(?:H\d+[:：]|Hypothesis\s+\d+[:：]|\d+[\.、]|[•·*-]\s*).*\n?)+)/i,
+      // Chinese colon format
       /(?:研究假设|实验假设)[：:\s]*\n?((?:(?:H\d+[:：]|假设\d+[:：]|\d+[\.、]|[•·*-]\s*).*\n?)+)/i,
       /(?:假设|hypothesis)[：:\s]*\n?((?:(?:H\d+[:：]|假设\d+[:：]|\d+[\.、]|[•·*-]\s*).*\n?)+)/i,
       /((?:H\d+[:：]|假设\d+[:：]).*(?:\n(?:H\d+[:：]|假设\d+[:：]).*)*)/i
     ]
     
-    // 实验设计提取模式（支持markdown格式）
+    // 实验设计提取模式（支持markdown格式和中英文）
     const designPatterns = [
-      // Markdown标题格式: # 实验设计
-      /(?:#+\s*(?:实验设计|研究设计|设计方案).*?)\n((?:(?!#+\s*(?:数据分析|结果呈现|研究假设|统计分析|预期结果)).)+?)(?=\n#+\s*(?:数据分析|结果呈现|研究假设|统计分析|预期结果)|$)/is,
-      // 传统冒号格式
-      /(?:实验设计|研究设计)[：:\s]*\n?((?:(?!(?:数据分析|结果呈现|研究假设)).)+?)(?=(?:\n\s*(?:数据分析|结果呈现|研究假设|$)))/is,
-      /(?:设计方案|实验方法)[：:\s]*\n?((?:(?!(?:数据分析|结果呈现|研究假设)).)+?)(?=(?:\n\s*(?:数据分析|结果呈现|研究假设|$)))/is
+      // English Markdown format: # Experimental Design
+      /(?:#+\s*(?:Experimental Design|Research Design|Design Plan).*?)\n((?:(?!#+\s*(?:Data Analysis|Results Presentation|Research Hypotheses|Statistical Analysis|Expected Results)).)+?)(?=\n#+\s*(?:Data Analysis|Results Presentation|Research Hypotheses|Statistical Analysis|Expected Results)|$)/is,
+      // Chinese Markdown format: # 实验设计
+      /(?:#+\s*(?:实验设计|研究设计|设计方案).*?)\n((?:(?!#+\s*(?:数据分析|结果呈现|研究假设|统计分析|预期结果|Data Analysis|Results Presentation|Research Hypotheses)).)+?)(?=\n#+\s*(?:数据分析|结果呈现|研究假设|统计分析|预期结果|Data Analysis|Results Presentation|Research Hypotheses)|$)/is,
+      // English colon format
+      /(?:Experimental Design|Research Design)[：:\s]*\n?((?:(?!(?:Data Analysis|Results Presentation|Research Hypotheses|数据分析|结果呈现|研究假设)).)+?)(?=(?:\n\s*(?:Data Analysis|Results Presentation|Research Hypotheses|数据分析|结果呈现|研究假设|$)))/is,
+      // Chinese colon format
+      /(?:实验设计|研究设计)[：:\s]*\n?((?:(?!(?:数据分析|结果呈现|研究假设|Data Analysis|Results Presentation|Research Hypotheses)).)+?)(?=(?:\n\s*(?:数据分析|结果呈现|研究假设|Data Analysis|Results Presentation|Research Hypotheses|$)))/is,
+      /(?:设计方案|实验方法)[：:\s]*\n?((?:(?!(?:数据分析|结果呈现|研究假设|Data Analysis|Results Presentation|Research Hypotheses)).)+?)(?=(?:\n\s*(?:数据分析|结果呈现|研究假设|Data Analysis|Results Presentation|Research Hypotheses|$)))/is
     ]
     
-    // 数据分析提取模式（支持markdown格式）
+    // 数据分析提取模式（支持markdown格式和中英文）
     const analysisPatterns = [
-      // Markdown标题格式: # 数据分析
-      /(?:#+\s*(?:数据分析|统计分析|分析方法).*?)\n((?:(?!#+\s*(?:结果呈现|研究假设|实验设计|预期结果)).)+?)(?=\n#+\s*(?:结果呈现|研究假设|实验设计|预期结果)|$)/is,
-      // 传统冒号格式
-      /(?:数据分析|统计分析|分析方法)[：:\s]*\n?((?:(?!(?:结果呈现|研究假设|实验设计)).)+?)(?=(?:\n\s*(?:结果呈现|研究假设|实验设计|$)))/is,
-      /(?:分析工具|统计方法|数据处理)[：:\s]*\n?((?:(?!(?:结果呈现|研究假设|实验设计)).)+?)(?=(?:\n\s*(?:结果呈现|研究假设|实验设计|$)))/is
+      // English Markdown format: # Data Analysis
+      /(?:#+\s*(?:Data Analysis|Statistical Analysis|Analysis Method).*?)\n((?:(?!#+\s*(?:Results Presentation|Research Hypotheses|Experimental Design|Expected Results)).)+?)(?=\n#+\s*(?:Results Presentation|Research Hypotheses|Experimental Design|Expected Results)|$)/is,
+      // Chinese Markdown format: # 数据分析
+      /(?:#+\s*(?:数据分析|统计分析|分析方法).*?)\n((?:(?!#+\s*(?:结果呈现|研究假设|实验设计|预期结果|Results Presentation|Research Hypotheses|Experimental Design)).)+?)(?=\n#+\s*(?:结果呈现|研究假设|实验设计|预期结果|Results Presentation|Research Hypotheses|Experimental Design)|$)/is,
+      // English colon format
+      /(?:Data Analysis|Statistical Analysis|Analysis Method)[：:\s]*\n?((?:(?!(?:Results Presentation|Research Hypotheses|Experimental Design|结果呈现|研究假设|实验设计)).)+?)(?=(?:\n\s*(?:Results Presentation|Research Hypotheses|Experimental Design|结果呈现|研究假设|实验设计|$)))/is,
+      // Chinese colon format
+      /(?:数据分析|统计分析|分析方法)[：:\s]*\n?((?:(?!(?:结果呈现|研究假设|实验设计|Results Presentation|Research Hypotheses|Experimental Design)).)+?)(?=(?:\n\s*(?:结果呈现|研究假设|实验设计|Results Presentation|Research Hypotheses|Experimental Design|$)))/is,
+      /(?:分析工具|统计方法|数据处理)[：:\s]*\n?((?:(?!(?:结果呈现|研究假设|实验设计|Results Presentation|Research Hypotheses|Experimental Design)).)+?)(?=(?:\n\s*(?:结果呈现|研究假设|实验设计|Results Presentation|Research Hypotheses|Experimental Design|$)))/is
     ]
     
-    // 结果呈现提取模式（支持markdown格式）
+    // 结果呈现提取模式（支持markdown格式和中英文）
     const resultsPatterns = [
-      // Markdown标题格式: # 结果呈现
-      /(?:#+\s*(?:结果呈现|预期结果|研究结果).*?)\n((?:(?!#+\s*(?:研究假设|实验设计|数据分析)).)+?)(?=\n#+\s*(?:研究假设|实验设计|数据分析)|$)/is,
-      // 传统冒号格式
-      /(?:结果呈现|预期结果|研究结果)[：:\s]*\n?((?:(?!(?:研究假设|实验设计|数据分析)).)+?)(?=(?:\n\s*(?:研究假设|实验设计|数据分析|$)))/is,
-      /(?:预期|预计|期望).*?(?:结果|发现|效应)[：:\s]*\n?((?:(?!(?:研究假设|实验设计|数据分析)).)+?)(?=(?:\n\s*(?:研究假设|实验设计|数据分析|$)))/is
+      // English Markdown format: # Results Presentation
+      /(?:#+\s*(?:Results Presentation|Expected Results|Research Results).*?)\n((?:(?!#+\s*(?:Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=\n#+\s*(?:Research Hypotheses|Experimental Design|Data Analysis)|$)/is,
+      // Chinese Markdown format: # 结果呈现
+      /(?:#+\s*(?:结果呈现|预期结果|研究结果).*?)\n((?:(?!#+\s*(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=\n#+\s*(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis)|$)/is,
+      // English colon format
+      /(?:Results Presentation|Expected Results|Research Results)[：:\s]*\n?((?:(?!(?:Research Hypotheses|Experimental Design|Data Analysis|研究假设|实验设计|数据分析)).)+?)(?=(?:\n\s*(?:Research Hypotheses|Experimental Design|Data Analysis|研究假设|实验设计|数据分析|$)))/is,
+      // Chinese colon format
+      /(?:结果呈现|预期结果|研究结果)[：:\s]*\n?((?:(?!(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=(?:\n\s*(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis|$)))/is,
+      /(?:预期|预计|期望).*?(?:结果|发现|效应)[：:\s]*\n?((?:(?!(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=(?:\n\s*(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis|$)))/is
     ]
     
     // 提取各部分内容
-    const hypothesis = extractSection(actualContent, hypothesisPatterns, '研究假设')
-    const design = extractSection(actualContent, designPatterns, '实验设计')
-    const analysis = extractSection(actualContent, analysisPatterns, '数据分析')
-    const results = extractSection(actualContent, resultsPatterns, '结果呈现')
+    const hypothesis = extractSection(actualContent, hypothesisPatterns, 'Research Hypotheses')
+    const design = extractSection(actualContent, designPatterns, 'Experimental Design')
+    const analysis = extractSection(actualContent, analysisPatterns, 'Data Analysis')
+    const results = extractSection(actualContent, resultsPatterns, 'Results Presentation')
     
-    console.log('提取结果:')
-    console.log('- 研究假设:', hypothesis ? '✓ 已提取' : '✗ 未提取', hypothesis ? `(${hypothesis.length}字符)` : '')
-    console.log('- 实验设计:', design ? '✓ 已提取' : '✗ 未提取', design ? `(${design.length}字符)` : '')
-    console.log('- 数据分析:', analysis ? '✓ 已提取' : '✗ 未提取', analysis ? `(${analysis.length}字符)` : '')
-    console.log('- 结果呈现:', results ? '✓ 已提取' : '✗ 未提取', results ? `(${results.length}字符)` : '')
+    console.log('Extraction Results:')
+    console.log('- Research Hypotheses:', hypothesis ? '✓ Extracted' : '✗ Not extracted', hypothesis ? `(${hypothesis.length} characters)` : '')
+    console.log('- Experimental Design:', design ? '✓ Extracted' : '✗ Not extracted', design ? `(${design.length} characters)` : '')
+    console.log('- Data Analysis:', analysis ? '✓ Extracted' : '✗ Not extracted', analysis ? `(${analysis.length} characters)` : '')
+    console.log('- Results Presentation:', results ? '✓ Extracted' : '✗ Not extracted', results ? `(${results.length} characters)` : '')
     
     // 检查是否提取到至少一个有效内容
     const hasValidContent = hypothesis || design || analysis || results
     if (!hasValidContent) {
-      console.log('未提取到任何有效的研究方案内容')
-      console.log('完整内容长度:', actualContent.length)
-      console.log('内容包含的关键词:')
-      console.log('- 研究假设:', actualContent.includes('研究假设'))
-      console.log('- 实验设计:', actualContent.includes('实验设计'))
-      console.log('- 数据分析:', actualContent.includes('数据分析'))
-      console.log('- 结果呈现:', actualContent.includes('结果呈现'))
-      console.log('实际内容前1000字符:', actualContent.substring(0, 1000))
+      console.log('No valid research plan content extracted')
+      console.log('Full content length:', actualContent.length)
+      console.log('Content includes keywords:')
+      console.log('- Research Hypotheses:', actualContent.includes('Research Hypotheses') || actualContent.includes('研究假设'))
+      console.log('- Experimental Design:', actualContent.includes('Experimental Design') || actualContent.includes('实验设计'))
+      console.log('- Data Analysis:', actualContent.includes('Data Analysis') || actualContent.includes('数据分析'))
+      console.log('- Results Presentation:', actualContent.includes('Results Presentation') || actualContent.includes('结果呈现'))
+      console.log('First 1000 characters of actual content:', actualContent.substring(0, 1000))
       return false
     }
     
     // 构建新的研究方案数据
     const planData = {
-      title: `基于Coze生成的研究方案`,
-      researchQuestions: 'Coze智能体生成的研究方案',
-      methodology: `基于用户需求生成的研究方法 (生成时间: ${new Date().toLocaleString('zh-CN')})`,
-      dataCollection: '根据研究设计制定的数据收集方案',
+      title: `Research Plan Generated by AI`,
+      researchQuestions: 'AI-generated research plan',
+      methodology: `Research methodology generated based on user requirements (Generated: ${new Date().toLocaleString('en-US')})`,
+      dataCollection: 'Data collection plan formulated according to research design',
       hypotheses: [],
       experimentalDesign: '',
       analysisMethod: '',
@@ -811,21 +841,21 @@ const parseAndDisplayResearchPlan = (content) => {
       // 使用 updateCurrentPlan 更新当前方案状态
       updateCurrentPlan(planData)
       
-      console.log(`成功解析并更新研究方案，更新了 ${updatedFields} 个字段`)
+      console.log(`Successfully parsed and updated research plan, updated ${updatedFields} fields`)
       
       // 显示成功提示
       setTimeout(() => {
-        alert('Research plan has been updated to the right panel! Please check the content of each module.')
+        alert('Research plan has been updated on the right panel! Please check the content of each module.')
       }, 500)
       
       return true
     } else {
-      console.log('未更新任何字段，解析失败')
+      console.log('No fields updated, parsing failed')
       return false
     }
     
   } catch (error) {
-    console.error('解析研究方案时出现错误:', error)
+    console.error('Error occurred while parsing research plan:', error)
     return false
   }
 }
@@ -843,7 +873,7 @@ const handleViewInRightPanel = (message) => {
   const success = parseAndDisplayResearchPlan(originalContent)
   
   if (!success) {
-    console.log('解析失败，原始内容前500字符:', originalContent.substring(0, 500))
+    console.log('Parsing failed, first 500 characters of original content:', originalContent.substring(0, 500))
     alert('Failed to parse research plan. Please check if the plan format is correct.')
   }
 }
@@ -1062,7 +1092,7 @@ const handleSendMessage = async () => {
   if (isAuthenticated.value && !currentConversation.value && !chatState.conversationId) {
     // 生成基于第一条消息的对话标题
     const title = message.length > 20 ? message.substring(0, 20) + '...' : message
-    const description = 'Auto-created conversation based on user message'
+    const description = '基于用户消息自动创建的对话'
     
     try {
       const result = await conversationAPI.create(title, description)
@@ -1078,8 +1108,8 @@ const handleSendMessage = async () => {
       }
     } catch (error) {
       console.error('自动创建对话失败:', error)
-      alert('Failed to create conversation: ' + error.message)
-      // Continue sending message even if conversation creation failed
+      alert('创建对话失败：' + error.message)
+      // 继续发送消息，即使对话创建失败
     }
   }
   
