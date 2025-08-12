@@ -1,7 +1,7 @@
 <template>
   <div class="mb-4">
     <div class="flex flex-wrap gap-2 items-center">
-      <!-- 提示词按钮 -->
+      <!-- Prompt Buttons -->
       <template v-for="(prompt, index) in currentPrompts" :key="index">
         <button
           @click="handlePromptClick(prompt)"
@@ -11,7 +11,7 @@
         </button>
       </template>
       
-      <!-- 换一批按钮 -->
+      <!-- Change Batch Button -->
       <button
         @click="handleRefresh"
         class="flex items-center space-x-1 px-3 py-1.5 border border-purple-300 text-purple-600 hover:bg-purple-50 text-sm rounded-full transition-colors whitespace-nowrap ml-2"
@@ -28,13 +28,13 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-// 接收父组件传递的方法
+// Receive methods passed from parent component
 const emit = defineEmits(['sendPrompt'])
 
-// 首页必显示的提示词
+// Prompt that must be displayed on homepage
 const firstPrompt = 'What is quantitative research?'
 
-// 其他提示词
+// Other prompts
 const otherPrompts = [
   'Recommend latest HCI research',
   'What are the common types of variables?',
@@ -55,42 +55,42 @@ const otherPrompts = [
   'What are the key points in writing the methods section?'
 ]
 
-// 所有提示词（用于轮换显示）
+// All prompts (for rotation display)
 const allPrompts = [firstPrompt, ...otherPrompts]
 
-// 当前批次索引
+// Current batch index
 const currentBatchIndex = ref(0)
-// 每批显示的提示词数量
+// Number of prompts displayed per batch
 const promptsPerBatch = 3
 
-// 当前显示的提示词
+// Currently displayed prompts
 const currentPrompts = computed(() => {
   if (currentBatchIndex.value === 0) {
-    // 第一批：第一个位置固定显示首页提示词，其他两个从其他提示词中选择
+    // First batch: first position fixed for homepage prompt, other two selected from other prompts
     return [
       firstPrompt,
       otherPrompts[0],
       otherPrompts[1]
     ]
   } else {
-    // 其他批次：从所有提示词中按批次选择（跳过前3个，因为第一批已经用了）
+    // Other batches: select from all prompts by batch (skip first 3, as first batch already used)
     const adjustedIndex = currentBatchIndex.value - 1
     const startIndex = 3 + adjustedIndex * promptsPerBatch
     return allPrompts.slice(startIndex, startIndex + promptsPerBatch)
   }
 })
 
-// 处理提示词点击
+// Handle prompt click
 const handlePromptClick = (prompt) => {
   emit('sendPrompt', prompt)
 }
 
-// 处理换一批
+// Handle change batch
 const handleRefresh = () => {
-  // 总批次数：第一批(3个) + 剩余提示词的批次数
-  const remainingPrompts = allPrompts.length - 3 // 减去第一批使用的3个
+  // Total batch count: first batch (3) + batch count of remaining prompts
+  const remainingPrompts = allPrompts.length - 3 // Subtract 3 used in first batch
   const remainingBatches = Math.ceil(remainingPrompts / promptsPerBatch)
-  const totalBatches = 1 + remainingBatches // 第一批 + 剩余批次
+  const totalBatches = 1 + remainingBatches // First batch + remaining batches
   
   currentBatchIndex.value = (currentBatchIndex.value + 1) % totalBatches
 }

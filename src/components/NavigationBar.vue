@@ -2,7 +2,7 @@
   <header class="bg-white shadow-sm border-b sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
-        <!-- 左上角：首页按钮 -->
+        <!-- Top Left: Home Button -->
         <div class="flex items-center">
           <button
             @click="router.push('/')"
@@ -16,7 +16,7 @@
           </button>
         </div>
 
-        <!-- 中间：主导航菜单（高频功能） -->
+        <!-- Center: Main Navigation Menu (High Frequency Functions) -->
         <nav class="hidden md:flex items-center space-x-8">
           <router-link
             to="/papers"
@@ -41,9 +41,9 @@
           </router-link>
         </nav>
 
-        <!-- 右上角：低频功能、历史记录、环境切换器和用户菜单 -->
+        <!-- Top Right: Low Frequency Functions, History, Environment Switcher and User Menu -->
         <div class="flex items-center space-x-2">
-          <!-- 文献搜索（低频功能） -->
+          <!-- Literature Search (Low Frequency Function) -->
           <router-link
             to="/scholar-search"
             class="flex items-center px-2.5 py-2 text-sm text-gray-600 hover:text-blue-600 border border-gray-300 rounded-md hover:border-blue-300 transition-colors"
@@ -55,7 +55,7 @@
             Search
           </router-link>
 
-          <!-- 引用文献（低频功能） -->
+          <!-- Referenced Papers (Low Frequency Function) -->
           <router-link
             to="/references"
             class="flex items-center px-2.5 py-2 text-sm text-gray-600 hover:text-blue-600 border border-gray-300 rounded-md hover:border-blue-300 transition-colors"
@@ -68,7 +68,7 @@
             <span v-if="referencedCount > 0" class="ml-1 px-1.5 py-0.5 text-xs bg-purple-500 text-white rounded-full">{{ referencedCount }}</span>
           </router-link>
 
-          <!-- ChatGPT对话 - 已隐藏 -->
+          <!-- ChatGPT Chat - Hidden -->
           <!-- <router-link
             to="/chatgpt"
             class="flex items-center px-2.5 py-2 text-sm text-gray-600 hover:text-green-600 border border-gray-300 rounded-md hover:border-green-300 transition-colors"
@@ -80,7 +80,7 @@
             ChatGPT
           </router-link> -->
 
-          <!-- 历史记录 -->
+          <!-- History Records -->
           <button
             @click="router.push('/history-plans')"
             class="flex items-center px-2.5 py-2 text-sm text-gray-600 hover:text-blue-600 border border-gray-300 rounded-md hover:border-blue-300 transition-colors"
@@ -92,23 +92,23 @@
             History
           </button>
 
-          <!-- 主题切换按钮 -->
+          <!-- Theme Toggle Button -->
           <button
             @click="themeStore.toggleTheme"
             class="flex items-center px-2.5 py-2 text-sm text-gray-600 hover:text-blue-600 border border-gray-300 rounded-md hover:border-blue-300 transition-colors"
             :title="themeStore.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
           >
             <svg v-if="themeStore.isDark" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <!-- 太阳图标 (浅色模式) -->
+              <!-- Sun icon (Light mode) -->
               <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/>
             </svg>
             <svg v-else class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <!-- 月亮图标 (暗黑模式) -->
+              <!-- Moon icon (Dark mode) -->
               <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
             </svg>
           </button>
 
-          <!-- 用户菜单 -->
+          <!-- User Menu -->
           <div v-if="userStore.isAuthenticated" class="relative ml-2">
             <button
               @click="toggleUserMenu"
@@ -123,7 +123,7 @@
               </svg>
             </button>
 
-            <!-- 用户下拉菜单 -->
+            <!-- User Dropdown Menu -->
             <div v-show="showUserMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border z-50">
               <div class="py-1">
                 <div class="px-4 py-2 text-sm text-gray-600 border-b">
@@ -143,7 +143,7 @@
             </div>
           </div>
 
-          <!-- 登录/注册按钮 -->
+          <!-- Login/Register Buttons -->
           <div v-else class="flex items-center space-x-1 ml-2">
             <router-link
               to="/login"
@@ -160,7 +160,7 @@
           </div>
         </div>
 
-        <!-- 移动端菜单按钮 -->
+        <!-- Mobile Menu Button -->
         <div class="md:hidden">
           <button
             @click="toggleMobileMenu"
@@ -173,10 +173,10 @@
         </div>
       </div>
 
-      <!-- 移动端导航菜单 -->
+      <!-- Mobile Navigation Menu -->
       <div v-show="showMobileMenu" class="md:hidden">
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t">
-          <!-- 高频功能 -->
+          <!-- High Frequency Functions -->
           <router-link
             to="/papers"
             class="mobile-nav-link"
@@ -192,10 +192,10 @@
             Research Plan
           </router-link>
           
-          <!-- 分隔线 -->
+          <!-- Divider -->
           <div class="border-t my-2"></div>
           
-          <!-- 低频功能 -->
+          <!-- Low Frequency Functions -->
           <router-link
             to="/scholar-search"
             class="mobile-nav-link"
@@ -215,7 +215,7 @@
             class="mobile-nav-link"
             @click="closeMobileMenu"
           >
-            ChatGPT 对话
+            ChatGPT Chat
           </router-link> -->
           <router-link
             to="/history-plans"
@@ -225,7 +225,7 @@
             History
           </router-link>
           
-          <!-- 主题切换按钮 (移动端) -->
+          <!-- Theme Toggle Button (Mobile) -->
           <button
             @click="themeStore.toggleTheme"
             class="flex items-center px-3 py-2 text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors w-full"
@@ -239,7 +239,7 @@
             {{ themeStore.isDark ? 'Light Mode' : 'Dark Mode' }}
           </button>
           
-          <!-- 移动端用户菜单分隔线 -->
+          <!-- Mobile User Menu Divider -->
           <div class="border-t pt-2 mt-2">
             <div v-if="userStore.isAuthenticated" class="space-y-1">
               <div class="px-3 py-2 text-sm text-gray-600">
@@ -287,41 +287,41 @@ const router = useRouter()
 const userStore = useUserStore()
 const themeStore = useThemeStore()
 
-// 移动端菜单状态
+// Mobile menu state
 const showMobileMenu = ref(false)
 const showUserMenu = ref(false)
 
-// 引用文献计数
+// Referenced papers count
 const referencedCount = computed(() => papersState.referencedPapers.size)
 
-// 切换移动端菜单
+// Toggle mobile menu
 const toggleMobileMenu = () => {
   showMobileMenu.value = !showMobileMenu.value
 }
 
-// 关闭移动端菜单
+// Close mobile menu
 const closeMobileMenu = () => {
   showMobileMenu.value = false
 }
 
-// 切换用户菜单
+// Toggle user menu
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value
 }
 
-// 关闭用户菜单
+// Close user menu
 const closeUserMenu = () => {
   showUserMenu.value = false
 }
 
-// 处理用户登出
+// Handle user logout
 const handleLogout = () => {
   userStore.logout()
   closeUserMenu()
   router.push('/')
 }
 
-// 点击外部关闭用户菜单
+// Click outside to close user menu
 const handleClickOutside = (event) => {
   const userMenuElement = event.target.closest('.relative')
   if (!userMenuElement && showUserMenu.value) {
@@ -329,7 +329,7 @@ const handleClickOutside = (event) => {
   }
 }
 
-// 初始化用户状态
+// Initialize user state
 onMounted(async () => {
   await userStore.initializeUser()
   document.addEventListener('click', handleClickOutside)

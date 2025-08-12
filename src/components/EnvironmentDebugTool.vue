@@ -2,7 +2,7 @@
   <div v-if="showTool" class="fixed bottom-4 right-4 z-50">
     <div class="bg-white border border-gray-300 rounded-lg shadow-lg p-4 max-w-sm">
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-sm font-semibold text-gray-700">环境调试工具</h3>
+        <h3 class="text-sm font-semibold text-gray-700">Environment Debug Tool</h3>
         <button
           @click="toggleTool"
           class="text-gray-400 hover:text-gray-600 text-sm"
@@ -11,9 +11,9 @@
         </button>
       </div>
       
-      <!-- 当前环境信息 -->
+      <!-- Current Environment Info -->
       <div class="mb-3">
-        <div class="text-xs text-gray-500 mb-1">当前环境</div>
+        <div class="text-xs text-gray-500 mb-1">Current Environment</div>
         <div class="flex items-center space-x-2">
           <div 
             class="w-2 h-2 rounded-full"
@@ -24,18 +24,18 @@
         <div class="text-xs text-gray-600 mt-1">{{ currentEnvironment.description }}</div>
       </div>
       
-      <!-- API 配置信息 -->
+      <!-- API Configuration Info -->
       <div class="mb-3">
-        <div class="text-xs text-gray-500 mb-1">API 配置</div>
+        <div class="text-xs text-gray-500 mb-1">API Configuration</div>
         <div class="bg-gray-50 rounded p-2 text-xs font-mono">
           <div>Base: {{ currentEnvironment.apiBaseUrl }}</div>
           <div>Chat: {{ currentEnvironment.chatApiUrl }}</div>
         </div>
       </div>
       
-      <!-- 连接状态 -->
+      <!-- Connection Status -->
       <div class="mb-3">
-        <div class="text-xs text-gray-500 mb-1">连接状态</div>
+        <div class="text-xs text-gray-500 mb-1">Connection Status</div>
         <div class="flex items-center space-x-2">
           <div 
             class="w-2 h-2 rounded-full"
@@ -48,7 +48,7 @@
             :disabled="connectionStatus === 'connecting'"
             class="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 disabled:opacity-50"
           >
-            测试
+            Test
           </button>
         </div>
       </div>
@@ -80,7 +80,7 @@
 
       <!-- AI服务选择 -->
       <div class="mb-3">
-        <div class="text-xs text-gray-500 mb-2">AI服务选择</div>
+        <div class="text-xs text-gray-500 mb-2">AI Service Selection</div>
         <div class="grid grid-cols-2 gap-2">
           <button
             @click="switchAIService('coze')"
@@ -101,7 +101,7 @@
             💬 ChatGPT
           </button>
         </div>
-        <div class="text-xs text-gray-600 mt-1">当前: {{ currentAIServiceName }}</div>
+        <div class="text-xs text-gray-600 mt-1">Current: {{ currentAIServiceName }}</div>
       </div>
       
       <!-- 调试信息 -->
@@ -110,16 +110,16 @@
           @click="showDebugInfo = !showDebugInfo"
           class="text-xs text-gray-500 hover:text-gray-700"
         >
-          {{ showDebugInfo ? '隐藏' : '显示' }}调试信息 ▼
+          {{ showDebugInfo ? 'Hide' : 'Show' }} Debug Info ▼
         </button>
         
         <div v-if="showDebugInfo" class="mt-2 bg-gray-50 rounded p-2 text-xs">
           <div class="space-y-1">
-            <div><strong>开发模式:</strong> {{ isDev ? '是' : '否' }}</div>
-            <div><strong>Vite HMR:</strong> {{ hasHMR ? '是' : '否' }}</div>
-            <div><strong>LocalStorage:</strong> {{ hasEnvironmentInStorage ? '已设置' : '未设置' }}</div>
-            <div><strong>URL参数:</strong> {{ urlEnvironment || '无' }}</div>
-            <div><strong>浏览器:</strong> {{ userAgent }}</div>
+            <div><strong>Development Mode:</strong> {{ isDev ? 'Yes' : 'No' }}</div>
+            <div><strong>Vite HMR:</strong> {{ hasHMR ? 'Yes' : 'No' }}</div>
+            <div><strong>LocalStorage:</strong> {{ hasEnvironmentInStorage ? 'Set' : 'Not Set' }}</div>
+            <div><strong>URL Parameters:</strong> {{ urlEnvironment || 'None' }}</div>
+            <div><strong>Browser:</strong> {{ userAgent }}</div>
           </div>
         </div>
       </div>
@@ -130,13 +130,13 @@
           @click="clearEnvironmentSettings"
           class="flex-1 px-2 py-1 text-xs bg-yellow-50 text-yellow-700 border border-yellow-300 rounded hover:bg-yellow-100"
         >
-          重置设置
+          Reset Settings
         </button>
         <button
           @click="copyEnvironmentInfo"
           class="flex-1 px-2 py-1 text-xs bg-gray-50 text-gray-700 border border-gray-300 rounded hover:bg-gray-100"
         >
-          复制信息
+          Copy Info
         </button>
       </div>
     </div>
@@ -147,7 +147,7 @@
     v-if="!showTool && (isDev || isDebugMode)"
     @click="toggleTool"
     class="fixed bottom-4 right-4 z-40 w-10 h-10 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 flex items-center justify-center text-sm"
-    title="打开环境调试工具"
+    title="Open Environment Debug Tool"
   >
     🔧
   </button>
@@ -165,13 +165,13 @@ import {
   AI_SERVICE_TYPES 
 } from '../stores/aiServiceStore.js'
 
-// 响应式数据
+// Reactive data
 const showTool = ref(false)
 const showDebugInfo = ref(false)
 const currentEnvironment = ref(environmentUtils.getCurrentInfo())
 const connectionStatus = ref('unknown') // 'connected', 'connecting', 'disconnected', 'unknown'
 
-// 计算属性
+// Computed properties
 const isDev = computed(() => import.meta.env.DEV)
 const isDebugMode = computed(() => {
   return localStorage.getItem('methodmate_debug_mode') === 'true' || 
@@ -205,18 +205,18 @@ const environmentStatusClass = computed(() => {
 
 const connectionStatusText = computed(() => {
   switch (connectionStatus.value) {
-    case 'connected': return '已连接'
-    case 'connecting': return '连接中...'
-    case 'disconnected': return '连接失败'
-    default: return '未测试'
+    case 'connected': return 'Connected'
+    case 'connecting': return 'Connecting...'
+    case 'disconnected': return 'Connection Failed'
+    default: return 'Not Tested'
   }
 })
 
-// AI服务相关计算属性
+// AI service related computed properties
 const currentAIService = computed(() => aiServiceState.getCurrentAIService())
 const currentAIServiceName = computed(() => aiServiceState.getCurrentAIServiceName())
 
-// 方法
+// Methods
 function toggleTool() {
   showTool.value = !showTool.value
 }
@@ -225,21 +225,21 @@ function switchEnvironment(envType) {
   try {
     setCurrentEnvironment(envType)
     currentEnvironment.value = environmentUtils.getCurrentInfo()
-    console.log(`🔄 环境已切换到: ${currentEnvironment.value.name}`)
+    console.log(`🔄 Environment switched to: ${currentEnvironment.value.name}`)
     
-    // 重置连接状态
+    // Reset connection status
     connectionStatus.value = 'unknown'
   } catch (error) {
-    console.error('环境切换失败:', error)
+    console.error('Environment switch failed:', error)
   }
 }
 
 function switchAIService(serviceType) {
   try {
     aiServiceState.setAIService(serviceType)
-    console.log(`🤖 AI服务已切换到: ${aiServiceState.getCurrentAIServiceName()}`)
+    console.log(`🤖 AI service switched to: ${aiServiceState.getCurrentAIServiceName()}`)
   } catch (error) {
-    console.error('AI服务切换失败:', error)
+    console.error('AI service switch failed:', error)
   }
 }
 
@@ -258,7 +258,7 @@ async function testConnection() {
       connectionStatus.value = 'disconnected'
     }
   } catch (error) {
-    console.error('连接测试失败:', error)
+    console.error('Connection test failed:', error)
     connectionStatus.value = 'disconnected'
   }
 }
@@ -284,33 +284,33 @@ function copyEnvironmentInfo() {
   }
   
   navigator.clipboard.writeText(JSON.stringify(info, null, 2)).then(() => {
-    console.log('环境信息已复制到剪贴板')
+    console.log('Environment information copied to clipboard')
   }).catch(err => {
-    console.error('复制失败:', err)
+    console.error('Copy failed:', err)
   })
 }
 
-// 监听环境变更事件
+// Listen for environment change events
 function handleEnvironmentChange(event) {
   currentEnvironment.value = environmentUtils.getCurrentInfo()
   connectionStatus.value = 'unknown'
 }
 
-// 键盘快捷键
+// Keyboard shortcuts
 function handleKeyDown(event) {
-  // Ctrl/Cmd + Shift + E 打开/关闭调试工具
+  // Ctrl/Cmd + Shift + E to open/close debug tool
   if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'E') {
     event.preventDefault()
     toggleTool()
   }
 }
 
-// 生命周期
+// Lifecycle
 onMounted(() => {
   window.addEventListener('environmentChanged', handleEnvironmentChange)
   document.addEventListener('keydown', handleKeyDown)
   
-  // 开发模式下自动打开
+  // Auto open in development mode
   if (isDev.value && localStorage.getItem('methodmate_auto_debug') !== 'false') {
     showTool.value = true
   }
@@ -323,7 +323,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 工具面板动画 */
+/* Tool panel animations */
 .fixed {
   animation: slideInUp 0.3s ease-out;
 }

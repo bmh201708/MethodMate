@@ -1,46 +1,46 @@
 <template>
   <div class="bg-white rounded-lg border p-6 max-w-2xl mx-auto">
-    <h2 class="text-xl font-bold mb-4">AI服务测试</h2>
+    <h2 class="text-xl font-bold mb-4">AI Service Test</h2>
     
-    <!-- 当前AI服务状态 -->
+    <!-- Current AI Service Status -->
     <div class="mb-4 p-3 bg-gray-50 rounded">
-      <div class="text-sm text-gray-600">当前AI服务</div>
+      <div class="text-sm text-gray-600">Current AI Service</div>
       <div class="text-lg font-semibold text-blue-600">
         {{ currentAIServiceName }}
       </div>
     </div>
     
-    <!-- 切换按钮 -->
+    <!-- Switch Button -->
     <div class="mb-4">
       <button
         @click="toggleAIService"
         class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
       >
-        切换到 {{ nextServiceName }}
+        Switch to {{ nextServiceName }}
       </button>
     </div>
     
-    <!-- 测试消息输入 -->
+    <!-- Test Message Input -->
     <div class="mb-4">
       <label class="block text-sm font-medium text-gray-700 mb-2">
-        测试消息
+        Test Message
       </label>
       <textarea
         v-model="testMessage"
         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         rows="3"
-        placeholder="输入测试消息..."
+        placeholder="Enter test message..."
       ></textarea>
     </div>
     
-    <!-- 测试按钮 -->
+    <!-- Test Buttons -->
     <div class="mb-4 space-x-2">
       <button
         @click="testStreamMessage"
         :disabled="isLoading || !testMessage.trim()"
         class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
       >
-        {{ isLoading ? '测试中...' : '测试流式消息' }}
+        {{ isLoading ? 'Testing...' : 'Test Stream Message' }}
       </button>
       
       <button
@@ -48,7 +48,7 @@
         :disabled="isLoading || !testMessage.trim()"
         class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 transition-colors"
       >
-        {{ isLoading ? '测试中...' : '测试静默消息' }}
+        {{ isLoading ? 'Testing...' : 'Test Silent Message' }}
       </button>
       
       <button
@@ -56,7 +56,7 @@
         :disabled="isLoading"
         class="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:opacity-50 transition-colors"
       >
-        {{ isLoading ? '测试中...' : '测试关键词提取' }}
+        {{ isLoading ? 'Testing...' : 'Test Keyword Extraction' }}
       </button>
       
       <button
@@ -64,7 +64,7 @@
         :disabled="isLoading"
         class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 transition-colors"
       >
-        {{ isLoading ? '测试中...' : '测试来源介绍' }}
+        {{ isLoading ? 'Testing...' : 'Test Source Introduction' }}
       </button>
       
       <button
@@ -72,7 +72,7 @@
         :disabled="isLoading"
         class="px-4 py-2 bg-pink-600 text-white rounded hover:bg-pink-700 disabled:opacity-50 transition-colors"
       >
-        {{ isLoading ? '测试中...' : '测试方法介绍' }}
+        {{ isLoading ? 'Testing...' : 'Test Method Introduction' }}
       </button>
       
       <button
@@ -80,31 +80,31 @@
         :disabled="isLoading"
         class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-50 transition-colors"
       >
-        {{ isLoading ? '测试中...' : '测试统计方法查询' }}
+        {{ isLoading ? 'Testing...' : 'Test Statistical Method Query' }}
       </button>
     </div>
     
-    <!-- 测试结果 -->
+    <!-- Test Results -->
     <div v-if="testResult" class="mb-4">
       <label class="block text-sm font-medium text-gray-700 mb-2">
-        测试结果
+        Test Results
       </label>
       <div class="bg-gray-50 border rounded-md p-3 max-h-60 overflow-y-auto">
         <pre class="text-sm whitespace-pre-wrap">{{ testResult }}</pre>
       </div>
     </div>
     
-    <!-- 错误信息 -->
+    <!-- Error Message -->
     <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
       <div class="text-red-800 text-sm">
-        <strong>错误：</strong>{{ errorMessage }}
+        <strong>Error:</strong>{{ errorMessage }}
       </div>
     </div>
     
-    <!-- 流式输出实时显示 -->
+    <!-- Real-time Stream Output Display -->
     <div v-if="streamOutput" class="mb-4">
       <label class="block text-sm font-medium text-gray-700 mb-2">
-        流式输出（实时）
+        Stream Output (Real-time)
       </label>
       <div class="bg-blue-50 border border-blue-200 rounded-md p-3 max-h-60 overflow-y-auto">
         <div class="text-sm whitespace-pre-wrap">{{ streamOutput }}</div>
@@ -125,8 +125,8 @@ import {
   queryStatisticalMethod
 } from '../services/aiServiceAdapter.js'
 
-// 响应式数据
-const testMessage = ref('请介绍一下定量研究方法的基本概念')
+// Reactive data
+const testMessage = ref('Please introduce the basic concepts of quantitative research methods')
 const testResult = ref('')
 const errorMessage = ref('')
 const streamOutput = ref('')

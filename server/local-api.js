@@ -115,7 +115,7 @@ const TARGET_DOMAINS = {
 };
 
 // Coze API配置 - 从cozeApi.js获取
-const COZE_API_KEY = process.env.COZE_API_KEY || 'pat_Q06cU8OsiWefqJHG2ed8GlV1al9WRGRVNAfkNmpG567hDXVbcHeyLHWtMLciNj37';
+const COZE_API_KEY = process.env.COZE_API_KEY || 'pat_JbivMTTLDl2EQkzyFPDJ0PvIrUlDcIRgLClE65kT568CFQ81pBDR82AZzsz39Jec';
 const COZE_API_URL = process.env.COZE_API_URL || 'https://api.coze.com';
 const COZE_BOT_ID = process.env.COZE_BOT_ID || '7513529977745915905';
 const COZE_BOT_ID_Reference = process.env.COZE_BOT_ID_Reference || '7511024998740754448';  

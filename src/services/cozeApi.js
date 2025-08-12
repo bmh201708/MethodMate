@@ -1,6 +1,6 @@
 import { CozeAPI } from '@coze/api'
 
-const API_KEY = 'pat_Q06cU8OsiWefqJHG2ed8GlV1al9WRGRVNAfkNmpG567hDXVbcHeyLHWtMLciNj37'
+const API_KEY = 'pat_JbivMTTLDl2EQkzyFPDJ0PvIrUlDcIRgLClE65kT568CFQ81pBDR82AZzsz39Jec'
 const BOT_ID = '7513529977745915905'
 const USER_ID = '7505301221562023954'
 

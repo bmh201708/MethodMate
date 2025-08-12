@@ -82,7 +82,7 @@ export const getServerConfig = () => {
  */
 export const getCozeConfig = () => {
   return {
-    apiKey: process.env.COZE_API_KEY || 'pat_Q06cU8OsiWefqJHG2ed8GlV1al9WRGRVNAfkNmpG567hDXVbcHeyLHWtMLciNj37',
+    apiKey: process.env.COZE_API_KEY || 'pat_JbivMTTLDl2EQkzyFPDJ0PvIrUlDcIRgLClE65kT568CFQ81pBDR82AZzsz39Jec',
     apiUrl: process.env.COZE_API_URL || 'https://api.coze.com',
     botId: process.env.COZE_BOT_ID || '7513529977745915905',
     botIdReference: process.env.COZE_BOT_ID_Reference || '7511024998740754448',

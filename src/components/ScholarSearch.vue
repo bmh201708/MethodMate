@@ -1,6 +1,6 @@
 <template>
   <div class="scholar-search-container max-w-6xl mx-auto p-6">
-    <!-- 搜索表单 -->
+    <!-- Search Form -->
     <div class="search-form bg-white rounded-lg shadow-md p-6 mb-6">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-2xl font-bold text-gray-800">OpenAlex Literature Search</h2>
@@ -59,7 +59,7 @@
               <span v-else>Search</span>
             </button>
             
-            <!-- 新搜索按钮 -->
+            <!-- New Search Button -->
             <button
               v-if="searchResults.length > 0"
               type="button"
@@ -77,7 +77,7 @@
       </form>
     </div>
 
-    <!-- 引用文献列表 -->
+    <!-- Referenced Papers List -->
     <div v-if="referencedCount > 0" class="referenced-papers bg-white rounded-lg shadow-md p-6 mb-6">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold text-purple-800 flex items-center">
@@ -120,7 +120,7 @@
       </div>
     </div>
 
-    <!-- 搜索结果 -->
+    <!-- Search Results -->
     <div v-if="searchResults.length > 0" class="search-results">
               <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-4">
@@ -151,7 +151,7 @@
             'border-purple-300 bg-purple-50': isReferenced(paper)
           }"
         >
-          <!-- 论文标题和基本信息 -->
+          <!-- Paper Title and Basic Information -->
           <div class="paper-header mb-4">
             <div class="flex items-center justify-between mb-2">
               <h4 class="text-lg font-semibold text-gray-900 leading-tight">
@@ -194,12 +194,12 @@
             </div>
           </div>
 
-          <!-- 论文摘要 -->
+          <!-- Paper Abstract -->
           <div v-if="paper.summary" class="paper-summary mb-4">
             <p class="text-gray-700 text-sm leading-relaxed">{{ paper.summary }}</p>
           </div>
 
-          <!-- 操作按钮 -->
+          <!-- Action Buttons -->
           <div class="paper-actions flex flex-wrap gap-2">
             <a
               v-if="paper.scholar_url"
@@ -273,7 +273,7 @@
             </span>
           </div>
 
-          <!-- 下载链接 -->
+          <!-- Download Links -->
           <div v-if="paper.downloadSources && paper.downloadSources.length > 0" class="download-sources mt-4 pt-4 border-t border-gray-200">
             <h5 class="text-sm font-medium text-gray-800 mb-2">Available Download Sources:</h5>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -304,7 +304,7 @@
       </div>
     </div>
 
-    <!-- 空状态 -->
+    <!-- Empty State -->
     <div v-else-if="!loading && searchQuery" class="empty-state text-center py-12">
       <div class="text-gray-400 mb-4">
         <svg class="w-24 h-24 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,7 +315,7 @@
       <p class="text-gray-500">Please try searching with different keywords</p>
     </div>
 
-    <!-- 错误信息 -->
+    <!-- Error Message -->
     <div v-if="error" class="error-message bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
       <div class="flex items-center">
         <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -351,13 +351,13 @@ export default {
   },
   
   mounted() {
-    // 组件挂载时，如果有之前的搜索查询，恢复到搜索框
+    // On component mount, restore previous search query to search box if exists
     if (this.lastSearchQuery) {
       this.searchQuery = this.lastSearchQuery
     }
   },
   computed: {
-    // 使用全局状态
+    // Use global state
     searchResults() {
       return papersState.searchResults
     },
@@ -411,7 +411,7 @@ export default {
     },
     
     referencedPapersList() {
-      // 直接返回存储的完整引用列表
+      // Return the stored complete reference list directly
       return papersState.referencedPapersList
     },
     
@@ -421,7 +421,7 @@ export default {
   },
   
   methods: {
-    // 引入状态管理函数
+    // Import state management functions
     toggleReference,
     isReferenced,
     
@@ -434,7 +434,7 @@ export default {
     },
     
     startNewSearch() {
-      // 清空搜索结果和搜索框
+      // Clear search results and search box
       clearSearchResults()
       this.searchQuery = ''
     },
@@ -447,12 +447,12 @@ export default {
         const currentSearchQuery = this.searchQuery.trim()
         const requestedCount = parseInt(this.numResults)
         
-        console.log(`📝 开始新的学术搜索，目标数量: ${requestedCount}篇`)
+        console.log(`📝 Starting new academic search, target count: ${requestedCount} papers`)
 
         // 使用环境配置的API地址
         const { getApiBaseUrl } = await import('../config/environment.js')
         const searchApiUrl = `${getApiBaseUrl()}/openalex-search`
-        console.log('📤 学者搜索API请求URL:', searchApiUrl)
+        console.log('📤 Scholar search API request URL:', searchApiUrl)
         
         const response = await fetch(searchApiUrl, {
           method: 'POST',
@@ -469,39 +469,39 @@ export default {
         const data = await response.json()
 
         if (response.ok) {
-          // 确保每个结果都有isTopVenue属性和唯一ID，保留原始的relevance_score
+          // Ensure each result has isTopVenue property and unique ID, preserve original relevance_score
           const processedResults = data.papers.map((result, index) => ({
             ...result,
-            id: result.id || result.title, // 使用id或标题作为唯一ID
+            id: result.id || result.title, // Use id or title as unique ID
             downloadSources: null,
             downloadMessage: '',
-            isTopVenue: result.isTopVenue || false, // 确保isTopVenue属性存在
+            isTopVenue: result.isTopVenue || false, // Ensure isTopVenue property exists
             summary: result.abstract
           }))
           
-          // 保存到全局状态
+          // Save to global state
           setSearchResults(processedResults, this.searchQuery)
           
-          console.log('搜索结果已保存到全局状态:', processedResults)
+          console.log('Search results saved to global state:', processedResults)
         } else {
-          setSearchError(data.error || '搜索失败，请重试')
+          setSearchError(data.error || 'Search failed, please try again')
           setSearchResults([], this.searchQuery)
         }
       } catch (err) {
         console.error('Search error:', err)
-        setSearchError('网络错误，请检查网络连接')
+        setSearchError('Network error, please check your connection')
         setSearchResults([], this.searchQuery)
       } finally {
         setSearchLoading(false)
       }
     },
     
-    // 根据相关性分数确定相关性等级
+    // Determine relevance level based on relevance score
     getRelevanceLevel(score) {
-      if (score >= 0.8) return 'high'      // 高相关性：绿色
-      if (score >= 0.6) return 'medium'    // 中等相关性：黄色  
-      if (score >= 0.4) return 'low'       // 低相关性：橙色
-      return 'very-low'                    // 极低相关性：红色
+      if (score >= 0.8) return 'high'      // High relevance: green
+      if (score >= 0.6) return 'medium'    // Medium relevance: yellow  
+      if (score >= 0.4) return 'low'       // Low relevance: orange
+      return 'very-low'                    // Very low relevance: red
     },
 
     async findDownloadSources(paper, index) {
@@ -513,7 +513,7 @@ export default {
         // 使用环境配置的API地址
         const { getApiBaseUrl } = await import('../config/environment.js')
         const downloadApiUrl = `${getApiBaseUrl()}/paper-download`
-        console.log('📤 论文下载API请求URL:', downloadApiUrl)
+        console.log('📤 Paper download API request URL:', downloadApiUrl)
         
         const response = await fetch(downloadApiUrl, {
           method: 'POST',
@@ -533,11 +533,11 @@ export default {
           paper.downloadSources = data.download_sources
           paper.downloadMessage = data.message
         } else {
-          paper.downloadMessage = data.error || '获取下载链接失败'
+          paper.downloadMessage = data.error || 'Failed to get download links'
         }
       } catch (err) {
         console.error('Download sources error:', err)
-        paper.downloadMessage = '网络错误，请重试'
+        paper.downloadMessage = 'Network error, please try again'
       } finally {
         this.loadingDownload = null
       }
@@ -564,12 +564,12 @@ export default {
   transform: translateX(2px);
 }
 
-/* 搜索框聚焦效果 */
+/* Search box focus effect */
 .search-form input:focus {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* 加载动画 */
+/* Loading animation */
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -583,7 +583,7 @@ export default {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* 引用文献样式 */
+/* Referenced papers style */
 .paper-card.referenced {
   background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
   border-color: #c084fc;
@@ -593,13 +593,13 @@ export default {
   border-left: 4px solid #8b5cf6;
 }
 
-/* 按钮悬浮效果 */
+/* Button hover effect */
 .hover-lift:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* 按钮悬浮效果 */
+/* Button hover effect */
 .paper-actions button:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);

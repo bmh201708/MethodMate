@@ -1,10 +1,10 @@
 <template>
   <div v-if="visible" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden transform transition-all duration-300">
-      <!-- 头部 -->
+      <!-- Header -->
       <div class="px-8 py-6 border-b border-gray-100">
         <div class="flex items-center justify-between">
-          <h3 class="text-xl font-semibold text-gray-900">润色提示词</h3>
+          <h3 class="text-xl font-semibold text-gray-900">Polish Prompt</h3>
           <button @click="handleCancel" class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-xl hover:bg-gray-100">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -13,16 +13,16 @@
         </div>
       </div>
 
-      <!-- 内容区域 -->
+      <!-- Content Area -->
       <div class="px-8 py-6 max-h-[60vh] overflow-y-auto">
-        <!-- 输入框 -->
+        <!-- Input Box -->
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-3">自定义优化要求（可选）</label>
+          <label class="block text-sm font-medium text-gray-700 mb-3">Custom Optimization Requirements (Optional)</label>
           <div class="relative">
             <input
               v-model="optimizeInstruction"
               type="text"
-              placeholder="您希望如何润色提示词？留空将使用默认专业化润色..."
+              placeholder="How would you like to polish the prompt? Leave empty to use default professional polishing..."
               class="w-full rounded-2xl border border-gray-200 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
               @keyup.enter="handleOptimize"
               :disabled="isOptimizing"
@@ -39,37 +39,37 @@
           </div>
         </div>
 
-        <!-- 原始提示词 -->
+        <!-- Original Prompt -->
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-3">原始提示词</label>
+          <label class="block text-sm font-medium text-gray-700 mb-3">Original Prompt</label>
           <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200">
             <p class="text-gray-800 text-sm leading-relaxed">{{ originalPrompt }}</p>
           </div>
         </div>
 
-        <!-- 润色结果 -->
+        <!-- Polish Result -->
         <div v-if="optimizedPrompt || isOptimizing" class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-3">润色后的提示词</label>
+          <label class="block text-sm font-medium text-gray-700 mb-3">Polished Prompt</label>
           <div class="bg-purple-50 rounded-2xl border border-purple-200">
             <div v-if="isOptimizing" class="flex items-center space-x-3 p-4">
               <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
-              <span class="text-sm text-purple-700 font-medium">正在润色中...</span>
+              <span class="text-sm text-purple-700 font-medium">Polishing...</span>
             </div>
             <textarea
               v-else
               v-model="optimizedPrompt"
               class="w-full p-4 bg-transparent text-gray-800 text-sm leading-relaxed resize-none focus:outline-none placeholder-gray-500"
               rows="8"
-              placeholder="润色后的提示词将在这里显示，您可以直接编辑..."
+              placeholder="The polished prompt will be displayed here, you can edit it directly..."
             ></textarea>
           </div>
         </div>
 
-        <!-- 润色建议 -->
+        <!-- Polish Suggestions -->
         <div v-if="optimizationSuggestions" class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-3">💡 优化建议</label>
+          <label class="block text-sm font-medium text-gray-700 mb-3">💡 Optimization Suggestions</label>
           <div class="bg-purple-50 rounded-2xl p-4 border border-purple-200">
-            <!-- 如果是数组格式的建议 -->
+            <!-- If suggestions are in array format -->
             <ul v-if="Array.isArray(optimizationSuggestions)" class="space-y-3">
               <li v-for="(suggestion, index) in optimizationSuggestions" :key="index" 
                   class="flex items-start space-x-3">
@@ -79,19 +79,19 @@
                 <span class="text-gray-800 text-sm leading-relaxed">{{ suggestion }}</span>
               </li>
             </ul>
-            <!-- 如果是字符串格式的建议 -->
+            <!-- If suggestions are in string format -->
             <p v-else class="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed">{{ optimizationSuggestions }}</p>
           </div>
         </div>
       </div>
 
-      <!-- 底部按钮 -->
+      <!-- Bottom Buttons -->
       <div class="px-8 py-6 border-t border-gray-100 flex justify-end space-x-3">
         <button
           @click="handleCancel"
           class="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors font-medium"
         >
-          取消
+          Cancel
         </button>
         <button
           @click="handleReplace"
@@ -101,7 +101,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
           </svg>
-          <span>替换</span>
+          <span>Replace</span>
         </button>
       </div>
     </div>
@@ -127,13 +127,13 @@ const props = defineProps({
 // Emits
 const emit = defineEmits(['close', 'replace'])
 
-// 响应式数据
+// Reactive data
 const optimizeInstruction = ref('')
 const optimizedPrompt = ref('')
-const optimizationSuggestions = ref(null) // 可以是字符串或数组
+const optimizationSuggestions = ref(null) // Can be string or array
 const isOptimizing = ref(false)
 
-// 监听显示状态变化，重置数据
+// Watch display state changes, reset data
 watch(() => props.visible, (newVisible) => {
   if (newVisible) {
     optimizeInstruction.value = ''
@@ -143,28 +143,28 @@ watch(() => props.visible, (newVisible) => {
   }
 })
 
-// 处理建议数据的格式化
+// Handle suggestion data formatting
 const processSuggestions = (suggestions) => {
   if (!suggestions) return null
   
-  // 如果已经是数组，直接返回
+  // If already an array, return directly
   if (Array.isArray(suggestions)) {
     return suggestions
   }
   
-  // 如果是字符串，尝试解析
+  // If it's a string, try to parse
   if (typeof suggestions === 'string') {
-    // 尝试解析JSON数组格式的字符串
+    // Try to parse JSON array format string
     try {
       const parsed = JSON.parse(suggestions)
       if (Array.isArray(parsed)) {
         return parsed
       }
     } catch (e) {
-      // JSON解析失败，继续处理
+      // JSON parsing failed, continue processing
     }
     
-    // 检查是否是数组格式的字符串 (如 "[\"建议1\", \"建议2\"]")
+    // Check if it's an array format string (like "[\"suggestion1\", \"suggestion2\"]")
     const arrayMatch = suggestions.match(/^\s*\[(.*)\]\s*$/)
     if (arrayMatch) {
       try {
@@ -173,7 +173,7 @@ const processSuggestions = (suggestions) => {
           return parsed
         }
       } catch (e) {
-        // 如果JSON解析失败，尝试手动分割
+        // If JSON parsing fails, try manual splitting
         const content = arrayMatch[1]
         const items = content.split(/,\s*(?=")/g)
           .map(item => item.replace(/^"(.*)"$/, '$1').trim())
@@ -185,17 +185,17 @@ const processSuggestions = (suggestions) => {
       }
     }
     
-    // 尝试按行或分号分割
+    // Try splitting by lines or semicolons
     const lines = suggestions.split(/\n|;/).map(line => line.trim()).filter(line => line.length > 0)
     if (lines.length > 1) {
       return lines
     }
     
-    // 返回原字符串
+    // Return original string
     return suggestions
   }
   
-  // 其他情况返回原值
+  // Return original value in other cases
   return suggestions
 }
 
@@ -208,11 +208,11 @@ const handleOptimize = async () => {
   optimizationSuggestions.value = null
   
   try {
-    // 如果用户没有输入自定义要求，使用默认的专业化润色
+    // If user hasn't input custom requirements, use default professional polishing
     const finalInstruction = optimizeInstruction.value.trim() || 
-      '提升提示词的学术专业性，使用准确的研究术语和方法论表达，结合相关理论框架和最新研究进展，符合学术论文写作标准'
+      'Enhance the academic professionalism of the prompt, use accurate research terminology and methodological expressions, combine relevant theoretical frameworks and latest research developments, comply with academic paper writing standards'
     
-    // 构建发送给coze的消息
+    // Build message to send to coze
     const optimizeMessage = `你是一位资深的学术研究指导专家，专门帮助科研工作者优化他们的研究提示词和问题。请根据以下要求专业地润色提示词，使其更符合学术研究的标准和深度。
 
 【背景信息】
@@ -255,34 +255,34 @@ ${finalInstruction}
 - 润色后的提示词应该保持原有的核心意图，只是让表达更专业、更学术化
 - 确保润色后的提示词能够帮助研究者获得更深入、更专业的指导`
     
-    console.log('开始润色提示词:', optimizeMessage)
+    console.log('Starting prompt polishing:', optimizeMessage)
     
-    // 发送到coze agent
+    // Send to coze agent
     const result = await sendSilentMessageToCoze(optimizeMessage, [])
     
-    console.log('润色结果:', result)
+    console.log('Polish result:', result)
     
-    // 解析结果
+    // Parse result
     await parseOptimizeResult(result)
     
   } catch (error) {
-    console.error('润色提示词失败:', error)
-    optimizedPrompt.value = '润色失败，请重试'
+    console.error('Prompt polishing failed:', error)
+    optimizedPrompt.value = 'Polishing failed, please try again'
   } finally {
     isOptimizing.value = false
   }
 }
 
-// 解析优化结果
+// Parse optimization result
 const parseOptimizeResult = async (result) => {
   let parsedResult = null
   
   try {
-    // 尝试提取JSON
+    // Try to extract JSON
     const jsonMatch = result.match(/```json\s*([\s\S]*?)\s*```/i) || result.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       let jsonStr = jsonMatch[1] || jsonMatch[0]
-      // 清理JSON字符串
+      // Clean JSON string
       jsonStr = jsonStr
         .replace(/,\s*}/g, '}')
         .replace(/,\s*]/g, ']')
@@ -294,33 +294,33 @@ const parseOptimizeResult = async (result) => {
       parsedResult = JSON.parse(jsonStr)
     }
   } catch (error) {
-    console.log('JSON解析失败，尝试其他方法:', error.message)
+    console.log('JSON parsing failed, trying other methods:', error.message)
   }
   
   if (parsedResult && typeof parsedResult === 'object') {
-    // 成功解析JSON
+    // Successfully parsed JSON
     optimizedPrompt.value = parsedResult.optimizedPrompt || parsedResult.output || parsedResult.result || ''
     
-    // 处理建议数据 - 可能是字符串、数组或其他格式
+    // Handle suggestion data - may be string, array or other formats
     const suggestions = parsedResult.suggestions || parsedResult.explanation || ''
     optimizationSuggestions.value = processSuggestions(suggestions)
   } else {
-    // 如果JSON解析失败，直接使用结果作为优化后的提示词
+    // If JSON parsing fails, use result directly as polished prompt
     optimizedPrompt.value = result.trim()
   }
   
-  // 如果优化后的提示词为空或与原始提示词相同，使用原始结果
+  // If polished prompt is empty or same as original, use original result
   if (!optimizedPrompt.value || optimizedPrompt.value === props.originalPrompt) {
     optimizedPrompt.value = result.trim()
   }
 }
 
-// 处理取消
+// Handle cancel
 const handleCancel = () => {
   emit('close')
 }
 
-// 处理替换
+// Handle replace
 const handleReplace = () => {
   if (optimizedPrompt.value) {
     emit('replace', optimizedPrompt.value)
@@ -330,7 +330,7 @@ const handleReplace = () => {
 </script>
 
 <style scoped>
-/* 自定义滚动条样式 */
+/* Custom scrollbar styles */
 .overflow-y-auto::-webkit-scrollbar {
   width: 6px;
 }
@@ -349,7 +349,7 @@ const handleReplace = () => {
   background: #a8a8a8;
 }
 
-/* 文本框样式 */
+/* Text box styles */
 textarea {
   min-height: 120px;
 }

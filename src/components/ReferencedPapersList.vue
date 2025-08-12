@@ -1,13 +1,13 @@
 <template>
   <div v-if="referencedCount > 0">
-    <!-- 操作栏 -->
+    <!-- Action bar -->
     <div class="bg-white rounded-lg shadow-md p-4 mb-6">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-purple-800 flex items-center">
           <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
           </svg>
-          参考文献列表 ({{ referencedCount }} 篇)
+          Referenced Papers List ({{ referencedCount }} papers)
         </h3>
         <div class="flex gap-2">
           <button
@@ -17,21 +17,21 @@
             <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
             </svg>
-            导出
+            Export
           </button>
           <button
             @click="clearAllReferences"
             class="text-sm text-gray-500 hover:text-red-500 transition-colors"
           >
-            清空全部
+            Clear All
           </button>
         </div>
       </div>
     </div>
 
-    <!-- 左右分栏布局 -->
+    <!-- Left-right column layout -->
     <div class="grid grid-cols-12 gap-6">
-      <!-- 左侧文献卡片列表 -->
+      <!-- Left side paper card list -->
       <div class="col-span-5">
         <div class="space-y-4 max-h-[80vh] overflow-y-auto">
           <div
@@ -50,7 +50,7 @@
                   <button 
                     @click.stop="removeFromReferences(paper)"
                     class="flex-shrink-0 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                    title="移除引用"
+                    title="Remove reference"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -61,7 +61,7 @@
                 <div class="text-xs text-gray-500 mb-2 flex items-center gap-2">
                   <span class="px-2 py-1 rounded-full"
                         :class="paper.source === 'search' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'">
-                    {{ paper.source === 'search' ? '文献搜索' : 'AI推荐' }}
+                    {{ paper.source === 'search' ? 'Literature Search' : 'AI Recommendation' }}
                   </span>
                   <span v-if="paper.referencedAt" class="text-gray-400">
                     {{ formatDate(paper.referencedAt) }}
@@ -69,10 +69,10 @@
                 </div>
                 
                 <p v-if="paper.abstract || paper.summary" class="text-sm text-gray-600 mb-3 line-clamp-2">
-                  {{ paper.abstract || paper.summary || '暂无摘要' }}
+                  {{ paper.abstract || paper.summary || 'No abstract available' }}
                 </p>
                 
-                <!-- 标签显示区域 -->
+                <!-- Tag display area -->
                 <div v-if="getPaperTags(paper).length > 0" class="mb-2">
                   <div class="flex flex-wrap gap-1">
                     <div
@@ -96,11 +96,11 @@
                 <div class="flex items-center justify-between">
                   <div class="text-xs text-gray-500">
                     <span v-if="paper.authors" class="mr-2">
-                      {{ Array.isArray(paper.authors) ? paper.authors.slice(0, 2).join(', ') + (paper.authors.length > 2 ? ' 等' : '') : paper.authors }}
+                      {{ Array.isArray(paper.authors) ? paper.authors.slice(0, 2).join(', ') + (paper.authors.length > 2 ? ' et al.' : '') : paper.authors }}
                     </span>
                     <span v-if="paper.year">{{ paper.year }}</span>
                   </div>
-                  <span class="text-xs text-purple-500">点击查看详情</span>
+                  <span class="text-xs text-purple-500">Click to view details</span>
                 </div>
               </div>
             </div>
@@ -108,79 +108,79 @@
         </div>
       </div>
 
-      <!-- 右侧文献详情 -->
+      <!-- Right side paper details -->
       <div class="col-span-7">
         <div class="paper-detail-scroll bg-white rounded-lg shadow-sm p-6 max-h-[80vh] overflow-y-auto">
           <div v-if="selectedPaper">
-            <!-- 标题和操作按钮 -->
+            <!-- Title and action buttons -->
             <div class="flex justify-between items-start mb-6">
               <h2 class="text-2xl font-bold text-gray-900 flex-1">{{ showTitleTranslation && translatedTitle ? translatedTitle : selectedPaper.title }}</h2>
               <div class="ml-4 flex items-center space-x-2">
                 <span class="px-3 py-1 bg-purple-100 text-purple-600 text-sm rounded-full">
-                  已参考
+                  Referenced
                 </span>
                 <button 
                   @click="removeFromReferences(selectedPaper)"
                   class="px-4 py-2 text-sm rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
                 >
-                  移除引用
+                  Remove Reference
                 </button>
               </div>
             </div>
             
-            <!-- 基本信息 -->
+            <!-- Basic information -->
             <div class="mb-6">
               <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
                 <div v-if="selectedPaper.authors">
-                  <span class="font-medium text-gray-700">作者：</span>
+                  <span class="font-medium text-gray-700">Authors:</span>
                   {{ Array.isArray(selectedPaper.authors) ? selectedPaper.authors.join(', ') : selectedPaper.authors }}
                 </div>
                 <div v-if="selectedPaper.year">
-                  <span class="font-medium text-gray-700">发表年份：</span>
+                  <span class="font-medium text-gray-700">Publication Year:</span>
                   {{ selectedPaper.year }}
                 </div>
                 <div v-if="selectedPaper.journal">
-                  <span class="font-medium text-gray-700">期刊：</span>
+                  <span class="font-medium text-gray-700">Journal:</span>
                   {{ selectedPaper.journal }}
                 </div>
                 <div v-if="selectedPaper.citations || selectedPaper.citationCount">
-                  <span class="font-medium text-gray-700">被引用次数：</span>
+                  <span class="font-medium text-gray-700">Citations:</span>
                   {{ selectedPaper.citations || selectedPaper.citationCount }}
                 </div>
                 <div v-if="selectedPaper.source">
-                  <span class="font-medium text-gray-700">来源：</span>
+                  <span class="font-medium text-gray-700">Source:</span>
                   <span class="px-2 py-1 rounded text-xs"
                         :class="selectedPaper.source === 'search' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'">
-                    {{ selectedPaper.source === 'search' ? '文献搜索' : 'AI推荐' }}
+                    {{ selectedPaper.source === 'search' ? 'Literature Search' : 'AI Recommendation' }}
                   </span>
                 </div>
                 <div v-if="selectedPaper.referencedAt">
-                  <span class="font-medium text-gray-700">引用时间：</span>
+                  <span class="font-medium text-gray-700">Referenced Time:</span>
                   {{ formatDate(selectedPaper.referencedAt) }}
                 </div>
               </div>
               
-              <!-- 标签管理区域 -->
+              <!-- Tag management area -->
               <div class="mt-4 pt-3 border-t border-gray-100">
                 <div class="flex items-center justify-between mb-3">
-                  <h4 class="text-sm font-medium text-gray-700">自定义标签</h4>
+                  <h4 class="text-sm font-medium text-gray-700">Custom Tags</h4>
                   <button 
                     @click="showTagDialog = true"
                     class="text-sm px-2 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors flex items-center space-x-1"
-                    title="添加标签"
+                    title="Add tag"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                     </svg>
-                    <span>添加标签</span>
+                    <span>Add Tag</span>
                   </button>
                 </div>
                 
-                <!-- 标签显示区域 -->
+                <!-- Tag display area -->
                 <div class="flex flex-wrap gap-2 min-h-[2rem] mb-3">
                   <div v-if="getPaperTags(selectedPaper).length === 0" 
                        class="text-sm text-gray-400 italic flex items-center">
-                    暂无标签，点击右侧按钮添加
+                    No tags yet, click the button on the right to add
                   </div>
                   <div
                     v-for="tag in getPaperTags(selectedPaper)"
@@ -193,7 +193,7 @@
                     <button
                       @click="removeTagFromPaper(selectedPaper, tag.id)"
                       class="ml-1 p-0.5 rounded-full hover:bg-black hover:bg-opacity-10 transition-colors opacity-0 group-hover:opacity-100"
-                      title="移除标签"
+                      title="Remove tag"
                     >
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -203,7 +203,7 @@
                 </div>
               </div>
               
-              <!-- "保存到本地"按钮移到基本信息底部 -->
+              <!-- "Save to Local" button moved to bottom of basic info -->
               <div class="mt-4 pt-3 border-t border-gray-100">
                 <button 
                   @click="savePaperToCache(selectedPaper)"
@@ -216,7 +216,7 @@
                       ? 'bg-blue-50 text-blue-500 hover:bg-blue-100'
                       : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
                   ]"
-                  :title="paperCacheStatus === 'saved' ? '已保存到本地' : paperCacheStatus === 'updated' ? '已更新本地缓存' : '保存到本地缓存'"
+                  :title="paperCacheStatus === 'saved' ? 'Saved to local' : paperCacheStatus === 'updated' ? 'Local cache updated' : 'Save to local cache'"
                 >
                   <svg v-if="isSavingToCache" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -229,20 +229,20 @@
               </div>
             </div>
 
-            <!-- 摘要 -->
+            <!-- Abstract -->
                           <div v-if="selectedPaper.abstract || selectedPaper.summary" class="mb-6">
                             <div class="flex items-center justify-between mb-3">
-                              <h3 class="text-lg font-semibold text-gray-900">摘要</h3>
+                              <h3 class="text-lg font-semibold text-gray-900">Abstract</h3>
                               <button 
                                 @click="toggleTranslation"
                                 :disabled="isTranslating"
                                 class="text-sm px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                                title="翻译标题和摘要"
+                                title="Translate title and abstract"
                               >
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
                                 </svg>
-                                <span>{{ isTranslating ? '翻译中...' : (showTranslation ? '显示原文' : '显示译文') }}</span>
+                                <span>{{ isTranslating ? 'Translating...' : (showTranslation ? 'Show Original' : 'Show Translation') }}</span>
                               </button>
                             </div>
                             <p class="text-gray-600 leading-relaxed">
@@ -250,10 +250,10 @@
                             </p>
                           </div>
 
-                          <!-- 研究方法部分 -->
+                          <!-- Research Method Section -->
                           <div class="mt-6 mb-6">
                             <div class="flex items-center justify-between">
-                              <h3 class="text-lg font-semibold text-gray-900">研究方法预览</h3>
+                              <h3 class="text-lg font-semibold text-gray-900">Research Method Preview</h3>
                               <div class="flex items-center space-x-2">
                                 <span v-if="isLoadingPaperContent" 
                                       class="text-sm text-gray-500 mr-3 flex items-center">
@@ -261,26 +261,26 @@
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                   </svg>
-                                  正在分析...
+                                  Analyzing...
                                 </span>
                                 <button 
                                   v-if="selectedPaper.researchMethod"
                                   @click="retryExtractMethod"
                                   class="text-orange-500 hover:text-orange-600 text-sm flex items-center"
                                   :disabled="isLoadingPaperContent"
-                                  title="重新分析研究方法"
+                                  title="Re-analyze research method"
                                 >
                                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                   </svg>
-                                  重新分析
+                                  Re-analyze
                                 </button>
                                 <button 
                                   v-if="selectedPaper.researchMethod"
                                   @click="toggleFullText"
                                   class="text-blue-600 hover:text-blue-700 text-sm flex items-center"
                                 >
-                                  {{ showFullText ? '收起' : '展开' }}
+                                  {{ showFullText ? 'Collapse' : 'Expand' }}
                                   <svg 
                                     class="w-4 h-4 ml-1 transform transition-transform"
                                     :class="{ 'rotate-180': showFullText }"
@@ -295,7 +295,7 @@
                             </div>
                             <div v-if="!isLoadingPaperContent && !selectedPaper.researchMethod" 
                                  class="mt-3 text-gray-500">
-                              <p class="text-sm mb-2">暂无研究方法信息</p>
+                              <p class="text-sm mb-2">No research method information available</p>
                               <div class="flex space-x-2">
                                 <button 
                                   @click="fetchPaperContent"
@@ -309,7 +309,7 @@
                                   <svg v-else class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                   </svg>
-                                  {{ isLoadingPaperContent ? '获取中...' : '尝试获取研究方法' }}
+                                  {{ isLoadingPaperContent ? 'Loading...' : 'Try to get research method' }}
                                 </button>
                               </div>
                             </div>
@@ -320,12 +320,12 @@
                                   @click="toggleMethodTranslation"
                                   :disabled="isTranslatingMethod"
                                   class="text-sm px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                                  title="切换中英文"
+                                  title="Switch language"
                                 >
                                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
                                   </svg>
-                                  <span>{{ isTranslatingMethod ? '翻译中...' : (showMethodTranslation ? '显示原文' : '显示译文') }}</span>
+                                  <span>{{ isTranslatingMethod ? 'Translating...' : (showMethodTranslation ? 'Show Original' : 'Show Translation') }}</span>
                                 </button>
                               </div>
                               <div class="bg-gray-50 p-4 rounded-lg">
@@ -339,9 +339,9 @@
                             </div>
                           </div>
 
-            <!-- 下载源 -->
+            <!-- Download Sources -->
             <div v-if="selectedPaper.downloadSources && selectedPaper.downloadSources.length > 0" class="mb-6">
-              <h3 class="text-lg font-semibold text-gray-900 mb-3">下载源</h3>
+              <h3 class="text-lg font-semibold text-gray-900 mb-3">Download Sources</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <a
                   v-for="(source, sourceIndex) in selectedPaper.downloadSources"
@@ -356,7 +356,7 @@
                 >
                   <div class="flex items-center">
                     <span class="font-medium">{{ source.source }}</span>
-                    <span v-if="source.free" class="ml-1 text-green-600 text-xs">(免费)</span>
+                    <span v-if="source.free" class="ml-1 text-green-600 text-xs">(Free)</span>
                   </div>
                   <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/>
@@ -366,9 +366,9 @@
               </div>
             </div>
 
-            <!-- 链接 -->
+            <!-- Links -->
             <div class="mb-6">
-              <h3 class="text-lg font-semibold text-gray-900 mb-3">文献链接</h3>
+              <h3 class="text-lg font-semibold text-gray-900 mb-3">Paper Links</h3>
               <div class="flex gap-3">
                 <a
                   v-if="selectedPaper.scholar_url"
@@ -379,7 +379,7 @@
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                   </svg>
-                  查看原文
+                  View Original
                 </a>
                 <a
                   v-if="selectedPaper.downloadUrl"
@@ -390,7 +390,7 @@
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                   </svg>
-                  下载原文
+                  Download Original
                 </a>
                 <button
                   @click="findDownloadSources(selectedPaper)"
@@ -404,45 +404,45 @@
                   <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                   </svg>
-                  {{ loadingDownload ? '获取中...' : '获取更多下载源' }}
+                  {{ loadingDownload ? 'Loading...' : 'Get More Download Sources' }}
                 </button>
               </div>
             </div>
 
-            <!-- 引用信息 -->
+            <!-- Citation Information -->
             <div class="bg-purple-50 p-4 rounded-lg">
               <h3 class="text-lg font-semibold text-purple-900 mb-2 flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
                 </svg>
-                引用信息
+                Citation Information
               </h3>
               <p class="text-purple-700 text-sm">
-                该文献已被添加到您的参考文献列表中，您可以在研究方案中引用此文献的观点和方法。
+                This paper has been added to your reference list. You can cite this paper's viewpoints and methods in your research proposal.
               </p>
             </div>
           </div>
           
-          <!-- 未选择文献时的空状态 -->
+          <!-- Empty state when no paper is selected -->
           <div v-else class="text-center text-gray-500 mt-20">
             <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            <p class="text-lg">请点击左侧文献卡片查看详情</p>
-            <p class="text-sm mt-2">选择一篇参考文献，查看其详细信息</p>
+            <p class="text-lg">Please click on a paper card on the left to view details</p>
+            <p class="text-sm mt-2">Select a reference paper to view its detailed information</p>
           </div>
         </div>
       </div>
     </div>
   </div>
   
-  <!-- 无引用文献时的空状态 -->
+  <!-- Empty state when no referenced papers -->
   <div v-else class="no-references text-center py-12 px-4 bg-gray-50 rounded-lg">
     <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
     </svg>
-    <h3 class="text-xl font-medium text-gray-900 mb-2">暂无参考文献</h3>
-    <p class="text-gray-500">在文献搜索页面或推荐页面点击"参考此文"按钮添加文献到此列表</p>
+    <h3 class="text-xl font-medium text-gray-900 mb-2">No Reference Papers</h3>
+    <p class="text-gray-500">Click the "Reference This" button on the literature search or recommendation page to add papers to this list</p>
     <div class="mt-6 flex gap-3 justify-center">
       <router-link 
         to="/scholar-search" 
@@ -451,7 +451,7 @@
         <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
         </svg>
-        前往文献搜索
+        Go to Literature Search
       </router-link>
       <router-link 
         to="/papers" 
@@ -460,16 +460,16 @@
         <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
           <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        前往文献推荐
+        Go to Literature Recommendations
       </router-link>
     </div>
   </div>
 
-  <!-- 标签管理对话框 -->
+  <!-- Tag Management Dialog -->
   <div v-if="showTagDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="showTagDialog = false">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4" @click.stop>
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">管理标签</h3>
+        <h3 class="text-lg font-semibold text-gray-900">Manage Tags</h3>
         <button @click="showTagDialog = false" class="text-gray-400 hover:text-gray-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -477,21 +477,21 @@
         </button>
       </div>
 
-      <!-- 新建标签区域 -->
+      <!-- New Tag Creation Area -->
       <div class="mb-6">
-        <h4 class="text-sm font-medium text-gray-700 mb-3">创建新标签</h4>
+        <h4 class="text-sm font-medium text-gray-700 mb-3">Create New Tag</h4>
         <div class="space-y-3">
           <input
             v-model="newTagName"
             type="text"
-            placeholder="输入标签名称"
+            placeholder="Enter tag name"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             @keyup.enter="createNewTag"
             maxlength="20"
           />
           <div class="flex items-center justify-between">
             <div class="flex space-x-2">
-              <span class="text-sm text-gray-600">颜色：</span>
+              <span class="text-sm text-gray-600">Color:</span>
               <div class="flex space-x-1">
                 <button
                   v-for="color in tagColors"
@@ -509,12 +509,12 @@
               :disabled="!newTagName.trim()"
               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
             >
-              创建
+              Create
             </button>
           </div>
-          <!-- 预览 -->
+          <!-- Preview -->
           <div v-if="newTagName.trim()" class="mt-2">
-            <span class="text-xs text-gray-500">预览：</span>
+            <span class="text-xs text-gray-500">Preview:</span>
             <div
               class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ml-2"
               :style="{ backgroundColor: newTagColor + '20', color: newTagColor, borderColor: newTagColor }"
@@ -526,12 +526,12 @@
         </div>
       </div>
 
-      <!-- 现有标签列表 -->
+      <!-- Existing Tags List -->
       <div class="mb-6">
-        <h4 class="text-sm font-medium text-gray-700 mb-3">选择现有标签</h4>
+        <h4 class="text-sm font-medium text-gray-700 mb-3">Select Existing Tags</h4>
         <div class="max-h-40 overflow-y-auto">
           <div v-if="allTags.length === 0" class="text-sm text-gray-400 italic text-center py-4">
-            暂无标签，请先创建
+            No tags available, please create one first
           </div>
           <div v-else class="space-y-2">
             <label
@@ -555,7 +555,7 @@
               <button
                 @click.prevent="deleteTag(tag.id)"
                 class="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:text-red-600 transition-all"
-                title="删除标签"
+                title="Delete tag"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -566,19 +566,19 @@
         </div>
       </div>
 
-      <!-- 底部按钮 -->
+      <!-- Bottom Buttons -->
       <div class="flex justify-end space-x-3">
         <button
           @click="showTagDialog = false"
           class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
         >
-          取消
+          Cancel
         </button>
         <button
           @click="showTagDialog = false"
           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
-          完成
+          Done
         </button>
       </div>
     </div>
@@ -594,82 +594,82 @@ import 'katex/dist/katex.min.css'
 import { chatState } from '../stores/chatStore'
 import { sendSilentMessageToCoze } from '../services/cozeApi'
 
-// 配置marked支持LaTeX数学公式
+// Configure marked to support LaTeX math formulas
 marked.use(markedKatex({
   throwOnError: false,
   displayMode: false,
   output: 'html'
 }))
 
-// 配置marked安全选项
+// Configure marked security options
 marked.setOptions({
   sanitize: true,
   breaks: true,
   gfm: true
 })
 
-// 响应式数据
+// Reactive data
 const selectedPaper = ref(null)
 const loadingDownload = ref(false)
 
-// 翻译相关状态
+// Translation related states
 const showTranslation = ref(false)
 const translatedAbstract = ref('')
 const isTranslating = ref(false)
 
-// 标题翻译相关状态
+// Title translation related states
 const showTitleTranslation = ref(false)
 const translatedTitle = ref('')
 
-// 研究方法相关状态
+// Research method related states
 const showMethodTranslation = ref(false)
 const translatedMethod = ref('')
 const isTranslatingMethod = ref(false)
 const showFullText = ref(false)
 const isLoadingPaperContent = ref(false)
 
-// 论文缓存相关状态
+// Paper cache related states
 const isSavingToCache = ref(false)
 const paperCacheStatus = ref('') // 'saved', 'updated', ''
 
-// 标签管理相关状态
+// Tag management related states
 const showTagDialog = ref(false)
 const newTagName = ref('')
 const newTagColor = ref('#3B82F6')
 const allTags = ref([])
-const paperTags = ref(new Map()) // 存储论文与标签的关联关系
+const paperTags = ref(new Map()) // Store paper-tag associations
 
-// 预定义的标签颜色
+// Predefined tag colors
 const tagColors = [
-  '#3B82F6', // 蓝色
-  '#10B981', // 绿色
-  '#F59E0B', // 黄色
-  '#EF4444', // 红色
-  '#8B5CF6', // 紫色
-  '#F97316', // 橙色
-  '#06B6D4', // 青色
-  '#84CC16', // 石灰绿
-  '#EC4899', // 粉色
-  '#6B7280'  // 灰色
+  '#3B82F6', // Blue
+  '#10B981', // Green
+  '#F59E0B', // Yellow
+  '#EF4444', // Red
+  '#8B5CF6', // Purple
+  '#F97316', // Orange
+  '#06B6D4', // Cyan
+  '#84CC16', // Lime
+  '#EC4899', // Pink
+  '#6B7280'  // Gray
 ]
 
-// 渲染markdown内容
+// Render markdown content
 const renderMarkdown = (markdown) => {
   if (!markdown) return ''
   try {
     return marked.parse(markdown)
   } catch (error) {
-    console.error('Markdown解析错误:', error)
-    return markdown // 返回原始内容作为回退
+    console.error('Markdown parsing error:', error)
+    return markdown // Return original content as fallback
   }
 }
 
-// 切换全文显示状态
+// Toggle full text display state
 const toggleFullText = () => {
   showFullText.value = !showFullText.value
 }
 
-// 获取论文内容和研究方法
+// Get paper content and research method
 const fetchPaperContent = async () => {
   if (!selectedPaper.value || !selectedPaper.value.title) {
     return
@@ -678,11 +678,11 @@ const fetchPaperContent = async () => {
   isLoadingPaperContent.value = true
   
   try {
-    console.log('手动获取论文内容:', selectedPaper.value.title)
+    console.log('Manually get paper content:', selectedPaper.value.title)
     
     const { getApiBaseUrl } = await import('../config/environment.js')
     const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
-    console.log('📤 获取论文内容API请求URL:', getContentApiUrl)
+    console.log('📤 Get paper content API request URL:', getContentApiUrl)
     
     // 获取当前AI服务类型
     const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
@@ -736,11 +736,11 @@ const fetchPaperContent = async () => {
       }
     } else {
       console.error('获取论文内容失败:', result.error)
-      alert('获取论文内容失败: ' + (result.error || '未知错误'))
+      alert('Failed to get paper content: ' + (result.error || 'Unknown error'))
     }
   } catch (error) {
     console.error('获取论文内容出错:', error)
-    alert('获取论文内容出错: ' + error.message)
+    alert('Error getting paper content: ' + error.message)
   } finally {
     isLoadingPaperContent.value = false
   }
@@ -757,10 +757,10 @@ const retryExtractMethod = async () => {
   isLoadingPaperContent.value = true
   
   try {
-    console.log('重新分析研究方法:', selectedPaper.value.title)
+    console.log('Re-analyzing research method:', selectedPaper.value.title)
     
     // 第一步：清空数据库中的研究方法，强制重新分析
-    console.log('🗑️ 清空数据库中的研究方法...')
+    console.log('🗑️ Clearing research method from database...')
     
     const { getApiBaseUrl } = await import('../config/environment.js')
     const saveApiUrl = `${getApiBaseUrl()}/paper-cache/save`
@@ -795,9 +795,9 @@ const retryExtractMethod = async () => {
     })
     
     if (!clearResponse.ok) {
-      console.warn('清空数据库研究方法失败，但继续进行重新分析')
+      console.warn('Failed to clear research method from database, but continuing with re-analysis')
     } else {
-      console.log('✅ 成功清空数据库中的研究方法')
+      console.log('✅ Successfully cleared research method from database')
     }
     
     // 第二步：清除前端状态
@@ -814,10 +814,10 @@ const retryExtractMethod = async () => {
     }
     
     // 第三步：重新获取论文内容
-    console.log('🔄 重新获取论文内容和研究方法...')
+    console.log('🔄 Re-fetching paper content and research method...')
     
     const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
-    console.log('📤 重新分析-获取论文内容API请求URL:', getContentApiUrl)
+    console.log('📤 Re-analysis - Get paper content API request URL:', getContentApiUrl)
     
     // 获取当前AI服务类型
     const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
@@ -837,10 +837,10 @@ const retryExtractMethod = async () => {
     
     if (!response.ok) {
       if (response.status === 429) {
-        throw new Error('请求过于频繁，请稍后再试。');
+        throw new Error('Too many requests, please try again later.');
       }
       const errorResult = await response.json().catch(() => ({}));
-      throw new Error(errorResult.error || `API响应错误: ${response.status}`);
+      throw new Error(errorResult.error || `API response error: ${response.status}`);
     }
     
     const result = await response.json()
@@ -855,9 +855,9 @@ const retryExtractMethod = async () => {
       if (result.researchMethod) {
         selectedPaper.value.researchMethod = result.researchMethod
         showFullText.value = true // 自动展开研究方法
-        console.log('✅ 重新分析成功，获取到新的研究方法')
+        console.log('✅ Re-analysis successful, obtained new research method')
       } else {
-        console.log('⚠️ 重新分析完成，但未获取到研究方法')
+        console.log('⚠️ Re-analysis completed, but no research method obtained')
       }
       
       // 同时更新引用论文列表中的对应论文
@@ -874,12 +874,12 @@ const retryExtractMethod = async () => {
         }
       }
     } else {
-      throw new Error(result.error || '重新获取论文内容失败');
+      throw new Error(result.error || 'Failed to re-fetch paper content');
     }
     
   } catch (error) {
     console.error('重新分析研究方法出错:', error)
-    alert('重新分析研究方法出错: ' + error.message)
+    alert('Error re-analyzing research method: ' + error.message)
   } finally {
     isLoadingPaperContent.value = false
   }
@@ -888,7 +888,7 @@ const retryExtractMethod = async () => {
 // 翻译文本的通用函数
 const translateText = async (text, type = 'text') => {
   if (!text || !text.trim()) {
-    throw new Error(`${type}内容为空`)
+    throw new Error(`${type} content is empty`)
   }
   
   try {
@@ -913,14 +913,14 @@ const translateText = async (text, type = 'text') => {
     
     if (!response.ok) {
       const errorResult = await response.json().catch(() => ({}));
-      throw new Error(errorResult.error || `翻译失败，状态码: ${response.status}`);
+      throw new Error(errorResult.error || `Translation failed, status code: ${response.status}`);
     }
     
     const result = await response.json()
     console.log('📥 翻译API响应:', result)
     
     if (!result.success || !result.translated) {
-      throw new Error('翻译API返回无效结果')
+      throw new Error('Translation API returned invalid result')
     }
     
     const translatedText = result.translated.trim()
@@ -929,7 +929,7 @@ const translateText = async (text, type = 'text') => {
       console.log(`✅ ${type}翻译成功`)
       return translatedText
     } else {
-      throw new Error('翻译结果为空')
+      throw new Error('Translation result is empty')
     }
     
   } catch (error) {
@@ -1021,7 +1021,7 @@ const toggleTranslation = async () => {
     
   } catch (error) {
     console.error('翻译失败:', error)
-    alert('翻译失败：' + error.message)
+    alert('Translation failed: ' + error.message)
   }
 }
 
@@ -1051,7 +1051,7 @@ const toggleMethodTranslation = async () => {
       showMethodTranslation.value = true
     } catch (error) {
       console.error('研究方法翻译失败:', error)
-      alert('研究方法翻译失败：' + error.message)
+      alert('Research method translation failed: ' + error.message)
     } finally {
       isTranslatingMethod.value = false
     }
@@ -1114,7 +1114,7 @@ const removeFromReferences = (paper) => {
 
 // 清空所有引用
 const clearAllReferences = () => {
-  if (confirm('确定要清空所有参考文献吗？')) {
+  if (confirm('Are you sure you want to clear all reference papers?')) {
     clearReferences()
     selectedPaper.value = null
   }
@@ -1174,8 +1174,8 @@ const findDownloadSources = async (paper) => {
     }
 
   } catch (error) {
-    console.error('获取下载源失败:', error);
-    alert('获取下载源失败，请稍后重试');
+    console.error('Failed to get download sources:', error);
+    alert('Failed to get download sources, please try again later');
   } finally {
     loadingDownload.value = false;
   }
@@ -1184,22 +1184,22 @@ const findDownloadSources = async (paper) => {
 // 导出引用文献
 const exportReferences = () => {
   if (referencedCount.value === 0) {
-    alert('暂无参考文献可导出')
+    alert('No reference papers to export')
     return
   }
 
   const exportData = referencedPapersList.value.map((paper, index) => ({
-    序号: index + 1,
-    标题: paper.title,
-    作者: Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors || '',
-    期刊: paper.journal || '',
-    年份: paper.year || '',
-    引用次数: paper.citations || paper.citationCount || '',
-    摘要: paper.abstract || paper.summary || '',
-    研究方法: paper.researchMethod || '',
-    链接: paper.scholar_url || paper.downloadUrl || '',
-    来源: paper.source === 'search' ? '文献搜索' : 'AI推荐',
-    引用时间: paper.referencedAt ? new Date(paper.referencedAt).toLocaleString() : ''
+    Index: index + 1,
+    Title: paper.title,
+    Authors: Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors || '',
+    Journal: paper.journal || '',
+    Year: paper.year || '',
+    Citations: paper.citations || paper.citationCount || '',
+    Abstract: paper.abstract || paper.summary || '',
+    'Research Method': paper.researchMethod || '',
+    Link: paper.scholar_url || paper.downloadUrl || '',
+    Source: paper.source === 'search' ? 'Literature Search' : 'AI Recommendation',
+    'Referenced Time': paper.referencedAt ? new Date(paper.referencedAt).toLocaleString() : ''
   }))
 
   // 转换为CSV格式
@@ -1213,14 +1213,14 @@ const exportReferences = () => {
   const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
   const link = document.createElement('a')
   link.href = URL.createObjectURL(blob)
-  link.download = `参考文献列表_${new Date().toISOString().slice(0, 10)}.csv`
+  link.download = `reference_papers_${new Date().toISOString().slice(0, 10)}.csv`
   link.click()
 }
 
 // 保存论文到本地缓存
 const savePaperToCache = async (paper) => {
   if (!paper || !paper.title) {
-    alert('无效的论文信息')
+    alert('Invalid paper information')
     return
   }
 
@@ -1271,7 +1271,7 @@ const savePaperToCache = async (paper) => {
 
     if (!response.ok) {
       const errorResult = await response.json().catch(() => ({}))
-      throw new Error(errorResult.error || `保存失败，状态码: ${response.status}`)
+      throw new Error(errorResult.error || `Save failed, status code: ${response.status}`)
     }
 
     const result = await response.json()
@@ -1286,12 +1286,12 @@ const savePaperToCache = async (paper) => {
       }, 3000)
       
     } else {
-      throw new Error(result.error || '保存失败')
+      throw new Error(result.error || 'Save failed')
     }
 
   } catch (error) {
-    console.error('保存引用论文到缓存失败:', error)
-    alert('保存失败: ' + error.message)
+    console.error('Failed to save reference paper to cache:', error)
+    alert('Save failed: ' + error.message)
     paperCacheStatus.value = ''
   } finally {
     isSavingToCache.value = false
@@ -1332,7 +1332,7 @@ const createNewTag = () => {
 
 // 删除标签
 const deleteTag = (tagId) => {
-  if (!confirm('确定要删除这个标签吗？删除后所有文献的此标签也会被移除。')) return
+  if (!confirm('Are you sure you want to delete this tag? All papers with this tag will also have it removed.')) return
   
   // 从所有标签中移除
   allTags.value = allTags.value.filter(tag => tag.id !== tagId)
@@ -1465,6 +1465,7 @@ onMounted(() => {
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

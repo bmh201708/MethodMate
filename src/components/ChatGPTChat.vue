@@ -1,6 +1,6 @@
 <template>
   <div class="bg-white rounded-lg shadow-sm border h-[700px] flex flex-col">
-    <!-- 聊天标题栏 -->
+    <!-- Chat Title Bar -->
     <div class="border-b border-gray-200 p-4 flex justify-between items-center">
       <div class="flex items-center space-x-3">
         <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
@@ -34,21 +34,21 @@
       </div>
     </div>
 
-    <!-- 消息列表区域 -->
+    <!-- Message List Area -->
     <div class="flex-1 overflow-y-auto p-4 space-y-4" ref="messagesContainer">
-      <!-- 欢迎消息 -->
+      <!-- Welcome Message -->
       <div v-if="messages.length === 0" class="text-center text-gray-500 py-8">
         <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
         </svg>
-        <p class="text-lg font-medium mb-2">开始与 ChatGPT 对话</p>
-        <p class="text-sm">输入您的问题，我会尽力为您提供帮助</p>
+        <p class="text-lg font-medium mb-2">Start Conversation with ChatGPT</p>
+        <p class="text-sm">Enter your question and I'll try my best to help you</p>
       </div>
 
-      <!-- 消息列表 -->
+      <!-- Message List -->
       <div v-for="(message, index) in messages" :key="index" class="flex" :class="message.role === 'user' ? 'justify-end' : 'justify-start'">
         <div class="flex max-w-[80%]" :class="message.role === 'user' ? 'flex-row-reverse' : 'flex-row'">
-          <!-- 头像 -->
+          <!-- Avatar -->
           <div class="flex-shrink-0" :class="message.role === 'user' ? 'ml-3' : 'mr-3'">
             <div class="w-8 h-8 rounded-full flex items-center justify-center" 
                  :class="message.role === 'user' ? 'bg-blue-500' : 'bg-green-500'">
@@ -61,7 +61,7 @@
             </div>
           </div>
           
-          <!-- 消息内容 -->
+          <!-- Message Content -->
           <div class="flex flex-col">
             <div class="px-4 py-2 rounded-lg" 
                  :class="message.role === 'user' 
@@ -76,7 +76,7 @@
         </div>
       </div>
 
-      <!-- 正在输入指示器 -->
+      <!-- Typing Indicator -->
       <div v-if="isLoading" class="flex justify-start">
         <div class="flex max-w-[80%]">
           <div class="flex-shrink-0 mr-3">
@@ -97,14 +97,14 @@
       </div>
     </div>
 
-    <!-- 输入区域 -->
+    <!-- Input Area -->
     <div class="border-t border-gray-200 p-4">
       <div class="flex space-x-3">
         <div class="flex-1">
           <textarea
             v-model="newMessage"
             @keydown="handleKeydown"
-            placeholder="输入您的消息..."
+            placeholder="Enter your message..."
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
             rows="2"
             :disabled="isLoading"
@@ -122,11 +122,11 @@
           <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
           </svg>
-          <span>{{ isLoading ? '发送中...' : '发送' }}</span>
+          <span>{{ isLoading ? 'Sending...' : 'Send' }}</span>
         </button>
       </div>
       <div class="mt-2 text-xs text-gray-500 text-center">
-        按 Ctrl+Enter 快速发送 • 支持 Markdown 格式
+        Press Ctrl+Enter to send quickly • Supports Markdown format
       </div>
     </div>
   </div>
@@ -137,19 +137,19 @@ import { ref, nextTick, onMounted } from 'vue'
 import { sendMessageToChatGPT } from '../services/chatgptService'
 import { marked } from 'marked'
 
-// 响应式数据
+// Reactive data
 const messages = ref([])
 const newMessage = ref('')
 const isLoading = ref(false)
 const messagesContainer = ref(null)
 
-// 配置marked
+// Configure marked
 marked.setOptions({
   breaks: true,
   gfm: true
 })
 
-// 发送消息
+// Send message
 const sendMessage = async () => {
   if (!newMessage.value.trim() || isLoading.value) return
 
@@ -159,23 +159,23 @@ const sendMessage = async () => {
     timestamp: Date.now()
   }
 
-  // 添加用户消息
+  // Add user message
   messages.value.push(userMessage)
   const messageText = newMessage.value.trim()
   newMessage.value = ''
   
-  // 滚动到底部
+  // Scroll to bottom
   await nextTick()
   scrollToBottom()
 
-  // 设置加载状态
+  // Set loading state
   isLoading.value = true
 
   try {
-    // 调用ChatGPT API
+    // Call ChatGPT API
     const response = await sendMessageToChatGPT(messageText, messages.value.slice(0, -1))
     
-    // 添加AI回复
+    // Add AI reply
     const aiMessage = {
       role: 'assistant',
       content: response,
@@ -184,23 +184,23 @@ const sendMessage = async () => {
     
     messages.value.push(aiMessage)
     
-    // 滚动到底部
+    // Scroll to bottom
     await nextTick()
     scrollToBottom()
     
   } catch (error) {
-    console.error('ChatGPT API调用失败:', error)
+    console.error('ChatGPT API call failed:', error)
     
-    // 添加错误消息
+    // Add error message
     const errorMessage = {
       role: 'assistant',
-      content: '抱歉，我现在无法回复您的消息。请检查网络连接或稍后再试。',
+      content: 'Sorry, I cannot reply to your message right now. Please check your network connection or try again later.',
       timestamp: Date.now()
     }
     
     messages.value.push(errorMessage)
     
-    // 滚动到底部
+    // Scroll to bottom
     await nextTick()
     scrollToBottom()
   } finally {
@@ -208,7 +208,7 @@ const sendMessage = async () => {
   }
 }
 
-// 处理键盘事件
+// Handle keyboard events
 const handleKeydown = (event) => {
   if (event.ctrlKey && event.key === 'Enter') {
     event.preventDefault()
@@ -216,18 +216,18 @@ const handleKeydown = (event) => {
   }
 }
 
-// 滚动到底部
+// Scroll to bottom
 const scrollToBottom = () => {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
   }
 }
 
-// 测试大文本功能
+// Test large text functionality
 const testLargeText = async () => {
   if (isLoading.value) return
   
-  // 生成约15万字符的测试文本
+  // Generate test text of about 150,000 characters
   const generateLargeText = () => {
     const baseText = `这是一个大文本测试。本文将测试GPT-4o处理大量文本的能力。在人工智能和自然语言处理领域，处理大量文本数据是一个重要的挑战。现代的大语言模型如GPT-4o具有强大的文本理解和生成能力，但它们也有token限制。
 
@@ -250,14 +250,14 @@ GPT-4o的上下文窗口为128,000个token，这意味着它可以处理相当�
 
 因此，这个测试对于评估系统的实用性具有重要意义。`
     
-    // 重复文本直到达到约15万字符
+    // Repeat text until reaching about 150,000 characters
     let result = ''
     const targetLength = 150000
     
     while (result.length < targetLength) {
       result += baseText + '\n\n'
       
-      // 添加一些变化以避免完全重复
+      // Add some variation to avoid complete repetition
       result += `第${Math.floor(result.length / 1000)}段：当前文本长度约为${result.length}字符。`
       result += `时间戳：${new Date().toISOString()}。`
       result += `随机数：${Math.random().toString(36).substring(2, 15)}。\n\n`
@@ -268,10 +268,10 @@ GPT-4o的上下文窗口为128,000个token，这意味着它可以处理相当�
   
   const largeText = generateLargeText()
   
-  // 创建测试消息
+  // Create test message
   const testMessage = `请分析以下大文本（约${largeText.length}字符）并提供简要总结：\n\n${largeText}\n\n请总结这段文本的主要内容，并评估文本的结构和特点。`
   
-  // 添加用户消息
+  // Add user message
   const userMessage = {
     role: 'user',
     content: testMessage,
@@ -280,44 +280,44 @@ GPT-4o的上下文窗口为128,000个token，这意味着它可以处理相当�
   
   messages.value.push(userMessage)
   
-  // 滚动到底部
+  // Scroll to bottom
   await nextTick()
   scrollToBottom()
   
-  // 设置加载状态
+  // Set loading state
   isLoading.value = true
   
   try {
-    console.log(`正在发送大文本测试，文本长度：${testMessage.length}字符`)
+    console.log(`Sending large text test, text length: ${testMessage.length} characters`)
     
-    // 记录开始时间
+    // Record start time
     const startTime = Date.now()
     
-    // 调用ChatGPT API
+    // Call ChatGPT API
     const response = await sendMessageToChatGPT(testMessage, messages.value.slice(0, -1))
     
-    // 记录结束时间
+    // Record end time
     const endTime = Date.now()
     const duration = endTime - startTime
     
-    // 添加AI回复
+    // Add AI reply
     const aiMessage = {
       role: 'assistant',
-      content: `${response}\n\n---\n📊 **测试结果统计：**\n- 输入文本长度：${testMessage.length.toLocaleString()}字符\n- 处理时间：${duration.toLocaleString()}毫秒\n- 测试状态：✅ 成功`,
+      content: `${response}\n\n---\n📊 **Test Result Statistics:**\n- Input text length: ${testMessage.length.toLocaleString()} characters\n- Processing time: ${duration.toLocaleString()} milliseconds\n- Test status: ✅ Success`,
       timestamp: Date.now()
     }
     
     messages.value.push(aiMessage)
     
-    console.log(`大文本测试完成，处理时间：${duration}ms`)
+    console.log(`Large text test completed, processing time: ${duration}ms`)
     
   } catch (error) {
-    console.error('大文本测试失败:', error)
+    console.error('Large text test failed:', error)
     
-    // 添加错误消息
+    // Add error message
     const errorMessage = {
       role: 'assistant',
-      content: `❌ **大文本测试失败**\n\n错误信息：${error.message}\n\n这可能是由于以下原因：\n1. 文本长度超过了API的token限制\n2. 网络连接问题\n3. API配置问题\n4. 服务器处理超时\n\n建议：\n- 检查网络连接\n- 确认API密钥配置正确\n- 尝试发送较短的文本进行测试`,
+      content: `❌ **Large Text Test Failed**\n\nError message: ${error.message}\n\nThis may be due to the following reasons:\n1. Text length exceeds API token limit\n2. Network connection issues\n3. API configuration problems\n4. Server processing timeout\n\nSuggestions:\n- Check network connection\n- Confirm API key configuration is correct\n- Try sending shorter text for testing`,
       timestamp: Date.now()
     }
     
@@ -325,54 +325,54 @@ GPT-4o的上下文窗口为128,000个token，这意味着它可以处理相当�
   } finally {
     isLoading.value = false
     
-    // 滚动到底部
+    // Scroll to bottom
     await nextTick()
     scrollToBottom()
   }
 }
 
-// 清空对话
+// Clear conversation
 const clearChat = () => {
-  if (confirm('确定要清空所有对话记录吗？')) {
+  if (confirm('Are you sure you want to clear all conversation records?')) {
     messages.value = []
   }
 }
 
-// 格式化消息内容（支持Markdown）
+// Format message content (supports Markdown)
 const formatMessage = (content) => {
   try {
     return marked.parse(content)
   } catch (error) {
-    console.error('Markdown解析错误:', error)
+    console.error('Markdown parsing error:', error)
     return content.replace(/\n/g, '<br>')
   }
 }
 
-// 格式化时间
+// Format time
 const formatTime = (timestamp) => {
   const date = new Date(timestamp)
   const now = new Date()
   const diff = now - date
 
-  if (diff < 60000) { // 小于1分钟
-    return '刚刚'
-  } else if (diff < 3600000) { // 小于1小时
-    return `${Math.floor(diff / 60000)}分钟前`
-  } else if (date.toDateString() === now.toDateString()) { // 今天
+  if (diff < 60000) { // Less than 1 minute
+    return 'Just now'
+  } else if (diff < 3600000) { // Less than 1 hour
+    return `${Math.floor(diff / 60000)} minutes ago`
+  } else if (date.toDateString() === now.toDateString()) { // Today
     return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
   } else {
     return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
   }
 }
 
-// 组件挂载时的初始化
+// Initialization when component mounts
 onMounted(() => {
-  // 可以在这里加载历史消息
+  // Can load historical messages here
 })
 </script>
 
 <style scoped>
-/* 自定义滚动条 */
+/* Custom scrollbar */
 .overflow-y-auto::-webkit-scrollbar {
   width: 6px;
 }
@@ -391,7 +391,7 @@ onMounted(() => {
   background: #a8a8a8;
 }
 
-/* 动画效果 */
+/* Animation effects */
 @keyframes bounce {
   0%, 80%, 100% {
     transform: scale(0);
@@ -405,13 +405,13 @@ onMounted(() => {
   animation: bounce 1.4s infinite ease-in-out both;
 }
 
-/* 消息内容样式 */
+/* Message content styles */
 .whitespace-pre-wrap {
   white-space: pre-wrap;
   word-wrap: break-word;
 }
 
-/* Markdown样式 */
+/* Markdown styles */
 :deep(.markdown) h1,
 :deep(.markdown) h2,
 :deep(.markdown) h3 {

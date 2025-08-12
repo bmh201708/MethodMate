@@ -3,7 +3,7 @@ import { CozeAPI } from '@coze/api';
 
 // 初始化 Coze API 客户端
 const apiClient = new CozeAPI({
-  token: 'pat_Q06cU8OsiWefqJHG2ed8GlV1al9WRGRVNAfkNmpG567hDXVbcHeyLHWtMLciNj37',
+  token: 'pat_JbivMTTLDl2EQkzyFPDJ0PvIrUlDcIRgLClE65kT568CFQ81pBDR82AZzsz39Jec',
   baseURL: 'https://api.coze.com'
 });
 
