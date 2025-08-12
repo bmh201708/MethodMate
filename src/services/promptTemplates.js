@@ -108,7 +108,7 @@ export const PLAN_EVALUATION_TEMPLATE = `你是一位最严苛、最具批判性
 
 最后请总结指出方案的优点和可改进之处。
 
-研究方案内容：
+当前研究方案：
 {{planContent}}
 
 {{#if hasUserRequirements}}
@@ -128,7 +128,7 @@ export const PLAN_EVALUATION_TEMPLATE = `你是一位最严苛、最具批判性
 // 部分评估提示词模板
 export const SECTION_EVALUATION_TEMPLATE = `请对以下研究方案中的"{{sectionName}}"部分进行专项评估。
 
-完整研究方案背景：
+当前完整研究方案：
 {{fullPlanContent}}
 
 需要重点评估的"{{sectionName}}"部分内容：

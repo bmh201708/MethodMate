@@ -3154,13 +3154,17 @@ const exitHistoryView = () => {
       
       // 使用PromptService生成评估提示词
       const promptData = {
-        planContent: JSON.stringify({
-          title: currentPlanState.title || '定量研究方案',
-          hypotheses: currentPlanState.hypotheses || [],
-          experimentalDesign: currentPlanState.experimentalDesign || '',
-          analysisMethod: currentPlanState.analysisMethod || '',
-          expectedResults: currentPlanState.expectedResults || ''
-        }, null, 2),
+        planContent: `# 研究假设：
+${currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : ''}
+
+# 实验设计：
+${currentPlanState.experimentalDesign || ''}
+
+# 数据分析：
+${currentPlanState.analysisMethod || ''}
+
+# 结果呈现：
+${currentPlanState.expectedResults || ''}`,
         hasUserRequirements: conversationContext.hasUserRequirements,
         userRequirements: conversationContext.userRequirements,
         researchContext: conversationContext.researchContext
@@ -3249,13 +3253,17 @@ const evaluateSectionPlan = async (section) => {
     const promptData = {
       sectionName,
       sectionContent,
-      fullPlanContent: JSON.stringify({
-        title: currentPlanState.title || '定量研究方案',
-        hypotheses: currentPlanState.hypotheses || [],
-        experimentalDesign: currentPlanState.experimentalDesign || '',
-        analysisMethod: currentPlanState.analysisMethod || '',
-        expectedResults: currentPlanState.expectedResults || ''
-      }, null, 2),
+      fullPlanContent: `# 研究假设：
+${currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : ''}
+
+# 实验设计：
+${currentPlanState.experimentalDesign || ''}
+
+# 数据分析：
+${currentPlanState.analysisMethod || ''}
+
+# 结果呈现：
+${currentPlanState.expectedResults || ''}`,
       hasUserRequirements: conversationContext.hasUserRequirements,
       userRequirements: conversationContext.userRequirements,
       researchContext: conversationContext.researchContext
