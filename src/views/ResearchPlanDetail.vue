@@ -3529,98 +3529,22 @@ const iteratePlanWithSuggestion = async (suggestion) => {
     // 提取对话历史中的用户需求
     const conversationContext = extractConversationContext()
     
-    const optimizationSpec = generateOptimizationRequirements(suggestion)
-    
-    // 构建迭代提示
-    let iterationPrompt = `${optimizationSpec.tone}。
-
-**用户的具体优化建议：** ${suggestion}
-
-当前研究方案：
-${JSON.stringify({
-  title: currentPlanState.title || '定量研究方案',
-  hypotheses: currentPlanState.hypotheses || [],
-  experimentalDesign: currentPlanState.experimentalDesign || '',
-  analysisMethod: currentPlanState.analysisMethod || '',
-  expectedResults: currentPlanState.expectedResults || ''
-}, null, 2)}
-
-**针对性优化要求：**
-${optimizationSpec.requirements.map((req, index) => `${index + 1}. ${req}`).join('\n')}
-
-**重点关注领域：**
-${optimizationSpec.focusAreas.map(area => `- ${area}`).join('\n')}`
-
-    // 如果有用户需求，添加到迭代提示中
-    if (conversationContext.hasUserRequirements) {
-      iterationPrompt += `
-
-**用户研究需求整合：**
-用户研究需求：${conversationContext.userRequirements}
-研究背景和上下文：${conversationContext.researchContext}
-
-**需求适配要求：**
-1. 在优化过程中，必须深度整合用户的具体研究需求
-2. 针对用户背景和研究目标，设计更加贴合的研究方案
-3. 基于用户的研究场景，提供更具针对性的方法选择和参数设置
-4. 确保优化后的方案能够直接服务于用户的研究目标`
+    // 使用PromptService生成完整方案迭代提示词
+    const promptData = {
+      suggestion,
+      planContent: JSON.stringify({
+        title: currentPlanState.title || '定量研究方案',
+        hypotheses: currentPlanState.hypotheses || [],
+        experimentalDesign: currentPlanState.experimentalDesign || '',
+        analysisMethod: currentPlanState.analysisMethod || '',
+        expectedResults: currentPlanState.expectedResults || ''
+      }, null, 2),
+      hasUserRequirements: conversationContext.hasUserRequirements,
+      userRequirements: conversationContext.userRequirements,
+      researchContext: conversationContext.researchContext
     }
-
-    iterationPrompt += `
-
-请按照以下格式返回完整的优化后方案，必须使用以下精确的标题格式：
-
-# 研究假设：
-<研究假设内容>
-
-# 实验设计：
-<实验设计内容>
-
-# 数据分析：
-<数据分析内容>
-
-# 结果呈现：
-<结果呈现内容>
-
-请按照以下详细结构优化方案，确保每一部分内容详实具体（每项不少于3句话）：
-
-一、研究假设
-简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
-
-二、实验设计
-参与者特征：可考虑但不限于样本量估算、年龄与性别构成、专业或技术背景、招募方式、纳入与排除标准，以及样本的代表性或研究适配性等，分点详细罗列。 
-分组方式：可描述分组方式与研究设计类型（如组间设计、组内设计、混合设计），明确自变量与因变量的定义及其操作化方式等，列出所有实验条件与控制变量。
-实验流程：尽可能详细说明实验流程，可描述各阶段的名称、任务内容、执行顺序等，确保流程完整、清晰、具备可复现性。
-
-三、数据分析
-详述将采集的用户数据类型，可参考但不限于主观评分数据（如问卷量表、用户偏好评估）、行为数据（如点击次数、任务完成时长、操作路径）与系统记录数据（如日志、交互轨迹等），并解释每类数据的采集方式（如问卷平台、实验系统、后台日志）。
-针对每一类关键因变量，明确采用的统计分析方法（如t检验、单/双因素ANOVA、回归分析、调节/中介效应分析等），并说明分析方法与研究假设的匹配关系、假设检验标准（如α = .05）及是否纳入协变量控制。
-
-四、结果呈现
-预测不同实验条件下，主要因变量之间可能呈现的差异或变化趋势，结合前人研究推测可能的解释机制。进一步说明将如何呈现各类实验结果，包括适合用于描述组间差异的图表（如箱线图、条形图）、用于展示交互效应或趋势的图表（如折线图、交互图）等。请说明每类图表如何辅助结果解读，并强调其与研究结论之间的逻辑映射关系。
-
-**输出验证标准：**`
-
-
-
-    const validationSpec = generateValidationCriteria(suggestion)
     
-    iterationPrompt += `
-${validationSpec.criteria.map((criterion, index) => `${index + 1}. ${criterion}`).join('\n')}`
-
-    if (validationSpec.qualityRequirements.length > 0) {
-      iterationPrompt += `
-
-**具体质量要求：**
-${validationSpec.qualityRequirements.map(req => `- ${req}`).join('\n')}`
-    }
-
-    iterationPrompt += `
-
-**最终检查清单：**
-${validationSpec.checklist.map(item => `✓ ${item}是否得到显著改善？`).join('\n')}
-✓ 是否保持了学术规范性和表述准确性？
-✓ 是否与用户的具体建议高度匹配？`
+    const iterationPrompt = PromptService.generateFullPlanIterationPrompt(promptData)
 
     console.log('迭代提示包含用户需求:', conversationContext.hasUserRequirements)
     
@@ -3702,202 +3626,21 @@ const iterateSectionPlan = async (section, suggestion) => {
     // 提取对话历史中的用户需求
     const conversationContext = extractConversationContext()
     
-    // 使用相同的优化要求生成函数
-    const optimizationSpec = generateOptimizationRequirements(suggestion)
-    
-    // 构建迭代提示
-    let iterationPrompt = `${optimizationSpec.tone}，特别需要重点优化研究方案的"${sectionName}"部分。
-
-**用户的具体优化建议：** ${suggestion}
-
-当前完整研究方案：
-#研究假设：
-${currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : ''}
-
-#实验设计：
-${currentPlanState.experimentalDesign || ''}
-
-#数据分析：
-${currentPlanState.analysisMethod || ''}
-
-#结果呈现：
-${currentPlanState.expectedResults || ''}
-
-**重点优化目标：${sectionName}部分**
-
-**针对性优化要求：**
-${optimizationSpec.requirements.map((req, index) => `${index + 1}. ${req}`).join('\n')}
-
-**重点关注领域：**
-${optimizationSpec.focusAreas.map(area => `- ${area}`).join('\n')}`
-
-    // 根据不同部分和建议类型添加特定的优化指导
-    const getSectionSpecificGuidance = (section, suggestion) => {
-      const suggestionLower = suggestion.toLowerCase()
-      let guidance = []
-      
-      switch (section) {
-        case 'hypothesis':
-          if (suggestionLower.includes('严谨性')) {
-            guidance.push("- **逻辑严谨性**：确保假设的因果逻辑清晰，避免循环论证和概念混淆")
-            guidance.push("- **可检验性**：每个假设都要具备可操作化的测量方案和验证方法")
-          }
-          if (suggestionLower.includes('细节') || suggestionLower.includes('详细')) {
-            guidance.push("- **理论依据详化**：为每个假设提供具体的理论模型引用和机制解释")
-            guidance.push("- **预期量化**：提供具体的预期效应量范围和统计显著性水平")
-          }
-          if (suggestionLower.includes('简化')) {
-            guidance.push("- **假设精炼**：去除冗余假设，保留核心关键假设，表述简洁明了")
-            guidance.push("- **重点突出**：突出主要研究假设，次要假设可适当简化表述")
-          }
-          break
-          
-        case 'design':
-          if (suggestionLower.includes('严谨性')) {
-            guidance.push("- **内外部效度**：加强实验设计的内部效度控制和外部效度考量")
-            guidance.push("- **控制变量**：完善混淆变量的识别和控制措施")
-          }
-          if (suggestionLower.includes('细节') || suggestionLower.includes('详细')) {
-            guidance.push("- **实施细节**：详细描述实验环境、设备配置、人员安排等具体信息")
-            guidance.push("- **操作标准**：为每个实验步骤制定详细的操作手册和质量标准")
-          }
-          if (suggestionLower.includes('简化')) {
-            guidance.push("- **流程简化**：优化实验流程，去除不必要的步骤，提高效率")
-            guidance.push("- **描述精炼**：简化复杂的技术描述，突出核心设计要点")
-          }
-          break
-          
-        case 'analysis':
-          if (suggestionLower.includes('统计方法')) {
-            guidance.push("- **方法选择**：详细说明统计方法的选择理由和适用条件")
-            guidance.push("- **分析策略**：制定完整的数据分析策略和备选方案")
-          }
-          if (suggestionLower.includes('效应量')) {
-            guidance.push("- **效应量计算**：为每个统计检验指定相应的效应量指标")
-            guidance.push("- **实际意义**：解释效应量的实际含义和评判标准")
-          }
-          if (suggestionLower.includes('假设检验')) {
-            guidance.push("- **假设设定**：明确每个统计检验的零假设和备择假设")
-            guidance.push("- **前提验证**：检查统计检验的前提条件和处理违反情况的方案")
-          }
-          if (suggestionLower.includes('数据处理')) {
-            guidance.push("- **预处理流程**：详细描述数据清洗、转换、标准化的具体步骤")
-            guidance.push("- **质量控制**：建立数据质量检查和异常值处理的标准流程")
-          }
-          break
-          
-        case 'results':
-          if (suggestionLower.includes('严谨性')) {
-            guidance.push("- **结果解释**：确保结果解释的客观性和逻辑性，避免过度解读")
-            guidance.push("- **局限性说明**：明确研究结果的适用范围和潜在局限性")
-          }
-          if (suggestionLower.includes('细节') || suggestionLower.includes('详细')) {
-            guidance.push("- **预期具体化**：提供具体的数值预期和统计指标范围")
-            guidance.push("- **可视化详化**：详细描述图表制作规范和解读方法")
-          }
-          if (suggestionLower.includes('简化')) {
-            guidance.push("- **重点突出**：突出关键结果，简化次要发现的描述")
-            guidance.push("- **表述清晰**：使用简洁明了的语言描述预期结果")
-          }
-          break
-      }
-      
-      return guidance
+    // 使用PromptService生成部分迭代提示词
+    const promptData = {
+      section,
+      sectionName,
+      suggestion,
+      hypotheses: currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : '',
+      experimentalDesign: currentPlanState.experimentalDesign || '',
+      analysisMethod: currentPlanState.analysisMethod || '',
+      expectedResults: currentPlanState.expectedResults || '',
+      hasUserRequirements: conversationContext.hasUserRequirements,
+      userRequirements: conversationContext.userRequirements,
+      researchContext: conversationContext.researchContext
     }
     
-    const sectionGuidance = getSectionSpecificGuidance(section, suggestion)
-    if (sectionGuidance.length > 0) {
-      iterationPrompt += `
-
-**针对"${sectionName}"部分的具体优化指导：**
-${sectionGuidance.join('\n')}`
-    }
-
-    iterationPrompt += `
-
-**整体协调要求：**
-1. 重点优化"${sectionName}"部分，确保改进效果符合用户的具体建议
-2. 适当调整其他部分以保持逻辑一致性，但避免大幅修改
-3. 确保所有部分形成完整、协调的研究方法论体系
-4. 根据用户建议的方向，有针对性地提升方案质量`
-    
-    // 如果有用户需求，添加到迭代提示中
-    if (conversationContext.hasUserRequirements) {
-      iterationPrompt += `
-
-**用户研究需求深度整合：**
-用户研究需求：${conversationContext.userRequirements}
-研究背景和上下文：${conversationContext.researchContext}
-
-**针对"${sectionName}"的需求适配要求：**
-1. 深度分析用户需求对"${sectionName}"部分的具体影响和要求
-2. 基于用户的研究背景，为"${sectionName}"部分设计更贴合的具体方案
-3. 确保"${sectionName}"的优化能够直接服务于用户的研究目标和实际需求
-4. 在优化过程中充分考虑用户的资源条件和实施环境`
-    }
-    
-    iterationPrompt += `
-
-请按照以下格式返回完整的优化后方案，必须使用以下精确的标题格式：
-
-# 研究假设：
-<研究假设内容>
-
-# 实验设计：
-<实验设计内容>
-
-# 数据分析：
-<数据分析内容>
-
-# 结果呈现：
-<结果呈现内容>
-
-请按照以下详细结构优化方案，确保每一部分内容详实具体（每项不少于3句话）：
-
-一、研究假设
-简述实验目的，并提出与研究目标高度对应的研究假设。每条假设需编号（H1, H2...）。
-
-二、实验设计
-参与者特征：可考虑但不限于样本量估算、年龄与性别构成、专业或技术背景、招募方式、纳入与排除标准，以及样本的代表性或研究适配性等，分点详细罗列。 
-分组方式：可描述分组方式与研究设计类型（如组间设计、组内设计、混合设计），明确自变量与因变量的定义及其操作化方式等，列出所有实验条件与控制变量。
-实验流程：尽可能详细说明实验流程，可描述各阶段的名称、任务内容、执行顺序等，确保流程完整、清晰、具备可复现性。
-
-三、数据分析
-详述将采集的用户数据类型，可参考但不限于主观评分数据（如问卷量表、用户偏好评估）、行为数据（如点击次数、任务完成时长、操作路径）与系统记录数据（如日志、交互轨迹等），并解释每类数据的采集方式（如问卷平台、实验系统、后台日志）。
-针对每一类关键因变量，明确采用的统计分析方法（如t检验、单/双因素ANOVA、回归分析、调节/中介效应分析等），并说明分析方法与研究假设的匹配关系、假设检验标准（如α = .05）及是否纳入协变量控制。
-
-四、结果呈现
-预测不同实验条件下，主要因变量之间可能呈现的差异或变化趋势，结合前人研究推测可能的解释机制。进一步说明将如何呈现各类实验结果，包括适合用于描述组间差异的图表（如箱线图、条形图）、用于展示交互效应或趋势的图表（如折线图、交互图）等。请说明每类图表如何辅助结果解读，并强调其与研究结论之间的逻辑映射关系。
-
-**输出验证标准：**`
-
-    // 为单个部分迭代生成验证标准
-    const sectionValidationSpec = generateValidationCriteria(suggestion)
-    
-    iterationPrompt += `
-${sectionValidationSpec.criteria.map((criterion, index) => `${index + 1}. ${criterion}`).join('\n')}`
-
-    if (sectionValidationSpec.qualityRequirements.length > 0) {
-      iterationPrompt += `
-
-**具体质量要求：**
-${sectionValidationSpec.qualityRequirements.map(req => `- ${req}`).join('\n')}`
-    }
-
-    iterationPrompt += `
-
-**重要实施要求：**
-- 必须返回完整的4个部分，严格按照上述详细结构组织内容
-- 重点优化"${sectionName}"部分，确保改进效果符合用户建议
-- 其他部分保持原样或做必要的协调调整，避免大幅修改
-- 必须使用Markdown格式，内容要详细具体，符合学术规范
-- 风格应贴近正式科研报告或论文开题材料
-
-**最终检查清单：**
-${sectionValidationSpec.checklist.map(item => `✓ "${sectionName}"部分的${item}是否得到显著改善？`).join('\n')}
-✓ 是否保持了其他部分的完整性和一致性？
-✓ 是否与用户的具体建议高度匹配？
-✓ 是否保持了学术规范性和表述准确性？`
+    const iterationPrompt = PromptService.generateSectionIterationPrompt(promptData)
     
     console.log(`发送${sectionName}部分迭代请求`)
     
@@ -4127,161 +3870,19 @@ ${currentSectionContent}
       referencesInfo = paperInfoArray.map(paperData => paperData.paperInfo).join('')
     }
     
-    // 如果有用户需求，添加到提示中
+    // 使用PromptService生成源自引言提示词
     const conversationContext = extractConversationContext()
-
-    // 根据不同部分构建专门的提示词
-    let prompt = ''
-    
-    // 构建基础信息部分
-    const baseInfo = `
-**## 1. 研究方案的当前部分内容：**
-${currentSectionContent}
-
-**## 2. 参考文献信息：**
-${referencesInfo}
-
-**## 3. 用户的研究需求和背景（如果提供）：**
-${conversationContext.hasUserRequirements ? `
-- **用户需求:** ${conversationContext.userRequirements}
-- **研究背景:** ${conversationContext.researchContext}
-` : '无特定用户需求，请仅基于文献进行分析。'}
-
-**## 4. 你的任务和输出要求：**
-`
-
-    // 根据当前部分选择对应的提示词
-    switch (activeSection.value) {
-      case 'hypothesis':
-        prompt = `
-**请根据当前研究方案中的"研究假设"部分内容，结合所引用的一篇或多篇参考文献，分析并指出研究假设的具体设计在哪些方面受到已有文献的启发或借鉴。**
-
-请生成一个表格，最多包含5行，每行分析一个借鉴关系。请直接输出markdown表格格式，不要用代码块包裹。表格应严格按照以下格式：
-
-| 当前方案中的做法 | 参考文献对应内容 | 借鉴关系说明 |
-|---|---|---|
-| 简明陈述本研究中"研究假设"的具体内容或核心假设点 | 【必须给出英文原文】明确标注参考文献中相关内容所在的位置，并摘录能够体现其核心思想的英文原文语句，标明出处 | 简要说明本研究假设如何受到该文献的启发，具体体现在哪些方面，强调借鉴的思路、结构或推理路径 |
-
-若同一条目借鉴了多篇文献，请在"参考文献对应内容"部分，采用类似"参考文献1（标题前两个单词…）、参考文献2（标题前两个单词…）"的简称方式进行区分说明。
-
-**重要要求：**
-- 表格前请添加一句话作为总体概述
-- 直接输出markdown表格，不要使用代码块包裹
-- "参考文献对应内容"列必须给出英文原文，格式如："原文：'English original text here' (来自：参考文献X - 标题简称)"
-- 每个单元格内容简洁明了，避免过长
-
-${baseInfo}`
-        break
-
-      case 'design':
-        prompt = `
-**请根据当前研究方案中的"实验设计"部分内容，结合所引用的一篇或多篇参考文献，分析并指出实验设计中的具体做法在哪些方面受到已有文献的启发或借鉴。**
-
-请生成一个表格，最多包含5行，每行分析一个借鉴关系。请直接输出markdown表格格式，不要用代码块包裹。表格应严格按照以下格式：
-
-| 当前方案中的做法 | 参考文献对应内容 | 借鉴关系说明 |
-|---|---|---|
-| 简要说明本研究在实验设计中的具体做法，例如分组方式、变量设置、任务类型或操作流程等 | 【必须给出英文原文】明确标注参考文献中相关内容所在的位置，并摘录能够体现其核心思想的英文原文语句，标明出处 | 简要说明当前实验设计在何种程度上受到该文献的启发，具体体现在何种设计思路、变量操作、对照逻辑或流程结构等方面 |
-
-若同一条目借鉴了多篇文献，请在"参考文献对应内容"部分，采用类似"参考文献1、参考文献2"的简称方式进行区分说明。
-
-**重要要求：**
-- 表格前请添加一句话作为总体概述
-- 直接输出markdown表格，不要使用代码块包裹
-- "参考文献对应内容"列必须给出英文原文，格式如："原文：'English original text here' (来自：参考文献X - 标题简称)"
-- 每个单元格内容简洁明了，避免过长
-
-${baseInfo}`
-        break
-
-      case 'analysis':
-        prompt = `
-**请根据当前研究方案中的"数据分析"部分内容，结合所引用的一篇或多篇参考文献，分析并指出数据分析中的具体做法在哪些方面受到已有文献的启发或借鉴。**
-
-请生成一个表格，最多包含5行，每行分析一个借鉴关系。表格应严格按照以下格式：
-
-| 当前方案中的做法 | 参考文献对应内容 | 借鉴关系说明 |
-|---|---|---|
-| 简要说明本研究在数据分析中的具体方法或策略，例如所采用的统计检验、变量分析方式、效应量计算方法等 | 明确标注参考文献中相关内容所在的位置（如页码、小节标题），并摘录能够体现其核心思想的原文语句（可选取关键词句或关键表达） | 简要说明当前方案中的数据分析做法如何受到该文献的启发，具体体现在分析类型的选择、变量处理方式、统计逻辑或解释框架等方面 |
-
-若同一条目借鉴了多篇文献，请在"参考文献对应内容"部分，采用类似"参考文献1（标题前两个单词…）、参考文献2（标题前两个单词…）"的简称方式进行区分说明。
-
-**注意：**
-- 表格前请添加一句话作为总体概述
-- 表格使用Markdown格式
-- 每个单元格内容简洁明了，避免过长
-
-${baseInfo}`
-        break
-
-
-
-      case 'analysis':
-        prompt = `
-**请根据当前研究方案中的"数据分析"部分内容，结合所引用的一篇或多篇参考文献，分析并指出数据分析方法的选择在哪些方面受到已有文献的启发或借鉴。**
-
-请生成一个表格，最多包含5行，每行分析一个借鉴关系。请直接输出markdown表格格式，不要用代码块包裹。表格应严格按照以下格式：
-
-| 当前方案中的做法 | 参考文献对应内容 | 借鉴关系说明 |
-|---|---|---|
-| 简要说明本研究在数据分析中的具体方法，例如统计方法、分析步骤、变量处理或模型构建等 | 【必须给出英文原文】明确标注参考文献中相关内容所在的位置，并摘录能够体现其核心思想的英文原文语句，标明出处 | 简要说明当前数据分析方法如何受到该文献的启发，具体体现在何种分析思路、统计选择、处理步骤或结果解读等方面 |
-
-若同一条目借鉴了多篇文献，请在"参考文献对应内容"部分，采用类似"参考文献1、参考文献2"的简称方式进行区分说明。
-
-**重要要求：**
-- 表格前请添加一句话作为总体概述
-- 直接输出markdown表格，不要使用代码块包裹
-- "参考文献对应内容"列必须给出英文原文，格式如："原文：'English original text here' (来自：参考文献X - 标题简称)"
-- 每个单元格内容简洁明了，避免过长
-
-${baseInfo}`
-        break
-
-      case 'results':
-        prompt = `
-**请根据当前研究方案中的"结果呈现"部分内容，结合所引用的一篇或多篇参考文献，分析并指出结果呈现方式的设计在哪些方面受到已有文献的启发或借鉴。**
-
-请生成一个表格，最多包含5行，每行分析一个借鉴关系。请直接输出markdown表格格式，不要用代码块包裹。表格应严格按照以下格式：
-
-| 当前方案中的做法 | 参考文献对应内容 | 借鉴关系说明 |
-|---|---|---|
-| 简要说明本研究对结果呈现的设计，例如预期结果或结论、以及所拟采用的图表类型 | 【必须给出英文原文】明确标注参考文献中相关内容所在的位置，并摘录能够体现其核心思想的英文原文语句，标明出处 | 简要说明当前方案在结果呈现方面如何受到该文献的启发，具体体现在哪些方面，如预期差异的表达方式、图表设计风格、指标对比结构或结论推理框架等 |
-
-若同一条目借鉴了多篇文献，请在"参考文献对应内容"部分，采用类似"参考文献1、参考文献2"的简称方式进行区分说明。
-
-**重要要求：**
-- 表格前请添加一句话作为总体概述
-- 直接输出markdown表格，不要使用代码块包裹
-- "参考文献对应内容"列必须给出英文原文，格式如："原文：'English original text here' (来自：参考文献X - 标题简称)"
-- 每个单元格内容简洁明了，避免过长
-
-${baseInfo}`
-        break
-
-      default:
-        // 默认使用原有的通用提示词作为备用
-        prompt = `
-你是一位专业的学术助手。你的任务是严谨地分析一组参考文献如何为一个研究计划的特定部分提供支撑。
-
-你的目标是生成一份"来源介绍"，逐篇清晰地解释每篇文献对计划的"${sectionName}"部分有何贡献，并用直接的原文引述作为论据。
-
-请生成一个表格格式的来源介绍，请直接输出markdown表格格式，不要用代码块包裹。表格应包含以下列：
-
-| 参考文献 | 核心贡献 | 具体引用内容 | 对当前研究的启发 |
-|---|---|---|---|
-| 文献标题 | 该文献对当前研究部分的核心贡献 | 【必须给出英文原文】文献中的具体内容和英文原文引用，标明出处 | 如何启发了当前研究的设计 |
-
-**重要要求：**
-- 表格前请添加一句话作为总体概述
-- 直接输出markdown表格，不要使用代码块包裹
-- "具体引用内容"列必须给出英文原文，格式如："原文：'English original text here' (来自：参考文献X - 标题简称)"
-- 每个单元格内容简洁明了，避免过长
-
-${baseInfo}
-
-请严格按照表格格式生成约300-500字的来源介绍。`
-        break
+    const promptData = {
+      section: activeSection.value,
+      sectionName,
+      sectionContent: currentSectionContent,
+      referencesInfo,
+      hasUserRequirements: conversationContext.hasUserRequirements,
+      userRequirements: conversationContext.userRequirements,
+      researchContext: conversationContext.researchContext
     }
+    
+    const prompt = PromptService.generateSourceIntroductionPrompt(promptData)
 
     console.log('发送来源介绍生成请求:', prompt.substring(0, 200) + '...')
     console.log('来源介绍生成包含用户需求:', conversationContext.hasUserRequirements)
@@ -4332,120 +3933,17 @@ const generateMethodIntroduction = async () => {
     const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
     const currentAIService = getCurrentAIService()
     
-    // 构建发送给AI的提示
-    let prompt = `我将为你提供一个研究方案的数据分析部分内容。请分析其中使用的研究方法和统计分析方法，并生成一个详细的方法介绍。
-
-研究方案的数据分析部分：
-${analysisContent}`
-
-    // 如果有用户需求，添加到提示中
+    // 使用PromptService生成方法介绍提示词
     const conversationContext = extractConversationContext()
-    if (conversationContext.hasUserRequirements) {
-      prompt += `
-
-用户研究需求：
-${conversationContext.userRequirements}
-
-研究背景和上下文：
-${conversationContext.researchContext}`
+    const promptData = {
+      analysisContent,
+      hasUserRequirements: conversationContext.hasUserRequirements,
+      userRequirements: conversationContext.userRequirements,
+      researchContext: conversationContext.researchContext,
+      aiService: currentAIService
     }
-
-    // 根据AI服务类型调整prompt格式
-    if (currentAIService === 'chatgpt') {
-      console.log('🎯 ChatGPT模式：使用分不同方法进行简介格式')
-      
-      prompt += `
-
-请分析上述数据分析内容中提到的统计方法，并为每种方法单独生成专业介绍。
-
-要求：
-1. 识别数据分析部分中提到的所有统计方法
-2. 对每种统计方法分别进行简单但专业的介绍
-3. 使用学术性语言，确保内容准确且易懂
-4. 必须严格按照以下格式组织内容
-
-格式要求：
-每个统计方法按以下结构介绍：
-
-**方法名称**
-方法的定义和基本作用，说明它适用于什么情况。
-
-**常见类型：**
-- 类型1：具体说明和应用场景
-- 类型2：具体说明和应用场景  
-- 类型3：具体说明和应用场景（如果有）
-
-**输出结果：**
-说明该方法会产生什么统计量（如t值、F值、p值等），以及如何解释结果和判断显著性。
-
-示例格式：
-**t检验**
-t检验(t-test)是一种常用的统计方法，用于比较两个样本之间的平均值是否存在显著差异。它适用于样本量较小、总体标准差未知的情况。
-
-**常见类型：**
-- 独立样本t检验：比较两个独立群体的均值(如男性和女性的考试成绩)
-- 配对样本t检验：比较同一组个体在不同条件下的均值(如干预前后)
-- 单样本t检验：检验一个样本的均值是否显著不同于某个已知值
-
-**输出结果：**
-t检验会计算一个t值，结合自由度，通过查表或统计软件得到p值，用来判断差异是否显著(通常以p<0.05为标准)。如果p值小于显著性水平，就可以认为两组之间存在统计学显著差异。`
-
-      // 如果有用户需求，添加个性化要求
-      if (conversationContext.hasUserRequirements) {
-        prompt += `
-
-**特别要求：**
-结合用户的研究需求，重点解释这些统计方法如何服务于用户的具体研究目标。`
-      }
-
-      prompt += `
-
-请按照上述格式，为数据分析部分中提到的每种统计方法生成介绍。`
-      
-    } else {
-      console.log('🔧 Coze模式：使用统计方法分类介绍格式')
-      
-      prompt += `
-
-请分析上述数据分析内容中提到的统计方法，并为每种方法单独生成专业介绍。
-
-要求：
-1. 识别数据分析部分中提到的所有统计方法
-2. 对每种统计方法分别进行简单但专业的介绍
-3. 按照以下格式为每个方法生成介绍：
-
-格式：
-**方法名称**
-方法的定义和基本作用，说明适用情况。
-
-**常见类型：**
-列出该方法的主要类型和各自的应用场景。
-
-**输出结果：**
-说明统计量、判断标准和结果解释。
-
-示例：
-**ANOVA**
-ANOVA(方差分析，Analysis of Variance)是一种用于比较三个或以上组的均值是否存在显著差异的统计方法。它是t检验的扩展，适用于多组情况。
-
-**常见类型：**
-- 单因素方差分析(One-way ANOVA)：适用于一个自变量，有多个水平。例如：比较三种教学方法对考试成绩的影响。
-- 双因素方差分析(Two-way ANOVA)：同时考察两个自变量及其交互作用。
-
-**输出结果：**
-ANOVA输出一个F值，再根据F分布计算p值，用于判断组间差异是否显著(通常以p<0.05为显著)。如果显著，还需进行事后检验(如Tukey HSD)来找出具体哪些组之间有差异。`
-
-      // 如果有用户需求，添加个性化要求
-      if (conversationContext.hasUserRequirements) {
-        prompt += `
-
-特别说明：请结合用户的研究需求，重点解释这些统计方法的适用性。`
-      }
-
-      prompt += `
-
-请按照上述格式，为数据分析部分中的每种统计方法生成介绍。`
-    }
+    
+    const prompt = PromptService.generateMethodIntroductionPrompt(promptData)
 
     console.log('发送方法介绍生成请求:', prompt.substring(0, 200) + '...')
     console.log('方法介绍生成包含用户需求:', conversationContext.hasUserRequirements)
