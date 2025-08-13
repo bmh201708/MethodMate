@@ -3388,7 +3388,7 @@ const generateOptimizationRequirements = (suggestion) => {
       const suggestionLower = suggestion.toLowerCase()
       let requirements = []
       let focusAreas = []
-      let tone = "你是一位资深的HCI研究专家"
+              let tone = "You are a senior HCI research expert"
       
       // 分析用户建议类型并生成相应要求
       if (suggestionLower.includes('自动迭代优化') || suggestionLower.includes('全面优化')) {
@@ -3874,92 +3874,118 @@ const generateSourceIntroduction = async () => {
     
     for (let i = 0; i < referencedPapers.length; i++) {
       const paper = referencedPapers[i]
-      let paperInfo = `\n参考文献${i + 1}：`
-      paperInfo += `\n标题：${paper.title}`
-      paperInfo += `\n摘要：${paper.abstract || paper.summary || '无摘要'}`
+      let paperInfo = `\nReference ${i + 1}:`
+      paperInfo += `\nTitle: ${paper.title}`
+      paperInfo += `\nAbstract: ${paper.abstract || paper.summary || 'No abstract available'}`
       
-      // 获取研究方法总结
-      if (paper.researchMethod) {
-        paperInfo += `\n研究方法总结：${paper.researchMethod}`
-      } else {
-        // 如果没有研究方法总结，尝试从缓存中获取
+      let fullText = paper.fullText
+
+      // 如果没有全文，尝试获取
+      if (!fullText) {
         try {
           const { getApiBaseUrl } = await import('../config/environment.js')
-          const getCachedMethodApiUrl = `${getApiBaseUrl()}/paper/get-cached-method`
-          console.log('📤 获取缓存方法API请求URL:', getCachedMethodApiUrl)
+          const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
+          console.log('📤 Getting full text API request URL:', getContentApiUrl)
           
-          const response = await fetch(getCachedMethodApiUrl, {
+          const response = await fetch(getContentApiUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               title: paper.title,
-              doi: paper.doi || null
+              doi: paper.doi || null,
+              aiService: currentAIService === 'chatgpt' ? 'chatgpt' : 'coze'
             })
           })
           
           if (response.ok) {
             const result = await response.json()
-            if (result.success && result.methodSummary) {
-              paperInfo += `\n研究方法总结：${result.methodSummary}`
-              // 更新论文对象
-              paper.researchMethod = result.methodSummary
-            } else {
-              paperInfo += `\n研究方法总结：暂无`
+            if (result.success && result.fullText) {
+              fullText = result.fullText
+              paper.fullText = fullText // Update paper object
             }
-          } else {
-            paperInfo += `\n研究方法总结：暂无`
           }
         } catch (error) {
-          console.error('获取研究方法总结失败:', error)
-          paperInfo += `\n研究方法总结：暂无`
+          console.error(`Failed to get full text for paper "${paper.title}":`, error)
+        }
+      }
+
+      // 优先使用全文内容
+      if (fullText) {
+        paperInfo += `\nFull Text Content: ${fullText}`
+      } else {
+        // 如果没有全文，退回到研究方法总结
+        if (paper.researchMethod) {
+          paperInfo += `\nResearch Method Summary: ${paper.researchMethod}`
+        } else {
+          // 如果没有研究方法总结，尝试从缓存中获取
+          try {
+            const { getApiBaseUrl } = await import('../config/environment.js')
+            const getCachedMethodApiUrl = `${getApiBaseUrl()}/paper/get-cached-method`
+            console.log('📤 Getting cached method API request URL:', getCachedMethodApiUrl)
+            
+            const response = await fetch(getCachedMethodApiUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: paper.title,
+                doi: paper.doi || null
+              })
+            })
+            
+            if (response.ok) {
+              const result = await response.json()
+              if (result.success && result.methodSummary) {
+                paperInfo += `\nResearch Method Summary: ${result.methodSummary}`
+                // Update paper object
+                paper.researchMethod = result.methodSummary
+              } else {
+                paperInfo += `\nResearch Method Summary: Not available`
+              }
+            } else {
+              paperInfo += `\nResearch Method Summary: Not available`
+            }
+          } catch (error) {
+            console.error('Failed to get research method summary:', error)
+            paperInfo += `\nResearch Method Summary: Not available`
+          }
         }
       }
       
       paperInfo += '\n'
-      paperInfoArray.push({ paperInfo, fullText: paper.fullText })
+      paperInfoArray.push({ paperInfo, fullText: fullText })
     }
     
     // ChatGPT模式下的智能内容长度控制
     if (currentAIService === 'chatgpt') {
-      console.log('🎯 ChatGPT模式：生成来源介绍时检查消息长度，智能选择参考文献内容')
+      console.log('🎯 ChatGPT Mode: Checking message length for source introduction generation, intelligently selecting reference content')
       
       // 先构建基础提示（不包含参考文献）
-      let basePrompt = `我将为你提供一个研究方案，以及研究方案参考的一些参考文献。请分析以下研究方案的"${sectionName}"部分参考了哪些参考文献的研究方法内容，并生成一个简洁的来源介绍。
+      let basePrompt = `I will provide you with a research plan and some reference papers that the research plan refers to. Please analyze which reference papers the "${sectionName}" section of the following research plan refers to in terms of research methods and generate a concise source introduction.
 
-研究方案的${sectionName}部分：
+${sectionName} section of the research plan:
 ${currentSectionContent}
 
-参考文献信息：`
+Reference information:`
       
-      // 尝试构建包含全文的版本
-      let fullTextReferencesInfo = ''
-      paperInfoArray.forEach((paperData) => {
-        let enhancedPaperInfo = paperData.paperInfo
-        
-        // 如果有全文，添加到信息中
-        if (paperData.fullText) {
-          enhancedPaperInfo += `\n   全文内容：${paperData.fullText}`
-        }
-        
-        fullTextReferencesInfo += enhancedPaperInfo
-      })
+      // 直接使用包含全文的版本
+      referencesInfo = paperInfoArray.map(paperData => paperData.paperInfo).join('')
       
-      const fullTextPrompt = basePrompt + fullTextReferencesInfo
+      const fullTextPrompt = basePrompt + referencesInfo
       
-      // 检查包含全文的消息长度
+      // 检查消息长度
       if (fullTextPrompt.length <= 250000) {
-        console.log(`✅ 消息长度 ${fullTextPrompt.length} 字符，在限制内，使用全文版本`)
-        referencesInfo = fullTextReferencesInfo
+        console.log(`✅ Message length ${fullTextPrompt.length} characters, within limit, using full text version`)
       } else {
-        console.log(`⚠️ 消息长度 ${fullTextPrompt.length} 字符，超出限制，使用研究方法版本`)
-        // 使用只包含研究方法的版本
-        referencesInfo = paperInfoArray.map(paperData => paperData.paperInfo).join('')
+        console.log(`⚠️ Message length ${fullTextPrompt.length} characters, exceeds limit`)
+        // 如果超出限制，可以在这里添加截断逻辑
       }
     } else {
-      console.log('🔧 Coze模式：使用标准参考文献处理')
-      // Coze模式：使用原有逻辑，只包含研究方法和摘要
+      console.log('🔧 Coze Mode: Using standard reference processing')
+      // Coze模式：使用标准参考文献处理
       referencesInfo = paperInfoArray.map(paperData => paperData.paperInfo).join('')
     }
     
@@ -3977,9 +4003,9 @@ ${currentSectionContent}
     
     const prompt = PromptService.generateSourceIntroductionPrompt(promptData)
 
-    console.log('发送来源介绍生成请求:', prompt)
-    console.log('来源介绍生成包含用户需求:', conversationContext.hasUserRequirements)
-    console.log('当前部分使用的提示词类型:', activeSection.value)
+    console.log('Sending source introduction generation request:', prompt)
+    console.log('Source introduction generation includes user requirements:', conversationContext.hasUserRequirements)
+    console.log('Current section using prompt type:', activeSection.value)
     
     // 调用AI服务
     const { generateSourceIntroduction } = await import('../services/aiServiceAdapter.js')
@@ -3990,13 +4016,13 @@ ${currentSectionContent}
     
     // 保存来源介绍到全局状态
     updateSourceIntroduction(activeSection.value, result)
-    console.log(`成功生成${sectionName}部分的来源介绍`)
+    console.log(`Successfully generated source introduction for ${sectionName} section`)
     
 
     
   } catch (error) {
-    console.error('生成来源介绍失败:', error)
-    alert(error.message || '生成来源介绍失败，请稍后重试')
+    console.error('Failed to generate source introduction:', error)
+    alert(error.message || 'Failed to generate source introduction, please try again later')
   } finally {
     isGeneratingSource.value = false
   }
