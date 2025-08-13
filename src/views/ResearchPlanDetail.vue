@@ -3131,6 +3131,48 @@ onMounted(() => {
   }
 })
 
+// 重置右侧研究方案展示状态（对话切换时调用）
+const resetPlanDisplayState = () => {
+  console.log('🔄 对话切换：重置右侧研究方案展示状态')
+  
+  // 重置当前方案状态为未生成状态
+  currentPlanState.isGenerated = false
+  currentPlanState.title = ''
+  currentPlanState.hypotheses = []
+  currentPlanState.experimentalDesign = ''
+  currentPlanState.analysisMethod = ''
+  currentPlanState.expectedResults = ''
+  currentPlanState.researchQuestions = ''
+  currentPlanState.methodology = ''
+  currentPlanState.dataCollection = ''
+  currentPlanState.timeline = ''
+  currentPlanState.lastUpdated = ''
+  
+  // 重置历史方案查看状态
+  isViewingHistoryPlan.value = false
+  clearCurrentViewingPlan() // 清空历史方案查看状态
+  
+  // 重置UI状态
+  activeSection.value = 'full'
+  analysisSubSection.value = 'methodology'
+  
+  console.log('✅ 研究方案展示状态已重置')
+}
+
+// 监听对话ID变化，当用户切换对话时重置右侧展示
+watch(() => chatState.conversationId, (newConversationId, oldConversationId) => {
+  console.log('🔄 检测到对话ID变化:', { 
+    from: oldConversationId, 
+    to: newConversationId 
+  })
+  
+  // 如果是从一个有效的对话切换到另一个对话（不是初始化）
+  if (oldConversationId !== undefined && oldConversationId !== newConversationId) {
+    console.log('🔄 执行对话切换重置')
+    resetPlanDisplayState()
+  }
+}, { immediate: false }) // 不需要立即执行
+
 // 组件卸载时清理全局函数
 onUnmounted(() => {
   if (typeof window !== 'undefined') {
@@ -3935,7 +3977,7 @@ ${currentSectionContent}
     
     const prompt = PromptService.generateSourceIntroductionPrompt(promptData)
 
-    console.log('发送来源介绍生成请求:', prompt.substring(0, 200) + '...')
+    console.log('发送来源介绍生成请求:', prompt)
     console.log('来源介绍生成包含用户需求:', conversationContext.hasUserRequirements)
     console.log('当前部分使用的提示词类型:', activeSection.value)
     
