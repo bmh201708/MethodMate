@@ -46,7 +46,7 @@ export const chatState = reactive({
     {
       id: 1,
       type: 'assistant',
-      content: '你好！我是 MethodMate AI 助手，请问有什么我可以帮助你的吗？',
+      content: 'Hello! I am MethodMate AI Assistant. Is there anything I can do for you?',
       isComplete: true
     }
   ],
@@ -1180,7 +1180,7 @@ export const clearMessages = () => {
     {
       id: 1,
       type: 'assistant',
-      content: '你好！我是 MethodMate AI 助手，请问有什么我可以帮助你的吗？',
+      content: 'Hello! I am MethodMate AI Assistant. Is there anything I can do for you?',
       isComplete: true
     }
   ]

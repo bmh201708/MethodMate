@@ -524,15 +524,15 @@ export class PromptService {
       }
     }
 
-    // 默认优化规格
+    // Default optimization specifications
     return {
-      tone: '你是一位资深的HCI研究专家，需要根据具体建议进行针对性优化',
+      tone: 'You are a senior HCI research expert who needs to conduct targeted optimization based on specific suggestions',
       requirements: [
-        '**针对性改进**：重点关注建议中提到的具体问题和改进方向',
-        '**保持平衡**：在改进的同时保持方案的整体协调性和完整性',
-        '**质量提升**：确保优化后的方案在指定方面有显著的质量提升'
+        '**Targeted Improvement**: Focus on specific issues and improvement directions mentioned in the suggestions',
+        '**Maintain Balance**: While improving, maintain the overall coordination and integrity of the plan',
+        '**Quality Enhancement**: Ensure that the optimized plan has significant quality improvements in specified areas'
       ],
-      focusAreas: ['建议的针对性实施', '整体方案的协调性', '改进效果的显著性']
+      focusAreas: ['Targeted implementation of suggestions', 'Overall plan coordination', 'Significance of improvement effects']
     }
   }
 
@@ -550,14 +550,14 @@ export class PromptService {
       }
     }
 
-    // 默认验证规格
+    // Default validation specifications
     return {
       criteria: [
-        '**改进针对性检查**：优化内容准确回应了用户的具体建议',
-        '**质量提升验证**：在建议的方向上有明显的改进效果',
-        '**整体协调性确认**：改进的同时保持了方案的整体协调性'
+        '**Improvement Targeting Check**: The optimization content accurately responds to the user\'s specific suggestions',
+        '**Quality Enhancement Verification**: There are obvious improvement effects in the direction of the suggestions',
+        '**Overall Coordination Confirmation**: The improvements maintain the overall coordination of the plan'
       ],
-      checklist: ['建议响应度', '改进显著性', '整体协调性']
+      checklist: ['Suggestion responsiveness', 'Improvement significance', 'Overall coordination']
     }
   }
 
@@ -575,27 +575,27 @@ export class PromptService {
     const suggestionLower = suggestion.toLowerCase()
     let guidance = []
 
-    // 检查建议类型并返回对应的指导
-    if (suggestionLower.includes('严谨性') && sectionConfig['严谨性']) {
-      guidance.push(...sectionConfig['严谨性'])
+    // Check suggestion type and return corresponding guidance
+    if ((suggestionLower.includes('rigor') || suggestionLower.includes('严谨性')) && sectionConfig['rigor']) {
+      guidance.push(...sectionConfig['rigor'])
     }
-    if ((suggestionLower.includes('细节') || suggestionLower.includes('详细')) && sectionConfig['细节']) {
-      guidance.push(...sectionConfig['细节'])
+    if ((suggestionLower.includes('detail') || suggestionLower.includes('细节') || suggestionLower.includes('详细')) && sectionConfig['detail']) {
+      guidance.push(...sectionConfig['detail'])
     }
-    if (suggestionLower.includes('简化') && sectionConfig['简化']) {
-      guidance.push(...sectionConfig['简化'])
+    if ((suggestionLower.includes('simplify') || suggestionLower.includes('简化')) && sectionConfig['simplify']) {
+      guidance.push(...sectionConfig['simplify'])
     }
-    if (suggestionLower.includes('统计方法') && sectionConfig['统计方法']) {
-      guidance.push(...sectionConfig['统计方法'])
+    if ((suggestionLower.includes('statistical method') || suggestionLower.includes('统计方法')) && sectionConfig['statistical_method']) {
+      guidance.push(...sectionConfig['statistical_method'])
     }
-    if (suggestionLower.includes('效应量') && sectionConfig['效应量']) {
-      guidance.push(...sectionConfig['效应量'])
+    if ((suggestionLower.includes('effect size') || suggestionLower.includes('效应量')) && sectionConfig['effect_size']) {
+      guidance.push(...sectionConfig['effect_size'])
     }
-    if (suggestionLower.includes('假设检验') && sectionConfig['假设检验']) {
-      guidance.push(...sectionConfig['假设检验'])
+    if ((suggestionLower.includes('hypothesis test') || suggestionLower.includes('假设检验')) && sectionConfig['hypothesis_test']) {
+      guidance.push(...sectionConfig['hypothesis_test'])
     }
-    if (suggestionLower.includes('数据处理') && sectionConfig['数据处理']) {
-      guidance.push(...sectionConfig['数据处理'])
+    if ((suggestionLower.includes('data processing') || suggestionLower.includes('数据处理')) && sectionConfig['data_processing']) {
+      guidance.push(...sectionConfig['data_processing'])
     }
 
     return guidance
@@ -645,7 +645,7 @@ export class PromptService {
             }
           }
         } catch (error) {
-          console.error(`获取论文"${paper.title}"全文失败:`, error)
+          console.error(`Failed to get full text for paper "${paper.title}":`, error)
         }
       }
 
@@ -673,50 +673,82 @@ export class PromptService {
     
     for (let i = 0; i < referencedPapers.length; i++) {
       const paper = referencedPapers[i]
-      let paperInfo = `\n参考文献${i + 1}：`
-      paperInfo += `\n标题：${paper.title}`
-      paperInfo += `\n摘要：${paper.abstract || paper.summary || '无摘要'}`
+      let paperInfo = `\nReference ${i + 1}:`
+      paperInfo += `\nTitle: ${paper.title}`
+      paperInfo += `\nAbstract: ${paper.abstract || paper.summary || 'No abstract available'}`
       
-      // 获取研究方法总结
-      if (paper.researchMethod) {
-        paperInfo += `\n研究方法总结：${paper.researchMethod}`
-      } else {
-        // 如果没有研究方法总结，尝试从缓存中获取
+      let fullText = paper.fullText
+      
+      // 如果没有全文，尝试获取
+      if (!fullText) {
         try {
           const { getApiBaseUrl } = await import('../config/environment.js')
-          const getCachedMethodApiUrl = `${getApiBaseUrl()}/paper/get-cached-method`
+          const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
           
-          const response = await fetch(getCachedMethodApiUrl, {
+          const response = await fetch(getContentApiUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               title: paper.title,
-              doi: paper.doi || null
+              doi: paper.doi || null,
+              aiService: aiService === 'chatgpt' ? 'chatgpt' : 'coze'
             })
           })
           
           if (response.ok) {
             const result = await response.json()
-            if (result.success && result.methodSummary) {
-              paperInfo += `\n研究方法总结：${result.methodSummary}`
-              paper.researchMethod = result.methodSummary
-            } else {
-              paperInfo += `\n研究方法总结：暂无`
+            if (result.success && result.fullText) {
+              fullText = result.fullText
+              paper.fullText = fullText // 更新论文对象
             }
-          } else {
-            paperInfo += `\n研究方法总结：暂无`
           }
         } catch (error) {
-          console.error('获取研究方法总结失败:', error)
-          paperInfo += `\n研究方法总结：暂无`
+          console.error(`Failed to get full text for paper "${paper.title}":`, error)
         }
       }
-      
-      // ChatGPT模式下可能需要包含全文
-      if (aiService === 'chatgpt' && paper.fullText) {
-        paperInfo += `\n全文内容：${paper.fullText}`
+
+      // 优先使用全文内容
+      if (fullText) {
+        paperInfo += `\nFull Text Content: ${fullText}`
+      } else {
+        // 如果没有全文，退回到研究方法总结
+        if (paper.researchMethod) {
+          paperInfo += `\nResearch Method Summary: ${paper.researchMethod}`
+        } else {
+          // 如果没有研究方法总结，尝试从缓存中获取
+          try {
+            const { getApiBaseUrl } = await import('../config/environment.js')
+            const getCachedMethodApiUrl = `${getApiBaseUrl()}/paper/get-cached-method`
+            
+            const response = await fetch(getCachedMethodApiUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: paper.title,
+                doi: paper.doi || null
+              })
+            })
+            
+            if (response.ok) {
+              const result = await response.json()
+              if (result.success && result.methodSummary) {
+                paperInfo += `\nResearch Method Summary: ${result.methodSummary}`
+                paper.researchMethod = result.methodSummary
+              } else {
+                paperInfo += `\nResearch Method Summary: Not available`
+              }
+            } else {
+              paperInfo += `\nResearch Method Summary: Not available`
+            }
+          } catch (error) {
+            console.error('Failed to get research method summary:', error)
+            paperInfo += `\nResearch Method Summary: Not available`
+          }
+        }
       }
       
       paperInfo += '\n'
