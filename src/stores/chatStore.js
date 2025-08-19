@@ -46,19 +46,19 @@ export const chatState = reactive({
     {
       id: 1,
       type: 'assistant',
-      content: 'Hello! I am MethodMate AI Assistant. Is there anything I can do for you?',
+      content: 'Hello! I am MethodMate AI Assistant. How can I help you today?',
       isComplete: true
     }
   ],
   isLoading: false,
   conversationId: null,
-  forceUpdateFlag: 0, // 强制更新标志
+  forceUpdateFlag: 0, // Force update flag
   currentUser: null,
   isTyping: false,
   error: null,
-  // 页面切换状态保持
-  isInitialized: false, // 是否已经初始化过
-  lastPageContext: null // 上次的页面上下文
+  // Page switching state management
+  isInitialized: false, // Whether initialized
+  lastPageContext: null // Last page context
 })
 
 // 监听conversationId的变化，帮助调试
@@ -989,11 +989,11 @@ export const sendMessage = async (message, pageContext = null) => {
     let messageWithContext = message
     
     if (pageContext === 'research-plan') {
-      // 在研究方案页面，添加当前方案作为上下文
+      // On research plan page, add current plan as context
       const planContext = buildCurrentPlanContext()
       if (planContext) {
-        messageWithContext = `${planContext}\n\n用户问题：${message}`
-        console.log('发送包含当前方案上下文的消息')
+        messageWithContext = `${planContext}\n\nUser Question: ${message}`
+        console.log('Sending message with current plan context')
       }
     }
 
@@ -1082,14 +1082,14 @@ export const sendMessage = async (message, pageContext = null) => {
     chatState.messages = chatState.messages.filter(m => m.id !== assistantMessageId)
     
     // 添加错误消息
-    const errorMessage = {
-      id: assistantMessageId,
-      type: 'assistant',
-      content: '抱歉，我遇到了一些问题。错误信息：' + (error.message || '未知错误') + '\n请稍后再试，或者刷新页面重试。',
-      isComplete: true,
-      isError: true,
-      saved: false
-    }
+          const errorMessage = {
+        id: assistantMessageId,
+        type: 'assistant',
+        content: 'Sorry, I encountered some issues. Error message: ' + (error.message || 'Unknown error') + '\nPlease try again later, or refresh the page to retry.',
+        isComplete: true,
+        isError: true,
+        saved: false
+      }
     chatState.messages.push(errorMessage)
     
     // 也尝试保存错误消息
@@ -1108,24 +1108,24 @@ export const sendMessage = async (message, pageContext = null) => {
   }
 }
 
-// 构建当前方案上下文的辅助方法
+// Helper method to build current plan context
 const buildCurrentPlanContext = () => {
   if (!currentPlanState.isGenerated) {
-    return null // 如果没有生成的方案，不添加上下文
+    return null // If no generated plan, don't add context
   }
   
-  let context = '当前研究方案上下文：\n'
+  let context = 'Current Research Plan Context:\n'
   
   if (currentPlanState.title) {
-    context += `方案标题：${currentPlanState.title}\n`
+    context += `Plan Title: ${currentPlanState.title}\n`
   }
   
   if (currentPlanState.researchQuestions) {
-    context += `研究问题：${currentPlanState.researchQuestions}\n`
+    context += `Research Questions: ${currentPlanState.researchQuestions}\n`
   }
   
   if (currentPlanState.hypotheses && currentPlanState.hypotheses.length > 0) {
-    context += `Research Hypothesis:\n${currentPlanState.hypotheses.map((h, i) => `${i + 1}. ${h}`).join('\n')}\n`
+    context += `Research Hypotheses:\n${currentPlanState.hypotheses.map((h, i) => `${i + 1}. ${h}`).join('\n')}\n`
   }
   
   if (currentPlanState.experimentalDesign) {
@@ -1137,10 +1137,10 @@ const buildCurrentPlanContext = () => {
   }
   
   if (currentPlanState.expectedResults) {
-    context += `预期结果：${currentPlanState.expectedResults}\n`
+    context += `Expected Results: ${currentPlanState.expectedResults}\n`
   }
   
-  context += '\n请基于以上研究方案上下文回答用户的问题。'
+  context += '\nPlease answer the user\'s question based on the above research plan context.'
   
   return context
 }
@@ -1180,7 +1180,7 @@ export const clearMessages = () => {
     {
       id: 1,
       type: 'assistant',
-      content: 'Hello! I am MethodMate AI Assistant. Is there anything I can do for you?',
+      content: 'Hello! I am MethodMate AI Assistant. How can I help you today?',
       isComplete: true
     }
   ]
