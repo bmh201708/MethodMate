@@ -4,13 +4,13 @@
       <!-- Conversation management header -->
       <div class="mb-4 border-b border-gray-200 pb-4">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-lg font-semibold text-gray-900">Conversation Management</h3>
+          <h3 class="px-1 text-base font-semibold text-gray-900">Dialogue Management</h3>
           <div class="flex items-center space-x-2">
             <button
               @click="showConversationsList = !showConversationsList"
-              class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-1"
+              class="px-1 py-1 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-1"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.013 8.013 0 01-7-4c0-4.418 3.582-8 8-8s8 3.582 8 8z"/>
               </svg>
               <span>{{ showConversationsList ? 'Hide' : 'View' }} History</span>
@@ -18,9 +18,9 @@
             <button
               @click="createNewConversation"
               :disabled="isCreatingConversation"
-              class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+              class="px-2 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
               </svg>
               <span>{{ isCreatingConversation ? 'Creating...' : 'New Chat' }}</span>
@@ -100,8 +100,8 @@
 
       <!-- Chat history -->
       <div class="flex-1 overflow-y-auto mb-4 space-y-4" ref="chatContainer">
-        <!-- 调试信息 -->
-        <div v-if="true" class="text-xs text-gray-400 p-2 bg-yellow-50 border border-yellow-200 rounded">
+        <!-- Debug information -->
+        <div v-if="false" class="text-xs text-gray-400 p-2 bg-yellow-50 border border-yellow-200 rounded">
           Debug: Total messages {{ chatState.messages.length }}, Last updated {{ new Date().toLocaleTimeString() }}, Force update flag: {{ chatState.forceUpdateFlag }}
         </div>
         <div v-for="message in chatState.messages" :key="`msg_${message.id}_${message.content?.length || 0}`" 
@@ -109,11 +109,11 @@
           <div :class="['max-w-[70%] rounded-lg p-4 relative', 
                        message.type === 'user' ? 'bg-purple-100' : 
                        message.isError ? 'bg-red-50 border border-red-200' : 'bg-gray-100']">
-            <!-- 用户消息：纯文本显示 -->
+            <!-- User message: plain text display -->
             <div v-if="message.type === 'user'">
               <p class="whitespace-pre-wrap text-gray-800">{{ getDisplayContent(message) }}</p>
               
-              <!-- 用户消息的展开按钮 -->
+              <!-- Expand button for user messages -->
               <div v-if="message.fullContent && message.isTruncated" 
                    class="mt-3 pt-3 border-t border-purple-200">
                 <button 
@@ -131,7 +131,7 @@
               </div>
             </div>
             
-            <!-- 助手消息：markdown渲染 -->
+            <!-- Assistant message: markdown rendering -->
             <div v-else-if="message.type === 'assistant'" 
                  :class="['markdown-content', message.isError ? 'text-red-700' : 'text-gray-800']">
               <!-- Debug information -->
@@ -197,7 +197,7 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.013 8.013 0 01-7-4c0-4.418 3.582-8 8-8s8 3.582 8 8z"/>
           </svg>
-          <span class="font-medium">Chat with AI Assistant</span>
+          <span class="font-medium">Chat with MethodMate</span>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
           </svg>
@@ -579,7 +579,7 @@ marked.setOptions({
   mangle: false // 禁用标题锚点混淆
 })
 
-// 检测是否为研究方案（缓存结果避免重复计算）
+// Detect if content is a research plan (cache results to avoid repeated calculations)
 const researchPlanCache = new Map()
 const isResearchPlan = (content) => {
   if (!content || typeof content !== 'string') return false
@@ -592,7 +592,7 @@ const isResearchPlan = (content) => {
     return researchPlanCache.get(contentHash)
   }
   
-  // 检查关键词组合，提高检测准确性（支持中英文）
+  // Check keyword combinations to improve detection accuracy (supports Chinese and English)
   const researchKeywords = [
     // Chinese keywords
     '研究假设', '实验设计', '数据分析', '结果呈现',
@@ -633,25 +633,25 @@ const isResearchPlan = (content) => {
   const designMatches = countMatches(designKeywords)
   const analysisMatches = countMatches(analysisKeywords)
   
-  // 至少包含多个不同类别的关键词才判断为研究方案
+  // Only consider as research plan if contains multiple keywords from different categories
   const totalMatches = researchMatches + designMatches + analysisMatches
   const categoryCount = (researchMatches > 0 ? 1 : 0) + 
                        (designMatches > 0 ? 1 : 0) + 
                        (analysisMatches > 0 ? 1 : 0)
   
-  // 判断标准：总匹配数>=3 且 涉及至少2个类别
+  // Criteria: total matches >= 3 and involves at least 2 categories
   const isValidPlan = totalMatches >= 3 && categoryCount >= 2
   
-  // 缓存结果
+  // Cache results
   researchPlanCache.set(contentHash, isValidPlan)
   
-  // 限制缓存大小
+  // Limit cache size
   if (researchPlanCache.size > 50) {
     const firstKey = researchPlanCache.keys().next().value
     researchPlanCache.delete(firstKey)
   }
   
-  // 只在检测到研究方案时输出日志，减少控制台噪音
+  // Only output logs when research plan detected to reduce console noise
   if (isValidPlan) {
     console.log('Detected research plan:', {
       totalMatches,
