@@ -213,47 +213,47 @@ const handleOptimize = async () => {
       'Enhance the academic professionalism of the prompt, use accurate research terminology and methodological expressions, combine relevant theoretical frameworks and latest research developments, comply with academic paper writing standards'
     
     // Build message to send to coze
-    const optimizeMessage = `你是一位资深的学术研究指导专家，专门帮助科研工作者优化他们的研究提示词和问题。请根据以下要求专业地润色提示词，使其更符合学术研究的标准和深度。
+    const optimizeMessage = `You are a senior academic research guidance expert, specializing in helping researchers optimize their research prompts and questions. Please professionally polish the prompt according to the following requirements to make it more compliant with academic research standards and depth.
 
-【背景信息】
-- 这是一个面向科研工作者的MethodMate研究助手项目
-- 用户主要从事定量研究、HCI（人机交互）、实验设计等学术研究
-- 用户可能有多种研究需求：生成研究方案、了解研究背景、分析研究方法、探索研究问题等
-- 需要提供专业、详细、可操作的指导
+【Background Information】
+- This is a MethodMate research assistant project for researchers
+- Users are mainly engaged in quantitative research, HCI (Human-Computer Interaction), experimental design and other academic research
+- Users may have various research needs: generating research plans, understanding research backgrounds, analyzing research methods, exploring research questions, etc.
+- Need to provide professional, detailed, and actionable guidance
 
-【原始提示词】
+【Original Prompt】
 ${props.originalPrompt}
 
-【润色要求】
+【Polishing Requirements】
 ${finalInstruction}
 
-【润色标准】
-1. 学术专业性：使用准确的学术术语和研究方法论表达
-2. 详细程度：提供具体的操作指导和理论背景
-3. 结构化：逻辑清晰，层次分明
-4. 实用性：包含具体的步骤、方法或案例参考
-5. 适应性：适合不同类型的研究需求（方案生成、背景了解、方法分析等）
-6. 前沿性：结合最新的研究趋势和方法
+【Polishing Standards】
+1. Academic professionalism: Use accurate academic terminology and research methodology expressions
+2. Detail level: Provide specific operational guidance and theoretical background
+3. Structured: Clear logic and distinct levels
+4. Practicality: Include specific steps, methods or case references
+5. Adaptability: Suitable for different types of research needs (plan generation, background understanding, method analysis, etc.)
+6. Cutting-edge: Combine latest research trends and methods
 
-【输出要求】
-请返回JSON格式，包含以下字段：
-- optimizedPrompt: 润色后的专业研究提示词（详细、结构化、包含具体指导）
-- suggestions: 优化建议数组，每条建议说明优化的理由和学术依据
+【Output Requirements】
+Please return in JSON format with the following fields:
+- optimizedPrompt: Polished professional research prompt (detailed, structured, including specific guidance)
+- suggestions: Array of optimization suggestions, each explaining the reasons for optimization and academic basis
 
-示例输出格式：
+Example output format:
 {
-  "optimizedPrompt": "详细的专业研究提示词...",
+  "optimizedPrompt": "Detailed professional research prompt...",
   "suggestions": [
-    "建议1：说明学术理由",
-    "建议2：说明方法论依据",
-    "建议3：说明实践指导价值"
+    "Suggestion 1: Explain academic rationale",
+    "Suggestion 2: Explain methodological basis", 
+    "Suggestion 3: Explain practical guidance value"
   ]
 }
 
-注意：
-- 不要假设用户一定要生成研究方案，要根据提示词内容判断用户的真实需求
-- 润色后的提示词应该保持原有的核心意图，只是让表达更专业、更学术化
-- 确保润色后的提示词能够帮助研究者获得更深入、更专业的指导`
+Note:
+- Don't assume users necessarily want to generate research plans, judge users' real needs based on prompt content
+- The polished prompt should maintain the original core intent, just make the expression more professional and academic
+- Ensure the polished prompt can help researchers get more in-depth and professional guidance`
     
     console.log('Starting prompt polishing:', optimizeMessage)
     

@@ -1017,14 +1017,14 @@ export const sendMessage = async (message, pageContext = null) => {
         // 强制触发Vue重新渲染
         chatState.forceUpdateFlag = Date.now()
         
-                 console.log('助手消息内容已更新，新长度:', newMessages[assistantMsgIndex].content.length)
-         console.log('强制更新后的消息数组长度:', chatState.messages.length)
-         console.log('更新后的消息对象:', { 
-           id: newMessages[assistantMsgIndex].id,
-           type: newMessages[assistantMsgIndex].type,
-           content: newMessages[assistantMsgIndex].content.substring(0, 50) + '...',
-           isComplete: newMessages[assistantMsgIndex].isComplete
-         })
+        //          console.log('助手消息内容已更新，新长度:', newMessages[assistantMsgIndex].content.length)
+        //  console.log('强制更新后的消息数组长度:', chatState.messages.length)
+        //  console.log('更新后的消息对象:', { 
+        //    id: newMessages[assistantMsgIndex].id,
+        //    type: newMessages[assistantMsgIndex].type,
+        //    content: newMessages[assistantMsgIndex].content.substring(0, 50) + '...',
+        //    isComplete: newMessages[assistantMsgIndex].isComplete
+        //  })
       } else {
         console.log('未找到助手消息，ID:', assistantMessageId)
         console.log('当前消息列表:', chatState.messages.map(m => ({ id: m.id, type: m.type })))

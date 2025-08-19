@@ -61,7 +61,7 @@ export async function sendMessageToChatGPT(message, history = []) {
     const messages = [
       {
         role: 'system',
-        content: '你是一个专业的学术研究助手，擅长人机交互（HCI）、定量研究方法、统计分析和学术写作。请用中文回答问题，保持专业性和准确性。'
+        content: 'You are a professional academic research assistant, specializing in Human-Computer Interaction (HCI), quantitative research methods, statistical analysis, and academic writing. Please respond in English while maintaining professionalism and accuracy.'
       },
       ...history.map(msg => ({
         role: msg.role,
@@ -142,7 +142,7 @@ export async function sendMessageToChatGPTStream(message, history = [], onChunk)
     const messages = [
       {
         role: 'system',
-        content: '你是一个专业的学术研究助手，擅长人机交互（HCI）、定量研究方法、统计分析和学术写作。请用中文回答问题，保持专业性和准确性。'
+        content: 'You are a professional academic research assistant, specializing in Human-Computer Interaction (HCI), quantitative research methods, statistical analysis, and academic writing. Please respond in English while maintaining professionalism and accuracy.'
       },
       ...history.map(msg => ({
         role: msg.role,
