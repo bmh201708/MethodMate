@@ -12,13 +12,13 @@
               ref="generatePlanBtnRef"
               @click="showResearchPlanDialog"
               :disabled="isGenerating"
-              class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-3 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2.5 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm font-medium"
             >
-              <svg v-if="isGenerating" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+              <svg v-if="isGenerating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
               </svg>
               <span>{{ isGenerating ? 'Generating...' : 'Generate Quantitative Research Plan' }}</span>
@@ -90,18 +90,18 @@
             </div>
           </div>
 
-          <div class="bg-white rounded-xl shadow-sm p-8">
-            <div class="space-y-8">
+          <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="space-y-6">
               <!-- 实验方案部分 -->
-              <div class="bg-white rounded-xl shadow-sm p-8">
+              <div class="bg-white rounded-xl shadow-sm p-6">
                 <!-- 方案导航按钮 -->
-                <div class="flex space-x-4 mb-8">
+                <div class="flex justify-between items-center mb-4 pb-1">
                   <button
                     v-for="section in sections"
                     :key="section.id"
                     :ref="section.id === 'full' ? 'fullSectionBtnRef' : null"
                     @click="activeSection = section.id"
-                    class="px-4 py-2 rounded-lg font-medium transition-colors"
+                    class="px-3 py-1.5 rounded text-xs font-bold transition-colors whitespace-nowrap flex-1 mx-1 text-center"
                     :class="[
                       activeSection === section.id
                         ? 'bg-purple-100 text-purple-700'
@@ -114,51 +114,54 @@
 
                 <!-- 各部分内容 -->
                 <div v-if="activeSection === 'full'">
-                  <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">{{ hasGeneratedPlan ? currentPlanState.title : 'Quantitative Research Plan' }}</h2>
-                    <!-- 简约的评估和迭代按钮 -->
+                  <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-xl font-bold text-gray-900">{{ hasGeneratedPlan ? currentPlanState.title : 'Quantitative Research Plan' }}</h1>
+                    <!-- 按钮组 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
+                      <!-- Comparison按钮 - 橙色 -->
+                      <button
+                        ref="planComparisonBtnRef"
+                        @click="showPlanComparison"
+                        class="px-3 py-1.5 text-xs bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors flex items-center justify-center space-x-1 shadow-sm min-w-[80px]"
+                      >
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        <span>Comparison</span>
+                      </button>
+                      
+                      <!-- Evaluation按钮 - 蓝色 -->
                       <button
                         ref="evaluateBtnRef"
                         @click="evaluatePlan"
                         :disabled="isEvaluating"
-                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
+                        class="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1 shadow-sm min-w-[80px]"
                       >
-                        <svg v-if="isEvaluating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <svg v-if="isEvaluating" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>{{ isEvaluating ? 'Evaluating...' : 'Overall Evaluation' }}</span>
+                        <span>{{ isEvaluating ? 'Evaluating...' : 'Evaluation' }}</span>
                       </button>
+                      
+                      <!-- Iteration按钮 - 绿色 -->
                       <button
                         ref="iterateBtnRef"
                         @click="showIterateDialog('full')"
                         :disabled="isIterating"
-                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
+                        class="px-3 py-1.5 text-xs bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1 shadow-sm min-w-[80px]"
                       >
-                        <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <svg v-if="isIterating" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
-                        <span>{{ isIterating ? 'Iterating...' : 'Plan Iteration' }}</span>
-                      </button>
-                      
-                      <!-- 方案对比按钮 -->
-                      <button
-                        ref="planComparisonBtnRef"
-                        @click="showPlanComparison"
-                        class="w-28 px-3 py-1.5 text-sm bg-green-50 text-green-600 rounded-md hover:bg-green-100 transition-colors flex items-center justify-center space-x-1.5"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                        <span>Plan Comparison</span>
+                        <span>{{ isIterating ? 'Iterating...' : 'Iteration' }}</span>
                       </button>
                     </div>
                   </div>
@@ -226,38 +229,41 @@
                   </div>
                 </div>
                 <div v-if="activeSection === 'hypothesis'">
-                  <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">Research Hypotheses</h2>
-                    <!-- 简约的部分评估按钮 -->
+                  <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Research Hypotheses</h2>
+                    <!-- 分节按钮组 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
+                      <!-- Section Evaluation按钮 - 蓝色 -->
                       <button
                         @click="evaluateSectionPlan('hypothesis')"
                         :disabled="isEvaluatingSection && evaluatingSection === 'hypothesis'"
-                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
+                        class="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1 shadow-sm min-w-[80px]"
                       >
-                        <svg v-if="isEvaluatingSection && evaluatingSection === 'hypothesis'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <svg v-if="isEvaluatingSection && evaluatingSection === 'hypothesis'" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>{{ (isEvaluatingSection && evaluatingSection === 'hypothesis') ? 'Evaluating...' : 'Section Evaluation' }}</span>
+                        <span>{{ (isEvaluatingSection && evaluatingSection === 'hypothesis') ? 'Evaluating...' : 'Evaluation' }}</span>
                       </button>
+                      
+                      <!-- Section Iteration按钮 - 绿色 -->
                       <button
                         @click="showIterateDialog('hypothesis')"
                         :disabled="isIterating"
                         data-section-iterate="hypothesis"
-                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
+                        class="px-3 py-1.5 text-xs bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1 shadow-sm min-w-[80px]"
                       >
-                        <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <svg v-if="isIterating" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
-                        <span>{{ isIterating ? 'Iterating...' : 'Section Iteration' }}</span>
+                        <span>{{ isIterating ? 'Iterating...' : 'Iteration' }}</span>
                       </button>
                     </div>
                   </div>
@@ -277,38 +283,41 @@
                   </div>
                 </div>
                 <div v-if="activeSection === 'design'">
-                  <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">Experimental Design</h2>
-                    <!-- 简约的部分评估按钮 -->
+                  <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Experimental Design</h2>
+                    <!-- 分节按钮组 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
+                      <!-- Section Evaluation按钮 - 蓝色 -->
                       <button
                         @click="evaluateSectionPlan('design')"
                         :disabled="isEvaluatingSection && evaluatingSection === 'design'"
-                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
+                        class="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1 shadow-sm min-w-[80px]"
                       >
-                        <svg v-if="isEvaluatingSection && evaluatingSection === 'design'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <svg v-if="isEvaluatingSection && evaluatingSection === 'design'" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>{{ (isEvaluatingSection && evaluatingSection === 'design') ? 'Evaluating...' : 'Section Evaluation' }}</span>
+                        <span>{{ (isEvaluatingSection && evaluatingSection === 'design') ? 'Evaluating...' : 'Evaluation' }}</span>
                       </button>
+                      
+                      <!-- Section Iteration按钮 - 绿色 -->
                       <button
                         @click="showIterateDialog('design')"
                         :disabled="isIterating"
                         data-section-iterate="design"
-                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
+                        class="px-3 py-1.5 text-xs bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1 shadow-sm min-w-[80px]"
                       >
-                        <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <svg v-if="isIterating" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
-                        <span>{{ isIterating ? 'Iterating...' : 'Section Iteration' }}</span>
+                        <span>{{ isIterating ? 'Iterating...' : 'Iteration' }}</span>
                       </button>
                     </div>
                   </div>
@@ -327,38 +336,41 @@
                   </div>
                 </div>
                 <div v-if="activeSection === 'analysis'">
-                  <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">Data Analysis</h2>
-                    <!-- 简约的部分评估按钮 -->
+                  <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Data Analysis</h2>
+                    <!-- 分节按钮组 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
+                      <!-- Section Evaluation按钮 - 蓝色 -->
                       <button
                         @click="evaluateSectionPlan('analysis')"
                         :disabled="isEvaluatingSection && evaluatingSection === 'analysis'"
-                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
+                        class="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1 shadow-sm min-w-[80px]"
                       >
-                        <svg v-if="isEvaluatingSection && evaluatingSection === 'analysis'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <svg v-if="isEvaluatingSection && evaluatingSection === 'analysis'" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>{{ (isEvaluatingSection && evaluatingSection === 'analysis') ? 'Evaluating...' : 'Section Evaluation' }}</span>
+                        <span>{{ (isEvaluatingSection && evaluatingSection === 'analysis') ? 'Evaluating...' : 'Evaluation' }}</span>
                       </button>
+                      
+                      <!-- Section Iteration按钮 - 绿色 -->
                       <button
                         @click="showIterateDialog('analysis')"
                         :disabled="isIterating"
                         data-section-iterate="analysis"
-                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
+                        class="px-3 py-1.5 text-xs bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1 shadow-sm min-w-[80px]"
                       >
-                        <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <svg v-if="isIterating" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
-                        <span>{{ isIterating ? 'Iterating...' : 'Section Iteration' }}</span>
+                        <span>{{ isIterating ? 'Iterating...' : 'Iteration' }}</span>
                       </button>
                     </div>
                   </div>
@@ -377,38 +389,41 @@
                   </div>
                 </div>
                 <div v-if="activeSection === 'results'">
-                  <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">Results Presentation</h2>
-                    <!-- 简约的部分评估按钮 -->
+                  <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Expected Results</h2>
+                    <!-- 分节按钮组 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
+                      <!-- Section Evaluation按钮 - 蓝色 -->
                       <button
                         @click="evaluateSectionPlan('results')"
                         :disabled="isEvaluatingSection && evaluatingSection === 'results'"
-                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
+                        class="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1 shadow-sm min-w-[80px]"
                       >
-                        <svg v-if="isEvaluatingSection && evaluatingSection === 'results'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <svg v-if="isEvaluatingSection && evaluatingSection === 'results'" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>{{ (isEvaluatingSection && evaluatingSection === 'results') ? 'Evaluating...' : 'Section Evaluation' }}</span>
+                        <span>{{ (isEvaluatingSection && evaluatingSection === 'results') ? 'Evaluating...' : 'Evaluation' }}</span>
                       </button>
+                      
+                      <!-- Section Iteration按钮 - 绿色 -->
                       <button
                         @click="showIterateDialog('results')"
                         :disabled="isIterating"
                         data-section-iterate="results"
-                        class="w-28 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
+                        class="px-3 py-1.5 text-xs bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1 shadow-sm min-w-[80px]"
                       >
-                        <svg v-if="isIterating" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <svg v-if="isIterating" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
-                        <span>{{ isIterating ? 'Iterating...' : 'Section Iteration' }}</span>
+                        <span>{{ isIterating ? 'Iterating...' : 'Iteration' }}</span>
                       </button>
                     </div>
                   </div>
@@ -440,7 +455,7 @@
                       ref="sourceIntroBtnRef"
                       @click="generateSourceIntroduction"
                       :disabled="isGeneratingSource"
-                      class="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                      class="px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
                     >
                       <svg v-if="isGeneratingSource" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -486,7 +501,7 @@
                         ref="sourceIntroBtnRef2"
                         @click="generateSourceIntroduction"
                         :disabled="isGeneratingSource"
-                        class="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                        class="px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
                       >
                         <svg v-if="isGeneratingSource" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -512,7 +527,7 @@
                         ref="methodIntroBtnRef"
                         @click="generateMethodIntroduction"
                         :disabled="isGeneratingMethod"
-                        class="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                        class="px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
                       >
                         <svg v-if="isGeneratingMethod" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -1680,11 +1695,11 @@ const jumpToStatisticalMethodQuery = async (methodName) => {
 
 
 const sections = [
-  { id: 'full', name: 'Complete Plan' },
-  { id: 'hypothesis', name: 'Research Hypotheses' },
+  { id: 'full', name: 'Full Proposal' },
+  { id: 'hypothesis', name: 'Hypotheses' },
   { id: 'design', name: 'Experimental Design' },
   { id: 'analysis', name: 'Data Analysis' },
-  { id: 'results', name: 'Results Presentation' }
+  { id: 'results', name: 'Expected Results' }
 ]
 
 const analysisSubSections = [
