@@ -5,7 +5,7 @@
       <template v-for="(prompt, index) in currentPrompts" :key="index">
         <button
           @click="handlePromptClick(prompt)"
-          class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-full transition-colors whitespace-nowrap"
+          class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs rounded-full transition-colors whitespace-nowrap"
         >
           {{ prompt }}
         </button>
@@ -14,7 +14,7 @@
       <!-- Change Batch Button -->
       <button
         @click="handleRefresh"
-        class="flex items-center space-x-1 px-3 py-1.5 border border-purple-300 text-purple-600 hover:bg-purple-50 text-sm rounded-full transition-colors whitespace-nowrap ml-2"
+        class="flex items-center space-x-1 px-3 py-1.5 border border-purple-300 text-purple-600 hover:bg-purple-50 text-xs rounded-full transition-colors whitespace-nowrap ml-2"
       >
         <span>Refresh</span>
         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
