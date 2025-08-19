@@ -35,11 +35,7 @@
     "tailwindcss": "^3.3.6",
     "vite": "^5.0.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/bmh201708/MethodMate.git"
-  },
-  "keywords": [
+    "keywords": [
     "academic",
     "research",
     "literature-search",
@@ -47,6 +43,6 @@
     "vue",
     "paper-search"
   ],
-  "author": "bmh201708",
+  "author": "MethodMate Team",
   "license": "MIT"
 }
