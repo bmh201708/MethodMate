@@ -80,13 +80,33 @@ npm run dev:local
 
 ### 环境变量配置
 
-在 `server/.env` 文件中配置：
+⚠️ **重要：为了安全性，所有 API 密钥已迁移到环境变量，不再硬编码。**
+
+#### 前端环境变量
+在项目根目录创建 `.env` 文件：
 
 ```env
-# Coze AI API配置
+# Coze API配置（前端）
+VITE_COZE_API_KEY=your_coze_api_key
+VITE_COZE_API_URL=https://api.coze.com
+VITE_COZE_BOT_ID=your_chat_bot_id
+VITE_COZE_USER_ID=your_coze_user_id
+VITE_COZE_RECOMMEND_BOT_ID=your_recommend_bot_id
+
+# ChatGPT配置（可选）
+VITE_CHATGPT_API_KEY=your_openai_api_key
+VITE_CHATGPT_BASE_URL=https://api.chatanywhere.tech/v1/chat/completions
+VITE_CHATGPT_MODEL=gpt-4o
+```
+
+#### 后端环境变量
+在 `server/` 目录创建 `.env` 文件：
+
+```env
+# Coze API配置
 COZE_API_KEY=your_coze_api_key
-COZE_BOT_ID=your_bot_id
-COZE_USER_ID=your_user_id
+COZE_BOT_ID=your_chat_bot_id
+COZE_USER_ID=your_coze_user_id
 
 # 数据库配置
 DB_HOST=localhost
@@ -100,8 +120,9 @@ JWT_SECRET=your_jwt_secret_key
 
 # 可选API配置
 CORE_API_KEY=your_core_api_key
-SEMANTIC_API_KEY=your_semantic_scholar_api_key
 ```
+
+📋 **详细配置指南请参考：[安全配置文档](docs/SECURITY_CONFIG.md)**
 
 ## 🛠️ 技术栈
 

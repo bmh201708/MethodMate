@@ -1,15 +1,15 @@
 import { CozeAPI } from '@coze/api'
 
-const API_KEY = 'pat_JbivMTTLDl2EQkzyFPDJ0PvIrUlDcIRgLClE65kT568CFQ81pBDR82AZzsz39Jec'
-const BOT_ID = '7513529977745915905'
-const USER_ID = '7505301221562023954'
+const API_KEY = import.meta.env.VITE_COZE_API_KEY || ''
+const BOT_ID = import.meta.env.VITE_COZE_BOT_ID || ''
+const USER_ID = import.meta.env.VITE_COZE_USER_ID || ''
 
 // 推荐智能体配置
-const RECOMMEND_BOT_ID = '7510957134268940304'
+const RECOMMEND_BOT_ID = import.meta.env.VITE_COZE_RECOMMEND_BOT_ID || ''
 
 const apiClient = new CozeAPI({
   token: API_KEY,
-  baseURL: 'https://api.coze.com',
+  baseURL: import.meta.env.VITE_COZE_API_URL || 'https://api.coze.com',
   allowPersonalAccessTokenInBrowser: true
 })
 
@@ -508,7 +508,7 @@ export const sendSilentMessageToCoze = async (message, chatHistory = []) => {
     })
     
     const params = {
-      bot_id: '7513529977745915905', // 使用指定的润色bot_id
+      bot_id: BOT_ID, // 使用指定的润色bot_id
       user_id: USER_ID,
       additional_messages: messages,
       stream: true, // 当auto_save_history=false时，必须设置stream=true

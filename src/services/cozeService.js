@@ -3,8 +3,8 @@ import { CozeAPI } from '@coze/api';
 
 // 初始化 Coze API 客户端
 const apiClient = new CozeAPI({
-  token: 'pat_JbivMTTLDl2EQkzyFPDJ0PvIrUlDcIRgLClE65kT568CFQ81pBDR82AZzsz39Jec',
-  baseURL: 'https://api.coze.com'
+  token: import.meta.env.VITE_COZE_API_KEY || '',
+  baseURL: import.meta.env.VITE_COZE_API_URL || 'https://api.coze.com'
 });
 
 // Coze服务类
@@ -13,8 +13,8 @@ class CozeService {
   async sendChatStream(message, conversationId = null) {
     try {
       const params = {
-        bot_id: '7513529977745915905',
-        user_id: '7505301221562023954',
+        bot_id: import.meta.env.VITE_COZE_BOT_ID || '',
+        user_id: import.meta.env.VITE_COZE_USER_ID || '',
         query: message,
         stream: true
       };
@@ -36,8 +36,8 @@ class CozeService {
   async sendChat(message, conversationId = null) {
     try {
       const params = {
-        bot_id: '7513529977745915905',
-        user_id: '7505301221562023954',
+        bot_id: import.meta.env.VITE_COZE_BOT_ID || '',
+        user_id: import.meta.env.VITE_COZE_USER_ID || '',
         query: message,
         stream: false
       };

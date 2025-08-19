@@ -114,12 +114,23 @@ const TARGET_DOMAINS = {
   }
 };
 
-// Coze API配置 - 从cozeApi.js获取
-const COZE_API_KEY = process.env.COZE_API_KEY || 'pat_JbivMTTLDl2EQkzyFPDJ0PvIrUlDcIRgLClE65kT568CFQ81pBDR82AZzsz39Jec';
+// Coze API配置 - 从环境变量获取
+const COZE_API_KEY = process.env.COZE_API_KEY;
 const COZE_API_URL = process.env.COZE_API_URL || 'https://api.coze.com';
-const COZE_BOT_ID = process.env.COZE_BOT_ID || '7513529977745915905';
-const COZE_BOT_ID_Reference = process.env.COZE_BOT_ID_Reference || '7511024998740754448';  
-const COZE_USER_ID = process.env.COZE_USER_ID || '7505301221562023954';
+const COZE_BOT_ID = process.env.COZE_BOT_ID;
+const COZE_BOT_ID_Reference = process.env.COZE_BOT_ID_Reference;
+const COZE_USER_ID = process.env.COZE_USER_ID;
+
+// 环境变量验证
+if (!COZE_API_KEY) {
+  console.warn('⚠️ COZE_API_KEY not found in environment variables');
+}
+if (!COZE_BOT_ID) {
+  console.warn('⚠️ COZE_BOT_ID not found in environment variables');
+}
+if (!COZE_USER_ID) {
+  console.warn('⚠️ COZE_USER_ID not found in environment variables');
+}
 
 // ChatGPT API配置
 const CHATGPT_CONFIG = getChatGPTConfig();
