@@ -636,36 +636,36 @@
                   @click="prevTutorialStep"
                   class="px-3 py-1.5 text-gray-600 text-sm hover:text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                 >
-                  上一步
+                  Back
                 </button>
                 <button
                   @click="nextTutorialStep"
                   class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
-                  {{ currentTutorialStep === tutorialSteps.length - 1 ? '完成' : '知道了' }}
+                  {{ currentTutorialStep === tutorialSteps.length - 1 ? 'Finish' : 'Understand' }}
                 </button>
                 <button
                   @click="skipTutorial"
                   class="px-3 py-1.5 text-gray-600 text-sm hover:text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                 >
-                  跳过
+                  Skip
                 </button>
               </div>
               <button
                 @click="dontShowAgain"
                 class="text-xs text-gray-500 hover:text-gray-700 transition-colors underline"
               >
-                下次不提示
+                Not prompting next time
               </button>
             </div>
             
             <!-- 键盘快捷键提示 -->
             <div class="mt-2 text-xs text-gray-400 text-center">
-              <span>Enter/空格: 下一步</span>
+              <span>Enter: next step</span>
               <span class="mx-2">•</span>
-              <span>Esc: 跳过</span>
+              <span>Esc: Skip</span>
               <span class="mx-2">•</span>
-              <span>←→: 前后步骤</span>
+              <span>←→: Steps before and after</span>
             </div>
           </div>
         </div>
@@ -673,7 +673,7 @@
         <!-- 进度指示器 -->
         <div class="mt-3 pt-2 border-t border-gray-100">
           <div class="flex items-center justify-between text-xs text-gray-500">
-            <span>步骤 {{ currentTutorialStep + 1 }} / {{ tutorialSteps.length }}</span>
+            <span>Step {{ currentTutorialStep + 1 }} / {{ tutorialSteps.length }}</span>
             <div class="flex space-x-1">
               <div 
                 v-for="(step, index) in tutorialSteps" 
@@ -694,14 +694,14 @@
         class="px-3 py-2 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-700 transition-colors opacity-50 hover:opacity-100"
         title="重置新手指引状态"
       >
-        重置引导
+        Reset guidance
       </button>
       <button
         @click="debugElementRefs"
         class="px-3 py-2 bg-blue-800 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors opacity-50 hover:opacity-100"
         title="调试元素引用"
       >
-        调试元素
+        Debugging elements
       </button>
     </div>
     
@@ -716,7 +716,7 @@
             <div>
               <h3 class="text-xl font-semibold text-gray-900">{{ getIterateDialogTitle() }}</h3>
               <p class="text-gray-600 mt-2 text-sm">
-                请输入您的迭代建议，AI将基于您的建议对{{ getSectionNameInChinese(iteratingSection) }}进行优化
+                Please enter your iteration suggestions, and AI will optimize{{ getSectionNameInChinese(iteratingSection) }} based on your suggestions
               </p>
             </div>
             <button
@@ -735,7 +735,7 @@
         
           <!-- 预设建议选项 -->
           <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-3">快速选择建议</label>
+            <label class="block text-sm font-medium text-gray-700 mb-3">Quick selection suggestions</label>
             <div class="grid grid-cols-2 gap-3">
               <button
                 v-for="(suggestion, index) in getPresetSuggestions()"
@@ -755,7 +755,7 @@
         
                   <!-- 迭代建议输入框 -->
           <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-3">迭代建议</label>
+            <label class="block text-sm font-medium text-gray-700 mb-3">Iterative suggestions</label>
             <textarea
               v-model="iterateSuggestion"
               rows="6"
@@ -771,7 +771,7 @@
             @click="closeIterateDialog"
             class="px-6 py-3 text-gray-700 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors font-medium"
           >
-            取消
+            Cancel
           </button>
           <button
             @click="confirmIterate"
@@ -782,7 +782,7 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span>{{ isIterating ? '迭代中...' : '确认迭代' }}</span>
+            <span>{{ isIterating ? 'Iterating...' : 'Confirm iteration' }}</span>
           </button>
         </div>
       </div>
@@ -795,7 +795,7 @@
       <!-- 对话框头部 -->
       <div class="px-8 py-6 border-b border-gray-100">
         <div class="flex items-center justify-between">
-          <h3 class="text-xl font-semibold text-gray-900">生成研究方案</h3>
+          <h3 class="text-xl font-semibold text-gray-900">Generate research proposal</h3>
           <button
             @click="closeResearchPlanDialog"
             class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-xl hover:bg-gray-100"
@@ -824,7 +824,7 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
               </svg>
-              <span>自定义主题</span>
+              <span>Custom Theme</span>
             </div>
           </button>
           <button
@@ -840,7 +840,7 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
-              <span>智能分析</span>
+              <span>Intelligent Analysis</span>
             </div>
           </button>
         </div>
@@ -925,7 +925,7 @@
           @click="closeResearchPlanDialog"
           class="px-6 py-3 text-gray-700 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors font-medium"
         >
-          取消
+          Cancel
         </button>
         <button
           @click="confirmGenerateResearchPlan"
@@ -935,7 +935,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
           </svg>
-          <span>开始生成</span>
+          <span>Start generating</span>
         </button>
       </div>
     </div>
@@ -951,7 +951,7 @@
           <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
           </svg>
-          <h2 class="text-xl font-semibold text-gray-900">方案对比</h2>
+          <h2 class="text-xl font-semibold text-gray-900">Solution Comparison</h2>
         </div>
         <button @click="closePlanComparison" 
                 class="text-gray-400 hover:text-gray-600 transition-colors">
@@ -969,7 +969,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <h3 class="text-lg font-medium text-blue-900">
-                  迭代信息
+                  Iterative information
                 </h3>
                 <p class="text-sm text-blue-700 mt-1">
                   迭代部分：{{ getSectionNameInChinese(planComparisonData.section) }}
@@ -985,7 +985,7 @@
                 <div class="text-2xl font-bold text-blue-600">
                   {{ planComparisonData.statistics.totalChanges }}
                 </div>
-                <div class="text-sm text-blue-600">个部分发生变化</div>
+                <div class="text-sm text-blue-600">parts have undergone changes</div>
               </div>
             </div>
           </div>
