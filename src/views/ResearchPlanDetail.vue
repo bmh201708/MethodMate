@@ -847,15 +847,15 @@
 
         <!-- 自定义主题模式 -->
         <div v-if="researchPlanMode === 'custom'">
-          <label class="block text-sm font-medium text-gray-700 mb-3">请输入您的研究主题或问题</label>
+          <label class="block text-sm font-medium text-gray-700 mb-3">Enter your research topic or question</label>
           <textarea
             v-model="researchTopicInput"
-            placeholder="例如：探讨人工智能对大学生学习效果的影响研究..."
+            placeholder="For example, exploring the impact of artificial intelligence on the learning outcomes of college students .."
             class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all duration-200"
             rows="4"
           ></textarea>
           <p class="text-xs text-gray-500 mt-2">
-            系统将基于您输入的主题，结合参考文献生成相应的定量研究方案
+            The system will generate a corresponding quantitative research plan based on the topic you input, combined with references
           </p>
         </div>
 
@@ -2618,7 +2618,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
       hasPapers: referencedPapers.length > 0,
       paperCount: referencedPapers.length,
       paperContents: paperContents.map((content, index) => 
-        content.fullText ? `参考文献${index + 1}全文内容：\n${content.fullText}` : ''
+        content.fullText ? `References ${index + 1} full text content：\n${content.fullText}` : ''
       ).filter(content => content).join('\n\n'),
       mode: mode
     }
