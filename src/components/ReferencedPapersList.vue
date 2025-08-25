@@ -1124,7 +1124,7 @@ const clearAllReferences = () => {
 const formatDate = (timestamp) => {
   if (!timestamp) return ''
   try {
-    return new Date(timestamp).toLocaleDateString('zh-CN', {
+    return new Date(timestamp).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -1199,7 +1199,7 @@ const exportReferences = () => {
     'Research Method': paper.researchMethod || '',
     Link: paper.scholar_url || paper.downloadUrl || '',
     Source: paper.source === 'search' ? 'Literature Search' : 'AI Recommendation',
-    'Referenced Time': paper.referencedAt ? new Date(paper.referencedAt).toLocaleString() : ''
+    'Referenced Time': paper.referencedAt ? new Date(paper.referencedAt).toLocaleString('en-US') : ''
   }))
 
   // 转换为CSV格式
