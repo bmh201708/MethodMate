@@ -4169,43 +4169,43 @@ const getPresetSuggestions = () => {
   
   // 基础建议（所有部分都有）
   const baseSuggestions = [
-    '自动迭代优化',
-    '提高科学严谨性',
-    '增加更多细节',
-    '简化表述'
+    'Automatic iteration optimization',
+    'Improve scientific rigor',
+    'Add more details',
+    'Simplify expression'
   ]
   
   // 特定部分的建议
   const sectionSpecificSuggestions = {
     'full': [
-      '整体优化各部分的一致性',
-      '强化研究的创新性',
-      '提升方案的可操作性',
-      '增强理论依据'
+      'Optimize overall consistency between sections',
+      'Enhance research innovation',
+      'Improve plan operability',
+      'Strengthen theoretical foundation'
     ],
     'hypothesis': [
-      '使假设更加具体明确',
-      '增加理论支撑',
-      '提高假设的可验证性',
-      '优化变量定义'
+      'Make hypotheses more specific and clear',
+      'Add theoretical support',
+      'Improve hypothesis verifiability',
+      'Optimize variable definitions'
     ],
     'design': [
-      '细化实验步骤',
-      '优化样本选择策略',
-      '改进控制变量设置',
-      '增加实验的可重复性'
+      'Refine experimental procedures',
+      'Optimize sampling strategy',
+      'Improve control variable settings',
+      'Increase experimental reproducibility'
     ],
     'analysis': [
-      '增加统计方法的详细说明',
-      '优化数据处理流程',
-      '补充效应量分析',
-      '完善统计假设检验'
+      'Add detailed description of statistical methods',
+      'Optimize data processing workflow',
+      'Supplement effect size analysis',
+      'Improve statistical hypothesis testing'
     ],
     'results': [
-      '增加可视化呈现方式',
-      '优化结果解释的逻辑',
-      '补充结果的实践意义',
-      '完善结论的表述'
+      'Add visualization presentation methods',
+      'Optimize logic of result interpretation',
+      'Supplement practical significance of results',
+      'Improve conclusion statements'
     ]
   }
   
