@@ -56,7 +56,7 @@ export function generateDiffHTML(oldText, newText) {
   // 显示删除的内容（红色）
   if (diff.removed.length > 0) {
     html += '<div class="diff-section">'
-    html += '<h4 class="diff-title removed">删除的内容</h4>'
+    html += '<h4 class="diff-title removed">Deleted Content</h4>'
     html += '<div class="diff-content removed">'
     diff.removed.forEach(line => {
       html += `<div class="diff-line removed">- ${escapeHtml(line)}</div>`
@@ -67,7 +67,7 @@ export function generateDiffHTML(oldText, newText) {
   // 显示新增的内容（绿色）
   if (diff.added.length > 0) {
     html += '<div class="diff-section">'
-    html += '<h4 class="diff-title added">新增的内容</h4>'
+    html += '<h4 class="diff-title added">Added Content</h4>'
     html += '<div class="diff-content added">'
     diff.added.forEach(line => {
       html += `<div class="diff-line added">+ ${escapeHtml(line)}</div>`
@@ -78,7 +78,7 @@ export function generateDiffHTML(oldText, newText) {
   // 显示保持不变的内容（灰色）
   if (diff.unchanged.length > 0) {
     html += '<div class="diff-section">'
-    html += '<h4 class="diff-title unchanged">保持不变的内容</h4>'
+    html += '<h4 class="diff-title unchanged">Unchanged Content</h4>'
     html += '<div class="diff-content unchanged">'
     diff.unchanged.forEach(line => {
       html += `<div class="diff-line unchanged">  ${escapeHtml(line)}</div>`
@@ -184,7 +184,7 @@ export function generateArrayDiffHTML(oldArray, newArray, title = '') {
   // 显示删除的项目（红色）
   if (diff.removed.length > 0) {
     html += '<div class="diff-section">'
-    html += '<h4 class="diff-title removed">删除的项目</h4>'
+    html += '<h4 class="diff-title removed">Deleted Items</h4>'
     html += '<div class="diff-content removed">'
     diff.removed.forEach(item => {
       html += `<div class="diff-item removed">- ${escapeHtml(item)}</div>`
@@ -195,7 +195,7 @@ export function generateArrayDiffHTML(oldArray, newArray, title = '') {
   // 显示新增的项目（绿色）
   if (diff.added.length > 0) {
     html += '<div class="diff-section">'
-    html += '<h4 class="diff-title added">新增的项目</h4>'
+    html += '<h4 class="diff-title added">Added Items</h4>'
     html += '<div class="diff-content added">'
     diff.added.forEach(item => {
       html += `<div class="diff-item added">+ ${escapeHtml(item)}</div>`
@@ -206,7 +206,7 @@ export function generateArrayDiffHTML(oldArray, newArray, title = '') {
   // 显示保持不变的项目（灰色）
   if (diff.unchanged.length > 0) {
     html += '<div class="diff-section">'
-    html += '<h4 class="diff-title unchanged">保持不变的项目</h4>'
+    html += '<h4 class="diff-title unchanged">Unchanged Items</h4>'
     html += '<div class="diff-content unchanged">'
     diff.unchanged.forEach(item => {
       html += `<div class="diff-item unchanged">  ${escapeHtml(item)}</div>`
@@ -225,7 +225,7 @@ export function generatePlanComparisonHTML(beforePlan, afterPlan) {
   // 标题对比
   if (beforePlan.title !== afterPlan.title) {
     html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">方案标题</h3>'
+    html += '<h3 class="section-title">Research Title</h3>'
     html += generateSideBySideDiffHTML(beforePlan.title || '', afterPlan.title || '')
     html += '</div>'
   }
@@ -234,25 +234,25 @@ export function generatePlanComparisonHTML(beforePlan, afterPlan) {
   const hypothesesDiff = compareArrays(beforePlan.hypotheses || [], afterPlan.hypotheses || [])
   if (hypothesesDiff.added.length > 0 || hypothesesDiff.removed.length > 0) {
     html += '<div class="comparison-section">'
-    html += generateSideBySideArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], '研究假设')
+    html += generateSideBySideArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], 'Research Hypotheses')
     html += '</div>'
   } else if (beforePlan.hypotheses && afterPlan.hypotheses && 
              JSON.stringify(beforePlan.hypotheses) !== JSON.stringify(afterPlan.hypotheses)) {
     // 如果数组内容相同但顺序不同，也显示对比
     html += '<div class="comparison-section">'
-    html += generateSideBySideArrayDiffHTML(beforePlan.hypotheses, afterPlan.hypotheses, '研究假设')
+    html += generateSideBySideArrayDiffHTML(beforePlan.hypotheses, afterPlan.hypotheses, 'Research Hypotheses')
     html += '</div>'
   } else if (beforePlan.hypotheses || afterPlan.hypotheses) {
     // 如果其中一个有假设，另一个没有，也显示对比
     html += '<div class="comparison-section">'
-    html += generateSideBySideArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], '研究假设')
+    html += generateSideBySideArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], 'Research Hypotheses')
     html += '</div>'
   }
   
   // 实验设计对比
   if (beforePlan.experimentalDesign !== afterPlan.experimentalDesign) {
     html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">实验设计</h3>'
+    html += '<h3 class="section-title">Experimental Design</h3>'
     html += generateSideBySideDiffHTML(beforePlan.experimentalDesign || '', afterPlan.experimentalDesign || '')
     html += '</div>'
   }
@@ -260,7 +260,7 @@ export function generatePlanComparisonHTML(beforePlan, afterPlan) {
   // 数据分析对比
   if (beforePlan.analysisMethod !== afterPlan.analysisMethod) {
     html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">数据分析</h3>'
+    html += '<h3 class="section-title">Data Analysis</h3>'
     html += generateSideBySideDiffHTML(beforePlan.analysisMethod || '', afterPlan.analysisMethod || '')
     html += '</div>'
   }
@@ -268,7 +268,7 @@ export function generatePlanComparisonHTML(beforePlan, afterPlan) {
   // 结果呈现对比
   if (beforePlan.expectedResults !== afterPlan.expectedResults) {
     html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">结果呈现</h3>'
+    html += '<h3 class="section-title">Expected Results</h3>'
     html += generateSideBySideDiffHTML(beforePlan.expectedResults || '', afterPlan.expectedResults || '')
     html += '</div>'
   }
@@ -286,7 +286,7 @@ export function generateSideBySideDiffHTML(oldText, newText) {
   
   // 左侧：原文
   html += '<div class="diff-column old-column">'
-  html += '<h4 class="column-title removed">原文</h4>'
+  html += '<h4 class="column-title removed">Original</h4>'
   html += '<div class="column-content">'
   
   // 显示删除的内容（红色）
@@ -307,7 +307,7 @@ export function generateSideBySideDiffHTML(oldText, newText) {
   
   // 右侧：新文
   html += '<div class="diff-column new-column">'
-  html += '<h4 class="column-title added">迭代后</h4>'
+  html += '<h4 class="column-title added">After Iteration</h4>'
   html += '<div class="column-content">'
   
   // 显示新增的内容（绿色）
@@ -343,7 +343,7 @@ export function generateSideBySideArrayDiffHTML(oldArray, newArray, title = '') 
   
   // 左侧：原文
   html += '<div class="diff-column old-column">'
-  html += '<h4 class="column-title removed">原文</h4>'
+  html += '<h4 class="column-title removed">Original</h4>'
   html += '<div class="column-content">'
   
   // 显示删除的项目（红色）
@@ -364,7 +364,7 @@ export function generateSideBySideArrayDiffHTML(oldArray, newArray, title = '') 
   
   // 右侧：新文
   html += '<div class="diff-column new-column">'
-  html += '<h4 class="column-title added">迭代后</h4>'
+  html += '<h4 class="column-title added">After Iteration</h4>'
   html += '<div class="column-content">'
   
   // 显示新增的项目（绿色）
@@ -391,7 +391,7 @@ export function generateSideBySideArrayDiffHTML(oldArray, newArray, title = '') 
 export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
   // 参数验证
   if (!beforePlan || !afterPlan) {
-    return '<div class="text-center text-red-500 py-8">对比数据不完整</div>'
+    return '<div class="text-center text-red-500 py-8">Comparison data is incomplete</div>'
   }
   
   let html = '<div class="left-right-comparison">'
@@ -400,7 +400,7 @@ export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
   // 标题对比
   if (beforePlan.title !== afterPlan.title) {
     html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">方案标题</h3>'
+    html += '<h3 class="section-title">Research Title</h3>'
     html += generateLeftRightDiffHTML(beforePlan.title || '', afterPlan.title || '')
     html += '</div>'
     hasChanges = true
@@ -414,7 +414,7 @@ export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
   if (hypothesesDiff.added.length > 0 || hypothesesDiff.removed.length > 0 || 
       JSON.stringify(beforeHypotheses) !== JSON.stringify(afterHypotheses)) {
     html += '<div class="comparison-section">'
-    html += generateLeftRightArrayDiffHTML(beforeHypotheses, afterHypotheses, '研究假设')
+    html += generateLeftRightArrayDiffHTML(beforeHypotheses, afterHypotheses, 'Research Hypotheses')
     html += '</div>'
     hasChanges = true
   }
@@ -422,7 +422,7 @@ export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
   // 实验设计对比
   if (beforePlan.experimentalDesign !== afterPlan.experimentalDesign) {
     html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">实验设计</h3>'
+    html += '<h3 class="section-title">Experimental Design</h3>'
     html += generateLeftRightDiffHTML(beforePlan.experimentalDesign || '', afterPlan.experimentalDesign || '')
     html += '</div>'
     hasChanges = true
@@ -431,7 +431,7 @@ export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
   // 数据分析对比
   if (beforePlan.analysisMethod !== afterPlan.analysisMethod) {
     html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">数据分析</h3>'
+    html += '<h3 class="section-title">Data Analysis</h3>'
     html += generateLeftRightDiffHTML(beforePlan.analysisMethod || '', afterPlan.analysisMethod || '')
     html += '</div>'
     hasChanges = true
@@ -440,7 +440,7 @@ export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
   // 结果呈现对比
   if (beforePlan.expectedResults !== afterPlan.expectedResults) {
     html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">结果呈现</h3>'
+    html += '<h3 class="section-title">Expected Results</h3>'
     html += generateLeftRightDiffHTML(beforePlan.expectedResults || '', afterPlan.expectedResults || '')
     html += '</div>'
     hasChanges = true
@@ -448,7 +448,7 @@ export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
   
   // 如果没有变化，显示提示信息
   if (!hasChanges) {
-    html += '<div class="text-center text-gray-500 py-8">两个方案内容相同，没有发现差异</div>'
+    html += '<div class="text-center text-gray-500 py-8">The two plans have identical content, no differences found</div>'
   }
   
   html += '</div>'
@@ -464,7 +464,7 @@ export function generateLeftRightDiffHTML(oldText, newText) {
   
   // 左侧：原文（显示删除的内容为红色，保持不变的内容为正常）
   html += '<div class="diff-column old-column">'
-  html += '<h4 class="column-title">原文</h4>'
+  html += '<h4 class="column-title">Original</h4>'
   html += '<div class="column-content">'
   
   // 显示删除的内容（红色）
@@ -485,7 +485,7 @@ export function generateLeftRightDiffHTML(oldText, newText) {
   
   // 右侧：修改后（显示新增的内容为绿色，保持不变的内容为正常）
   html += '<div class="diff-column new-column">'
-  html += '<h4 class="column-title">迭代后</h4>'
+  html += '<h4 class="column-title">After Iteration</h4>'
   html += '<div class="column-content">'
   
   // 显示新增的内容（绿色）
@@ -521,7 +521,7 @@ export function generateLeftRightArrayDiffHTML(oldArray, newArray, title = '') {
   
   // 左侧：原文（显示删除的项目为红色，保持不变的项目为正常）
   html += '<div class="diff-column old-column">'
-  html += '<h4 class="column-title">原文</h4>'
+  html += '<h4 class="column-title">Original</h4>'
   html += '<div class="column-content">'
   
   // 显示删除的项目（红色）
@@ -542,7 +542,7 @@ export function generateLeftRightArrayDiffHTML(oldArray, newArray, title = '') {
   
   // 右侧：修改后（显示新增的项目为绿色，保持不变的项目为正常）
   html += '<div class="diff-column new-column">'
-  html += '<h4 class="column-title">迭代后</h4>'
+  html += '<h4 class="column-title">After Iteration</h4>'
   html += '<div class="column-content">'
   
   // 显示新增的项目（绿色）
