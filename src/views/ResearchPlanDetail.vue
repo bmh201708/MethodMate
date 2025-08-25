@@ -2671,9 +2671,9 @@ const generatePlanTitle = () => {
     console.log('使用自定义主题模式，原始主题:', generationInfo.customTopic)
     // 清理主题，移除多余的词汇，保持简洁
     let cleanedTopic = generationInfo.customTopic
-      .replace(/^(探讨|研究|分析|调查|实验|测试|评估|关于)+/g, '') // 移除开头的动词
-      .replace(/(的影响|的关系|的效果|的作用|研究|分析|实验|方案|设计)+$/g, '') // 移除结尾的研究词汇
-      .replace(/请帮我|请|帮我|我想要|我希望|能否|可以|如何|怎样/g, '') // 移除请求性词汇
+      .replace(/^(探讨|研究|分析|调查|实验|测试|评估|关于|explore|research|analyze|investigate|experiment|test|evaluate|about|study)+/gi, '') // 移除开头的动词
+      .replace(/(的影响|的关系|的效果|的作用|研究|分析|实验|方案|设计|impact|relationship|effect|influence|research|analysis|experiment|plan|design)+$/gi, '') // 移除结尾的研究词汇
+      .replace(/请帮我|请|帮我|我想要|我希望|能否|可以|如何|怎样|please help|please|help me|i want|i hope|can you|how to|how can/gi, '') // 移除请求性词汇
       .replace(/\s+/g, ' ') // 合并多个空格
       .trim()
     
@@ -2700,7 +2700,7 @@ const generatePlanTitle = () => {
     
     // 确保标题不为空
     if (!cleanedTopic || cleanedTopic === '...') {
-      cleanedTopic = '用户自定义研究方案'
+      cleanedTopic = 'User Custom Research Plan'
     }
     
     console.log('自定义主题清理后的标题:', cleanedTopic)
@@ -2764,16 +2764,16 @@ const generatePlanTitle = () => {
   
   // 策略6：基于时间的智能默认标题（更具描述性）
   const now = new Date()
-  const timeStr = `${now.getMonth() + 1}月${now.getDate()}日-${now.getHours()}时${now.getMinutes()}分`
+  const timeStr = `${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`
   const referencedCount = Array.from(papersState.referencedPapersList).length
   
   let smartDefaultTitle = ''
   if (referencedCount > 0) {
-    smartDefaultTitle = `基于${referencedCount}篇文献的定量研究方案`
+    smartDefaultTitle = `Quantitative Research Plan Based on ${referencedCount} Papers`
   } else if (generationInfo.mode === 'custom') {
-    smartDefaultTitle = '用户自定义研究方案'
+    smartDefaultTitle = 'User Custom Research Plan'
   } else {
-    smartDefaultTitle = 'AI智能生成研究方案'
+    smartDefaultTitle = 'AI Generated Research Plan'
   }
   
   const finalTitle = `${smartDefaultTitle}-${timeStr}`
@@ -2787,16 +2787,19 @@ const extractTitleFromContent = (content) => {
   
   // 提取关键概念和技术术语
   const keywordPatterns = [
-    // 技术和方法相关
-    /(?:基于|使用|采用|通过)([^，。！？]{3,15}?)(?:的|技术|方法|算法|系统|平台)/g,
-    // 研究对象和领域
-    /([A-Za-z\u4e00-\u9fa5]{3,15}?)(?:对|与|在)([^，。！？]{3,15}?)(?:的影响|的关系|的效果|中的应用)/g,
-    // 实验和测试相关
-    /(?:实验|测试|验证|评估)([^，。！？]{3,15}?)(?:的|效果|性能|准确性)/g,
-    // 界面和交互相关
-    /([^，。！？]{3,15}?)(?:界面|交互|设计|体验|用户体验)/g,
-    // AI和智能相关
-    /(人工智能|机器学习|深度学习|神经网络|AI|智能)[^，。！？]{0,10}?(?:在|对|与)([^，。！？]{3,15})/g
+    // 技术和方法相关 (中英文)
+    /(?:基于|使用|采用|通过|based on|using|through|with)([^，。！？.,!?]{3,15}?)(?:的|技术|方法|算法|系统|平台|technology|method|algorithm|system|platform)/gi,
+    // 研究对象和领域 (中英文)
+    /([A-Za-z\u4e00-\u9fa5]{3,15}?)(?:对|与|在|on|with|in|for)([^，。！？.,!?]{3,15}?)(?:的影响|的关系|的效果|中的应用|impact|relationship|effect|application)/gi,
+    // 实验和测试相关 (中英文)
+    /(?:实验|测试|验证|评估|experiment|test|validation|evaluation)([^，。！？.,!?]{3,15}?)(?:的|效果|性能|准确性|effect|performance|accuracy)/gi,
+    // 界面和交互相关 (中英文)
+    /([^，。！？.,!?]{3,15}?)(?:界面|交互|设计|体验|用户体验|interface|interaction|design|experience|user experience|UI|UX)/gi,
+    // AI和智能相关 (中英文)
+    /(人工智能|机器学习|深度学习|神经网络|AI|智能|artificial intelligence|machine learning|deep learning|neural network|intelligent)[^，。！？.,!?]{0,10}?(?:在|对|与|in|on|for|with)([^，。！？.,!?]{3,15})/gi,
+    // 英文专有名词和概念
+    /\b([A-Z][a-zA-Z]{2,14})\s+(technology|system|method|approach|framework|model|algorithm)\b/gi,
+    /\b(virtual reality|augmented reality|human-computer interaction|user interface|machine learning|deep learning|natural language processing|computer vision|VR|AR|HCI|NLP|CV)\b/gi
   ]
   
   const extractedKeywords = new Set()
@@ -2825,18 +2828,27 @@ const extractTitleFromContent = (content) => {
       !keyword.includes('方法') &&
       !keyword.includes('用户') &&
       !keyword.includes('数据') &&
-      !keyword.includes('结果')
+      !keyword.includes('结果') &&
+      !keyword.includes('hypothesis') &&
+      !keyword.includes('experiment') &&
+      !keyword.includes('research') &&
+      !keyword.includes('analysis') &&
+      !keyword.includes('method') &&
+      !keyword.includes('user') &&
+      !keyword.includes('data') &&
+      !keyword.includes('result')
     )
     .slice(0, 2) // 最多取2个关键词
   
   if (cleanedKeywords.length > 0) {
-    let title = cleanedKeywords.join('与')
-    if (title.length > 20) {
+    let title = cleanedKeywords.join(' and ')
+    if (title.length > 30) {
       title = cleanedKeywords[0]
     }
     // 添加研究后缀
-    if (!title.includes('研究') && !title.includes('分析') && !title.includes('评估')) {
-      title += '研究'
+    if (!title.includes('研究') && !title.includes('分析') && !title.includes('评估') &&
+        !title.includes('Research') && !title.includes('Analysis') && !title.includes('Study')) {
+      title += ' Research'
     }
     return title
   }
