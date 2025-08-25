@@ -11,6 +11,8 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    host: '0.0.0.0',
+    allowedHosts: ['103670039pudv.vicp.fun'], // 允许此外部域名
     // 本地开发时的API代理配置
     // 使用环境变量来控制后端地址：USE_REMOTE_BACKEND=false 使用本地，否则默认使用远程
     proxy: {
