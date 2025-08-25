@@ -398,7 +398,7 @@
                         ? 'bg-blue-50 text-blue-500 hover:bg-blue-100'
                         : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
                     ]"
-                    :title="paperCacheStatus === 'saved' ? '已保存到本地' : paperCacheStatus === 'updated' ? '已更新本地缓存' : '保存到本地缓存'"
+                    :title="paperCacheStatus === 'saved' ? 'Saved to local' : paperCacheStatus === 'updated' ? 'Local cache updated' : 'Save to local cache'"
                   >
                     <svg v-if="isSavingToCache" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -741,34 +741,34 @@
           </p>
           <div class="flex items-center justify-between">
             <div class="flex space-x-2">
-              <button
-                @click="nextTutorialStep"
-                class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                知道了
-              </button>
-              <button
-                @click="skipTutorial"
-                class="px-3 py-1.5 text-gray-600 text-sm hover:text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-              >
-                跳过
-              </button>
+                              <button
+                  @click="nextTutorialStep"
+                  class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Got it
+                </button>
+                <button
+                  @click="skipTutorial"
+                  class="px-3 py-1.5 text-gray-600 text-sm hover:text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                >
+                  Skip
+                </button>
             </div>
             <button
               @click="dontShowAgain"
               class="text-xs text-gray-500 hover:text-gray-700 transition-colors underline"
             >
-              下次不提示
+              Don't show again
             </button>
           </div>
           
           <!-- 键盘快捷键提示 -->
           <div class="mt-2 text-xs text-gray-400 text-center">
-            <span>Enter/空格: 下一步</span>
+            <span>Enter/Space: Next step</span>
             <span class="mx-2">•</span>
-            <span>Esc: 跳过</span>
+            <span>Esc: Skip</span>
             <span class="mx-2">•</span>
-            <span>←→: 切换步骤</span>
+            <span>←→: Navigate steps</span>
           </div>
         </div>
       </div>
@@ -776,7 +776,7 @@
       <!-- 进度指示器 -->
       <div class="mt-3 pt-2 border-t border-gray-100">
         <div class="flex items-center justify-between text-xs text-gray-500">
-          <span>步骤 {{ currentTutorialStep + 1 }} / {{ tutorialSteps.length }}</span>
+          <span>Step {{ currentTutorialStep + 1 }} / {{ tutorialSteps.length }}</span>
           <div class="flex space-x-1">
             <div 
               v-for="(step, index) in tutorialSteps" 
@@ -795,9 +795,9 @@
     <button
       @click="resetTutorial"
       class="px-3 py-2 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-700 transition-colors opacity-50 hover:opacity-100"
-      title="重置新手指引状态"
+      title="Reset tutorial status"
     >
-      重置引导
+              Reset Tutorial
     </button>
   </div>
 </template>
@@ -2042,57 +2042,57 @@ const tutorialSamplePapers = [
 // 引导步骤定义
 const tutorialSteps = [
   {
-    title: 'AI对话助手',
-    description: '左侧是AI对话助手，您可以在这里与AI进行学术讨论，询问研究问题，获取建议。AI会根据对话内容为您推荐相关文献。',
+    title: 'AI Assistant',
+    description: 'The left side is the AI assistant, where you can engage in academic discussions with AI, ask research questions, and get suggestions. AI will recommend relevant literature based on your conversation content.',
     ref: null,
     customHighlight: 'chat-box-section'
   },
   {
-    title: '智能提取关键词',
-    description: '点击"提取关键词"按钮后，系统将展示根据您对话内容提取的关键词，您也可以手动输入。',
+    title: 'Smart Keyword Extraction',
+    description: 'Click the "Extract Keywords" button, and the system will display keywords extracted from your conversation content. You can also manually enter keywords.',
     ref: null,
     customHighlight: 'keyword-extract-section'
   },
   {
-    title: '输入关键词',
-    description: '在这里输入你想要搜索的关键词，支持中英文，多个关键词用逗号分隔。',
+    title: 'Enter Keywords',
+    description: 'Enter the keywords you want to search for here. Supports both Chinese and English, separate multiple keywords with commas.',
     ref: keywordInputRef
   },
   {
-    title: '获取相关文献',
-    description: '这是核心功能按钮，点击后会根据关键词为你推荐相关的学术文献。',
+    title: 'Get Related Literature',
+    description: 'This is the core function button. Click it to get academic literature recommendations based on your keywords.',
     ref: getPapersBtnRef
   },
   {
-    title: '扩大搜索范围',
-    description: '勾选此项会包含更多HCI的文献源，不仅限于顶级期刊和会议',
+    title: 'Expand Search Range',
+    description: 'Checking this option will include more HCI literature sources, not limited to top-tier journals and conferences.',
     ref: expandRangeCheckboxRef
   },
   {
-    title: '文献列表管理',
-    description: '这里显示AI推荐的文献列表。点击文献卡片可以查看详情，使用删除按钮可以移除不需要的文献。',
+    title: 'Literature List Management',
+    description: 'This shows the AI-recommended literature list. Click on a paper card to view details, use the delete button to remove unwanted papers.',
     ref: null,
     customHighlight: 'papers-list'
   },
   {
-    title: '中间列表选为参考',
-    description: '在文献列表中，每篇文献卡片底部都有"参考此文"按钮。点击后文献标题会变为紫色，表示已选为参考。',
+    title: 'Reference Selection in List',
+    description: 'In the literature list, each paper card has a "Reference" button at the bottom. Click it and the paper title will turn purple, indicating it has been selected as a reference.',
     ref: null,
     customHighlight: 'list-reference-btn-0'
   },
   {
-    title: '文献详情查看',
-    description: '右侧显示选中文献的详细信息，包括摘要、研究方法、作者信息等。可以在这里进行翻译、标记参考等操作。',
+    title: 'Literature Detail View',
+    description: 'The right side displays detailed information of the selected literature, including abstract, research methods, author information, etc. You can perform translation, reference marking and other operations here.',
     ref: null,
     customHighlight: 'paper-detail'
   },
   {
-    title: '详情页选为参考',
-    description: '在文献详情页面，点击"选为参考"按钮可以将当前文献标记为参考文献，方便在研究方案中引用。已选择的文献会显示"已选为参考"标签。',
+    title: 'Reference Selection in Detail',
+    description: 'In the literature detail page, click the "Add Reference" button to mark the current literature as a reference, making it easy to cite in your research proposal. Selected literature will display a "Referenced" label.',
     ref: referenceBtnRef
   },
   {
-    title: '研究方法预览',
+    title: 'Research Methods Preview',
     description: 'This section displays the research methodology information of the literature, including experimental design, participant characteristics, data collection, and statistical analysis. Click "Expand" to view the complete research methodology content.',
     ref: null,
     customHighlight: 'research-method-section'

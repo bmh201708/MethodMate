@@ -692,16 +692,16 @@
       <button
         @click="resetTutorial"
         class="px-3 py-2 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-700 transition-colors opacity-50 hover:opacity-100"
-        title="重置新手指引状态"
+        title="Reset tutorial status"
       >
-        Reset guidance
+        Reset Tutorial
       </button>
       <button
         @click="debugElementRefs"
         class="px-3 py-2 bg-blue-800 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors opacity-50 hover:opacity-100"
-        title="调试元素引用"
+        title="Debug element references"
       >
-        Debugging elements
+        Debug Elements
       </button>
     </div>
     
@@ -760,7 +760,7 @@
               v-model="iterateSuggestion"
               rows="6"
               class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all duration-200"
-              placeholder="请输入您的迭代建议..."
+              placeholder="Please enter your iteration suggestions..."
             ></textarea>
           </div>
         </div>
@@ -972,13 +972,13 @@
                   Iterative information
                 </h3>
                 <p class="text-sm text-blue-700 mt-1">
-                  迭代部分：{{ getSectionNameInChinese(planComparisonData.section) }}
+                  Iteration Section: {{ getSectionNameInChinese(planComparisonData.section) }}
                 </p>
                 <p class="text-sm text-blue-700">
-                  迭代建议：{{ planComparisonData.suggestion }}
+                  Iteration Suggestions: {{ planComparisonData.suggestion }}
                 </p>
                 <p class="text-sm text-blue-600">
-                  迭代时间：{{ new Date(planComparisonData.timestamp).toLocaleString() }}
+                  Iteration Time: {{ new Date(planComparisonData.timestamp).toLocaleString() }}
                 </p>
               </div>
               <div class="text-right">
@@ -993,42 +993,42 @@
           <!-- 变化统计 -->
           <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
-              <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.titleChanged ? '是' : '否' }}</div>
-              <div class="text-sm text-gray-600">标题变化</div>
-            </div>
-            <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
-              <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.hypothesesChanged ? '是' : '否' }}</div>
-              <div class="text-sm text-gray-600">假设变化</div>
-            </div>
-            <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
-              <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.experimentalDesignChanged ? '是' : '否' }}</div>
-              <div class="text-sm text-gray-600">设计变化</div>
-            </div>
-            <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
-              <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.analysisMethodChanged ? '是' : '否' }}</div>
-              <div class="text-sm text-gray-600">分析变化</div>
-            </div>
-            <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
-              <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.expectedResultsChanged ? '是' : '否' }}</div>
-              <div class="text-sm text-gray-600">结果变化</div>
+                              <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.titleChanged ? 'Yes' : 'No' }}</div>
+                              <div class="text-sm text-gray-600">Title Changes</div>
+              </div>
+              <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.hypothesesChanged ? 'Yes' : 'No' }}</div>
+                <div class="text-sm text-gray-600">Hypothesis Changes</div>
+              </div>
+              <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.experimentalDesignChanged ? 'Yes' : 'No' }}</div>
+                <div class="text-sm text-gray-600">Design Changes</div>
+              </div>
+              <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.analysisMethodChanged ? 'Yes' : 'No' }}</div>
+                <div class="text-sm text-gray-600">Analysis Changes</div>
+              </div>
+              <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                <div class="text-2xl font-bold text-gray-900">{{ planComparisonData.statistics.expectedResultsChanged ? 'Yes' : 'No' }}</div>
+                <div class="text-sm text-gray-600">Results Changes</div>
             </div>
           </div>
 
           <!-- 详细对比内容 -->
           <div class="bg-gray-50 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">详细对比（左：原文，右：迭代后）</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Detailed Comparison (Left: Original, Right: After Iteration)</h3>
             <div class="mb-4 flex items-center justify-center space-x-6 text-sm">
               <div class="flex items-center space-x-2">
                 <div class="w-3 h-3 bg-red-100 rounded-full border border-red-300"></div>
-                <span class="text-red-700">删除内容</span>
+                <span class="text-red-700">Deleted Content</span>
               </div>
               <div class="flex items-center space-x-2">
                 <div class="w-3 h-3 bg-green-100 rounded-full border border-green-300"></div>
-                <span class="text-green-700">新增内容</span>
+                <span class="text-green-700">Added Content</span>
               </div>
               <div class="flex items-center space-x-2">
                 <div class="w-3 h-3 bg-gray-100 rounded-full border border-gray-300"></div>
-                <span class="text-gray-700">保持不变</span>
+                <span class="text-gray-700">Unchanged</span>
               </div>
             </div>
             <div v-html="planComparisonHTML"></div>
@@ -1040,7 +1040,7 @@
       <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
         <button @click="closePlanComparison" 
                 class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
-          关闭
+                          Close
         </button>
       </div>
     </div>
@@ -1222,30 +1222,30 @@ const planComparisonBtnRef = ref(null) // 方案对比按钮
 
 // 引导步骤定义
 const tutorialSteps = [
-  {
-            title: 'Generate Quantitative Research Plan',
-    description: '点击这个按钮可以生成定量的研究方案，AI会根据您的需求和参考文献智能生成完整的研究设计。',
+    {
+    title: 'Generate Quantitative Research Plan',
+    description: 'Click this button to generate a quantitative research plan. AI will intelligently generate a complete research design based on your requirements and reference literature.',
     ref: generatePlanBtnRef
   },
   {
-    title: '方案评估功能',
-    description: '点击"整体评估"按钮，AI会对您的研究方案进行全面评估，包括逻辑性、合理性、可行性和需求匹配度。',
+    title: 'Plan Evaluation Function',
+    description: 'Click the "Overall Evaluation" button, and AI will conduct a comprehensive evaluation of your research plan, including logic, rationality, feasibility, and requirement matching.',
     ref: evaluateBtnRef
   },
   {
-    title: '整体方案迭代',
-    description: '点击"方案迭代"按钮，可以对整个研究方案进行优化改进，AI会根据您的建议重新生成更完善的方案。',
+    title: 'Overall Plan Iteration',
+    description: 'Click the "Plan Iteration" button to optimize and improve the entire research plan. AI will regenerate a more perfect plan based on your suggestions.',
     ref: iterateBtnRef
   },
 
   {
-    title: '方案对比功能',
-    description: '在方案迭代后，可以查看迭代前后的对比，了解方案的改进情况。',
+    title: 'Plan Comparison Function',
+    description: 'After plan iteration, you can view the comparison before and after iteration to understand the improvements of the plan.',
     ref: planComparisonBtnRef
   },
   {
-    title: '生成来源介绍',
-    description: '基于您选择的参考文献，AI可以生成当前部分的来源说明，帮助您了解研究背景。',
+    title: 'Generate Source Introduction',
+    description: 'Based on the reference literature you selected, AI can generate source descriptions for the current section to help you understand the research background.',
     getElement: () => {
       // 优先选择数据分析部分的来源介绍按钮
       if (activeSection.value === 'analysis' && analysisSubSection.value === 'source') {
@@ -1269,8 +1269,8 @@ const tutorialSteps = [
     }
   },
   {
-    title: '生成方法介绍',
-    description: '在数据分析部分，可以生成详细的研究方法介绍和统计分析方法说明。',
+    title: 'Generate Method Introduction',
+    description: 'In the data analysis section, you can generate detailed research method introductions and statistical analysis method descriptions.',
     getElement: () => {
       // 确保在数据分析部分
       if (activeSection.value !== 'analysis') {
@@ -1288,8 +1288,8 @@ const tutorialSteps = [
     }
   },
   {
-    title: '统计方法查询',
-    description: '在数据分析部分，可以查询各种统计方法的详细说明和使用场景。',
+    title: 'Statistical Method Query',
+    description: 'In the data analysis section, you can query detailed descriptions and usage scenarios of various statistical methods.',
     getElement: () => {
       // 确保在数据分析部分
       if (activeSection.value !== 'analysis') {
@@ -4221,7 +4221,7 @@ const selectPresetSuggestion = (suggestion) => {
 // 确认迭代
 const confirmIterate = async () => {
   if (!iterateSuggestion.value.trim()) {
-    alert('请输入迭代建议')
+    alert('Please enter iteration suggestions')
     return
   }
   

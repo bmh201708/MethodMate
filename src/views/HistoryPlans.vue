@@ -614,7 +614,7 @@ const refreshData = async () => {
             debugInfo.value.apiResponse = `成功加载 ${historyState.historyPlans.length} 个方案`
             console.log('数据加载完成，历史方案数量:', historyState.historyPlans.length)
         } else {
-            debugInfo.value.errorMessage = '用户未登录，请先登录后查看历史方案'
+            debugInfo.value.errorMessage = 'Please login fisrt'
             console.log('用户未登录，跳过数据加载')
         }
     } catch (error) {
