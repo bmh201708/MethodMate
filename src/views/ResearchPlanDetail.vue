@@ -21,7 +21,7 @@
               <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
               </svg>
-              <span>{{ isGenerating ? 'Generating...' : 'Generate Quantitative Research Plan' }}</span>
+              <span>{{ isGenerating ? 'Generating...' : 'Generate Quantitative Research Proposal' }}</span>
             </button>
             
             <!-- 参考文献状态显示 -->
@@ -115,7 +115,7 @@
                 <!-- 各部分内容 -->
                 <div v-if="activeSection === 'full'">
                   <div class="flex justify-between items-center mb-4">
-                    <h1 class="text-xl font-bold text-gray-900">{{ hasGeneratedPlan ? currentPlanState.title : 'Quantitative Research Plan' }}</h1>
+                    <h1 class="text-xl font-bold text-gray-900">{{ hasGeneratedPlan ? currentPlanState.title : 'Quantitative Research Proposal' }}</h1>
                     <!-- 按钮组 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
                       <!-- Comparison按钮 - 橙色 -->
@@ -201,9 +201,9 @@
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                       </div>
-                      <h3 class="text-lg font-medium text-gray-900 mb-2">No experimental plan generated yet, please generate a research plan first</h3>
+                      <h3 class="text-lg font-medium text-gray-900 mb-2">No experimental proposal generated yet, please generate a research proposal first</h3>
                       <p class="text-gray-500 mb-6 max-w-md mx-auto">
-                        You can click the "Generate Quantitative Research Plan" button on the left, or enter relevant requirements in the chat box to generate a personalized research plan.
+                        You can click the "Generate Quantitative Research Proposal" button on the left, or enter relevant requirements in the chat box to generate a personalized research proposal.
                       </p>
                       <div class="flex justify-center space-x-4 text-sm text-gray-400">
                         <div class="flex items-center">
@@ -279,7 +279,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                       </svg>
                     </div>
-                    <p class="text-gray-500">No research hypotheses generated yet, please generate a research plan first</p>
+                    <p class="text-gray-500">No research hypotheses generated yet, please generate a research proposal first</p>
                   </div>
                 </div>
                 <div v-if="activeSection === 'design'">
@@ -332,7 +332,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
                       </svg>
                     </div>
-                    <p class="text-gray-500">No experimental design generated yet, please generate a research plan first</p>
+                    <p class="text-gray-500">No experimental design generated yet, please generate a research proposal first</p>
                   </div>
                 </div>
                 <div v-if="activeSection === 'analysis'">
@@ -385,7 +385,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                       </svg>
                     </div>
-                    <p class="text-gray-500">No data analysis plan generated yet, please generate a research plan first</p>
+                    <p class="text-gray-500">No data analysis proposal generated yet, please generate a research proposal first</p>
                   </div>
                 </div>
                 <div v-if="activeSection === 'results'">
@@ -438,7 +438,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
                       </svg>
                     </div>
-                    <p class="text-gray-500">No results presentation plan generated yet, please generate a research plan first</p>
+                    <p class="text-gray-500">No results presentation proposal generated yet, please generate a research proposal first</p>
                   </div>
                 </div>
               </div>
@@ -855,7 +855,7 @@
             rows="4"
           ></textarea>
           <p class="text-xs text-gray-500 mt-2">
-            The system will generate a corresponding quantitative research plan based on the topic you input, combined with references
+            The system will generate a corresponding quantitative research proposal based on the topic you input, combined with references
           </p>
         </div>
 
@@ -870,7 +870,7 @@
             <div>
               <h4 class="font-medium text-purple-900 mb-2">AI Analysis of User Requirements</h4>
               <p class="text-sm text-purple-700 leading-relaxed">
-                The system will automatically analyze research requirements, background and objectives mentioned in your chat history, combined with selected reference literature, to generate personalized quantitative research plans.
+                The system will automatically analyze research requirements, background and objectives mentioned in your chat history, combined with selected reference literature, to generate personalized quantitative research proposals.
               </p>
               <div class="mt-3 flex items-center space-x-4 text-xs text-purple-600">
                 <div class="flex items-center space-x-1">
@@ -889,7 +889,7 @@
                   <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                   </svg>
-                  <span>Generate Plan</span>
+                  <span>Generate Proposal</span>
                 </div>
               </div>
             </div>
@@ -1223,18 +1223,18 @@ const planComparisonBtnRef = ref(null) // 方案对比按钮
 // 引导步骤定义
 const tutorialSteps = [
     {
-    title: 'Generate Quantitative Research Plan',
-    description: 'Click this button to generate a quantitative research plan. AI will intelligently generate a complete research design based on your requirements and reference literature.',
+    title: 'Generate Quantitative Research Proposal',
+    description: 'Click this button to generate a quantitative research proposal. AI will intelligently generate a complete research design based on your requirements and reference literature.',
     ref: generatePlanBtnRef
   },
   {
-    title: 'Plan Evaluation Function',
-    description: 'Click the "Overall Evaluation" button, and AI will conduct a comprehensive evaluation of your research plan, including logic, rationality, feasibility, and requirement matching.',
+    title: 'Proposal Evaluation Function',
+    description: 'Click the "Overall Evaluation" button, and AI will conduct a comprehensive evaluation of your research proposal, including logic, rationality, feasibility, and requirement matching.',
     ref: evaluateBtnRef
   },
   {
-    title: 'Overall Plan Iteration',
-    description: 'Click the "Plan Iteration" button to optimize and improve the entire research plan. AI will regenerate a more perfect plan based on your suggestions.',
+    title: 'Overall Proposal Iteration',
+    description: 'Click the "Proposal Iteration" button to optimize and improve the entire research proposal. AI will regenerate a more perfect proposal based on your suggestions.',
     ref: iterateBtnRef
   },
 
@@ -2124,16 +2124,16 @@ const saveToHistoryPlans = async (context = {}) => {
   }
 }
 
-// Parse AI-generated research plan Markdown (strict mode)
+// Parse AI-generated research proposal Markdown (strict mode)
 const parseResearchPlanResponse = async (content, context = {}) => {
   try {
-    console.log('Starting to parse research plan, content length:', content.length)
+    console.log('Starting to parse research proposal, content length:', content.length)
     
     if (!content || typeof content !== 'string') {
       throw new Error('AI response content is empty or invalid format')
     }
     
-    // Strict check for required research plan structure (support both English and Chinese)
+    // Strict check for required research proposal structure (support both English and Chinese)
     const requiredSections = {
       english: ['Research Hypotheses', 'Experimental Design', 'Data Analysis', 'Results Presentation'],
       chinese: ['研究假设', '实验设计', '数据分析', '结果呈现']
@@ -2172,7 +2172,7 @@ const parseResearchPlanResponse = async (content, context = {}) => {
     }
     
     if (missingSections.length > 0) {
-      throw new Error(`AI response missing required research plan sections: ${missingSections.join(', ')}. Please ensure the response contains complete research plan format.`)
+      throw new Error(`AI response missing required research proposal sections: ${missingSections.join(', ')}. Please ensure the response contains complete research proposal format.`)
     }
     
         // Use simpler and more accurate parsing method
@@ -2274,7 +2274,7 @@ const parseResearchPlanResponse = async (content, context = {}) => {
     // Check if at least one valid content is extracted
     const hasValidContent = hypothesis || design || analysis || results
     if (!hasValidContent) {
-      console.log('No valid research plan content extracted, first 500 characters of original content:', content.substring(0, 500))
+      console.log('No valid research proposal content extracted, first 500 characters of original content:', content.substring(0, 500))
       // Output more detailed debug information
       console.log('Attempting to find keywords:')
       if (isEnglish) {
@@ -2360,7 +2360,7 @@ const parseResearchPlanResponse = async (content, context = {}) => {
     const timestamp = new Date().toLocaleString('en-US')
     const generatedTitle = generatePlanTitle()
     currentPlanState.title = generatedTitle
-    currentPlanState.researchQuestions = 'AI-generated research plan'
+    currentPlanState.researchQuestions = 'AI-generated research proposal'
     currentPlanState.methodology = `Research methodology generated based on reference literature (Generated: ${timestamp})`
     currentPlanState.dataCollection = 'Data collection plan formulated according to research design'
     
@@ -2368,7 +2368,7 @@ const parseResearchPlanResponse = async (content, context = {}) => {
     
     // Initialize source introduction for complete plan section
     currentPlanState.full = {
-      sourceIntro: 'This research plan integrates various research methods and literature resources, aiming to provide a comprehensive and scientific quantitative research framework.'
+              sourceIntro: 'This research proposal integrates various research methods and literature resources, aiming to provide a comprehensive and scientific quantitative research framework.'
     }
     
     // If at least one field is updated, consider it successful
@@ -2397,17 +2397,17 @@ const parseResearchPlanResponse = async (content, context = {}) => {
       activeSection.value = 'full'
       
       // Show success message
-      console.log('Successfully parsed and updated research plan')
+      console.log('Successfully parsed and updated research proposal')
       
       // Automatically save to history plans
       await saveToHistoryPlans(context)
       
-      return true // Successfully parsed and updated research plan
+      return true // Successfully parsed and updated research proposal
     } else {
-      throw new Error('Parsing failed: Unable to extract valid research plan content from AI response. Please check if the AI response format is correct.')
+      throw new Error('Parsing failed: Unable to extract valid research proposal content from AI response. Please check if the AI response format is correct.')
     }
   } catch (error) {
-    console.error('Error occurred while parsing research plan:', error)
+    console.error('Error occurred while parsing research proposal:', error)
     console.log('Original content:', content.substring(0, 500))
     throw error // Re-throw error for caller to handle
   }
@@ -2700,7 +2700,7 @@ const generatePlanTitle = () => {
     
     // 确保标题不为空
     if (!cleanedTopic || cleanedTopic === '...') {
-      cleanedTopic = 'User Custom Research Plan'
+      cleanedTopic = 'User Custom Research Proposal'
     }
     
     console.log('自定义主题清理后的标题:', cleanedTopic)
@@ -2769,11 +2769,11 @@ const generatePlanTitle = () => {
   
   let smartDefaultTitle = ''
   if (referencedCount > 0) {
-    smartDefaultTitle = `Quantitative Research Plan Based on ${referencedCount} Papers`
+          smartDefaultTitle = `Quantitative Research Proposal Based on ${referencedCount} Papers`
   } else if (generationInfo.mode === 'custom') {
-    smartDefaultTitle = 'User Custom Research Plan'
+          smartDefaultTitle = 'User Custom Research Proposal'
   } else {
-    smartDefaultTitle = 'AI Generated Research Plan'
+          smartDefaultTitle = 'AI Generated Research Proposal'
   }
   
   const finalTitle = `${smartDefaultTitle}-${timeStr}`
@@ -3991,9 +3991,9 @@ const generateSourceIntroduction = async () => {
       console.log('🎯 ChatGPT Mode: Checking message length for source introduction generation, intelligently selecting reference content')
       
       // 先构建基础提示（不包含参考文献）
-      let basePrompt = `I will provide you with a research plan and some reference papers that the research plan refers to. Please analyze which reference papers the "${sectionName}" section of the following research plan refers to in terms of research methods and generate a concise source introduction.
+      let basePrompt = `I will provide you with a research proposal and some reference papers that the research proposal refers to. Please analyze which reference papers the "${sectionName}" section of the following research proposal refers to in terms of research methods and generate a concise source introduction.
 
-${sectionName} section of the research plan:
+${sectionName} section of the research proposal:
 ${currentSectionContent}
 
 Reference information:`

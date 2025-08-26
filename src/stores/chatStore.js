@@ -356,20 +356,20 @@ const loadCurrentPlanFromStorage = () => {
       const parsed = JSON.parse(saved)
       return {
         title: parsed.title || 'AI-Edited Images and Videos Impact on Human Memory',
-        researchQuestions: parsed.researchQuestions || 'AI编辑的图像与视频如何影响人类记忆形成和回忆的准确性？这种影响与传统媒体的影响有何不同？',
-        methodology: parsed.methodology || '采用混合研究方法，结合实验研究和问卷调查。实验组和对照组将分别接触AI编辑和传统编辑的媒体内容。',
-        dataCollection: parsed.dataCollection || '通过在线实验平台收集数据，参与者将完成记忆测试和问卷调查。使用眼动追踪技术记录参与者观看内容时的注意力分配。',
-        analysisMethod: parsed.analysisMethod || '使用SPSS进行定量分析，包括方差分析(ANOVA)和多元回归分析。质性数据将通过主题分析方法进行编码和分析。',
+        researchQuestions: parsed.researchQuestions || 'How do AI-edited images and videos impact human memory formation and recall accuracy? How does this effect differ from traditional media?',
+        methodology: parsed.methodology || 'A mixed-methods research approach combining experimental research and questionnaire surveys. Experimental and control groups will be exposed to AI-edited and traditionally edited media content respectively.',
+        dataCollection: parsed.dataCollection || 'Data collection through online experimental platforms where participants complete memory tests and questionnaire surveys. Eye-tracking technology records participants\' attention allocation while viewing content.',
+        analysisMethod: parsed.analysisMethod || 'Quantitative analysis using SPSS including Analysis of Variance (ANOVA) and multiple regression analysis. Qualitative data will be coded and analyzed through thematic analysis methods.',
         hypotheses: parsed.hypotheses || [
-          'H1: 接触AI编辑的媒体内容会导致更高的虚假记忆形成率。',
-          'H2: AI编辑内容的不确定性特征会增加记忆失真的程度。',
-          'H3: 参与者的媒体素养水平会调节AI编辑内容对记忆的影响。'
+          'H1: Exposure to AI-edited media content will lead to higher false memory formation rates.',
+          'H2: Uncertainty characteristics of AI-edited content will increase the degree of memory distortion.',
+          'H3: Participants\' media literacy level will moderate the impact of AI-edited content on memory.'
         ],
         experimentalDesign: parsed.experimentalDesign || 'Adopt a 2x2 mixed experimental design, manipulating media type (AI-edited vs. traditional editing) and presentation style (static vs. dynamic).',
-        variables: parsed.variables || '自变量：媒体类型、呈现方式；因变量：记忆准确度、虚假记忆比率；控制变量：媒体素养、年龄、教育背景。',
+        variables: parsed.variables || 'Independent variables: media type, presentation method; Dependent variables: memory accuracy, false memory ratio; Control variables: media literacy, age, educational background.',
         statisticalTools: parsed.statisticalTools || 'SPSS 26.0, R Studio, Python data analysis packages (pandas, numpy, scipy)',
-        expectedResults: parsed.expectedResults || '预期AI编辑的媒体内容会导致更高的虚假记忆形成率，且这种效应会被参与者的媒体素养水平调节。',
-        visualization: parsed.visualization || '使用ggplot2创建交互效应图，使用Python的seaborn库绘制相关性热图和箱线图。',
+        expectedResults: parsed.expectedResults || 'Expected that AI-edited media content will lead to higher false memory formation rates, and this effect will be moderated by participants\' media literacy level.',
+        visualization: parsed.visualization || 'Create interaction effect plots using ggplot2, draw correlation heatmaps and box plots using Python\'s seaborn library.',
         references: parsed.references || [
           {
             id: 1,
@@ -391,7 +391,7 @@ const loadCurrentPlanFromStorage = () => {
           methodIntro: 'Hypothesis validation will use experimental research methods to test the impact of AI-edited content on memory formation through a strictly controlled experimental environment. The experimental design includes pre-tests and post-tests to ensure result reliability.'
         },
         design: parsed.design || {
-          sourceIntro: 'The experimental design references multiple classic memory research paradigms and incorporates the latest AI technology development characteristics. The design plan has been optimized through expert reviews and pilot experiments.',
+          sourceIntro: 'The experimental design references multiple classic memory research paradigms and incorporates the latest AI technology development characteristics. The design proposal has been optimized through expert reviews and pilot experiments.',
           methodIntro: 'Adopt a 2x2 mixed experimental design, manipulating media type (AI-edited vs. traditional editing) and presentation style (static vs. dynamic). All experimental materials have been standardized.'
         },
         analysis: parsed.analysis || {
@@ -427,20 +427,20 @@ const loadCurrentPlanFromStorage = () => {
   // 返回默认值
   return {
     title: 'AI-Edited Images and Videos Impact on Human Memory',
-    researchQuestions: 'AI编辑的图像与视频如何影响人类记忆形成和回忆的准确性？这种影响与传统媒体的影响有何不同？',
-    methodology: '采用混合研究方法，结合实验研究和问卷调查。实验组和对照组将分别接触AI编辑和传统编辑的媒体内容。',
-    dataCollection: '通过在线实验平台收集数据，参与者将完成记忆测试和问卷调查。使用眼动追踪技术记录参与者观看内容时的注意力分配。',
-    analysisMethod: '使用SPSS进行定量分析，包括方差分析(ANOVA)和多元回归分析。质性数据将通过主题分析方法进行编码和分析。',
+    researchQuestions: 'How do AI-edited images and videos impact human memory formation and recall accuracy? How does this effect differ from traditional media?',
+    methodology: 'A mixed-methods research approach combining experimental research and questionnaire surveys. Experimental and control groups will be exposed to AI-edited and traditionally edited media content respectively.',
+    dataCollection: 'Data collection through online experimental platforms where participants complete memory tests and questionnaire surveys. Eye-tracking technology records participants\' attention allocation while viewing content.',
+    analysisMethod: 'Quantitative analysis using SPSS including Analysis of Variance (ANOVA) and multiple regression analysis. Qualitative data will be coded and analyzed through thematic analysis methods.',
     hypotheses: [
-      'H1: 接触AI编辑的媒体内容会导致更高的虚假记忆形成率。',
-      'H2: AI编辑内容的不确定性特征会增加记忆失真的程度。',
-      'H3: 参与者的媒体素养水平会调节AI编辑内容对记忆的影响。'
+      'H1: Exposure to AI-edited media content will lead to higher false memory formation rates.',
+      'H2: Uncertainty characteristics of AI-edited content will increase the degree of memory distortion.',
+      'H3: Participants\' media literacy level will moderate the impact of AI-edited content on memory.'
     ],
     experimentalDesign: 'Adopt a 2x2 mixed experimental design, manipulating media type (AI-edited vs. traditional editing) and presentation style (static vs. dynamic).',
-    variables: '自变量：媒体类型、呈现方式；因变量：记忆准确度、虚假记忆比率；控制变量：媒体素养、年龄、教育背景。',
+    variables: 'Independent variables: media type, presentation method; Dependent variables: memory accuracy, false memory ratio; Control variables: media literacy, age, educational background.',
     statisticalTools: 'SPSS 26.0, R Studio, Python data analysis packages (pandas, numpy, scipy)',
-    expectedResults: '预期AI编辑的媒体内容会导致更高的虚假记忆形成率，且这种效应会被参与者的媒体素养水平调节。',
-    visualization: '使用ggplot2创建交互效应图，使用Python的seaborn库绘制相关性热图和箱线图。',
+    expectedResults: 'Expected that AI-edited media content will lead to higher false memory formation rates, and this effect will be moderated by participants\' media literacy level.',
+    visualization: 'Create interaction effect plots using ggplot2, draw correlation heatmaps and box plots using Python\'s seaborn library.',
     references: [
       {
         id: 1,
@@ -462,7 +462,7 @@ const loadCurrentPlanFromStorage = () => {
       methodIntro: 'Hypothesis validation will use experimental research methods to test the impact of AI-edited content on memory formation through a strictly controlled experimental environment. The experimental design includes pre-tests and post-tests to ensure result reliability.'
     },
     design: {
-      sourceIntro: 'The experimental design references multiple classic memory research paradigms and incorporates the latest AI technology development characteristics. The design plan has been optimized through expert reviews and pilot experiments.',
+      sourceIntro: 'The experimental design references multiple classic memory research paradigms and incorporates the latest AI technology development characteristics. The design proposal has been optimized through expert reviews and pilot experiments.',
       methodIntro: 'Adopt a 2x2 mixed experimental design, manipulating media type (AI-edited vs. traditional editing) and presentation style (static vs. dynamic). All experimental materials have been standardized.'
     },
     analysis: {
@@ -1108,16 +1108,16 @@ export const sendMessage = async (message, pageContext = null) => {
   }
 }
 
-// Helper method to build current plan context
+// Helper method to build current proposal context
 const buildCurrentPlanContext = () => {
   if (!currentPlanState.isGenerated) {
-    return null // If no generated plan, don't add context
+    return null // If no generated proposal, don't add context
   }
   
-  let context = 'Current Research Plan Context:\n'
+  let context = 'Current Research Proposal Context:\n'
   
   if (currentPlanState.title) {
-    context += `Plan Title: ${currentPlanState.title}\n`
+    context += `Proposal Title: ${currentPlanState.title}\n`
   }
   
   if (currentPlanState.researchQuestions) {
@@ -1140,7 +1140,7 @@ const buildCurrentPlanContext = () => {
     context += `Expected Results: ${currentPlanState.expectedResults}\n`
   }
   
-  context += '\nPlease answer the user\'s question based on the above research plan context.'
+  context += '\nPlease answer the user\'s question based on the above research proposal context.'
   
   return context
 }
@@ -1220,7 +1220,7 @@ export const addHistoryPlan = async (planData, generationContext = null) => {
   if (!hasSubstantialContent) {
     console.log('新方案内容不足，直接添加（可能是默认数据）')
   } else {
-    // Check if an identical plan already exists (based on complete plan content and creation time range)
+    // Check if an identical proposal already exists (based on complete proposal content and creation time range)
     const now = new Date()
     const threeMinutesAgo = new Date(now.getTime() - 3 * 60 * 1000) // 3分钟前
     
@@ -1241,7 +1241,7 @@ export const addHistoryPlan = async (planData, generationContext = null) => {
         return false
       }
       
-      // Compare core content of complete plans
+      // Compare core content of complete proposals
       const existingFullPlan = existingPlan.fullPlan
       if (!existingFullPlan) {
         console.log('- 跳过：历史方案无完整数据')
@@ -1291,13 +1291,13 @@ export const addHistoryPlan = async (planData, generationContext = null) => {
   
   const newPlan = {
     id: Date.now(), // 使用时间戳作为前端ID
-    title: planData.title || '基于AI智能体生成的定量研究方案',
-    description: planData.researchQuestions || planData.output || '暂无描述',
-    createdAt: new Date().toLocaleString('zh-CN'),
-    updatedAt: new Date().toLocaleString('zh-CN'),
-    author: 'AI智能体',
-    status: '已生成',
-    fullPlan: JSON.parse(JSON.stringify(planData)), // Save deep copy of complete plan data
+    title: planData.title || 'AI-Generated Quantitative Research Proposal',
+    description: planData.researchQuestions || planData.output || 'No description available',
+    createdAt: new Date().toLocaleString('en-US'),
+    updatedAt: new Date().toLocaleString('en-US'),
+    author: 'AI Assistant',
+    status: 'Generated',
+    fullPlan: JSON.parse(JSON.stringify(planData)), // Save deep copy of complete proposal data
     generationContext: generationContext, // 保存生成时的上下文
     sourceIntroductions: currentPlanState.sourceIntroductions ? 
       JSON.parse(JSON.stringify(currentPlanState.sourceIntroductions)) : {}, // 保存来源介绍
@@ -1456,17 +1456,17 @@ export const updateCurrentPlan = (planData) => {
 export const resetCurrentPlan = () => {
   // 重置为默认状态，但保留结构化数据
   currentPlanState.title = 'AI-Edited Images and Videos Impact on Human Memory'
-  currentPlanState.researchQuestions = 'AI编辑的图像与视频如何影响人类记忆形成和回忆的准确性？这种影响与传统媒体的影响有何不同？'
-  currentPlanState.methodology = '采用混合研究方法，结合实验研究和问卷调查。实验组和对照组将分别接触AI编辑和传统编辑的媒体内容。'
-  currentPlanState.dataCollection = '通过在线实验平台收集数据，参与者将完成记忆测试和问卷调查。使用眼动追踪技术记录参与者观看内容时的注意力分配。'
-  currentPlanState.analysisMethod = '使用SPSS进行定量分析，包括方差分析(ANOVA)和多元回归分析。质性数据将通过主题分析方法进行编码和分析。'
+  currentPlanState.researchQuestions = 'How do AI-edited images and videos impact human memory formation and recall accuracy? How does this effect differ from traditional media?'
+  currentPlanState.methodology = 'A mixed-methods research approach combining experimental research and questionnaire surveys. Experimental and control groups will be exposed to AI-edited and traditionally edited media content respectively.'
+  currentPlanState.dataCollection = 'Data collection through online experimental platforms where participants complete memory tests and questionnaire surveys. Eye-tracking technology records participants\' attention allocation while viewing content.'
+  currentPlanState.analysisMethod = 'Quantitative analysis using SPSS including Analysis of Variance (ANOVA) and multiple regression analysis. Qualitative data will be coded and analyzed through thematic analysis methods.'
   currentPlanState.hypotheses = [
-    'H1: 接触AI编辑的媒体内容会导致更高的虚假记忆形成率。',
-    'H2: AI编辑内容的不确定性特征会增加记忆失真的程度。',
-    'H3: 参与者的媒体素养水平会调节AI编辑内容对记忆的影响。'
+    'H1: Exposure to AI-edited media content will lead to higher false memory formation rates.',
+    'H2: Uncertainty characteristics of AI-edited content will increase the degree of memory distortion.',
+    'H3: Participants\' media literacy level will moderate the impact of AI-edited content on memory.'
   ]
   currentPlanState.experimentalDesign = 'Adopt a 2x2 mixed experimental design, manipulating media type (AI-edited vs. traditional editing) and presentation style (static vs. dynamic).'
-  currentPlanState.expectedResults = '预期AI编辑的媒体内容会导致更高的虚假记忆形成率，且这种效应会被参与者的媒体素养水平调节。'
+  currentPlanState.expectedResults = 'Expected that AI-edited media content will lead to higher false memory formation rates, and this effect will be moderated by participants\' media literacy level.'
   currentPlanState.isGenerated = false
   
   // 清空来源介绍
@@ -1489,7 +1489,7 @@ export const applyPlanAsCurrentPlan = (planData, planId = null, sourceIntroducti
   if (planData.title) {
     currentPlanState.title = planData.title
   }
-  currentPlanState.methodology = `基于参考文献生成的研究方法 (应用时间: ${new Date().toLocaleString('zh-CN')})`
+  currentPlanState.methodology = `Research methodology based on reference literature (Applied: ${new Date().toLocaleString('en-US')})`
   
   // 标记当前应用的方案ID
   if (planId) {
