@@ -1112,93 +1112,93 @@ const currentTutorialStep = ref(0)
 
 // 样例研究方案数据
 const sampleResearchPlan = {
-  title: '社交媒体使用对大学生学习效率影响的定量研究方案',
+  title: 'A Quantitative Research Proposal on the Impact of Social Media Use on College Students\' Learning Efficiency',
   hypotheses: [
-    'H1：社交媒体使用时间与学习效率呈负相关关系',
-    'H2：不同类型的社交媒体使用对学习效率的影响存在显著差异',
-    'H3：社交媒体使用动机在学习时间与学习效率之间起调节作用'
+    'H1: Social media usage time is negatively correlated with learning efficiency',
+    'H2: Different types of social media use have significantly different impacts on learning efficiency',
+    'H3: Social media usage motivation moderates the relationship between study time and learning efficiency'
   ],
-  experimentalDesign: `**参与者特征：**
-- 样本量：预计招募300名大学生，基于效应量0.25，α=0.05，检验力0.8计算得出
-- 年龄构成：18-25岁，平均年龄21.5岁
-- 性别比例：男女比例接近1:1
-- 专业背景：涵盖理工科、文科、艺术类等不同专业
-- 招募方式：通过校园公告、社交媒体、课程群等渠道招募
-- 纳入标准：全日制在校大学生，有智能手机使用经验
-- 排除标准：有严重心理疾病史，无法完成实验任务
+  experimentalDesign: `**Participant Characteristics:**
+- Sample size: Plan to recruit 300 college students, calculated based on effect size 0.25, α=0.05, power 0.8
+- Age composition: 18-25 years old, average age 21.5 years
+- Gender ratio: Male to female ratio approximately 1:1
+- Academic background: Covers different majors including STEM, liberal arts, arts, etc.
+- Recruitment method: Recruit through campus announcements, social media, course groups, etc.
+- Inclusion criteria: Full-time college students with smartphone usage experience
+- Exclusion criteria: History of serious mental illness, inability to complete experimental tasks
 
-**分组方式：**
-- 研究设计：采用2×3混合设计
-- 自变量1：社交媒体使用时间（高使用组 vs 低使用组）
-- 自变量2：社交媒体类型（娱乐型、学习型、社交型）
-- 因变量：学习效率指标（任务完成时间、正确率、注意力集中度）
-- 控制变量：年龄、性别、专业背景、学习习惯、睡眠质量
+**Grouping Method:**
+- Research design: 2×3 mixed design
+- Independent variable 1: Social media usage time (high usage group vs low usage group)
+- Independent variable 2: Social media type (entertainment, educational, social)
+- Dependent variable: Learning efficiency indicators (task completion time, accuracy rate, attention concentration)
+- Control variables: Age, gender, academic background, study habits, sleep quality
 
-**实验流程：**
-1. 预实验阶段（30分钟）：
-   - 签署知情同意书
-   - 填写基本信息问卷
-   - 完成学习能力基线测试
-   - 安装实验监控软件
+**Experimental Procedure:**
+1. Pre-experiment phase (30 minutes):
+   - Sign informed consent form
+   - Complete basic information questionnaire
+   - Complete learning ability baseline test
+   - Install experimental monitoring software
 
-2. 实验阶段（7天）：
-   - 第1-3天：正常使用社交媒体，系统记录使用数据
-   - 第4天：完成学习任务测试
-   - 第5-7天：继续记录使用数据
-   - 每日填写使用日记和情绪状态问卷
+2. Experimental phase (7 days):
+   - Days 1-3: Normal social media use, system records usage data
+   - Day 4: Complete learning task test
+   - Days 5-7: Continue recording usage data
+   - Daily completion of usage diary and emotional state questionnaire
 
-3. 后测阶段（60分钟）：
-   - 完成学习效率测试
-   - 填写社交媒体使用动机问卷
-   - 进行深度访谈（随机抽取30%参与者）`,
-  analysisMethod: `**数据采集类型：**
-1. 主观评分数据：学习效率自评量表、使用动机问卷、注意力评估
-2. 行为数据：使用时长、频率、任务完成时间、正确率
-3. 系统记录：应用切换频率、屏幕使用时间分布
+3. Post-test phase (60 minutes):
+   - Complete learning efficiency test
+   - Fill out social media usage motivation questionnaire
+   - Conduct in-depth interviews (randomly select 30% of participants)`,
+  analysisMethod: `**Data Collection Types:**
+1. Subjective rating data: Learning efficiency self-assessment scale, usage motivation questionnaire, attention assessment
+2. Behavioral data: Usage duration, frequency, task completion time, accuracy rate
+3. System records: Application switching frequency, screen time distribution
 
-**统计分析方法：**
-1. 描述性统计：计算均值、标准差、分布特征
-2. 相关性分析：Pearson相关系数分析使用时间与学习效率关系
-3. 方差分析：双因素混合设计ANOVA分析交互效应
-4. 调节效应分析：层次回归分析使用动机的调节作用
-5. 协变量控制：将年龄、性别、专业背景作为协变量`,
-  expectedResults: `**预期差异和趋势：**
-1. 主要因变量差异预测：
-   - 高使用组的学习效率显著低于低使用组（p < 0.05）
-   - 娱乐型社交媒体使用者的学习效率最低
-   - 学习型社交媒体使用者的学习效率相对较高
-   - 使用时间与学习效率呈显著负相关（r = -0.35）
+**Statistical Analysis Methods:**
+1. Descriptive statistics: Calculate means, standard deviations, distribution characteristics
+2. Correlation analysis: Pearson correlation coefficient analysis of relationship between usage time and learning efficiency
+3. Analysis of variance: Two-factor mixed design ANOVA to analyze interaction effects
+4. Moderation effect analysis: Hierarchical regression analysis of the moderating role of usage motivation
+5. Covariate control: Age, gender, academic background as covariates`,
+  expectedResults: `**Expected Differences and Trends:**
+1. Main dependent variable difference predictions:
+   - Learning efficiency in high usage group significantly lower than low usage group (p < 0.05)
+   - Entertainment social media users have the lowest learning efficiency
+   - Educational social media users have relatively higher learning efficiency
+   - Usage time negatively correlated with learning efficiency (r = -0.35)
 
-2. 交互效应预测：
-   - 社交媒体类型与使用时间存在显著交互效应
-   - 娱乐型社交媒体在高使用组中的负面影响最大
-   - 学习型社交媒体在低使用组中可能产生正向影响
+2. Interaction effect predictions:
+   - Significant interaction effect between social media type and usage time
+   - Entertainment social media has the greatest negative impact in high usage group
+   - Educational social media may have positive impact in low usage group
 
-3. 调节效应预测：
-   - 使用动机在学习时间与效率间起显著调节作用
-   - 学习动机强的用户，使用时间对效率的负面影响较小
+3. Moderation effect predictions:
+   - Usage motivation significantly moderates the relationship between study time and efficiency
+   - Users with strong learning motivation show less negative impact of usage time on efficiency
 
-**结果呈现方式：**
-1. 描述性统计图表：
-   - 箱线图：展示不同使用组的学习效率分布
-   - 条形图：比较不同类型社交媒体的使用时长
-   - 散点图：显示使用时间与学习效率的相关关系
+**Result Presentation Methods:**
+1. Descriptive statistical charts:
+   - Box plots: Show learning efficiency distribution across different usage groups
+   - Bar charts: Compare usage duration of different social media types
+   - Scatter plots: Display correlation between usage time and learning efficiency
 
-2. 推断统计图表：
-   - 交互效应图：展示社交媒体类型与使用时间的交互作用
-   - 调节效应图：显示使用动机的调节作用
-   - 效应量森林图：展示各统计检验的效应量大小
+2. Inferential statistical charts:
+   - Interaction effect plots: Show interaction between social media type and usage time
+   - Moderation effect plots: Display the moderating role of usage motivation
+   - Effect size forest plots: Show effect sizes of various statistical tests
 
-3. 辅助解读图表：
-   - 路径图：展示变量间的因果关系
-   - 热力图：显示各变量间的相关矩阵
-   - 时间序列图：展示7天内使用模式的变化趋势
+3. Auxiliary interpretation charts:
+   - Path diagrams: Show causal relationships between variables
+   - Heat maps: Display correlation matrix between variables
+   - Time series plots: Show changes in usage patterns over 7 days
 
-**结果解释逻辑：**
-- 通过多维度数据验证研究假设的合理性
-- 结合前人研究解释发现的理论意义
-- 分析结果对教育实践的指导价值
-- 讨论研究的局限性和未来研究方向`,
+**Result Interpretation Logic:**
+- Validate the reasonableness of research hypotheses through multi-dimensional data
+- Explain the theoretical significance of findings in combination with previous research
+- Analyze the guiding value of results for educational practice
+- Discuss research limitations and future research directions`,
   isGenerated: true,
   lastUpdated: new Date().toISOString()
 }
