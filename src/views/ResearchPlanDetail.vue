@@ -601,7 +601,7 @@
     </main>
     
     <!-- 新手指引遮罩层 -->
-    <div v-if="showTutorial" class="fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300" @click="skipTutorial">
+    <div v-if="showTutorial" class="fixed inset-0 bg-black bg-opacity-50 z-[60] transition-opacity duration-300 tutorial-overlay" @click="skipTutorial">
       <!-- 高亮区域 -->
       <div 
         v-if="currentTutorialStep < tutorialSteps.length"
@@ -688,7 +688,7 @@
     </div>
 
     <!-- 重置引导按钮（开发模式） -->
-    <div v-if="isDevelopment" class="fixed bottom-4 right-4 z-40 flex flex-col space-y-2">
+    <div v-if="isDevelopment" class="fixed bottom-4 right-4 z-[58] flex flex-col space-y-2">
       <button
         @click="resetTutorial"
         class="px-3 py-2 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-700 transition-colors opacity-50 hover:opacity-100"
@@ -4908,12 +4908,33 @@ const closePlanComparison = () => {
 
 /* 确保高亮元素在最上层 */
 .tutorial-highlight {
-  z-index: 51;
+  z-index: 61;
 }
 
 /* 引导提示框样式优化 */
 .tutorial-tooltip {
+  z-index: 62;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  isolation: isolate; /* Create a new stacking context */
+}
+
+/* 确保新手指引层级始终最高 */
+div[v-if="showTutorial"] {
+  position: fixed !important;
+  z-index: 60 !important;
+}
+
+/* 防止任何输入框或其他元素覆盖新手指引 */
+.tutorial-highlight,
+.tutorial-tooltip {
+  position: absolute !important;
+  pointer-events: auto !important;
+}
+
+/* 确保新手指引遮罩层不会被任何元素覆盖 */
+.tutorial-overlay {
+  isolation: isolate;
+  contain: layout style paint;
 }
 </style> 
