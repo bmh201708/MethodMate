@@ -1154,14 +1154,11 @@ const sampleResearchPlan = {
   analysisMethod: `**Data Collection Types:**
 1. Subjective rating data: Learning efficiency self-assessment scale, usage motivation questionnaire, attention assessment
 2. Behavioral data: Usage duration, frequency, task completion time, accuracy rate
-3. System records: Application switching frequency, screen time distribution
 
 **Statistical Analysis Methods:**
 1. Descriptive statistics: Calculate means, standard deviations, distribution characteristics
 2. Correlation analysis: Pearson correlation coefficient analysis of relationship between usage time and learning efficiency
-3. Analysis of variance: Two-factor mixed design ANOVA to analyze interaction effects
-4. Moderation effect analysis: Hierarchical regression analysis of the moderating role of usage motivation
-5. Covariate control: Age, gender, academic background as covariates`,
+3. Analysis of variance: Two-factor mixed design ANOVA to analyze interaction effects`,
   expectedResults: `**Expected Differences and Trends:**
 1. Main dependent variable difference predictions:
    - Learning efficiency in high usage group significantly lower than low usage group (p < 0.05)
