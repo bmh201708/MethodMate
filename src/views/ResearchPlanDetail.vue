@@ -550,7 +550,7 @@
                   <!-- Statistical method query content -->
                   <div v-if="analysisSubSection === 'query'" class="space-y-6" id="statistical-method-query">
                     <div class="bg-gray-50 p-6 rounded-lg">
-                      <h3 class="text-lg font-semibold text-gray-900 mb-4">Statistical Method Query</h3>
+                      <h3 class="text-lg font-semibold text-gray-900 mb-4">Statistical Method Lookup</h3>
                       <div class="flex space-x-4">
                         <input
                           ref="statisticalQueryInputRef"
@@ -570,7 +570,7 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
-                          <span>{{ isQuerying ? 'Querying...' : 'Query' }}</span>
+                          <span>{{ isQuerying ? 'Searching...' : 'Search' }}</span>
                         </button>
                       </div>
                       
@@ -716,7 +716,7 @@
             <div>
               <h3 class="text-xl font-semibold text-gray-900">{{ getIterateDialogTitle() }}</h3>
               <p class="text-gray-600 mt-2 text-sm">
-                Please enter your iteration suggestions, and AI will optimize{{ getSectionNameInChinese(iteratingSection) }} based on your suggestions
+                Please enter your iteration suggestions, and AI will optimize {{ getSectionNameInEnglish(iteratingSection) }} based on your suggestions
               </p>
             </div>
             <button
@@ -972,7 +972,7 @@
                   Iterative information
                 </h3>
                 <p class="text-sm text-blue-700 mt-1">
-                  Iteration Section: {{ getSectionNameInChinese(planComparisonData.section) }}
+                  Iteration Section: {{ getSectionNameInEnglish(planComparisonData.section) }}
                 </p>
                 <p class="text-sm text-blue-700">
                   Iteration Suggestions: {{ planComparisonData.suggestion }}
@@ -1285,7 +1285,7 @@ const tutorialSteps = [
     }
   },
   {
-    title: 'Statistical Method Query',
+    title: 'Statistical Method Lookup',
     description: 'In the data analysis section, you can query detailed descriptions and usage scenarios of various statistical methods.',
     getElement: () => {
       // 确保在数据分析部分
@@ -1686,7 +1686,7 @@ const jumpToStatisticalMethodQuery = async (methodName) => {
     
   } catch (error) {
     console.error('跳转到统计方法查询失败:', error)
-    alert('跳转失败，请手动切换到统计方法查询')
+    alert('Navigation failed, please manually switch to statistical method lookup')
   }
 }
 
@@ -1702,7 +1702,7 @@ const sections = [
 const analysisSubSections = [
   { id: 'source', name: 'Source Introduction' },
   { id: 'method', name: 'Method Introduction' },
-  { id: 'query', name: 'Statistical Method Query' }
+  { id: 'query', name: 'Statistical Method Lookup' }
 ]
 
 // 检测是否有AI生成的研究方案数据
@@ -2648,11 +2648,11 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
     await parseResearchPlanResponse(response.content, generationContext)
     
     // 解析成功，显示成功提示
-    alert('研究方案生成成功！已包含研究假设、实验设计、数据分析和结果呈现四个完整部分。')
+    alert('Generate research proposal successfully!')
     
   } catch (error) {
     console.error('生成研究方案失败:', error)
-    alert(`生成研究方案失败：${error.message}`)
+          alert(`Failed to generate research plan: ${error.message}`)
   } finally {
     isGenerating.value = false
   }
@@ -3097,7 +3097,7 @@ onMounted(() => {
         await jumpToStatisticalMethodQuery(encodedMethodName)
       } catch (error) {
         console.error('处理统计方法点击失败:', error)
-        alert('跳转失败，请稍后重试')
+        alert('Navigation failed, please try again later')
       }
     }
     
@@ -3288,7 +3288,7 @@ ${currentPlanState.expectedResults || ''}`,
       
       // 显示提示消息
       setTimeout(() => {
-        alert('评估请求已发送，请等待AI助手的评估结果。')
+        alert('Evaluation request sent, please wait for AI assistant evaluation results.')
       }, 500)
 
       // 设置一个定时器，在10秒后重置评估状态
@@ -3302,7 +3302,7 @@ ${currentPlanState.expectedResults || ''}`,
 
     } catch (error) {
       console.error('评估方案失败:', error)
-      alert('评估方案失败，请重试')
+      alert('Failed to evaluate plan, please try again')
       isEvaluating.value = false
     }
   }
@@ -3347,12 +3347,12 @@ const evaluateSectionPlan = async (section) => {
         sectionContent = currentPlanState.expectedResults || ''
         break
       default:
-        alert('不支持的评估部分')
+        alert('Unsupported evaluation section')
       return
     }
     
     if (!sectionContent.trim()) {
-      alert(`当前${sectionName}部分内容为空，无法进行评估`)
+      alert(`Current ${sectionName} section is empty, cannot perform evaluation`)
       isEvaluatingSection.value = false
       evaluatingSection.value = ''
       return
@@ -3387,7 +3387,7 @@ ${currentPlanState.expectedResults || ''}`,
     
     // 显示提示消息
     setTimeout(() => {
-      alert(`${sectionName}部分的评估请求已发送，请等待AI助手的评估结果。`)
+      alert(`${sectionName} section evaluation request sent, please wait for AI assistant results.`)
     }, 500)
 
     // 设置一个定时器，在10秒后重置评估状态
@@ -3401,7 +3401,7 @@ ${currentPlanState.expectedResults || ''}`,
 
   } catch (error) {
     console.error(`评估${sectionName}部分失败:`, error)
-    alert(`评估${sectionName}部分失败，请重试`)
+    alert(`Failed to evaluate ${sectionName} section, please try again`)
     isEvaluatingSection.value = false
     evaluatingSection.value = ''
   }
@@ -3689,11 +3689,11 @@ const iteratePlanWithSuggestion = async (suggestion) => {
     await completeIteration(response.id)
     
     // 解析成功，显示成功提示
-    alert('方案迭代成功！已根据您的建议优化了完整的研究方案。')
+          alert('Plan iteration successful! The complete research plan has been optimized based on your suggestions.')
 
   } catch (error) {
     console.error('迭代方案失败:', error)
-    alert(`迭代方案失败：${error.message}`)
+          alert(`Failed to iterate plan: ${error.message}`)
   } finally {
     isIterating.value = false
   }
@@ -3712,7 +3712,7 @@ const iterateSectionPlan = async (section, suggestion) => {
     storeIterationSnapshot(section, suggestion)
     
     // 获取部分名称和内容
-    const sectionName = getSectionNameInChinese(section)
+    const sectionName = getSectionNameInEnglish(section)
     let sectionContent = ''
     
     switch (section) {
@@ -3729,13 +3729,13 @@ const iterateSectionPlan = async (section, suggestion) => {
         sectionContent = currentPlanState.expectedResults || ''
         break
       default:
-        alert('不支持的部分')
+        alert('Unsupported section')
         isIterating.value = false
         return
     }
     
     if (!sectionContent.trim()) {
-      alert(`当前${sectionName}部分内容为空，无法进行迭代`)
+      alert(`Current ${sectionName} section is empty, cannot perform iteration`)
       isIterating.value = false
       return
     }
@@ -3787,11 +3787,11 @@ const iterateSectionPlan = async (section, suggestion) => {
     await completeIteration(response.id)
     
     // 解析成功，显示成功提示
-    alert(`${sectionName}部分迭代成功！已根据您的建议优化了该部分内容。`)
+          alert(`${sectionName} section iteration successful! Content has been optimized based on your suggestions.`)
     
   } catch (error) {
     console.error(`迭代${section}部分失败:`, error)
-    alert(`迭代失败：${error.message}`)
+          alert(`Iteration failed: ${error.message}`)
   } finally {
     isIterating.value = false
   }
@@ -3800,7 +3800,7 @@ const iterateSectionPlan = async (section, suggestion) => {
 // 查询统计方法
 const queryStatisticalMethod = async () => {
   if (!statisticalMethodQuery.value.trim()) {
-    alert('请输入要查询的统计方法名称')
+    alert('Please enter the statistical method name to search')
     return
   }
 
@@ -3843,14 +3843,14 @@ const generateSourceIntroduction = async () => {
   
   // 检查是否有生成的方案
   if (!hasGeneratedPlan.value) {
-    alert('请先生成研究方案，再生成来源介绍')
+    alert('Please generate a research plan first before generating source introduction')
     return
   }
   
   // 检查是否有参考文献
   const referencedPapers = Array.from(papersState.referencedPapersList)
   if (referencedPapers.length === 0) {
-    alert('请先选择参考文献，再生成来源介绍')
+    alert('Please select reference papers first before generating source introduction')
     return
   }
   
@@ -3879,12 +3879,12 @@ const generateSourceIntroduction = async () => {
         sectionName = '结果呈现'
         break
       default:
-        alert('当前部分不支持生成来源介绍')
+        alert('Current section does not support generating source introduction')
         return
     }
     
     if (!currentSectionContent.trim()) {
-      alert(`当前${sectionName}部分内容为空，无法生成来源介绍`)
+      alert(`Current ${sectionName} section is empty, cannot generate source introduction`)
       return
     }
     
@@ -4058,14 +4058,14 @@ const generateMethodIntroduction = async () => {
   
   // 检查是否有生成的方案
   if (!hasGeneratedPlan.value) {
-    alert('请先生成研究方案，再生成方法介绍')
+    alert('Please generate a research plan first before generating method introduction')
     return
   }
   
   // 检查数据分析部分是否有内容
   const analysisContent = currentPlanState.analysisMethod || ''
   if (!analysisContent.trim()) {
-    alert('数据分析部分内容为空，无法生成方法介绍')
+    alert('Data analysis section is empty, cannot generate method introduction')
     return
   }
   
@@ -4102,7 +4102,7 @@ const generateMethodIntroduction = async () => {
     
   } catch (error) {
     console.error('生成方法介绍失败:', error)
-    alert(error.message || '生成方法介绍失败，请稍后重试')
+    alert(error.message || 'Failed to generate method introduction, please try again later')
   } finally {
     isGeneratingMethod.value = false
   }
@@ -4128,15 +4128,15 @@ const applyHistoryPlan = () => {
     
     // 不再添加到历史记录，因为这个方案已经在历史记录中了
     
-    console.log('应用历史方案为当前方案，方案ID:', planId)
-    alert('历史方案已应用为当前方案！')
+    console.log('Applied historical plan as current plan, plan ID:', planId)
+    alert('Historical plan has been applied as current plan!')
   }
 }
 
 // 显示迭代对话框
 const showIterateDialog = (section) => {
   if (!currentPlanState || !hasGeneratedPlan.value) {
-    alert('请先生成研究方案')
+    alert('Please generate a research plan first')
     return
   }
   
@@ -4156,18 +4156,18 @@ const closeIterateDialog = () => {
 
 // 获取迭代对话框标题
 const getIterateDialogTitle = () => {
-  const sectionName = getSectionNameInChinese(iteratingSection.value)
-  return sectionName === '完整方案' ? '迭代完整研究方案' : `迭代${sectionName}部分`
+  const sectionName = getSectionNameInEnglish(iteratingSection.value)
+  return sectionName === 'Full Plan' ? 'Iterate Complete Research Plan' : `Iterate ${sectionName} Section`
 }
 
-// 获取部分名称的中文映射
-const getSectionNameInChinese = (section) => {
+// 获取部分名称的英文映射
+const getSectionNameInEnglish = (section) => {
   const sectionMap = {
-    'full': '完整方案',
-    'hypothesis': '研究假设',
-    'design': '实验设计',
-    'analysis': '数据分析',
-    'results': '结果呈现'
+    'full': 'Full Plan',
+    'hypothesis': 'Research Hypotheses',
+    'design': 'Experimental Design',
+    'analysis': 'Data Analysis',
+    'results': 'Expected Results'
   }
   return sectionMap[section] || section
 }
@@ -4261,7 +4261,7 @@ const showPlanComparison = async () => {
   try {
     // 首先检查是否有当前方案
     if (!currentPlanState || !currentPlanState.isGenerated) {
-      alert('请先生成研究方案')
+      alert('Please generate a research plan first')
       return
     }
     
@@ -4283,26 +4283,26 @@ const showPlanComparison = async () => {
         console.log('❌ 没有迭代历史，创建测试对比数据...')
         // 创建测试对比数据用于演示
         const testBeforePlan = {
-          title: '测试方案 - 原始版本',
-          hypotheses: ['H1：测试假设1', 'H2：测试假设2'],
-          experimentalDesign: '这是原始的实验设计内容',
-          analysisMethod: '这是原始的数据分析方法',
-          expectedResults: '这是原始的结果呈现内容'
+          title: 'Test Plan - Original Version',
+          hypotheses: ['H1: Test hypothesis 1', 'H2: Test hypothesis 2'],
+          experimentalDesign: 'This is the original experimental design content',
+          analysisMethod: 'This is the original data analysis method',
+          expectedResults: 'This is the original results presentation content'
         }
         
         const testAfterPlan = {
-          title: '测试方案 - 迭代版本',
-          hypotheses: ['H1：测试假设1（优化版）', 'H2：测试假设2（优化版）', 'H3：新增假设3'],
-          experimentalDesign: '这是优化后的实验设计内容，增加了更多细节',
-          analysisMethod: '这是优化后的数据分析方法，包含更详细的统计说明',
-          expectedResults: '这是优化后的结果呈现内容，增加了可视化说明'
+          title: 'Test Plan - Iterated Version',
+          hypotheses: ['H1: Test hypothesis 1 (optimized)', 'H2: Test hypothesis 2 (optimized)', 'H3: New hypothesis 3'],
+          experimentalDesign: 'This is the optimized experimental design content with more details',
+          analysisMethod: 'This is the optimized data analysis method with more detailed statistical explanations',
+          expectedResults: 'This is the optimized results presentation content with visualization explanations'
         }
         
         planComparisonData.value = {
           before: testBeforePlan,
           after: testAfterPlan,
           section: 'full',
-          suggestion: '测试迭代建议：优化方案的科学性和可操作性',
+          suggestion: 'Test iteration suggestion: Optimize the scientific nature and operability of the plan',
           timestamp: new Date().toISOString(),
           statistics: generateDiffStatistics(testBeforePlan, testAfterPlan)
         }
@@ -4371,7 +4371,7 @@ const showPlanComparison = async () => {
       currentPlanState: currentPlanState,
       iterationState: iterationState
     })
-    alert('获取方案对比数据失败，请重试')
+    alert('Failed to get plan comparison data, please try again')
   }
 }
 
