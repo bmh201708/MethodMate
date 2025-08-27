@@ -41,7 +41,7 @@
                   </button>
                 </div>
                 <p class="text-xs text-gray-500">
-                  Supports both Chinese and English keywords, separate multiple keywords with commas. Click "Extract Keywords" to intelligently extract relevant keywords from conversation history.
+                  Please separate multiple keywords with commas. You can extract keywords from conversation history or add some.
                 </p>
               </div>
 

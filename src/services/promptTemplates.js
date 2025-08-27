@@ -1,18 +1,18 @@
 /**
- * Research Plan Detail Page Prompt Templates
+ * Research Proposal Detail Page Prompt Templates
  * 
- * This file contains all prompt templates related to research plan generation, evaluation, and iteration
+ * This file contains all prompt templates related to research proposal generation, evaluation, and iteration
  * Uses variable placeholders for dynamic content filling
  */
 
-// Basic research plan generation prompt template
-export const RESEARCH_PLAN_GENERATION_TEMPLATE = `Please help me generate a quantitative experimental research plan.
+// Basic research proposal generation prompt template
+export const RESEARCH_PLAN_GENERATION_TEMPLATE = `Please help me generate a quantitative experimental research proposal.
 
 {{#if customTopic}}
 **Research Topic/Question:**
 {{customTopic}}
 
-Please generate a detailed quantitative research plan based on the above research topic.
+Please generate a detailed quantitative research proposal based on the above research topic.
 {{else}}
 {{#if hasUserRequirements}}
 Based on our conversation history, I understand the following research requirements:
@@ -29,22 +29,22 @@ I will provide you with the content of the following {{paperCount}} reference pa
 {{paperContents}}
 
 {{#if customTopic}}
-Please generate a detailed quantitative research plan based on the full text content of the above {{paperCount}} reference papers, combined with the aforementioned research topic.
+Please generate a detailed quantitative research proposal based on the full text content of the above {{paperCount}} reference papers, combined with the aforementioned research topic.
 {{else}}
 {{#if hasUserRequirements}}
-Please generate a detailed quantitative research plan based on the full text content of the above {{paperCount}} reference papers, combined with the research requirements I mentioned.
+Please generate a detailed quantitative research proposal based on the full text content of the above {{paperCount}} reference papers, combined with the research requirements I mentioned.
 {{else}}
-Please generate a detailed quantitative research plan based on the full text content of the above {{paperCount}} reference papers.
+Please generate a detailed quantitative research proposal based on the full text content of the above {{paperCount}} reference papers.
 {{/if}}
 {{/if}}
 {{else}}
 {{#if customTopic}}
-Please generate a detailed quantitative research plan.
+Please generate a detailed quantitative research proposal.
 {{else}}
 {{#if hasUserRequirements}}
-Please generate a detailed quantitative research plan based on the research requirements I mentioned.
+Please generate a detailed quantitative research proposal based on the research requirements I mentioned.
 {{else}}
-Please generate a detailed quantitative research plan.
+Please generate a detailed quantitative research proposal.
 {{/if}}
 {{/if}}
 {{/if}}
@@ -55,7 +55,7 @@ Please return strictly according to the following format, and must use the follo
 <Insert specific research hypotheses content here>
 
 # Experimental Design:
-<Insert detailed experimental design plan here>
+<Insert detailed experimental design proposal here>
 
 # Data Analysis:
 <Insert data analysis methods here>
@@ -63,7 +63,7 @@ Please return strictly according to the following format, and must use the follo
 # Results Presentation:
 <Insert results presentation format here>
 
-Please write a high-quality quantitative research plan for the Human-Computer Interaction (HCI) field based on the research background, research objectives/research questions, and reference literature I provided. The plan should be structurally clear, logically rigorous, and substantive, avoiding generalities or jargon accumulation. Please organize the content strictly according to the following structure and provide detailed descriptions in each section (at least 3 sentences per item):
+Please write a high-quality quantitative research proposal for the Human-Computer Interaction (HCI) field based on the research background, research objectives/research questions, and reference literature I provided. The proposal should be structurally clear, logically rigorous, and substantive, avoiding generalities or jargon accumulation. Please organize the content strictly according to the following structure and provide detailed descriptions in each section (at least 3 sentences per item):
 
 I. Research Hypotheses
 Briefly describe the experimental purpose and propose research hypotheses that correspond highly to the research objectives. Each hypothesis should be numbered (H1, H2...).
@@ -77,7 +77,7 @@ III. Data Analysis
 Please describe in detail the types of user data collected in this study, which may include but are not limited to the following: Subjective rating data, need to clarify the measured subjective indicators (such as satisfaction, immersion, cognitive load, etc.), and point out the scale form used, including but not limited to Likert scales (such as 7-point or 5-point rating), percentile sliders, self-designed scales or standard scales. Please explain the measurement purpose and rating range of each dimension (for example: "The immersion dimension is used to evaluate the user's subjective immersion experience during the task process, using a 7-point rating, where 1 represents 'completely not immersed' and 7 represents 'completely immersed'"). If it is a standard scale, the name and source need to be noted; if it is a self-designed scale, please explain the design basis, dimension division and measurement objectives, and provide typical item examples to show the specific aspects that the scale focuses on. Regardless of whether standard scales or self-designed scales are used, it is recommended to explain whether reliability tests (such as Cronbach's α) have been conducted and report relevant results to support scale quality and usage rationality.
 For behavioral data, please list the specific indicators recorded (such as click count, task completion time, generated content quantity, interaction steps, etc.), and explain the data collection method (such as system logs or front-end buried points), clarifying whether it includes dynamic information such as interaction sequence, editing path, and dwell time. If the collected content covers the user's operation process or strategy selection during the task, it should also be explained to support process analysis.
 For system recorded data, please explain whether user-generated text, images, prompts, interaction trajectories, etc. are retained, and whether this content is used for subsequent analysis, such as automatic scoring, content comparison, behavioral modeling, etc. If automatic evaluation is involved, please list the indicators used and their evaluation dimensions (such as IoU for image region overlap calculation), and briefly explain their principles and applicability. In addition, if combined with manual annotation or used as qualitative analysis materials, please explain the annotation method and analysis purpose.
-In the data analysis section, please explain the statistical analysis methods used around key dependent variables and clearly correspond each method to the corresponding research hypotheses (such as H1, H2, etc.). Please explain the basis for method selection and set significance standards (such as α = 0.05), explain whether to control covariates (such as user background or pre-test results), and whether to use Bonferroni, Holm and other correction methods when conducting multiple comparisons. The overall analysis plan should clearly show the correspondence between variables, hypotheses and methods to ensure that research questions can be effectively verified through systematic data analysis.
+In the data analysis section, please explain the statistical analysis methods used around key dependent variables and clearly correspond each method to the corresponding research hypotheses (such as H1, H2, etc.). Please explain the basis for method selection and set significance standards (such as α = 0.05), explain whether to control covariates (such as user background or pre-test results), and whether to use Bonferroni, Holm and other correction methods when conducting multiple comparisons. The overall analysis proposal should clearly show the correspondence between variables, hypotheses and methods to ensure that research questions can be effectively verified through systematic data analysis.
 This section should be no less than 800 words
 
 IV. Results Presentation
@@ -94,21 +94,21 @@ Requirements and Notes
 ● All content must be constructed around the input research, with accurate, specific, and logical information;
 ● If the input materials are incomplete, reasonable academic assumptions can be made based on common sense, but prerequisite assumptions must be clearly marked.`;
 
-// Plan evaluation prompt template
-export const PLAN_EVALUATION_TEMPLATE = `You are the most rigorous, critical, and experienced HCI expert, examining the current research plan from aspects such as logic, rationality, feasibility, and requirement matching, please provide practical and specific improvement suggestions, not generalizations, need to be concise, accurate and sufficiently professional
+// Proposal evaluation prompt template
+export const PLAN_EVALUATION_TEMPLATE = `You are the most rigorous, critical, and experienced HCI expert, examining the current research proposal from aspects such as logic, rationality, feasibility, and requirement matching, please provide practical and specific improvement suggestions, not generalizations, need to be concise, accurate and sufficiently professional
 
-Please systematically evaluate the following research plan, analyzing from the following three aspects:
+Please systematically evaluate the following research proposal, analyzing from the following three aspects:
 1. Logic: Evaluate the correspondence between research purposes, research hypotheses, evaluation indicators, etc.
 2. Rationality: Evaluate whether various evaluation indicators, evaluation tools, evaluation methods, etc. are effective and appropriate
 3. Feasibility: Evaluate whether the task load, time, cost, etc. of user experiments are feasible
 
 {{#if hasUserRequirements}}
-4. Requirement matching: Evaluate whether the plan fully meets the user's specific research needs and objectives
+4. Requirement matching: Evaluate whether the proposal fully meets the user's specific research needs and objectives
 {{/if}}
 
-Finally, please summarize and point out the advantages and areas for improvement of the plan.
+Finally, please summarize and point out the advantages and areas for improvement of the proposal.
 
-Current research plan:
+Current research proposal:
 {{planContent}}
 
 {{#if hasUserRequirements}}
@@ -119,23 +119,23 @@ Research background and context:
 {{researchContext}}
 
 Please pay special attention to evaluating:
-1. Whether the plan fully considers the specific research objectives mentioned by the user
+1. Whether the proposal fully considers the specific research objectives mentioned by the user
 2. Whether the research hypotheses highly match the user's needs
 3. Whether the experimental design is suitable for the user's research scenario and preferences
 4. Whether the data analysis methods can effectively answer the user's research questions
 {{/if}}`;
 
 // Section evaluation prompt template
-export const SECTION_EVALUATION_TEMPLATE = `Please conduct a special evaluation of the "{{sectionName}}" section in the following research plan.
+export const SECTION_EVALUATION_TEMPLATE = `Please conduct a special evaluation of the "{{sectionName}}" section in the following research proposal.
 
-Current complete research plan:
+Current complete research proposal:
 {{fullPlanContent}}
 
 "{{sectionName}}" section content that needs focused evaluation:
 {{sectionContent}}
 
 Please evaluate the "{{sectionName}}" section in the following aspects:
-1. Logic: Evaluate whether the logical structure of this section is clear and its coordination with the overall plan
+1. Logic: Evaluate whether the logical structure of this section is clear and its coordination with the overall proposal
 2. Rationality: Evaluate whether the design of this section is scientifically reasonable and whether the method selection is appropriate
 3. Feasibility: Evaluate the implementation difficulty, time cost and resource requirements of this section
 4. Completeness: Evaluate whether the content of this section is sufficiently detailed and whether important elements are missing
@@ -164,12 +164,12 @@ Please pay special attention to evaluating:
 
 Please provide targeted evaluation opinions, focusing on the quality and improvement space of the "{{sectionName}}" section.`;
 
-// Complete plan iteration prompt template
+// Complete proposal iteration prompt template
 export const FULL_PLAN_ITERATION_TEMPLATE = `{{tone}}.
 
 **User's specific optimization suggestions:** {{suggestion}}
 
-Current research plan:
+Current research proposal:
 {{planContent}}
 
 **Targeted optimization requirements:**
@@ -185,12 +185,12 @@ Research background and context: {{researchContext}}
 
 **Requirements adaptation requirements:**
 1. In the optimization process, user's specific research needs must be deeply integrated
-2. Design a more targeted research plan based on user background and research objectives
+2. Design a more targeted research proposal based on user background and research objectives
 3. Based on the user's research scenario, provide more targeted method selection and parameter settings
-4. Ensure that the optimized plan can directly serve the user's research objectives
+4. Ensure that the optimized proposal can directly serve the user's research objectives
 {{/if}}
 
-Please return the complete optimized plan according to the following format, and must use the following precise title format:
+Please return the complete optimized proposal according to the following format, and must use the following precise title format:
 
 # Research Hypotheses:
 <Research hypotheses content>
@@ -204,7 +204,7 @@ Please return the complete optimized plan according to the following format, and
 # Results Presentation:
 <Results presentation content>
 
-Please optimize the plan according to the following detailed structure, ensuring that each part is detailed and specific (at least 3 sentences per item):
+Please optimize the proposal according to the following detailed structure, ensuring that each part is detailed and specific (at least 3 sentences per item):
 
 I. Research Hypotheses
 Briefly describe the experimental purpose and propose research hypotheses that correspond highly to the research objectives. Each hypothesis should be numbered (H1, H2...).
@@ -235,11 +235,11 @@ Predict the possible differences or trends among the main dependent variables un
 ✓ Does it highly match the user's specific suggestions?`;
 
 // Section iteration prompt template
-export const SECTION_ITERATION_TEMPLATE = `{{tone}}, especially need to focus on optimizing the "{{sectionName}}" section of the research plan.
+export const SECTION_ITERATION_TEMPLATE = `{{tone}}, especially need to focus on optimizing the "{{sectionName}}" section of the research proposal.
 
 **User's specific optimization suggestions:** {{suggestion}}
 
-Current complete research plan:
+Current complete research proposal:
 # Research Hypotheses:
 {{hypotheses}}
 
@@ -269,7 +269,7 @@ Current complete research plan:
 1. Focus on optimizing the "{{sectionName}}" section to ensure improvement effects meet user's specific suggestions
 2. Appropriately adjust other sections to maintain logical consistency, but avoid major modifications
 3. Ensure all sections form a complete, coordinated research methodology system
-4. According to the direction of user suggestions, improve plan quality in a targeted manner
+4. According to the direction of user suggestions, improve proposal quality in a targeted manner
 
 {{#if hasUserRequirements}}
 **Deep integration of user research requirements:**
@@ -278,12 +278,12 @@ Research background and context: {{researchContext}}
 
 **Requirements adaptation requirements for "{{sectionName}}":**
 1. Deeply analyze the specific impact and requirements of user needs on the "{{sectionName}}" section
-2. Based on the user's research background, design more fitting specific plans for the "{{sectionName}}" section
+2. Based on the user's research background, design more fitting specific proposals for the "{{sectionName}}" section
 3. Ensure that the optimization of "{{sectionName}}" can directly serve the user's research objectives and actual needs
 4. Fully consider the user's resource conditions and implementation environment during the optimization process
 {{/if}}
 
-Please return the complete optimized plan according to the following format, and must use the following precise title format:
+Please return the complete optimized proposal according to the following format, and must use the following precise title format:
 
 # Research Hypotheses:
 <Research hypotheses content>
@@ -297,7 +297,7 @@ Please return the complete optimized plan according to the following format, and
 # Results Presentation:
 <Results presentation content>
 
-Please optimize the plan according to the following detailed structure, ensuring that each part is detailed and specific (at least 3 sentences per item):
+Please optimize the proposal according to the following detailed structure, ensuring that each part is detailed and specific (at least 3 sentences per item):
 
 I. Research Hypotheses
 Briefly describe the experimental purpose and propose research hypotheses that correspond highly to the research objectives. Each hypothesis should be numbered (H1, H2...).
@@ -336,11 +336,11 @@ Predict the possible differences or trends among the main dependent variables un
 ✓ Does it maintain academic normativity and expression accuracy?`;
 
 // Source introduction generation template - Research Hypotheses section
-export const SOURCE_INTRODUCTION_HYPOTHESIS_TEMPLATE = `**Please analyze and point out how the specific design of research hypotheses in the current research plan is inspired by or borrowed from existing literature, based on the "Research Hypotheses" section content and the referenced literature.**
+export const SOURCE_INTRODUCTION_HYPOTHESIS_TEMPLATE = `**Please analyze and point out how the specific design of research hypotheses in the current research proposal is inspired by or borrowed from existing literature, based on the "Research Hypotheses" section content and the referenced literature.**
 
 Please generate a table with a maximum of 5 rows, each row analyzing a borrowing relationship. Please output directly in markdown table format without code block wrapping. The table should strictly follow the following format:
 
-| Current Plan Approach | Corresponding Reference Content | Borrowing Relationship Description |
+| Current Proposal Approach | Corresponding Reference Content | Borrowing Relationship Description |
 |---|---|---|
 | Briefly state the specific content or core hypothesis points of "Research Hypotheses" in this study | 【Must provide English original text】Clearly mark the location of relevant content in the reference literature and extract English original sentences that reflect its core ideas, with source indicated | Briefly explain how the current research hypotheses are inspired by this literature, specifically reflected in which aspects, emphasizing the borrowed ideas, structure or reasoning path |
 
@@ -352,7 +352,7 @@ If the same item borrows from multiple literature, please distinguish and explai
 - The "Corresponding Reference Content" column must provide English original text, format like: "Original text: 'English original text here' (From: Reference X - Title abbreviation)"
 - Each cell content should be concise and clear, avoid being too long
 
-**## 1. Current section content of the research plan:**
+**## 1. Current section content of the research proposal:**
 {{currentSectionContent}}
 
 **## 2. Reference literature information:**
@@ -373,7 +373,7 @@ export const SOURCE_INTRODUCTION_DESIGN_TEMPLATE = `**Please analyze and point o
 
 Please generate a table with a maximum of 5 rows, each row analyzing a borrowing relationship. Please output directly in markdown table format without code block wrapping. The table should strictly follow the following format:
 
-| Current Plan Approach | Corresponding Reference Content | Borrowing Relationship Description |
+| Current Proposal Approach | Corresponding Reference Content | Borrowing Relationship Description |
 |---|---|---|
 | Briefly explain the specific practices in experimental design of this study, such as grouping methods, variable settings, task types or operation procedures | 【Must provide English original text】Clearly mark the location of relevant content in the reference literature and extract English original sentences that reflect its core ideas, with source indicated | Briefly explain to what extent the current experimental design is inspired by this literature, specifically reflected in what design ideas, variable operations, control logic or process structure |
 
@@ -385,7 +385,7 @@ If the same item borrows from multiple literature, please distinguish and explai
 - The "Corresponding Reference Content" column must provide English original text, format like: "Original text: 'English original text here' (From: Reference X - Title abbreviation)"
 - Each cell content should be concise and clear, avoid being too long
 
-**## 1. Current section content of the research plan:**
+**## 1. Current section content of the research proposal:**
 {{currentSectionContent}}
 
 **## 2. Reference literature information:**
@@ -406,7 +406,7 @@ export const SOURCE_INTRODUCTION_ANALYSIS_TEMPLATE = `**Please analyze and point
 
 Please generate a table with a maximum of 5 rows, each row analyzing a borrowing relationship. Please output directly in markdown table format without code block wrapping. The table should strictly follow the following format:
 
-| Current Plan Approach | Corresponding Reference Content | Borrowing Relationship Description |
+| Current Proposal Approach | Corresponding Reference Content | Borrowing Relationship Description |
 |---|---|---|
 | Briefly explain the specific methods in data analysis of this study, such as statistical methods, analysis steps, variable processing or model construction | 【Must provide English original text】Clearly mark the location of relevant content in the reference literature and extract English original sentences that reflect its core ideas, with source indicated | Briefly explain how the current data analysis methods are inspired by this literature, specifically reflected in what analysis ideas, statistical choices, processing steps or result interpretation |
 
@@ -418,7 +418,7 @@ If the same item borrows from multiple literature, please distinguish and explai
 - The "Corresponding Reference Content" column must provide English original text, format like: "Original text: 'English original text here' (From: Reference X - Title abbreviation)"
 - Each cell content should be concise and clear, avoid being too long
 
-**## 1. Current section content of the research plan:**
+**## 1. Current section content of the research proposal:**
 {{currentSectionContent}}
 
 **## 2. Reference literature information:**
@@ -439,9 +439,9 @@ export const SOURCE_INTRODUCTION_RESULTS_TEMPLATE = `**Please analyze and point 
 
 Please generate a table with a maximum of 5 rows, each row analyzing a borrowing relationship. Please output directly in markdown table format without code block wrapping. The table should strictly follow the following format:
 
-| Current Plan Approach | Corresponding Reference Content | Borrowing Relationship Description |
+| Current Proposal Approach | Corresponding Reference Content | Borrowing Relationship Description |
 |---|---|---|
-| Briefly explain the design of results presentation in this study, such as expected results or conclusions, and the proposed chart types | 【Must provide English original text】Clearly mark the location of relevant content in the reference literature and extract English original sentences that reflect its core ideas, with source indicated | Briefly explain how the current plan in results presentation is inspired by this literature, specifically reflected in which aspects, such as expression methods of expected differences, chart design styles, indicator comparison structures or conclusion reasoning frameworks |
+| Briefly explain the design of results presentation in this study, such as expected results or conclusions, and the proposed chart types | 【Must provide English original text】Clearly mark the location of relevant content in the reference literature and extract English original sentences that reflect its core ideas, with source indicated | Briefly explain how the current proposal in results presentation is inspired by this literature, specifically reflected in which aspects, such as expression methods of expected differences, chart design styles, indicator comparison structures or conclusion reasoning frameworks |
 
 If the same item borrows from multiple literature, please distinguish and explain in the "Corresponding Reference Content" section using abbreviations like "Reference 1, Reference 2".
 
@@ -451,7 +451,7 @@ If the same item borrows from multiple literature, please distinguish and explai
 - The "Corresponding Reference Content" column must provide English original text, format like: "Original text: 'English original text here' (From: Reference X - Title abbreviation)"
 - Each cell content should be concise and clear, avoid being too long
 
-**## 1. Current section content of the research plan:**
+**## 1. Current section content of the research proposal:**
 {{currentSectionContent}}
 
 **## 2. Reference literature information:**
@@ -468,9 +468,9 @@ No specific user requirements, please analyze based on literature only.
 **## 4. Your task and output requirements:**`;
 
 // Source introduction generation template - Default general template
-export const SOURCE_INTRODUCTION_DEFAULT_TEMPLATE = `You are a professional academic assistant. Your task is to rigorously analyze how a group of reference literature provides support for a specific section of a research plan.
+export const SOURCE_INTRODUCTION_DEFAULT_TEMPLATE = `You are a professional academic assistant. Your task is to rigorously analyze how a group of reference literature provides support for a specific section of a research proposal.
 
-Your goal is to generate a "Source Introduction" that clearly explains how each piece of literature contributes to the "{{sectionName}}" section of the plan, using direct original text citations as evidence.
+Your goal is to generate a "Source Introduction" that clearly explains how each piece of literature contributes to the "{{sectionName}}" section of the proposal, using direct original text citations as evidence.
 
 Please generate a source introduction in table format, output directly in markdown table format without code block wrapping. The table should include the following columns:
 
@@ -484,7 +484,7 @@ Please generate a source introduction in table format, output directly in markdo
 - The "Specific Citation Content" column must provide English original text, format like: "Original text: 'English original text here' (From: Reference X - Title abbreviation)"
 - Each cell content should be concise and clear, avoid being too long
 
-**## 1. Current section content of the research plan:**
+**## 1. Current section content of the research proposal:**
 {{currentSectionContent}}
 
 **## 2. Reference literature information:**
@@ -503,9 +503,9 @@ No specific user requirements, please analyze based on literature only.
 Please generate a source introduction of about 300-500 words strictly according to the table format.`;
 
 // Method introduction generation template - ChatGPT mode
-export const METHOD_INTRODUCTION_CHATGPT_TEMPLATE = `I will provide you with the data analysis section content of a research plan. Please analyze the research methods and statistical analysis methods used in it, and generate a detailed method introduction.
+export const METHOD_INTRODUCTION_CHATGPT_TEMPLATE = `I will provide you with the data analysis section content of a research proposal. Please analyze the research methods and statistical analysis methods used in it, and generate a detailed method introduction.
 
-Data analysis section of the research plan:
+Data analysis section of the research proposal:
 {{analysisContent}}
 
 {{#if hasUserRequirements}}
@@ -558,9 +558,9 @@ Combined with the user's research needs, focus on explaining how these statistic
 Please generate introductions for each statistical method mentioned in the data analysis section according to the above format.`;
 
 // Method introduction generation template - Coze mode
-export const METHOD_INTRODUCTION_COZE_TEMPLATE = `I will provide you with the data analysis section content of a research plan. Please analyze the research methods and statistical analysis methods used in it, and generate a detailed method introduction.
+export const METHOD_INTRODUCTION_COZE_TEMPLATE = `I will provide you with the data analysis section content of a research proposal. Please analyze the research methods and statistical analysis methods used in it, and generate a detailed method introduction.
 
-Data analysis section of the research plan:
+Data analysis section of the research proposal:
 {{analysisContent}}
 
 {{#if hasUserRequirements}}
@@ -608,16 +608,16 @@ Please generate introductions for each statistical method in the data analysis s
 // Optimization suggestion configurations
 export const OPTIMIZATION_SPECS = {
   'Automatic Iterative Optimization': {
-    tone: 'You are a senior HCI research expert who needs to conduct comprehensive intelligent optimization of the research plan',
+    tone: 'You are a senior HCI research expert who needs to conduct comprehensive intelligent optimization of the research proposal',
     requirements: [
       '**Comprehensive Enhancement**: Conduct comprehensive optimization from theoretical foundation, method design, data analysis, result presentation and other dimensions',
-      '**Balanced Improvement**: Moderately enhance the professional depth of each part while maintaining the overall coordination of the plan',
-      '**Intelligent Adjustment**: Automatically identify and focus on strengthening parts that need improvement based on weak points of the plan'
+      '**Balanced Improvement**: Moderately enhance the professional depth of each part while maintaining the overall coordination of the proposal',
+      '**Intelligent Adjustment**: Automatically identify and focus on strengthening parts that need improvement based on weak points of the proposal'
     ],
     focusAreas: ['Overall coordination', 'Methodological completeness', 'Academic normativity']
   },
   'Improve Scientific Rigor': {
-    tone: 'You are a senior HCI research expert who needs to focus on improving the scientific rigor of the research plan',
+    tone: 'You are a senior HCI research expert who needs to focus on improving the scientific rigor of the research proposal',
     requirements: [
       '**Methodological Rigor**: Ensure the logic of research design, completeness of control variables, and validity of causal inference',
       '**Statistical Rigor**: Use correct statistical methods, set reasonable significance levels, consider effect size and statistical power',
@@ -626,7 +626,7 @@ export const OPTIMIZATION_SPECS = {
     focusAreas: ['Internal and external validity of research design', 'Normativity of statistical analysis', 'Objectivity of result interpretation']
   },
   'Add More Details': {
-    tone: 'You are a senior HCI research expert who needs to significantly increase specific details of the research plan',
+    tone: 'You are a senior HCI research expert who needs to significantly increase specific details of the research proposal',
     requirements: [
       '**Operational Detail Enrichment**: Provide specific numerical parameters, detailed operation steps, clear time arrangements',
       '**Technical Specification Refinement**: Include device models, software versions, experimental environment configurations and other technical details',
@@ -635,7 +635,7 @@ export const OPTIMIZATION_SPECS = {
     focusAreas: ['Specific parameter settings', 'Operation process refinement', 'Implementation standard clarification']
   },
   'Simplify Expression': {
-    tone: 'You are a senior HCI research expert who needs to simplify and refine the expression of the research plan',
+    tone: 'You are a senior HCI research expert who needs to simplify and refine the expression of the research proposal',
     requirements: [
       '**Expression Refinement**: Remove redundant descriptions, retain key points, make expression more concise and clear',
       '**Structure Clarification**: Optimize paragraph structure, use clearer logical hierarchies, facilitate understanding and execution',
@@ -651,7 +651,7 @@ export const VALIDATION_SPECS = {
     criteria: [
       '**Balance Check**: Ensure all parts have moderate improvements without obvious weak points',
       '**Integrity Verification**: Logical connections between parts are closer, forming a complete methodological system',
-      '**Quality Enhancement Confirmation**: Overall academic level and operability of the plan have significantly improved'
+      '**Quality Enhancement Confirmation**: Overall academic level and operability of the proposal have significantly improved'
     ],
     checklist: ['Overall coordination', 'Methodological completeness', 'Academic normativity']
   },
@@ -702,7 +702,7 @@ export const PRESET_SUGGESTIONS = {
   full: [
     'Overall optimize consistency of all parts',
     'Strengthen research innovation',
-    'Improve plan operability',
+    'Improve proposal operability',
     'Enhance theoretical basis'
   ],
   hypothesis: [
@@ -764,7 +764,7 @@ export const SECTION_GUIDANCE = {
   analysis: {
     'Statistical Methods': [
       '- **Method Selection**: Explain in detail the selection reasons and applicable conditions of statistical methods',
-      '- **Analysis Strategy**: Develop complete data analysis strategies and alternative plans'
+      '- **Analysis Strategy**: Develop complete data analysis strategies and alternative proposals'
     ],
     'Effect Size': [
       '- **Effect Size Calculation**: Specify corresponding effect size indicators for each statistical test',
@@ -772,7 +772,7 @@ export const SECTION_GUIDANCE = {
     ],
     'Hypothesis Testing': [
       '- **Hypothesis Setting**: Clarify null and alternative hypotheses for each statistical test',
-      '- **Prerequisite Verification**: Check prerequisite conditions of statistical tests and plans for handling violations'
+      '- **Prerequisite Verification**: Check prerequisite conditions of statistical tests and proposals for handling violations'
     ],
     'Data Processing': [
       '- **Preprocessing Workflow**: Describe specific steps of data cleaning, transformation, standardization in detail',

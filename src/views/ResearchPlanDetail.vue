@@ -21,7 +21,7 @@
               <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
               </svg>
-              <span>{{ isGenerating ? 'Generating...' : 'Generate Quantitative Research Plan' }}</span>
+              <span>{{ isGenerating ? 'Generating...' : 'Generate Quantitative Research Proposal' }}</span>
             </button>
             
             <!-- 参考文献状态显示 -->
@@ -115,7 +115,7 @@
                 <!-- 各部分内容 -->
                 <div v-if="activeSection === 'full'">
                   <div class="flex justify-between items-center mb-4">
-                    <h1 class="text-xl font-bold text-gray-900">{{ hasGeneratedPlan ? currentPlanState.title : 'Quantitative Research Plan' }}</h1>
+                    <h1 class="text-xl font-bold text-gray-900">{{ hasGeneratedPlan ? currentPlanState.title : 'Quantitative Research Proposal' }}</h1>
                     <!-- 按钮组 -->
                     <div v-if="hasGeneratedPlan" class="flex space-x-2">
                       <!-- Comparison按钮 - 橙色 -->
@@ -201,9 +201,9 @@
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                       </div>
-                      <h3 class="text-lg font-medium text-gray-900 mb-2">No experimental plan generated yet, please generate a research plan first</h3>
+                      <h3 class="text-lg font-medium text-gray-900 mb-2">No experimental proposal generated yet, please generate a research proposal first</h3>
                       <p class="text-gray-500 mb-6 max-w-md mx-auto">
-                        You can click the "Generate Quantitative Research Plan" button on the left, or enter relevant requirements in the chat box to generate a personalized research plan.
+                        You can click the "Generate Quantitative Research Proposal" button on the left, or enter relevant requirements in the chat box to generate a personalized research proposal.
                       </p>
                       <div class="flex justify-center space-x-4 text-sm text-gray-400">
                         <div class="flex items-center">
@@ -279,7 +279,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                       </svg>
                     </div>
-                    <p class="text-gray-500">No research hypotheses generated yet, please generate a research plan first</p>
+                    <p class="text-gray-500">No research hypotheses generated yet, please generate a research proposal first</p>
                   </div>
                 </div>
                 <div v-if="activeSection === 'design'">
@@ -332,7 +332,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
                       </svg>
                     </div>
-                    <p class="text-gray-500">No experimental design generated yet, please generate a research plan first</p>
+                    <p class="text-gray-500">No experimental design generated yet, please generate a research proposal first</p>
                   </div>
                 </div>
                 <div v-if="activeSection === 'analysis'">
@@ -385,7 +385,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                       </svg>
                     </div>
-                    <p class="text-gray-500">No data analysis plan generated yet, please generate a research plan first</p>
+                    <p class="text-gray-500">No data analysis proposal generated yet, please generate a research proposal first</p>
                   </div>
                 </div>
                 <div v-if="activeSection === 'results'">
@@ -438,7 +438,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
                       </svg>
                     </div>
-                    <p class="text-gray-500">No results presentation plan generated yet, please generate a research plan first</p>
+                    <p class="text-gray-500">No results presentation proposal generated yet, please generate a research proposal first</p>
                   </div>
                 </div>
               </div>
@@ -550,7 +550,7 @@
                   <!-- Statistical method query content -->
                   <div v-if="analysisSubSection === 'query'" class="space-y-6" id="statistical-method-query">
                     <div class="bg-gray-50 p-6 rounded-lg">
-                      <h3 class="text-lg font-semibold text-gray-900 mb-4">Statistical Method Query</h3>
+                      <h3 class="text-lg font-semibold text-gray-900 mb-4">Statistical Method Lookup</h3>
                       <div class="flex space-x-4">
                         <input
                           ref="statisticalQueryInputRef"
@@ -570,7 +570,7 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
-                          <span>{{ isQuerying ? 'Querying...' : 'Query' }}</span>
+                          <span>{{ isQuerying ? 'Searching...' : 'Search' }}</span>
                         </button>
                       </div>
                       
@@ -601,7 +601,7 @@
     </main>
     
     <!-- 新手指引遮罩层 -->
-    <div v-if="showTutorial" class="fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300" @click="skipTutorial">
+    <div v-if="showTutorial" class="fixed inset-0 bg-black bg-opacity-50 z-[60] transition-opacity duration-300 tutorial-overlay" @click="skipTutorial">
       <!-- 高亮区域 -->
       <div 
         v-if="currentTutorialStep < tutorialSteps.length"
@@ -688,7 +688,7 @@
     </div>
 
     <!-- 重置引导按钮（开发模式） -->
-    <div v-if="isDevelopment" class="fixed bottom-4 right-4 z-40 flex flex-col space-y-2">
+    <div v-if="isDevelopment" class="fixed bottom-4 right-4 z-[58] flex flex-col space-y-2">
       <button
         @click="resetTutorial"
         class="px-3 py-2 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-700 transition-colors opacity-50 hover:opacity-100"
@@ -716,7 +716,7 @@
             <div>
               <h3 class="text-xl font-semibold text-gray-900">{{ getIterateDialogTitle() }}</h3>
               <p class="text-gray-600 mt-2 text-sm">
-                Please enter your iteration suggestions, and AI will optimize{{ getSectionNameInChinese(iteratingSection) }} based on your suggestions
+                Please enter your iteration suggestions, and AI will optimize {{ getSectionNameInEnglish(iteratingSection) }} based on your suggestions
               </p>
             </div>
             <button
@@ -855,7 +855,7 @@
             rows="4"
           ></textarea>
           <p class="text-xs text-gray-500 mt-2">
-            The system will generate a corresponding quantitative research plan based on the topic you input, combined with references
+            The system will generate a corresponding quantitative research proposal based on the topic you input, combined with references
           </p>
         </div>
 
@@ -870,7 +870,7 @@
             <div>
               <h4 class="font-medium text-purple-900 mb-2">AI Analysis of User Requirements</h4>
               <p class="text-sm text-purple-700 leading-relaxed">
-                The system will automatically analyze research requirements, background and objectives mentioned in your chat history, combined with selected reference literature, to generate personalized quantitative research plans.
+                The system will automatically analyze research requirements, background and objectives mentioned in your chat history, combined with selected reference literature, to generate personalized quantitative research proposals.
               </p>
               <div class="mt-3 flex items-center space-x-4 text-xs text-purple-600">
                 <div class="flex items-center space-x-1">
@@ -889,7 +889,7 @@
                   <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                   </svg>
-                  <span>Generate Plan</span>
+                  <span>Generate Proposal</span>
                 </div>
               </div>
             </div>
@@ -972,7 +972,7 @@
                   Iterative information
                 </h3>
                 <p class="text-sm text-blue-700 mt-1">
-                  Iteration Section: {{ getSectionNameInChinese(planComparisonData.section) }}
+                  Iteration Section: {{ getSectionNameInEnglish(planComparisonData.section) }}
                 </p>
                 <p class="text-sm text-blue-700">
                   Iteration Suggestions: {{ planComparisonData.suggestion }}
@@ -1112,93 +1112,90 @@ const currentTutorialStep = ref(0)
 
 // 样例研究方案数据
 const sampleResearchPlan = {
-  title: '社交媒体使用对大学生学习效率影响的定量研究方案',
+  title: 'A Quantitative Research Proposal on the Impact of Social Media Use on College Students\' Learning Efficiency',
   hypotheses: [
-    'H1：社交媒体使用时间与学习效率呈负相关关系',
-    'H2：不同类型的社交媒体使用对学习效率的影响存在显著差异',
-    'H3：社交媒体使用动机在学习时间与学习效率之间起调节作用'
+    'H1: Social media usage time is negatively correlated with learning efficiency',
+    'H2: Different types of social media use have significantly different impacts on learning efficiency',
+    'H3: Social media usage motivation moderates the relationship between study time and learning efficiency'
   ],
-  experimentalDesign: `**参与者特征：**
-- 样本量：预计招募300名大学生，基于效应量0.25，α=0.05，检验力0.8计算得出
-- 年龄构成：18-25岁，平均年龄21.5岁
-- 性别比例：男女比例接近1:1
-- 专业背景：涵盖理工科、文科、艺术类等不同专业
-- 招募方式：通过校园公告、社交媒体、课程群等渠道招募
-- 纳入标准：全日制在校大学生，有智能手机使用经验
-- 排除标准：有严重心理疾病史，无法完成实验任务
+  experimentalDesign: `**Participant Characteristics:**
+- Sample size: Plan to recruit 300 college students, calculated based on effect size 0.25, α=0.05, power 0.8
+- Age composition: 18-25 years old, average age 21.5 years
+- Gender ratio: Male to female ratio approximately 1:1
+- Academic background: Covers different majors including STEM, liberal arts, arts, etc.
+- Recruitment method: Recruit through campus announcements, social media, course groups, etc.
+- Inclusion criteria: Full-time college students with smartphone usage experience
+- Exclusion criteria: History of serious mental illness, inability to complete experimental tasks
 
-**分组方式：**
-- 研究设计：采用2×3混合设计
-- 自变量1：社交媒体使用时间（高使用组 vs 低使用组）
-- 自变量2：社交媒体类型（娱乐型、学习型、社交型）
-- 因变量：学习效率指标（任务完成时间、正确率、注意力集中度）
-- 控制变量：年龄、性别、专业背景、学习习惯、睡眠质量
+**Grouping Method:**
+- Research design: 2×3 mixed design
+- Independent variable 1: Social media usage time (high usage group vs low usage group)
+- Independent variable 2: Social media type (entertainment, educational, social)
+- Dependent variable: Learning efficiency indicators (task completion time, accuracy rate, attention concentration)
+- Control variables: Age, gender, academic background, study habits, sleep quality
 
-**实验流程：**
-1. 预实验阶段（30分钟）：
-   - 签署知情同意书
-   - 填写基本信息问卷
-   - 完成学习能力基线测试
-   - 安装实验监控软件
+**Experimental Procedure:**
+1. Pre-experiment phase (30 minutes):
+   - Sign informed consent form
+   - Complete basic information questionnaire
+   - Complete learning ability baseline test
+   - Install experimental monitoring software
 
-2. 实验阶段（7天）：
-   - 第1-3天：正常使用社交媒体，系统记录使用数据
-   - 第4天：完成学习任务测试
-   - 第5-7天：继续记录使用数据
-   - 每日填写使用日记和情绪状态问卷
+2. Experimental phase (7 days):
+   - Days 1-3: Normal social media use, system records usage data
+   - Day 4: Complete learning task test
+   - Days 5-7: Continue recording usage data
+   - Daily completion of usage diary and emotional state questionnaire
 
-3. 后测阶段（60分钟）：
-   - 完成学习效率测试
-   - 填写社交媒体使用动机问卷
-   - 进行深度访谈（随机抽取30%参与者）`,
-  analysisMethod: `**数据采集类型：**
-1. 主观评分数据：学习效率自评量表、使用动机问卷、注意力评估
-2. 行为数据：使用时长、频率、任务完成时间、正确率
-3. 系统记录：应用切换频率、屏幕使用时间分布
+3. Post-test phase (60 minutes):
+   - Complete learning efficiency test
+   - Fill out social media usage motivation questionnaire
+   - Conduct in-depth interviews (randomly select 30% of participants)`,
+  analysisMethod: `**Data Collection Types:**
+1. Subjective rating data: Learning efficiency self-assessment scale, usage motivation questionnaire, attention assessment
+2. Behavioral data: Usage duration, frequency, task completion time, accuracy rate
 
-**统计分析方法：**
-1. 描述性统计：计算均值、标准差、分布特征
-2. 相关性分析：Pearson相关系数分析使用时间与学习效率关系
-3. 方差分析：双因素混合设计ANOVA分析交互效应
-4. 调节效应分析：层次回归分析使用动机的调节作用
-5. 协变量控制：将年龄、性别、专业背景作为协变量`,
-  expectedResults: `**预期差异和趋势：**
-1. 主要因变量差异预测：
-   - 高使用组的学习效率显著低于低使用组（p < 0.05）
-   - 娱乐型社交媒体使用者的学习效率最低
-   - 学习型社交媒体使用者的学习效率相对较高
-   - 使用时间与学习效率呈显著负相关（r = -0.35）
+**Statistical Analysis Methods:**
+1. Descriptive statistics: Calculate means, standard deviations, distribution characteristics
+2. Correlation analysis: Pearson correlation coefficient analysis of relationship between usage time and learning efficiency
+3. Analysis of variance: Two-factor mixed design ANOVA to analyze interaction effects`,
+  expectedResults: `**Expected Differences and Trends:**
+1. Main dependent variable difference predictions:
+   - Learning efficiency in high usage group significantly lower than low usage group (p < 0.05)
+   - Entertainment social media users have the lowest learning efficiency
+   - Educational social media users have relatively higher learning efficiency
+   - Usage time negatively correlated with learning efficiency (r = -0.35)
 
-2. 交互效应预测：
-   - 社交媒体类型与使用时间存在显著交互效应
-   - 娱乐型社交媒体在高使用组中的负面影响最大
-   - 学习型社交媒体在低使用组中可能产生正向影响
+2. Interaction effect predictions:
+   - Significant interaction effect between social media type and usage time
+   - Entertainment social media has the greatest negative impact in high usage group
+   - Educational social media may have positive impact in low usage group
 
-3. 调节效应预测：
-   - 使用动机在学习时间与效率间起显著调节作用
-   - 学习动机强的用户，使用时间对效率的负面影响较小
+3. Moderation effect predictions:
+   - Usage motivation significantly moderates the relationship between study time and efficiency
+   - Users with strong learning motivation show less negative impact of usage time on efficiency
 
-**结果呈现方式：**
-1. 描述性统计图表：
-   - 箱线图：展示不同使用组的学习效率分布
-   - 条形图：比较不同类型社交媒体的使用时长
-   - 散点图：显示使用时间与学习效率的相关关系
+**Result Presentation Methods:**
+1. Descriptive statistical charts:
+   - Box plots: Show learning efficiency distribution across different usage groups
+   - Bar charts: Compare usage duration of different social media types
+   - Scatter plots: Display correlation between usage time and learning efficiency
 
-2. 推断统计图表：
-   - 交互效应图：展示社交媒体类型与使用时间的交互作用
-   - 调节效应图：显示使用动机的调节作用
-   - 效应量森林图：展示各统计检验的效应量大小
+2. Inferential statistical charts:
+   - Interaction effect plots: Show interaction between social media type and usage time
+   - Moderation effect plots: Display the moderating role of usage motivation
+   - Effect size forest plots: Show effect sizes of various statistical tests
 
-3. 辅助解读图表：
-   - 路径图：展示变量间的因果关系
-   - 热力图：显示各变量间的相关矩阵
-   - 时间序列图：展示7天内使用模式的变化趋势
+3. Auxiliary interpretation charts:
+   - Path diagrams: Show causal relationships between variables
+   - Heat maps: Display correlation matrix between variables
+   - Time series plots: Show changes in usage patterns over 7 days
 
-**结果解释逻辑：**
-- 通过多维度数据验证研究假设的合理性
-- 结合前人研究解释发现的理论意义
-- 分析结果对教育实践的指导价值
-- 讨论研究的局限性和未来研究方向`,
+**Result Interpretation Logic:**
+- Validate the reasonableness of research hypotheses through multi-dimensional data
+- Explain the theoretical significance of findings in combination with previous research
+- Analyze the guiding value of results for educational practice
+- Discuss research limitations and future research directions`,
   isGenerated: true,
   lastUpdated: new Date().toISOString()
 }
@@ -1223,18 +1220,18 @@ const planComparisonBtnRef = ref(null) // 方案对比按钮
 // 引导步骤定义
 const tutorialSteps = [
     {
-    title: 'Generate Quantitative Research Plan',
-    description: 'Click this button to generate a quantitative research plan. AI will intelligently generate a complete research design based on your requirements and reference literature.',
+    title: 'Generate Quantitative Research Proposal',
+    description: 'Click this button to generate a quantitative research proposal. AI will intelligently generate a complete research design based on your requirements and reference literature.',
     ref: generatePlanBtnRef
   },
   {
-    title: 'Plan Evaluation Function',
-    description: 'Click the "Overall Evaluation" button, and AI will conduct a comprehensive evaluation of your research plan, including logic, rationality, feasibility, and requirement matching.',
+    title: 'Proposal Evaluation Function',
+    description: 'Click the "Overall Evaluation" button, and AI will conduct a comprehensive evaluation of your research proposal, including logic, rationality, feasibility, and requirement matching.',
     ref: evaluateBtnRef
   },
   {
-    title: 'Overall Plan Iteration',
-    description: 'Click the "Plan Iteration" button to optimize and improve the entire research plan. AI will regenerate a more perfect plan based on your suggestions.',
+    title: 'Overall Proposal Iteration',
+    description: 'Click the "Proposal Iteration" button to optimize and improve the entire research proposal. AI will regenerate a more perfect proposal based on your suggestions.',
     ref: iterateBtnRef
   },
 
@@ -1288,7 +1285,7 @@ const tutorialSteps = [
     }
   },
   {
-    title: 'Statistical Method Query',
+    title: 'Statistical Method Lookup',
     description: 'In the data analysis section, you can query detailed descriptions and usage scenarios of various statistical methods.',
     getElement: () => {
       // 确保在数据分析部分
@@ -1689,7 +1686,7 @@ const jumpToStatisticalMethodQuery = async (methodName) => {
     
   } catch (error) {
     console.error('跳转到统计方法查询失败:', error)
-    alert('跳转失败，请手动切换到统计方法查询')
+    alert('Navigation failed, please manually switch to statistical method lookup')
   }
 }
 
@@ -1705,7 +1702,7 @@ const sections = [
 const analysisSubSections = [
   { id: 'source', name: 'Source Introduction' },
   { id: 'method', name: 'Method Introduction' },
-  { id: 'query', name: 'Statistical Method Query' }
+  { id: 'query', name: 'Statistical Method Lookup' }
 ]
 
 // 检测是否有AI生成的研究方案数据
@@ -2124,16 +2121,16 @@ const saveToHistoryPlans = async (context = {}) => {
   }
 }
 
-// Parse AI-generated research plan Markdown (strict mode)
+// Parse AI-generated research proposal Markdown (strict mode)
 const parseResearchPlanResponse = async (content, context = {}) => {
   try {
-    console.log('Starting to parse research plan, content length:', content.length)
+    console.log('Starting to parse research proposal, content length:', content.length)
     
     if (!content || typeof content !== 'string') {
       throw new Error('AI response content is empty or invalid format')
     }
     
-    // Strict check for required research plan structure (support both English and Chinese)
+    // Strict check for required research proposal structure (support both English and Chinese)
     const requiredSections = {
       english: ['Research Hypotheses', 'Experimental Design', 'Data Analysis', 'Results Presentation'],
       chinese: ['研究假设', '实验设计', '数据分析', '结果呈现']
@@ -2172,7 +2169,7 @@ const parseResearchPlanResponse = async (content, context = {}) => {
     }
     
     if (missingSections.length > 0) {
-      throw new Error(`AI response missing required research plan sections: ${missingSections.join(', ')}. Please ensure the response contains complete research plan format.`)
+      throw new Error(`AI response missing required research proposal sections: ${missingSections.join(', ')}. Please ensure the response contains complete research proposal format.`)
     }
     
         // Use simpler and more accurate parsing method
@@ -2274,7 +2271,7 @@ const parseResearchPlanResponse = async (content, context = {}) => {
     // Check if at least one valid content is extracted
     const hasValidContent = hypothesis || design || analysis || results
     if (!hasValidContent) {
-      console.log('No valid research plan content extracted, first 500 characters of original content:', content.substring(0, 500))
+      console.log('No valid research proposal content extracted, first 500 characters of original content:', content.substring(0, 500))
       // Output more detailed debug information
       console.log('Attempting to find keywords:')
       if (isEnglish) {
@@ -2360,7 +2357,7 @@ const parseResearchPlanResponse = async (content, context = {}) => {
     const timestamp = new Date().toLocaleString('en-US')
     const generatedTitle = generatePlanTitle()
     currentPlanState.title = generatedTitle
-    currentPlanState.researchQuestions = 'AI-generated research plan'
+    currentPlanState.researchQuestions = 'AI-generated research proposal'
     currentPlanState.methodology = `Research methodology generated based on reference literature (Generated: ${timestamp})`
     currentPlanState.dataCollection = 'Data collection plan formulated according to research design'
     
@@ -2368,7 +2365,7 @@ const parseResearchPlanResponse = async (content, context = {}) => {
     
     // Initialize source introduction for complete plan section
     currentPlanState.full = {
-      sourceIntro: 'This research plan integrates various research methods and literature resources, aiming to provide a comprehensive and scientific quantitative research framework.'
+              sourceIntro: 'This research proposal integrates various research methods and literature resources, aiming to provide a comprehensive and scientific quantitative research framework.'
     }
     
     // If at least one field is updated, consider it successful
@@ -2397,17 +2394,17 @@ const parseResearchPlanResponse = async (content, context = {}) => {
       activeSection.value = 'full'
       
       // Show success message
-      console.log('Successfully parsed and updated research plan')
+      console.log('Successfully parsed and updated research proposal')
       
       // Automatically save to history plans
       await saveToHistoryPlans(context)
       
-      return true // Successfully parsed and updated research plan
+      return true // Successfully parsed and updated research proposal
     } else {
-      throw new Error('Parsing failed: Unable to extract valid research plan content from AI response. Please check if the AI response format is correct.')
+      throw new Error('Parsing failed: Unable to extract valid research proposal content from AI response. Please check if the AI response format is correct.')
     }
   } catch (error) {
-    console.error('Error occurred while parsing research plan:', error)
+    console.error('Error occurred while parsing research proposal:', error)
     console.log('Original content:', content.substring(0, 500))
     throw error // Re-throw error for caller to handle
   }
@@ -2651,11 +2648,11 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
     await parseResearchPlanResponse(response.content, generationContext)
     
     // 解析成功，显示成功提示
-    alert('研究方案生成成功！已包含研究假设、实验设计、数据分析和结果呈现四个完整部分。')
+    alert('Generate research proposal successfully!')
     
   } catch (error) {
     console.error('生成研究方案失败:', error)
-    alert(`生成研究方案失败：${error.message}`)
+          alert(`Failed to generate research plan: ${error.message}`)
   } finally {
     isGenerating.value = false
   }
@@ -2700,7 +2697,7 @@ const generatePlanTitle = () => {
     
     // 确保标题不为空
     if (!cleanedTopic || cleanedTopic === '...') {
-      cleanedTopic = 'User Custom Research Plan'
+      cleanedTopic = 'User Custom Research Proposal'
     }
     
     console.log('自定义主题清理后的标题:', cleanedTopic)
@@ -2769,11 +2766,11 @@ const generatePlanTitle = () => {
   
   let smartDefaultTitle = ''
   if (referencedCount > 0) {
-    smartDefaultTitle = `Quantitative Research Plan Based on ${referencedCount} Papers`
+          smartDefaultTitle = `Quantitative Research Proposal Based on ${referencedCount} Papers`
   } else if (generationInfo.mode === 'custom') {
-    smartDefaultTitle = 'User Custom Research Plan'
+          smartDefaultTitle = 'User Custom Research Proposal'
   } else {
-    smartDefaultTitle = 'AI Generated Research Plan'
+          smartDefaultTitle = 'AI Generated Research Proposal'
   }
   
   const finalTitle = `${smartDefaultTitle}-${timeStr}`
@@ -3100,7 +3097,7 @@ onMounted(() => {
         await jumpToStatisticalMethodQuery(encodedMethodName)
       } catch (error) {
         console.error('处理统计方法点击失败:', error)
-        alert('跳转失败，请稍后重试')
+        alert('Navigation failed, please try again later')
       }
     }
     
@@ -3291,7 +3288,7 @@ ${currentPlanState.expectedResults || ''}`,
       
       // 显示提示消息
       setTimeout(() => {
-        alert('评估请求已发送，请等待AI助手的评估结果。')
+        alert('Evaluation request sent, please wait for AI assistant evaluation results.')
       }, 500)
 
       // 设置一个定时器，在10秒后重置评估状态
@@ -3305,7 +3302,7 @@ ${currentPlanState.expectedResults || ''}`,
 
     } catch (error) {
       console.error('评估方案失败:', error)
-      alert('评估方案失败，请重试')
+      alert('Failed to evaluate plan, please try again')
       isEvaluating.value = false
     }
   }
@@ -3350,12 +3347,12 @@ const evaluateSectionPlan = async (section) => {
         sectionContent = currentPlanState.expectedResults || ''
         break
       default:
-        alert('不支持的评估部分')
+        alert('Unsupported evaluation section')
       return
     }
     
     if (!sectionContent.trim()) {
-      alert(`当前${sectionName}部分内容为空，无法进行评估`)
+      alert(`Current ${sectionName} section is empty, cannot perform evaluation`)
       isEvaluatingSection.value = false
       evaluatingSection.value = ''
       return
@@ -3390,7 +3387,7 @@ ${currentPlanState.expectedResults || ''}`,
     
     // 显示提示消息
     setTimeout(() => {
-      alert(`${sectionName}部分的评估请求已发送，请等待AI助手的评估结果。`)
+      alert(`${sectionName} section evaluation request sent, please wait for AI assistant results.`)
     }, 500)
 
     // 设置一个定时器，在10秒后重置评估状态
@@ -3404,7 +3401,7 @@ ${currentPlanState.expectedResults || ''}`,
 
   } catch (error) {
     console.error(`评估${sectionName}部分失败:`, error)
-    alert(`评估${sectionName}部分失败，请重试`)
+    alert(`Failed to evaluate ${sectionName} section, please try again`)
     isEvaluatingSection.value = false
     evaluatingSection.value = ''
   }
@@ -3692,11 +3689,11 @@ const iteratePlanWithSuggestion = async (suggestion) => {
     await completeIteration(response.id)
     
     // 解析成功，显示成功提示
-    alert('方案迭代成功！已根据您的建议优化了完整的研究方案。')
+          alert('Plan iteration successful! The complete research plan has been optimized based on your suggestions.')
 
   } catch (error) {
     console.error('迭代方案失败:', error)
-    alert(`迭代方案失败：${error.message}`)
+          alert(`Failed to iterate plan: ${error.message}`)
   } finally {
     isIterating.value = false
   }
@@ -3715,7 +3712,7 @@ const iterateSectionPlan = async (section, suggestion) => {
     storeIterationSnapshot(section, suggestion)
     
     // 获取部分名称和内容
-    const sectionName = getSectionNameInChinese(section)
+    const sectionName = getSectionNameInEnglish(section)
     let sectionContent = ''
     
     switch (section) {
@@ -3732,13 +3729,13 @@ const iterateSectionPlan = async (section, suggestion) => {
         sectionContent = currentPlanState.expectedResults || ''
         break
       default:
-        alert('不支持的部分')
+        alert('Unsupported section')
         isIterating.value = false
         return
     }
     
     if (!sectionContent.trim()) {
-      alert(`当前${sectionName}部分内容为空，无法进行迭代`)
+      alert(`Current ${sectionName} section is empty, cannot perform iteration`)
       isIterating.value = false
       return
     }
@@ -3790,11 +3787,11 @@ const iterateSectionPlan = async (section, suggestion) => {
     await completeIteration(response.id)
     
     // 解析成功，显示成功提示
-    alert(`${sectionName}部分迭代成功！已根据您的建议优化了该部分内容。`)
+          alert(`${sectionName} section iteration successful! Content has been optimized based on your suggestions.`)
     
   } catch (error) {
     console.error(`迭代${section}部分失败:`, error)
-    alert(`迭代失败：${error.message}`)
+          alert(`Iteration failed: ${error.message}`)
   } finally {
     isIterating.value = false
   }
@@ -3803,7 +3800,7 @@ const iterateSectionPlan = async (section, suggestion) => {
 // 查询统计方法
 const queryStatisticalMethod = async () => {
   if (!statisticalMethodQuery.value.trim()) {
-    alert('请输入要查询的统计方法名称')
+    alert('Please enter the statistical method name to search')
     return
   }
 
@@ -3846,14 +3843,14 @@ const generateSourceIntroduction = async () => {
   
   // 检查是否有生成的方案
   if (!hasGeneratedPlan.value) {
-    alert('请先生成研究方案，再生成来源介绍')
+    alert('Please generate a research plan first before generating source introduction')
     return
   }
   
   // 检查是否有参考文献
   const referencedPapers = Array.from(papersState.referencedPapersList)
   if (referencedPapers.length === 0) {
-    alert('请先选择参考文献，再生成来源介绍')
+    alert('Please select reference papers first before generating source introduction')
     return
   }
   
@@ -3882,12 +3879,12 @@ const generateSourceIntroduction = async () => {
         sectionName = '结果呈现'
         break
       default:
-        alert('当前部分不支持生成来源介绍')
+        alert('Current section does not support generating source introduction')
         return
     }
     
     if (!currentSectionContent.trim()) {
-      alert(`当前${sectionName}部分内容为空，无法生成来源介绍`)
+      alert(`Current ${sectionName} section is empty, cannot generate source introduction`)
       return
     }
     
@@ -3991,9 +3988,9 @@ const generateSourceIntroduction = async () => {
       console.log('🎯 ChatGPT Mode: Checking message length for source introduction generation, intelligently selecting reference content')
       
       // 先构建基础提示（不包含参考文献）
-      let basePrompt = `I will provide you with a research plan and some reference papers that the research plan refers to. Please analyze which reference papers the "${sectionName}" section of the following research plan refers to in terms of research methods and generate a concise source introduction.
+      let basePrompt = `I will provide you with a research proposal and some reference papers that the research proposal refers to. Please analyze which reference papers the "${sectionName}" section of the following research proposal refers to in terms of research methods and generate a concise source introduction.
 
-${sectionName} section of the research plan:
+${sectionName} section of the research proposal:
 ${currentSectionContent}
 
 Reference information:`
@@ -4061,14 +4058,14 @@ const generateMethodIntroduction = async () => {
   
   // 检查是否有生成的方案
   if (!hasGeneratedPlan.value) {
-    alert('请先生成研究方案，再生成方法介绍')
+    alert('Please generate a research plan first before generating method introduction')
     return
   }
   
   // 检查数据分析部分是否有内容
   const analysisContent = currentPlanState.analysisMethod || ''
   if (!analysisContent.trim()) {
-    alert('数据分析部分内容为空，无法生成方法介绍')
+    alert('Data analysis section is empty, cannot generate method introduction')
     return
   }
   
@@ -4105,7 +4102,7 @@ const generateMethodIntroduction = async () => {
     
   } catch (error) {
     console.error('生成方法介绍失败:', error)
-    alert(error.message || '生成方法介绍失败，请稍后重试')
+    alert(error.message || 'Failed to generate method introduction, please try again later')
   } finally {
     isGeneratingMethod.value = false
   }
@@ -4131,15 +4128,15 @@ const applyHistoryPlan = () => {
     
     // 不再添加到历史记录，因为这个方案已经在历史记录中了
     
-    console.log('应用历史方案为当前方案，方案ID:', planId)
-    alert('历史方案已应用为当前方案！')
+    console.log('Applied historical plan as current plan, plan ID:', planId)
+    alert('Historical plan has been applied as current plan!')
   }
 }
 
 // 显示迭代对话框
 const showIterateDialog = (section) => {
   if (!currentPlanState || !hasGeneratedPlan.value) {
-    alert('请先生成研究方案')
+    alert('Please generate a research plan first')
     return
   }
   
@@ -4159,18 +4156,18 @@ const closeIterateDialog = () => {
 
 // 获取迭代对话框标题
 const getIterateDialogTitle = () => {
-  const sectionName = getSectionNameInChinese(iteratingSection.value)
-  return sectionName === '完整方案' ? '迭代完整研究方案' : `迭代${sectionName}部分`
+  const sectionName = getSectionNameInEnglish(iteratingSection.value)
+  return sectionName === 'Full Plan' ? 'Iterate Complete Research Plan' : `Iterate ${sectionName} Section`
 }
 
-// 获取部分名称的中文映射
-const getSectionNameInChinese = (section) => {
+// 获取部分名称的英文映射
+const getSectionNameInEnglish = (section) => {
   const sectionMap = {
-    'full': '完整方案',
-    'hypothesis': '研究假设',
-    'design': '实验设计',
-    'analysis': '数据分析',
-    'results': '结果呈现'
+    'full': 'Full Plan',
+    'hypothesis': 'Research Hypotheses',
+    'design': 'Experimental Design',
+    'analysis': 'Data Analysis',
+    'results': 'Expected Results'
   }
   return sectionMap[section] || section
 }
@@ -4264,7 +4261,7 @@ const showPlanComparison = async () => {
   try {
     // 首先检查是否有当前方案
     if (!currentPlanState || !currentPlanState.isGenerated) {
-      alert('请先生成研究方案')
+      alert('Please generate a research plan first')
       return
     }
     
@@ -4286,26 +4283,26 @@ const showPlanComparison = async () => {
         console.log('❌ 没有迭代历史，创建测试对比数据...')
         // 创建测试对比数据用于演示
         const testBeforePlan = {
-          title: '测试方案 - 原始版本',
-          hypotheses: ['H1：测试假设1', 'H2：测试假设2'],
-          experimentalDesign: '这是原始的实验设计内容',
-          analysisMethod: '这是原始的数据分析方法',
-          expectedResults: '这是原始的结果呈现内容'
+          title: 'Test Plan - Original Version',
+          hypotheses: ['H1: Test hypothesis 1', 'H2: Test hypothesis 2'],
+          experimentalDesign: 'This is the original experimental design content',
+          analysisMethod: 'This is the original data analysis method',
+          expectedResults: 'This is the original results presentation content'
         }
         
         const testAfterPlan = {
-          title: '测试方案 - 迭代版本',
-          hypotheses: ['H1：测试假设1（优化版）', 'H2：测试假设2（优化版）', 'H3：新增假设3'],
-          experimentalDesign: '这是优化后的实验设计内容，增加了更多细节',
-          analysisMethod: '这是优化后的数据分析方法，包含更详细的统计说明',
-          expectedResults: '这是优化后的结果呈现内容，增加了可视化说明'
+          title: 'Test Plan - Iterated Version',
+          hypotheses: ['H1: Test hypothesis 1 (optimized)', 'H2: Test hypothesis 2 (optimized)', 'H3: New hypothesis 3'],
+          experimentalDesign: 'This is the optimized experimental design content with more details',
+          analysisMethod: 'This is the optimized data analysis method with more detailed statistical explanations',
+          expectedResults: 'This is the optimized results presentation content with visualization explanations'
         }
         
         planComparisonData.value = {
           before: testBeforePlan,
           after: testAfterPlan,
           section: 'full',
-          suggestion: '测试迭代建议：优化方案的科学性和可操作性',
+          suggestion: 'Test iteration suggestion: Optimize the scientific nature and operability of the plan',
           timestamp: new Date().toISOString(),
           statistics: generateDiffStatistics(testBeforePlan, testAfterPlan)
         }
@@ -4374,7 +4371,7 @@ const showPlanComparison = async () => {
       currentPlanState: currentPlanState,
       iterationState: iterationState
     })
-    alert('获取方案对比数据失败，请重试')
+    alert('Failed to get plan comparison data, please try again')
   }
 }
 
@@ -4911,12 +4908,33 @@ const closePlanComparison = () => {
 
 /* 确保高亮元素在最上层 */
 .tutorial-highlight {
-  z-index: 51;
+  z-index: 61;
 }
 
 /* 引导提示框样式优化 */
 .tutorial-tooltip {
+  z-index: 62;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  isolation: isolate; /* Create a new stacking context */
+}
+
+/* 确保新手指引层级始终最高 */
+div[v-if="showTutorial"] {
+  position: fixed !important;
+  z-index: 60 !important;
+}
+
+/* 防止任何输入框或其他元素覆盖新手指引 */
+.tutorial-highlight,
+.tutorial-tooltip {
+  position: absolute !important;
+  pointer-events: auto !important;
+}
+
+/* 确保新手指引遮罩层不会被任何元素覆盖 */
+.tutorial-overlay {
+  isolation: isolate;
+  contain: layout style paint;
 }
 </style> 

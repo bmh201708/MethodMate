@@ -5,7 +5,7 @@
                         <!-- 左侧历史方案列表 -->
         <div class="w-96 h-[calc(100vh-10rem)] overflow-y-auto custom-scrollbar flex-shrink-0">
           <div class="bg-white rounded-xl shadow-sm p-6">
-                        <h2 class="text-xl font-semibold text-gray-900 mb-6">History Plan List</h2>
+                        <h2 class="text-xl font-semibold text-gray-900 mb-6">History Proposal List</h2>
 
                         <!-- 加载状态 -->
                         <div v-if="isLoading" class="text-center py-12">
@@ -16,15 +16,15 @@
                                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
                             </div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">Loading History Plans...</h3>
-                            <p class="text-gray-500">Please wait, fetching your research plans from the database</p>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">Loading History Proposals...</h3>
+                            <p class="text-gray-500">Please wait, fetching your research proposals from the database</p>
                         </div>
 
                         <!-- 顶部操作按钮 -->
                         <div v-else-if="historyState.historyPlans.length > 0"
                             class="flex justify-between items-center mb-6">
                             <p class="text-sm text-gray-600">
-                                Total {{ historyState.historyPlans.length }} history plans
+                                Total {{ historyState.historyPlans.length }} history proposals
                             </p>
                             <button @click="confirmClearAll"
                                 class="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm">
@@ -83,7 +83,7 @@
                                         <div class="flex space-x-2">
                                             <button @click.stop="applyPlan(plan)"
                                                 class="w-20 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs font-medium flex items-center justify-center">
-                                                Apply Plan
+                                                Apply Proposal
                                             </button>
                                             <button @click.stop="downloadPDF(plan)"
                                                 :disabled="isGeneratingPDF"
@@ -153,7 +153,7 @@
                             <div v-if="historyState.historyPlans.length > 0" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm text-gray-600">
-                                        Total {{ historyState.historyPlans.length }} research plans
+                                        Total {{ historyState.historyPlans.length }} research proposals
                                     </span>
                                     <button @click.stop="regenerateAllTitles()"
                                         :disabled="isRegeneratingTitle || historyState.historyPlans.length === 0"
@@ -176,9 +176,9 @@
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                             </div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">No History Plans</h3>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No History Proposals</h3>
                             <p class="text-gray-500 mb-6">
-                                You haven't generated any research plans yet. Please go to the research plan page to start creating your first plan.
+                                You haven't generated any research proposals yet. Please go to the research proposal page to start creating your first proposal.
                             </p>
 
                             <!-- 调试信息区域 -->
@@ -193,7 +193,7 @@
                                     <span class="text-yellow-800 font-medium">You are not logged in</span>
                                 </div>
                                 <p class="text-yellow-700 mt-2">
-                                    History plans feature requires login. Please log in to your account first.
+                                    History proposals feature requires login. Please log in to your account first.
                                 </p>
                                 <button @click="router.push('/login')"
                                     class="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors">
@@ -207,7 +207,7 @@
                                 <h4 class="text-red-800 font-medium mb-2">Debug Info:</h4>
                                 <ul class="text-red-700 text-sm space-y-1">
                                     <li>User logged in: {{ debugInfo.userAuthenticated ? 'Yes' : 'No' }}</li>
-                                    <li>Plan count: {{ debugInfo.planCount }}</li>
+                                    <li>Proposal count: {{ debugInfo.planCount }}</li>
                                     <li v-if="debugInfo.errorMessage">Error message: {{ debugInfo.errorMessage }}</li>
                                     <li v-if="debugInfo.apiResponse">API response: {{ debugInfo.apiResponse }}</li>
                                 </ul>
@@ -216,7 +216,7 @@
                             <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
                                 <button @click="router.push('/research-plan')"
                                     class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-                                    Start Creating Plan
+                                    Start Creating Proposal
                                 </button>
                                 <button @click="refreshData"
                                     class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
@@ -244,7 +244,7 @@
                                 </button>
                             </div>
 
-                            <!-- Complete Plan -->
+                            <!-- Complete Proposal -->
                             <div v-if="activeSection === 'full'">
                                 <div class="flex justify-between items-center mb-6">
                                     <h2 class="text-2xl font-bold text-gray-900 flex-1 mr-4">{{ selectedPlan.title }}</h2>
@@ -254,7 +254,7 @@
                                             class="w-32 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2">
                                             <svg v-if="isGeneratingPDF" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
                                             <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -270,7 +270,7 @@
                                         </button>
                                         <button @click="applyPlan(selectedPlan)"
                                             class="w-32 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center">
-                                            <span class="text-sm">Apply This Plan</span>
+                                            <span class="text-sm">Apply This Proposal</span>
                                         </button>
                                     </div>
                                 </div>
