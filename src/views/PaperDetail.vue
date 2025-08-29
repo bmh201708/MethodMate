@@ -1973,7 +1973,7 @@ const tutorialSamplePapers = [
   {
     id: 'tutorial_1',
     title: 'Synthetic Human Memories: AI-Edited Images and Videos Can Implant False Memories and Distort Recollection',
-    abstract: 'This study investigates how AI-edited media content affects human memory formation and recall accuracy. Through a series of controlled experiments, we demonstrate that exposure to AI-manipulated images and videos can significantly alter participants\' memory of events, leading to false memory implantation and distorted recollection patterns. Our findings reveal that AI-generated content can be particularly effective at creating false memories due to its realistic appearance and the lack of obvious manipulation cues that humans have learned to detect in traditional media.',
+    abstract: 'This study investigates how AI-edited media content affects human memory formation and recall accuracy. Through a series of controlled experiments, we demonstrate that exposure to AI-manipulated images and videos can significantly alter participants\' memory of events, leading to false memory implantation and distorted recollection patterns. ',
     authors: ['Smith, J.', 'Johnson, M.', 'Brown, R.', 'Davis, K.', 'Wilson, A.'],
     year: 2023,
     journal: 'Nature Human Behaviour',
