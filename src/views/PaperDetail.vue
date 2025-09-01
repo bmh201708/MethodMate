@@ -1973,7 +1973,7 @@ const tutorialSamplePapers = [
   {
     id: 'tutorial_1',
     title: 'Synthetic Human Memories: AI-Edited Images and Videos Can Implant False Memories and Distort Recollection',
-    abstract: 'This study investigates how AI-edited media content affects human memory formation and recall accuracy. Through a series of controlled experiments, we demonstrate that exposure to AI-manipulated images and videos can significantly alter participants\' memory of events, leading to false memory implantation and distorted recollection patterns. Our findings reveal that AI-generated content can be particularly effective at creating false memories due to its realistic appearance and the lack of obvious manipulation cues that humans have learned to detect in traditional media.',
+    abstract: 'This study investigates how AI-edited media content affects human memory formation and recall accuracy. Through a series of controlled experiments, we demonstrate that exposure to AI-manipulated images and videos can significantly alter participants\' memory of events, leading to false memory implantation and distorted recollection patterns. ',
     authors: ['Smith, J.', 'Johnson, M.', 'Brown, R.', 'Davis, K.', 'Wilson, A.'],
     year: 2023,
     journal: 'Nature Human Behaviour',
@@ -1983,34 +1983,34 @@ const tutorialSamplePapers = [
     downloadUrl: 'https://example.com/paper1.pdf',
     researchMethod: `## Research Hypothesis and Experimental Design
 
-**方法学解释：**
-本研究采用2×2混合实验设计，旨在探究AI编辑媒体内容对人类记忆形成的影响。实验设计基于认知负荷理论和记忆重构理论，通过操纵媒体类型（AI编辑 vs. 传统编辑）和呈现方式（静态 vs. 动态）来检验研究假设。
+**Methodology Explanation:**
+This study employed a 2×2 mixed experimental design to investigate the effects of AI-edited media content on human memory formation. The experimental design was based on cognitive load theory and memory reconstruction theory, manipulating media type (AI-edited vs. traditionally edited) and presentation format (static vs. dynamic) to test the research hypotheses.
 
-**原文引用：**
+**Original Citation:**
 "We hypothesized that AI-edited media content would lead to higher rates of false memory formation compared to traditionally edited content, particularly when presented in dynamic formats."
 
-## 参与者特征与实验实施
+## Participant Characteristics and Experimental Implementation
 
-**方法学解释：**
-研究招募了120名年龄在18-35岁之间的参与者，采用随机分组的方式分配到四个实验条件中。所有参与者均具有正常的视觉和听觉能力，无认知障碍史。
+**Methodology Explanation:**
+The study recruited 120 participants aged 18-35 years, who were randomly assigned to four experimental conditions. All participants had normal visual and auditory abilities with no history of cognitive impairment.
 
-**原文引用：**
+**Original Citation:**
 "Participants were randomly assigned to one of four experimental conditions using a computer-generated randomization sequence. Each participant completed a pre-test memory assessment and then viewed either AI-edited or traditionally edited media content."
 
-## 数据收集与统计分析
+## Data Collection and Statistical Analysis
 
-**方法学解释：**
-数据收集包括主观评分数据（记忆信心度、内容可信度）和行为数据（反应时间、错误率）。统计分析采用SPSS 26.0进行，包括描述性统计、方差分析和回归分析。
+**Methodology Explanation:**
+Data collection included subjective rating data (memory confidence, content credibility) and behavioral data (response time, error rate). Statistical analysis was conducted using SPSS 26.0, including descriptive statistics, analysis of variance, and regression analysis.
 
-**原文引用：**
+**Original Citation:**
 "Memory confidence was measured using a 7-point Likert scale, while response times and error rates were recorded automatically by the experimental software. Statistical analyses were conducted using SPSS 26.0 with α = 0.05."
 
-## 结果测量与效果评估
+## Results Measurement and Effect Evaluation
 
-**方法学解释：**
-结果评估采用多种测量工具，包括记忆准确性测试、虚假记忆检测和主观评价量表。评估指标的选择基于认知心理学领域的标准测量方法。
+**Methodology Explanation:**
+Results evaluation employed multiple measurement tools, including memory accuracy tests, false memory detection, and subjective evaluation scales. The selection of evaluation indicators was based on standard measurement methods in the field of cognitive psychology.
 
-**原文引用：**
+**Original Citation:**
 "Memory accuracy was assessed through a recognition test administered 24 hours after exposure to the media content. False memory rates were calculated as the proportion of incorrectly recognized items that were not present in the original stimuli."`
   },
   {

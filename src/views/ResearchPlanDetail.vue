@@ -2046,15 +2046,15 @@ const waitForResponse = (timeoutMs = 30000) => {
   })
 }
 
-// 自动保存到历史方案
+// Auto save to history plans
 const saveToHistoryPlans = async (context = {}) => {
   try {
-    console.log('开始保存方案到历史记录，上下文:', context)
+    console.log('Starting to save plan to history, context:', context)
     
-    // 确保标题是最新生成的（如果当前标题是默认标题，重新生成）
+    // Ensure title is the latest generated (if current title is default title, regenerate)
     let finalTitle = currentPlanState.title
     
-    // 检查是否需要重新生成标题
+    // Check if title needs to be regenerated
     const needRegenerateTitle = !finalTitle || 
       finalTitle === 'AI-Edited Images and Videos Impact on Human Memory' ||
       finalTitle.includes('定量研究方案') ||
@@ -2062,15 +2062,15 @@ const saveToHistoryPlans = async (context = {}) => {
       finalTitle === '用户自定义研究方案'
     
     if (needRegenerateTitle) {
-      console.log('当前标题需要重新生成:', finalTitle)
-      // 重新生成标题，使用更丰富的上下文
+      console.log('Current title needs regeneration:', finalTitle)
+      // Regenerate title with richer context
       finalTitle = generatePlanTitle()
-      console.log('重新生成的标题:', finalTitle)
-      // 更新当前方案的标题
+      console.log('Regenerated title:', finalTitle)
+      // Update current plan title
       currentPlanState.title = finalTitle
     }
     
-    // 构建方案数据
+    // Build plan data
     const planData = {
       title: finalTitle,
       researchQuestions: currentPlanState.researchQuestions,
@@ -2084,7 +2084,7 @@ const saveToHistoryPlans = async (context = {}) => {
       isIterated: context.isIteration || false
     }
     
-    // 构建保存上下文
+    // Build save context
     const saveContext = {
       referencedPapers: Array.from(papersState.referencedPapersList).map(paper => ({
         title: paper.title,
@@ -2093,31 +2093,31 @@ const saveToHistoryPlans = async (context = {}) => {
         source: paper.source
       })),
       userRequirements: extractConversationContext().userRequirements || '',
-      ...context, // 合并传入的上下文
+      ...context, // Merge passed context
       saveTime: new Date().toISOString()
     }
     
-    // 根据是否是迭代，设置不同的标题后缀
+    // Set different title suffixes based on whether it's an iteration
     if (context.isIteration) {
       if (context.iterationType === 'complete') {
-        planData.title = `${planData.title} - 完整迭代版本`
+        planData.title = `${planData.title} - Complete Iteration`
       } else if (context.iterationType === 'partial') {
-        planData.title = `${planData.title} - ${context.iteratedSectionName}迭代版本`
+        planData.title = `${planData.title} - ${context.iteratedSectionName} Iteration`
       }
     }
     
-    console.log('准备保存的方案数据:', {
+    console.log('Plan data ready to save:', {
       title: planData.title,
       isIterated: planData.isIterated,
       iterationType: context.iterationType
     })
     
     await addHistoryPlan(planData, saveContext)
-    console.log('成功保存方案到历史记录')
+    console.log('Successfully saved plan to history')
     
   } catch (error) {
-    console.error('保存方案到历史记录失败:', error)
-    // 不抛出错误，避免影响主流程
+    console.error('Failed to save plan to history:', error)
+    // Don't throw error to avoid affecting main process
   }
 }
 
@@ -3251,28 +3251,28 @@ const exitHistoryView = () => {
   }
 }
 
-  // 评估研究方案
+  // Evaluate research plan
   const evaluatePlan = async () => {
     if (isEvaluating.value || !currentPlanState) return
     
     try {
       isEvaluating.value = true
       
-      // 提取对话历史中的用户需求
+      // Extract user requirements from conversation history
       const conversationContext = extractConversationContext()
       
-      // 使用PromptService生成评估提示词
+      // Use PromptService to generate evaluation prompt
       const promptData = {
-        planContent: `# 研究假设：
+        planContent: `# Research Hypothesis:
 ${currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : ''}
 
-# 实验设计：
+# Experimental Design:
 ${currentPlanState.experimentalDesign || ''}
 
-# 数据分析：
+# Data Analysis:
 ${currentPlanState.analysisMethod || ''}
 
-# 结果呈现：
+# Results Presentation:
 ${currentPlanState.expectedResults || ''}`,
         hasUserRequirements: conversationContext.hasUserRequirements,
         userRequirements: conversationContext.userRequirements,
@@ -3281,33 +3281,33 @@ ${currentPlanState.expectedResults || ''}`,
       
       const evaluationPrompt = PromptService.generatePlanEvaluationPrompt(promptData)
 
-      console.log('评估提示包含用户需求:', conversationContext.hasUserRequirements)
+      console.log('Evaluation prompt includes user requirements:', conversationContext.hasUserRequirements)
 
-      // 发送消息到对话
+      // Send message to conversation
       await sendMessage(evaluationPrompt)
       
-      // 显示提示消息
+      // Show notification message
       setTimeout(() => {
         alert('Evaluation request sent, please wait for AI assistant evaluation results.')
       }, 500)
 
-      // 设置一个定时器，在10秒后重置评估状态
-      // 这是为了防止评估状态长时间保持，即使没有收到响应也会重置
+      // Set a timer to reset evaluation status after 10 seconds
+      // This prevents evaluation status from persisting too long, even if no response is received
       setTimeout(() => {
         if (isEvaluating.value) {
-          console.log('评估状态超时，自动重置')
+          console.log('Evaluation status timeout, automatically reset')
           isEvaluating.value = false
         }
       }, 10000)
 
     } catch (error) {
-      console.error('评估方案失败:', error)
+      console.error('Plan evaluation failed:', error)
       alert('Failed to evaluate plan, please try again')
       isEvaluating.value = false
     }
   }
 
-// 评估研究方案的特定部分
+// Evaluate specific sections of research plan
 const evaluateSectionPlan = async (section) => {
   if (isEvaluatingSection.value || !currentPlanState) return
   
@@ -3315,35 +3315,35 @@ const evaluateSectionPlan = async (section) => {
     isEvaluatingSection.value = true
     evaluatingSection.value = section
     
-    // 提取对话历史中的用户需求
+    // Extract user requirements from conversation history
     const conversationContext = extractConversationContext()
     
-    // 根据部分获取相应的内容和中文名称
+    // Get corresponding content and English names based on section
     let sectionContent = ''
     let sectionName = ''
     
     switch (section) {
       case 'full':
-        sectionName = '完整方案'
-        sectionContent = `研究假设：${currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : ''}
-实验设计：${currentPlanState.experimentalDesign || ''}
-数据分析：${currentPlanState.analysisMethod || ''}
-结果呈现：${currentPlanState.expectedResults || ''}`
+        sectionName = 'Complete Plan'
+        sectionContent = `Research Hypothesis: ${currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : ''}
+Experimental Design: ${currentPlanState.experimentalDesign || ''}
+Data Analysis: ${currentPlanState.analysisMethod || ''}
+Results Presentation: ${currentPlanState.expectedResults || ''}`
         break
       case 'hypothesis':
-        sectionName = '研究假设'
+        sectionName = 'Research Hypothesis'
         sectionContent = currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : ''
         break
       case 'design':
-        sectionName = '实验设计'
+        sectionName = 'Experimental Design'
         sectionContent = currentPlanState.experimentalDesign || ''
         break
       case 'analysis':
-        sectionName = '数据分析'
+        sectionName = 'Data Analysis'
         sectionContent = currentPlanState.analysisMethod || ''
         break
       case 'results':
-        sectionName = '结果呈现'
+        sectionName = 'Results Presentation'
         sectionContent = currentPlanState.expectedResults || ''
         break
       default:
@@ -3358,20 +3358,20 @@ const evaluateSectionPlan = async (section) => {
       return
     }
     
-    // 使用PromptService生成部分评估提示词
+    // Use PromptService to generate section evaluation prompt
     const promptData = {
       sectionName,
       sectionContent,
-      fullPlanContent: `# 研究假设：
+      fullPlanContent: `# Research Hypothesis:
 ${currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : ''}
 
-# 实验设计：
+# Experimental Design:
 ${currentPlanState.experimentalDesign || ''}
 
-# 数据分析：
+# Data Analysis:
 ${currentPlanState.analysisMethod || ''}
 
-# 结果呈现：
+# Results Presentation:
 ${currentPlanState.expectedResults || ''}`,
       hasUserRequirements: conversationContext.hasUserRequirements,
       userRequirements: conversationContext.userRequirements,
@@ -3380,27 +3380,27 @@ ${currentPlanState.expectedResults || ''}`,
     
     const evaluationPrompt = PromptService.generateSectionEvaluationPrompt(promptData)
 
-    console.log(`评估${sectionName}部分，包含用户需求:`, conversationContext.hasUserRequirements)
+    console.log(`Evaluating ${sectionName} section, includes user requirements:`, conversationContext.hasUserRequirements)
 
-    // 发送消息到对话
+    // Send message to conversation
     await sendMessage(evaluationPrompt)
     
-    // 显示提示消息
+    // Show notification message
     setTimeout(() => {
       alert(`${sectionName} section evaluation request sent, please wait for AI assistant results.`)
     }, 500)
 
-    // 设置一个定时器，在10秒后重置评估状态
+    // Set a timer to reset evaluation status after 10 seconds
     setTimeout(() => {
       if (isEvaluatingSection.value) {
-        console.log('部分评估状态超时，自动重置')
+        console.log('Section evaluation status timeout, automatically reset')
         isEvaluatingSection.value = false
         evaluatingSection.value = ''
       }
     }, 10000)
 
   } catch (error) {
-    console.error(`评估${sectionName}部分失败:`, error)
+    console.error(`${sectionName} section evaluation failed:`, error)
     alert(`Failed to evaluate ${sectionName} section, please try again`)
     isEvaluatingSection.value = false
     evaluatingSection.value = ''
@@ -3837,17 +3837,17 @@ const queryStatisticalMethod = async () => {
   }
 }
 
-// 生成来源介绍
+// Generate source introduction
 const generateSourceIntroduction = async () => {
   if (isGeneratingSource.value) return
   
-  // 检查是否有生成的方案
+  // Check if research plan has been generated
   if (!hasGeneratedPlan.value) {
     alert('Please generate a research plan first before generating source introduction')
     return
   }
   
-  // 检查是否有参考文献
+  // Check if there are reference papers
   const referencedPapers = Array.from(papersState.referencedPapersList)
   if (referencedPapers.length === 0) {
     alert('Please select reference papers first before generating source introduction')
@@ -3857,26 +3857,26 @@ const generateSourceIntroduction = async () => {
   isGeneratingSource.value = true
   
   try {
-    // 获取当前部分的内容
+    // Get current section content
     let currentSectionContent = ''
     let sectionName = ''
     
     switch (activeSection.value) {
       case 'hypothesis':
         currentSectionContent = currentPlanState.hypotheses ? currentPlanState.hypotheses.join('\n') : ''
-        sectionName = '研究假设'
+        sectionName = 'Research Hypothesis'
         break
       case 'design':
         currentSectionContent = currentPlanState.experimentalDesign || ''
-        sectionName = '实验设计'
+        sectionName = 'Experimental Design'
         break
       case 'analysis':
         currentSectionContent = currentPlanState.analysisMethod || ''
-        sectionName = '数据分析'
+        sectionName = 'Data Analysis'
         break
       case 'results':
         currentSectionContent = currentPlanState.expectedResults || ''
-        sectionName = '结果呈现'
+        sectionName = 'Results Presentation'
         break
       default:
         alert('Current section does not support generating source introduction')
@@ -3888,11 +3888,11 @@ const generateSourceIntroduction = async () => {
       return
     }
     
-    // 获取当前AI服务类型
+    // Get current AI service type
     const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
     const currentAIService = getCurrentAIService()
     
-    // 构建参考文献信息
+    // Build reference papers information
     let referencesInfo = ''
     const paperInfoArray = []
     
@@ -3904,7 +3904,7 @@ const generateSourceIntroduction = async () => {
       
       let fullText = paper.fullText
 
-      // 如果没有全文，尝试获取
+      // If no full text, try to fetch it
       if (!fullText) {
         try {
           const { getApiBaseUrl } = await import('../config/environment.js')
@@ -3935,15 +3935,15 @@ const generateSourceIntroduction = async () => {
         }
       }
 
-      // 优先使用全文内容
+      // Prioritize full text content
       if (fullText) {
         paperInfo += `\nFull Text Content: ${fullText}`
       } else {
-        // 如果没有全文，退回到研究方法总结
+        // If no full text, fall back to research method summary
         if (paper.researchMethod) {
           paperInfo += `\nResearch Method Summary: ${paper.researchMethod}`
         } else {
-          // 如果没有研究方法总结，尝试从缓存中获取
+          // If no research method summary, try to get from cache
           try {
             const { getApiBaseUrl } = await import('../config/environment.js')
             const getCachedMethodApiUrl = `${getApiBaseUrl()}/paper/get-cached-method`
@@ -3983,11 +3983,11 @@ const generateSourceIntroduction = async () => {
       paperInfoArray.push({ paperInfo, fullText: fullText })
     }
     
-    // ChatGPT模式下的智能内容长度控制
+    // Intelligent content length control in ChatGPT mode
     if (currentAIService === 'chatgpt') {
       console.log('🎯 ChatGPT Mode: Checking message length for source introduction generation, intelligently selecting reference content')
       
-      // 先构建基础提示（不包含参考文献）
+      // Build base prompt first (excluding reference papers)
       let basePrompt = `I will provide you with a research proposal and some reference papers that the research proposal refers to. Please analyze which reference papers the "${sectionName}" section of the following research proposal refers to in terms of research methods and generate a concise source introduction.
 
 ${sectionName} section of the research proposal:
@@ -3995,25 +3995,25 @@ ${currentSectionContent}
 
 Reference information:`
       
-      // 直接使用包含全文的版本
+      // Use full text version directly
       referencesInfo = paperInfoArray.map(paperData => paperData.paperInfo).join('')
       
       const fullTextPrompt = basePrompt + referencesInfo
       
-      // 检查消息长度
+      // Check message length
       if (fullTextPrompt.length <= 250000) {
         console.log(`✅ Message length ${fullTextPrompt.length} characters, within limit, using full text version`)
       } else {
         console.log(`⚠️ Message length ${fullTextPrompt.length} characters, exceeds limit`)
-        // 如果超出限制，可以在这里添加截断逻辑
+        // Truncation logic can be added here if exceeding limit
       }
     } else {
       console.log('🔧 Coze Mode: Using standard reference processing')
-      // Coze模式：使用标准参考文献处理
+      // Coze mode: use standard reference processing
       referencesInfo = paperInfoArray.map(paperData => paperData.paperInfo).join('')
     }
     
-    // 使用PromptService生成源自引言提示词
+    // Use PromptService to generate source introduction prompt
     const conversationContext = extractConversationContext()
     const promptData = {
       section: activeSection.value,
@@ -4031,14 +4031,14 @@ Reference information:`
     console.log('Source introduction generation includes user requirements:', conversationContext.hasUserRequirements)
     console.log('Current section using prompt type:', activeSection.value)
     
-    // 调用AI服务
+    // Call AI service
     const { generateSourceIntroduction } = await import('../services/aiServiceAdapter.js')
     const result = await generateSourceIntroduction(
       prompt, 
       `source_intro_${activeSection.value}_${Date.now()}`
     )
     
-    // 保存来源介绍到全局状态
+    // Save source introduction to global state
     updateSourceIntroduction(activeSection.value, result)
     console.log(`Successfully generated source introduction for ${sectionName} section`)
     
@@ -4052,17 +4052,17 @@ Reference information:`
   }
 }
 
-// 生成方法介绍
+// Generate method introduction
 const generateMethodIntroduction = async () => {
   if (isGeneratingMethod.value) return
   
-  // 检查是否有生成的方案
+  // Check if research plan has been generated
   if (!hasGeneratedPlan.value) {
     alert('Please generate a research plan first before generating method introduction')
     return
   }
   
-  // 检查数据分析部分是否有内容
+  // Check if data analysis section has content
   const analysisContent = currentPlanState.analysisMethod || ''
   if (!analysisContent.trim()) {
     alert('Data analysis section is empty, cannot generate method introduction')
@@ -4072,11 +4072,11 @@ const generateMethodIntroduction = async () => {
   isGeneratingMethod.value = true
   
   try {
-    // 获取当前AI服务类型
+    // Get current AI service type
     const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
     const currentAIService = getCurrentAIService()
     
-    // 使用PromptService生成方法介绍提示词
+    // Use PromptService to generate method introduction prompt
     const conversationContext = extractConversationContext()
     const promptData = {
       analysisContent,
@@ -4088,20 +4088,20 @@ const generateMethodIntroduction = async () => {
     
     const prompt = PromptService.generateMethodIntroductionPrompt(promptData)
 
-    console.log('发送方法介绍生成请求:', prompt.substring(0, 200) + '...')
-    console.log('方法介绍生成包含用户需求:', conversationContext.hasUserRequirements)
-    console.log('当前AI服务:', currentAIService)
+    console.log('Sending method introduction generation request:', prompt.substring(0, 200) + '...')
+    console.log('Method introduction generation includes user requirements:', conversationContext.hasUserRequirements)
+    console.log('Current AI service:', currentAIService)
     
-    // 调用AI服务
+    // Call AI service
     const { generateMethodIntroduction } = await import('../services/aiServiceAdapter.js')
     const result = await generateMethodIntroduction(prompt)
     
-    // 保存生成的方法介绍
+    // Save generated method introduction
     generatedMethodIntro.value = result
-    console.log('成功生成方法介绍')
+    console.log('Successfully generated method introduction')
     
   } catch (error) {
-    console.error('生成方法介绍失败:', error)
+    console.error('Method introduction generation failed:', error)
     alert(error.message || 'Failed to generate method introduction, please try again later')
   } finally {
     isGeneratingMethod.value = false
