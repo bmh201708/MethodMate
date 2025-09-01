@@ -15,9 +15,9 @@
         <button
           @click="showSelector = !showSelector"
           class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-          title="切换环境"
+          title="Switch Environment"
         >
-          {{ showSelector ? '收起' : '切换' }}
+          {{ showSelector ? 'Hide' : 'Switch' }}
         </button>
         
         <!-- 环境选择器 -->
@@ -26,7 +26,7 @@
           class="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-48"
         >
           <div class="p-2">
-            <div class="text-xs font-medium text-gray-500 mb-2">选择运行环境</div>
+            <div class="text-xs font-medium text-gray-500 mb-2">Select Runtime Environment</div>
             <div class="space-y-1">
               <button
                 v-for="env in availableEnvironments"
@@ -53,19 +53,19 @@
           
           <!-- 快速切换按钮 -->
           <div class="border-t border-gray-100 p-2">
-            <div class="text-xs text-gray-500 mb-2">快速切换</div>
+            <div class="text-xs text-gray-500 mb-2">Quick Switch</div>
             <div class="flex space-x-1">
               <button
                 @click="quickSwitch('local')"
                 class="flex-1 px-2 py-1 text-xs bg-green-50 text-green-700 rounded border border-green-200 hover:bg-green-100"
               >
-                本地
+                Local
               </button>
               <button
                 @click="quickSwitch('remote')"
                 class="flex-1 px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100"
               >
-                云端
+                Remote
               </button>
             </div>
           </div>
@@ -75,11 +75,11 @@
     
     <!-- 环境信息提示 -->
     <div v-if="showDetails" class="mt-2 p-2 bg-gray-50 rounded-md text-xs">
-      <div class="font-medium">当前环境详情:</div>
+      <div class="font-medium">Current Environment Details:</div>
       <div class="text-gray-600">
-        <div>名称: {{ currentEnvironment.name }}</div>
-        <div>API地址: {{ currentEnvironment.apiBaseUrl }}</div>
-        <div>描述: {{ currentEnvironment.description }}</div>
+        <div>Name: {{ currentEnvironment.name }}</div>
+        <div>API URL: {{ currentEnvironment.apiBaseUrl }}</div>
+        <div>Description: {{ currentEnvironment.description }}</div>
       </div>
     </div>
   </div>

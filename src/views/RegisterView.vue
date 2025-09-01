@@ -36,14 +36,14 @@
             type="email"
             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 
                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="请输入邮箱地址（可选）"
+            placeholder="Enter email address (optional)"
           />
         </div>
 
         <!-- 密码输入 -->
         <div>
           <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-            密码 *
+            Password *
           </label>
           <input
             id="password"
@@ -52,15 +52,15 @@
             required
             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 
                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="请输入密码（至少6位）"
+            placeholder="Enter password (at least 6 characters)"
           />
-          <p class="mt-1 text-xs text-gray-500">密码长度至少为6位</p>
+          <p class="mt-1 text-xs text-gray-500">Password must be at least 6 characters</p>
         </div>
 
         <!-- 确认密码输入 -->
         <div>
           <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">
-            确认密码 *
+            Confirm Password *
           </label>
           <input
             id="confirmPassword"
@@ -69,7 +69,7 @@
             required
             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 
                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="请再次输入密码"
+            placeholder="Enter password again"
           />
         </div>
 
@@ -96,21 +96,21 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            注册中...
+            Registering...
           </span>
-          <span v-else>注册</span>
+          <span v-else>Sign Up</span>
         </button>
       </form>
 
       <!-- 登录链接 -->
       <div class="mt-6 text-center">
         <p class="text-gray-600">
-          已有账户？
+          Already have an account?
           <router-link 
             to="/login" 
             class="text-blue-600 hover:text-blue-500 font-medium"
           >
-            立即登录
+            Login Now
           </router-link>
         </p>
       </div>
@@ -121,7 +121,7 @@
           to="/" 
           class="text-gray-500 hover:text-gray-700 text-sm"
         >
-          ← 返回首页
+          ← Back to Home
         </router-link>
       </div>
     </div>
@@ -153,17 +153,17 @@ export default {
     const validateForm = () => {
       if (!registerForm.value.username || !registerForm.value.password || 
           !registerForm.value.confirmPassword) {
-        error.value = '请填写所有必填字段'
+        error.value = 'Please fill in all required fields'
         return false
       }
       
       if (registerForm.value.password.length < 6) {
-        error.value = '密码长度至少为6位'
+        error.value = 'Password must be at least 6 characters'
         return false
       }
       
       if (registerForm.value.password !== registerForm.value.confirmPassword) {
-        error.value = '两次输入的密码不一致'
+        error.value = 'Passwords do not match'
         return false
       }
       
@@ -171,7 +171,7 @@ export default {
       if (registerForm.value.email && registerForm.value.email.trim()) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(registerForm.value.email.trim())) {
-          error.value = '请输入有效的邮箱地址'
+          error.value = 'Please enter a valid email address'
           return false
         }
       }
@@ -196,7 +196,7 @@ export default {
           registerForm.value.password
         )
         
-        success.value = '注册成功！正在跳转到首页...'
+        success.value = 'Registration successful! Redirecting to home page...'
         
         // 注册成功后等待2秒再跳转，让用户看到成功消息
         setTimeout(() => {
@@ -204,7 +204,7 @@ export default {
         }, 2000)
         
       } catch (err) {
-        error.value = err.message || '注册失败，请稍后重试'
+        error.value = err.message || 'Registration failed, please try again later'
       } finally {
         loading.value = false
       }

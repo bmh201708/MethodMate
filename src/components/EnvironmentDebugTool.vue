@@ -55,7 +55,7 @@
       
       <!-- 快速切换按钮 -->
       <div class="mb-3">
-        <div class="text-xs text-gray-500 mb-2">快速切换</div>
+        <div class="text-xs text-gray-500 mb-2">Quick Switch</div>
         <div class="grid grid-cols-2 gap-2">
           <button
             @click="switchEnvironment('local')"
@@ -64,7 +64,7 @@
               : 'bg-gray-50 text-gray-700 border-gray-300'"
             class="px-2 py-1 text-xs border rounded hover:bg-opacity-80"
           >
-            本地环境
+            Local Environment
           </button>
           <button
             @click="switchEnvironment('remote')"
@@ -73,7 +73,7 @@
               : 'bg-gray-50 text-gray-700 border-gray-300'"
             class="px-2 py-1 text-xs border rounded hover:bg-opacity-80"
           >
-            云服务器
+            Cloud Server
           </button>
         </div>
       </div>

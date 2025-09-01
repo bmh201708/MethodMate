@@ -2,7 +2,7 @@
   <div :class="['flex flex-col md:flex-row items-center rounded-2xl shadow-lg p-6 mb-6', gradient, 'w-full h-full']">
     <!-- 左侧大图（更大，尽量完整展示） -->
     <div class="w-full md:w-2/3 h-full flex items-center justify-center">
-      <img :src="image" alt="功能预览" class="w-full h-[28vh] md:h-[36vh] object-contain rounded-xl transition-all duration-500 bg-white/30" />
+      <img :src="image" alt="Feature Preview" class="w-full h-[28vh] md:h-[36vh] object-contain rounded-xl transition-all duration-500 bg-white/30" />
     </div>
     <!-- 右侧内容（大字号，宽度适中） -->
     <div class="flex-1 text-left flex flex-col justify-center h-full md:pl-8">
