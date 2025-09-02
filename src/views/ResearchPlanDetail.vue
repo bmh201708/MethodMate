@@ -2439,71 +2439,71 @@ const displayCompleteUpdatedPlan = (updatedSectionName) => {
     
     // 添加实验设计
     if (currentPlanState.experimentalDesign) {
-      const isUpdated = isFullPlanUpdate || updatedSectionName === '实验设计'
-      completeMarkdown += `${isUpdated ? '🔄' : '📋'} **#实验设计：**\n`
+      const isUpdated = isFullPlanUpdate || updatedSectionName === 'Experimental Design'
+      completeMarkdown += `${isUpdated ? '🔄' : '📋'} **#Experimental Design:**\n`
       completeMarkdown += `${currentPlanState.experimentalDesign}\n\n`
     }
     
-    // 添加数据分析
+    // Add data analysis
     if (currentPlanState.analysisMethod) {
-      const isUpdated = isFullPlanUpdate || updatedSectionName === '数据分析'
-      completeMarkdown += `${isUpdated ? '🔄' : '📋'} **#数据分析：**\n`
+      const isUpdated = isFullPlanUpdate || updatedSectionName === 'Data Analysis'
+      completeMarkdown += `${isUpdated ? '🔄' : '📋'} **#Data Analysis:**\n`
       completeMarkdown += `${currentPlanState.analysisMethod}\n\n`
     }
     
-    // 添加结果呈现
+    // Add results presentation
     if (currentPlanState.expectedResults) {
-      const isUpdated = isFullPlanUpdate || updatedSectionName === '结果呈现'
-      completeMarkdown += `${isUpdated ? '🔄' : '📋'} **#结果呈现：**\n`
+      const isUpdated = isFullPlanUpdate || updatedSectionName === 'Results Presentation'
+      completeMarkdown += `${isUpdated ? '🔄' : '📋'} **#Results Presentation:**\n`
       completeMarkdown += `${currentPlanState.expectedResults}\n\n`
     }
     
-    // 添加说明
-    completeMarkdown += `---\n\n📝 **说明：**\n`
+    // Add description
+    completeMarkdown += `---\n\n📝 **Description:**\n`
     if (isFullPlanUpdate) {
-      completeMarkdown += `- 🔄 表示本次完整方案迭代中的所有部分\n`
-      completeMarkdown += `- 更新时间：${new Date().toLocaleString('zh-CN')}`
+      completeMarkdown += `- 🔄 Indicates all parts in this complete plan iteration\n`
+      completeMarkdown += `- Update time: ${new Date().toLocaleString('en-US')}`
     } else {
-      completeMarkdown += `- 🔄 表示本次迭代中更新的部分\n`
-      completeMarkdown += `- 📋 表示保持不变的部分\n`
-      completeMarkdown += `- 更新时间：${new Date().toLocaleString('zh-CN')}`
+      completeMarkdown += `- 🔄 Indicates updated parts in this iteration\n`
+      completeMarkdown += `- 📋 Indicates unchanged parts\n`
+      completeMarkdown += `- Update time: ${new Date().toLocaleString('en-US')}`
     }
     
     // 创建一个系统消息并添加到聊天状态中
     const systemMessage = {
-      id: Date.now() + Math.random(), // 生成唯一ID
+      id: Date.now() + Math.random(), // Generate unique ID
       type: 'assistant',
       content: completeMarkdown,
       timestamp: new Date().toISOString(),
       isComplete: true,
       isError: false,
-      isSystemGenerated: true // 标记为系统生成的消息
+      isSystemGenerated: true // Mark as system generated message
     }
     
     // 添加到聊天消息列表
     chatState.messages.push(systemMessage)
     
-    console.log('完整方案已添加到聊天框')
+    console.log('Complete plan has been added to chat box')
     
   } catch (error) {
-    console.error('显示完整方案时出错:', error)
+    console.error('Error when displaying complete plan:', error)
   }
 }
 
-// 显示研究方案生成对话框
+// Show research plan generation dialog
 const showResearchPlanDialog = () => {
   researchPlanMode.value = 'custom'
   researchTopicInput.value = ''
   showResearchPlanDialogModal.value = true
 }
 
-// 关闭研究方案生成对话框
+// Close research plan generation dialog
 const closeResearchPlanDialog = () => {
   showResearchPlanDialogModal.value = false
   researchPlanMode.value = 'custom'
   researchTopicInput.value = ''
   
-  // 重置生成信息
+  // Reset generation info
   currentGenerationInfo.value = {
     mode: 'auto',
     customTopic: '',
@@ -2511,35 +2511,35 @@ const closeResearchPlanDialog = () => {
   }
 }
 
-// 确认生成研究方案
+// Confirm research plan generation
 const confirmGenerateResearchPlan = async () => {
-  // 保存当前的模式和主题，避免在关闭对话框时被重置
+  // Save current mode and topic to avoid reset when closing dialog
   const currentMode = researchPlanMode.value
   const currentTopic = researchTopicInput.value
   
   // 关闭对话框
   closeResearchPlanDialog()
   
-  // 调用生成函数，传递保存的模式和主题
+  // Call generation function with saved mode and topic
   await generateResearchPlan(currentMode, currentTopic)
 }
 
-// 当前生成方案的信息（用于标题生成）
+// Current generation plan info (for title generation)
 const currentGenerationInfo = ref({
   mode: 'auto',
   customTopic: '',
   timestamp: null
 })
 
-// 生成定量研究方案（修改为支持模式和主题参数）
+// Generate quantitative research plan (modified to support mode and topic parameters)
 const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
-  // 记录当前最新的消息ID
+  // Record the latest message ID
   const latestMessage = chatState.messages
     .filter(msg => msg.isComplete)
     .pop()
   lastMessageIdBeforeGenerate.value = latestMessage ? latestMessage.id : 0
   
-  // 保存当前生成的信息，用于后续标题生成
+  // Save current generation info for subsequent title generation
   currentGenerationInfo.value = {
     mode: mode,
     customTopic: customTopic.trim(),
@@ -2548,35 +2548,35 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
   
   isGenerating.value = true
   
-  console.log('开始生成新方案，当前最新消息ID:', lastMessageIdBeforeGenerate.value)
-  console.log('生成模式:', mode, '自定义主题:', customTopic)
+  console.log('Starting to generate new plan, current latest message ID:', lastMessageIdBeforeGenerate.value)
+  console.log('Generation mode:', mode, 'Custom topic:', customTopic)
   
   try {
-    // 预先提取对话上下文（智能分析模式会用到）
+    // Pre-extract conversation context (intelligent analysis mode will use this)
     const conversationContext = extractConversationContext()
     
-    // 获取所有参考文献信息（包括搜索和推荐的）
+    // Get all reference paper information (including search and recommendation)
     const referencedPapers = Array.from(papersState.referencedPapersList)
     
-    // 准备参考文献内容
+    // Prepare reference paper content
     let paperContents = []
     if (referencedPapers.length > 0) {
-      // 获取当前AI服务类型
+      // Get current AI service type
       const { getCurrentAIService } = await import('../stores/aiServiceStore.js')
       const currentAIService = getCurrentAIService()
       
-      console.log(`🔍 开始处理${referencedPapers.length}篇参考文献的全文内容`)
+      console.log(`🔍 Starting to process full text content of ${referencedPapers.length} reference papers`)
       
-      // 获取每篇论文的全文内容
+      // Get full text content for each paper
       paperContents = await Promise.all(referencedPapers.map(async (paper, index) => {
         let fullText = paper.fullText;
         
-        // 如果没有全文，尝试获取
+        // If no full text, try to get it
         if (!fullText) {
           try {
             const { getApiBaseUrl } = await import('../config/environment.js')
             const getContentApiUrl = `${getApiBaseUrl()}/paper/get-full-content`
-            console.log('📤 获取论文内容API请求URL:', getContentApiUrl)
+            console.log('📤 Get paper content API request URL:', getContentApiUrl)
             
             const response = await fetch(getContentApiUrl, {
               method: 'POST',
@@ -2594,7 +2594,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
               const result = await response.json();
               if (result.success && result.fullText) {
                 fullText = result.fullText;
-                paper.fullText = fullText; // 更新论文对象
+                paper.fullText = fullText; // Update paper object
               }
             }
           } catch (error) {
@@ -2606,7 +2606,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
       }));
     }
     
-    // 使用PromptService生成研究方案提示词
+    // Use PromptService to generate research plan prompt
     const promptData = {
       customTopic: customTopic.trim(),
       hasUserRequirements: conversationContext.hasUserRequirements,
@@ -2622,12 +2622,12 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
     
     const message = PromptService.generateResearchPlan(promptData)
     
-    console.log('准备发送的消息:', message)
-    console.log('生成模式:', mode)
-    console.log('自定义主题:', customTopic || '无')
-    console.log('参考文献数量:', referencedPapers.length)
+    console.log('Message to be sent:', message)
+    console.log('Generation mode:', mode)
+    console.log('Custom topic:', customTopic || 'None')
+    console.log('Number of reference papers:', referencedPapers.length)
     
-    // 发送消息到chatbox
+    // Send message to chatbox
     await sendMessage(message)
     
     // 等待AI响应
@@ -2637,7 +2637,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
     // 解析AI响应
     console.log('收到AI响应，开始解析...')
     
-    // 准备生成上下文
+    // Prepare generation context
     const generationContext = {
       isIteration: false,
       generateTime: new Date().toISOString(),
