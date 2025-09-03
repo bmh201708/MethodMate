@@ -205,15 +205,15 @@ const testKeywordExtraction = async () => {
   try {
     console.log(`🧪 测试关键词提取 - 使用 ${currentAIServiceName.value}`)
     
-    // 模拟聊天历史
+    // Mock chat history
     const mockChatHistory = [
       {
         type: 'user',
-        content: '我想研究用户界面设计对用户体验的影响'
+        content: 'I want to research the impact of user interface design on user experience'
       },
       {
         type: 'assistant',
-        content: '这是一个很有趣的HCI研究方向。你可以考虑使用实验设计方法，设置不同的界面条件，测量用户的任务完成时间、错误率和满意度等指标。'
+        content: 'This is an interesting HCI research direction. You can consider using experimental design methods, setting different interface conditions, and measuring indicators such as user task completion time, error rate, and satisfaction.'
       }
     ]
     
@@ -267,12 +267,12 @@ const testMethodIntroduction = async () => {
   try {
     console.log(`🧪 测试方法介绍生成 - 使用 ${currentAIServiceName.value}`)
     
-    const mockPrompt = `我将为你提供一个研究方案的数据分析部分内容。请分析其中使用的研究方法和统计分析方法，并生成一个详细的方法介绍。
+    const mockPrompt = `I will provide you with the data analysis section content of a research plan. Please analyze the research methods and statistical analysis methods used in it, and generate a detailed method introduction.
 
-研究方案的数据分析部分：
-采用描述性统计分析和推断性统计分析相结合的方法。首先对任务完成时间、错误率和满意度评分进行描述性统计分析，计算均值、标准差等。然后使用双因素方差分析(Two-way ANOVA)检验界面复杂度和反馈类型对各项指标的主效应和交互效应。如果发现显著差异，将进行事后检验(Tukey HSD)确定具体差异位置。显著性水平设定为α=0.05。
+Data analysis section of the research plan:
+A combination of descriptive and inferential statistical analysis methods is adopted. First, descriptive statistical analysis is performed on task completion time, error rate, and satisfaction scores, calculating mean and standard deviation. Then, two-way ANOVA is used to test the main effects and interaction effects of interface complexity and feedback type on various indicators. If significant differences are found, post-hoc tests (Tukey HSD) will be conducted to determine specific difference locations. The significance level is set at α=0.05.
 
-请基于上述数据分析内容，生成一个300-500字的方法介绍，包括数据分析的总体策略、具体统计方法及其适用场景、分析步骤流程等。`
+Please generate a 300-500 word method introduction based on the above data analysis content, including the overall strategy of data analysis, specific statistical methods and their applicable scenarios, analysis workflow, etc.`
     
     const result = await generateMethodIntroduction(mockPrompt)
     

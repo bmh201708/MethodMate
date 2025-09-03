@@ -278,54 +278,54 @@ export const loadUserData = async () => {
       console.log(`已加载 ${papersResult.papers.length} 篇引用文献，并标记为已显示`)
     }
 
-    // 加载历史方案
+    // Load historical plans
     if (plansResult.success && plansResult.plans) {
       historyState.historyPlans = plansResult.plans.map(plan => {
-        // 解析hypotheses字段中的JSON数据
+        // Parse JSON data in hypotheses field
         let parsedHypotheses = []
         try {
           if (plan.hypotheses) {
             parsedHypotheses = JSON.parse(plan.hypotheses)
           }
         } catch (error) {
-          console.warn(`解析方案 ${plan.title} 的hypotheses字段失败:`, error)
+          console.warn(`Failed to parse hypotheses field of plan ${plan.title}:`, error)
         }
         
-        // 尝试解析resources字段中的JSON数据（生成上下文）
+        // Try to parse JSON data in resources field (generation context)
         let parsedContext = null
         try {
           if (plan.resources) {
             parsedContext = JSON.parse(plan.resources)
           }
         } catch (error) {
-          console.warn(`解析方案 ${plan.title} 的resources字段失败:`, error)
+          console.warn(`Failed to parse resources field of plan ${plan.title}:`, error)
         }
         
-        // 尝试解析source_introductions字段中的JSON数据
+        // Try to parse JSON data in source_introductions field
         let parsedSourceIntroductions = {}
         try {
           if (plan.source_introductions) {
             parsedSourceIntroductions = JSON.parse(plan.source_introductions)
           }
         } catch (error) {
-          console.warn(`解析方案 ${plan.title} 的source_introductions字段失败:`, error)
+          console.warn(`Failed to parse source_introductions field of plan ${plan.title}:`, error)
         }
         
         return {
           id: plan.id,
           title: plan.title,
           description: plan.description,
-          createdAt: new Date(plan.created_at).toLocaleString('zh-CN'),
-          updatedAt: new Date(plan.updated_at).toLocaleString('zh-CN'),
-          author: 'AI智能体',
-          status: plan.status === 'active' ? '已应用' : '已生成',
+          createdAt: new Date(plan.created_at).toLocaleString('en-US'),
+          updatedAt: new Date(plan.updated_at).toLocaleString('en-US'),
+          author: 'AI Agent',
+          status: plan.status === 'active' ? 'Applied' : 'Generated',
           fullPlan: {
             title: plan.title,
             researchQuestions: plan.description,
             methodology: plan.methodology,
             timeline: plan.timeline,
             resources: plan.resources,
-            // 从数据库字段直接提取
+            // Extract directly from database fields
             hypotheses: parsedHypotheses,
             experimentalDesign: plan.experimental_design || '',
             analysisMethod: plan.analysis_method || '',
@@ -335,16 +335,16 @@ export const loadUserData = async () => {
           },
           generationContext: parsedContext,
           sourceIntroductions: parsedSourceIntroductions,
-          databaseId: plan.id // 保存数据库ID
+          databaseId: plan.id // Save database ID
         }
       })
       
-      console.log(`已加载 ${plansResult.plans.length} 个历史方案`)
+      console.log(`Loaded ${plansResult.plans.length} historical plans`)
     }
 
-    console.log('用户数据加载完成')
+    console.log('User data loading completed')
   } catch (error) {
-    console.error('加载用户数据失败:', error)
+    console.error('Failed to load user data:', error)
   }
 }
 
@@ -412,7 +412,7 @@ const loadCurrentPlanFromStorage = () => {
         },
         lastUpdated: parsed.lastUpdated || null,
         iterationHistory: parsed.iterationHistory || [],
-        // 迭代快照持久化字段
+        // Iteration snapshot persistence fields
         lastIterationSnapshot: parsed.lastIterationSnapshot || null,
         lastIterationAfterSnapshot: parsed.lastIterationAfterSnapshot || null,
         lastIterationSection: parsed.lastIterationSection || null,
@@ -424,7 +424,7 @@ const loadCurrentPlanFromStorage = () => {
     console.error('从localStorage恢复方案状态失败:', error)
   }
   
-  // 返回默认值
+  // Return default values
   return {
     title: 'AI-Edited Images and Videos Impact on Human Memory',
     researchQuestions: 'How do AI-edited images and videos impact human memory formation and recall accuracy? How does this effect differ from traditional media?',

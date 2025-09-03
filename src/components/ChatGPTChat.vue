@@ -258,9 +258,9 @@ GPT-4o的上下文窗口为128,000个token，这意味着它可以处理相当�
       result += baseText + '\n\n'
       
       // Add some variation to avoid complete repetition
-      result += `第${Math.floor(result.length / 1000)}段：当前文本长度约为${result.length}字符。`
-      result += `时间戳：${new Date().toISOString()}。`
-      result += `随机数：${Math.random().toString(36).substring(2, 15)}。\n\n`
+      result += `Paragraph ${Math.floor(result.length / 1000)}: Current text length is approximately ${result.length} characters.`
+      result += `Timestamp: ${new Date().toISOString()}.`
+      result += `Random number: ${Math.random().toString(36).substring(2, 15)}.\n\n`
     }
     
     return result.substring(0, targetLength)
@@ -269,7 +269,7 @@ GPT-4o的上下文窗口为128,000个token，这意味着它可以处理相当�
   const largeText = generateLargeText()
   
   // Create test message
-  const testMessage = `请分析以下大文本（约${largeText.length}字符）并提供简要总结：\n\n${largeText}\n\n请总结这段文本的主要内容，并评估文本的结构和特点。`
+  const testMessage = `Please analyze the following large text (approximately ${largeText.length} characters) and provide a brief summary:\n\n${largeText}\n\nPlease summarize the main content of this text and evaluate its structure and characteristics.`
   
   // Add user message
   const userMessage = {
@@ -359,9 +359,9 @@ const formatTime = (timestamp) => {
   } else if (diff < 3600000) { // Less than 1 hour
     return `${Math.floor(diff / 60000)} minutes ago`
   } else if (date.toDateString() === now.toDateString()) { // Today
-    return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
   } else {
-    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
   }
 }
 

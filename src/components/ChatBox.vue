@@ -592,39 +592,28 @@ const isResearchPlan = (content) => {
     return researchPlanCache.get(contentHash)
   }
   
-  // Check keyword combinations to improve detection accuracy (supports Chinese and English)
+  // Check keyword combinations to improve detection accuracy (English keywords)
   const researchKeywords = [
-    // Chinese keywords
-    '研究假设', '实验设计', '数据分析', '结果呈现',
-    '研究方案', '实验方案', '定量研究', '研究方法',
-    '研究目标', '研究问题', '实验组', '对照组',
-    'H1:', 'H2:', 'H3:', '假设一', '假设二', '假设三',
-    // English keywords
     'Research Hypotheses', 'Experimental Design', 'Data Analysis', 'Results Presentation',
     'research plan', 'experimental plan', 'quantitative research', 'research method',
     'research objective', 'research question', 'experimental group', 'control group',
+    'H1:', 'H2:', 'H3:', 'hypothesis one', 'hypothesis two', 'hypothesis three',
     'hypothesis', 'hypotheses'
   ]
   
   const designKeywords = [
-    // Chinese keywords
-    '2x2设计', '实验设计', '自变量', '因变量', '控制变量',
-    '随机分组', '实验条件', '实验程序', '被试',
-    // English keywords
     '2x2 design', 'experimental design', 'independent variable', 'dependent variable', 'control variable',
     'random assignment', 'experimental condition', 'experimental procedure', 'participants'
   ]
   
   const analysisKeywords = [
-    // Chinese keywords
-    'SPSS', 'R Studio', '方差分析', 'ANOVA', '回归分析',
-    't检验', '卡方检验', '统计分析', '数据处理',
-    // English keywords
+    'SPSS', 'R Studio', 'variance analysis', 'ANOVA', 'regression analysis',
+    't-test', 'chi-square test', 'statistical analysis', 'data processing',
     'data analysis', 'statistical analysis', 'regression analysis',
     't-test', 'chi-square test', 'ANOVA', 'data processing'
   ]
   
-  // 计算匹配的关键词数量
+  // Calculate matched keywords count
   const countMatches = (keywords) => {
     return keywords.filter(keyword => content.includes(keyword)).length
   }
@@ -725,46 +714,34 @@ const parseAndDisplayResearchPlan = (content) => {
       /((?:H\d+[:：]|假设\d+[:：]).*(?:\n(?:H\d+[:：]|假设\d+[:：]).*)*)/i
     ]
     
-    // 实验设计提取模式（支持markdown格式和中英文）
+    // Experimental design extraction patterns (markdown format and English)
     const designPatterns = [
       // English Markdown format: # Experimental Design
       /(?:#+\s*(?:Experimental Design|Research Design|Design Plan).*?)\n((?:(?!#+\s*(?:Data Analysis|Results Presentation|Research Hypotheses|Statistical Analysis|Expected Results)).)+?)(?=\n#+\s*(?:Data Analysis|Results Presentation|Research Hypotheses|Statistical Analysis|Expected Results)|$)/is,
-      // Chinese Markdown format: # 实验设计
-      /(?:#+\s*(?:实验设计|研究设计|设计方案).*?)\n((?:(?!#+\s*(?:数据分析|结果呈现|研究假设|统计分析|预期结果|Data Analysis|Results Presentation|Research Hypotheses)).)+?)(?=\n#+\s*(?:数据分析|结果呈现|研究假设|统计分析|预期结果|Data Analysis|Results Presentation|Research Hypotheses)|$)/is,
       // English colon format
-      /(?:Experimental Design|Research Design)[：:\s]*\n?((?:(?!(?:Data Analysis|Results Presentation|Research Hypotheses|数据分析|结果呈现|研究假设)).)+?)(?=(?:\n\s*(?:Data Analysis|Results Presentation|Research Hypotheses|数据分析|结果呈现|研究假设|$)))/is,
-      // Chinese colon format
-      /(?:实验设计|研究设计)[：:\s]*\n?((?:(?!(?:数据分析|结果呈现|研究假设|Data Analysis|Results Presentation|Research Hypotheses)).)+?)(?=(?:\n\s*(?:数据分析|结果呈现|研究假设|Data Analysis|Results Presentation|Research Hypotheses|$)))/is,
-      /(?:设计方案|实验方法)[：:\s]*\n?((?:(?!(?:数据分析|结果呈现|研究假设|Data Analysis|Results Presentation|Research Hypotheses)).)+?)(?=(?:\n\s*(?:数据分析|结果呈现|研究假设|Data Analysis|Results Presentation|Research Hypotheses|$)))/is
+      /(?:Experimental Design|Research Design)[：:\s]*\n?((?:(?!(?:Data Analysis|Results Presentation|Research Hypotheses)).)+?)(?=(?:\n\s*(?:Data Analysis|Results Presentation|Research Hypotheses|$)))/is,
+      /(?:Design Plan|Experimental Method)[：:\s]*\n?((?:(?!(?:Data Analysis|Results Presentation|Research Hypotheses)).)+?)(?=(?:\n\s*(?:Data Analysis|Results Presentation|Research Hypotheses|$)))/is
     ]
     
-    // 数据分析提取模式（支持markdown格式和中英文）
+    // Data analysis extraction patterns (markdown format and English)
     const analysisPatterns = [
       // English Markdown format: # Data Analysis
       /(?:#+\s*(?:Data Analysis|Statistical Analysis|Analysis Method).*?)\n((?:(?!#+\s*(?:Results Presentation|Research Hypotheses|Experimental Design|Expected Results)).)+?)(?=\n#+\s*(?:Results Presentation|Research Hypotheses|Experimental Design|Expected Results)|$)/is,
-      // Chinese Markdown format: # 数据分析
-      /(?:#+\s*(?:数据分析|统计分析|分析方法).*?)\n((?:(?!#+\s*(?:结果呈现|研究假设|实验设计|预期结果|Results Presentation|Research Hypotheses|Experimental Design)).)+?)(?=\n#+\s*(?:结果呈现|研究假设|实验设计|预期结果|Results Presentation|Research Hypotheses|Experimental Design)|$)/is,
       // English colon format
-      /(?:Data Analysis|Statistical Analysis|Analysis Method)[：:\s]*\n?((?:(?!(?:Results Presentation|Research Hypotheses|Experimental Design|结果呈现|研究假设|实验设计)).)+?)(?=(?:\n\s*(?:Results Presentation|Research Hypotheses|Experimental Design|结果呈现|研究假设|实验设计|$)))/is,
-      // Chinese colon format
-      /(?:数据分析|统计分析|分析方法)[：:\s]*\n?((?:(?!(?:结果呈现|研究假设|实验设计|Results Presentation|Research Hypotheses|Experimental Design)).)+?)(?=(?:\n\s*(?:结果呈现|研究假设|实验设计|Results Presentation|Research Hypotheses|Experimental Design|$)))/is,
-      /(?:分析工具|统计方法|数据处理)[：:\s]*\n?((?:(?!(?:结果呈现|研究假设|实验设计|Results Presentation|Research Hypotheses|Experimental Design)).)+?)(?=(?:\n\s*(?:结果呈现|研究假设|实验设计|Results Presentation|Research Hypotheses|Experimental Design|$)))/is
+      /(?:Data Analysis|Statistical Analysis|Analysis Method)[：:\s]*\n?((?:(?!(?:Results Presentation|Research Hypotheses|Experimental Design)).)+?)(?=(?:\n\s*(?:Results Presentation|Research Hypotheses|Experimental Design|$)))/is,
+      /(?:Analysis Tool|Statistical Method|Data Processing)[：:\s]*\n?((?:(?!(?:Results Presentation|Research Hypotheses|Experimental Design)).)+?)(?=(?:\n\s*(?:Results Presentation|Research Hypotheses|Experimental Design|$)))/is
     ]
     
-    // 结果呈现提取模式（支持markdown格式和中英文）
+    // Results presentation extraction patterns (markdown format and English)
     const resultsPatterns = [
       // English Markdown format: # Results Presentation
       /(?:#+\s*(?:Results Presentation|Expected Results|Research Results).*?)\n((?:(?!#+\s*(?:Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=\n#+\s*(?:Research Hypotheses|Experimental Design|Data Analysis)|$)/is,
-      // Chinese Markdown format: # 结果呈现
-      /(?:#+\s*(?:结果呈现|预期结果|研究结果).*?)\n((?:(?!#+\s*(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=\n#+\s*(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis)|$)/is,
       // English colon format
-      /(?:Results Presentation|Expected Results|Research Results)[：:\s]*\n?((?:(?!(?:Research Hypotheses|Experimental Design|Data Analysis|研究假设|实验设计|数据分析)).)+?)(?=(?:\n\s*(?:Research Hypotheses|Experimental Design|Data Analysis|研究假设|实验设计|数据分析|$)))/is,
-      // Chinese colon format
-      /(?:结果呈现|预期结果|研究结果)[：:\s]*\n?((?:(?!(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=(?:\n\s*(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis|$)))/is,
-      /(?:预期|预计|期望).*?(?:结果|发现|效应)[：:\s]*\n?((?:(?!(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=(?:\n\s*(?:研究假设|实验设计|数据分析|Research Hypotheses|Experimental Design|Data Analysis|$)))/is
+      /(?:Results Presentation|Expected Results|Research Results)[：:\s]*\n?((?:(?!(?:Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=(?:\n\s*(?:Research Hypotheses|Experimental Design|Data Analysis|$)))/is,
+      /(?:Expected|Anticipated|Projected).*?(?:Results|Findings|Effects)[：:\s]*\n?((?:(?!(?:Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=(?:\n\s*(?:Research Hypotheses|Experimental Design|Data Analysis|$)))/is
     ]
     
-    // 提取各部分内容
+    // Extract section content
     const hypothesis = extractSection(actualContent, hypothesisPatterns, 'Research Hypotheses')
     const design = extractSection(actualContent, designPatterns, 'Experimental Design')
     const analysis = extractSection(actualContent, analysisPatterns, 'Data Analysis')

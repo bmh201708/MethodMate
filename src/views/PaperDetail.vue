@@ -2037,9 +2037,9 @@ Results evaluation employed multiple measurement tools, including memory accurac
   }
 ]
 
-// 样例论文详情数据已合并到tutorialSamplePapers[0]中，不再需要单独的tutorialSamplePaperDetail
+// Sample paper details data is already merged into tutorialSamplePapers[0], no need for separate tutorialSamplePaperDetail
 
-// 引导步骤定义
+// Tutorial steps definition
 const tutorialSteps = [
   {
     title: 'AI Assistant',
@@ -2055,7 +2055,7 @@ const tutorialSteps = [
   },
   {
     title: 'Enter Keywords',
-    description: 'Enter the keywords you want to search for here. Supports both Chinese and English, separate multiple keywords with commas.',
+    description: 'Enter the keywords you want to search for here. Supports both English and Chinese, separate multiple keywords with commas.',
     ref: keywordInputRef
   },
   {
@@ -2099,7 +2099,7 @@ const tutorialSteps = [
   }
 ]
 
-// 计算高亮区域样式
+// Calculate highlight area style
 const highlightStyle = computed(() => {
   if (currentTutorialStep.value >= tutorialSteps.length) return {}
   
@@ -2119,7 +2119,7 @@ const highlightStyle = computed(() => {
     }
   }
   
-  // 普通元素高亮
+  // Regular element highlight
   const element = currentStep.ref?.value
   if (!element) return {}
   
@@ -2132,13 +2132,13 @@ const highlightStyle = computed(() => {
   }
 })
 
-// 计算提示框位置
+// Calculate tooltip position
 const tooltipStyle = computed(() => {
   if (currentTutorialStep.value >= tutorialSteps.length) return {}
   
   const currentStep = tutorialSteps[currentTutorialStep.value]
   
-  // 特殊处理AI对话助手步骤
+  // Special handling for AI chat assistant step
   if (currentStep.customHighlight === 'chat-box-section') {
     const element = document.getElementById(currentStep.customHighlight)
     if (element) {
@@ -2146,16 +2146,16 @@ const tooltipStyle = computed(() => {
       const windowHeight = window.innerHeight
       const windowWidth = window.innerWidth
       
-      // 将提示框放在AI对话区域的右侧
+      // Place tooltip to the right of AI chat area
       let top = rect.top + 50
       let left = rect.right + 20
       
-      // 如果右侧空间不够，显示在左侧
+      // If there's not enough space on the right, display on the left
       if (left + 320 > windowWidth) {
         left = rect.left - 340
       }
       
-      // 如果下方空间不够，调整垂直位置
+      // If there's not enough space below, adjust vertical position
       if (top + 200 > windowHeight) {
         top = windowHeight - 220
       }
@@ -2175,16 +2175,16 @@ const tooltipStyle = computed(() => {
       const windowHeight = window.innerHeight
       const windowWidth = window.innerWidth
       
-      // 计算提示框位置，避免超出屏幕
+      // Calculate tooltip position, avoid going beyond screen
       let top = rect.bottom + 20
       let left = rect.left
       
-      // 如果下方空间不够，显示在上方
+      // If there's not enough space below, display above
       if (top + 200 > windowHeight) {
         top = rect.top - 220
       }
       
-      // 如果右侧空间不够，调整位置
+      // If there's not enough space on the right, adjust position
       if (left + 320 > windowWidth) {
         left = windowWidth - 340
       }
@@ -2196,7 +2196,7 @@ const tooltipStyle = computed(() => {
     }
   }
   
-  // 普通元素提示框位置
+  // Regular element tooltip position
   const element = currentStep.ref?.value
   if (!element) return {}
   
@@ -2204,16 +2204,16 @@ const tooltipStyle = computed(() => {
   const windowHeight = window.innerHeight
   const windowWidth = window.innerWidth
   
-  // 计算提示框位置，避免超出屏幕
+  // Calculate tooltip position, avoid going beyond screen
   let top = rect.bottom + 20
   let left = rect.left
   
-  // 如果下方空间不够，显示在上方
+  // If there's not enough space below, display above
   if (top + 200 > windowHeight) {
     top = rect.top - 220
   }
   
-  // 如果右侧空间不够，调整位置
+  // If there's not enough space on the right, adjust position
   if (left + 320 > windowWidth) {
     left = windowWidth - 340
   }
