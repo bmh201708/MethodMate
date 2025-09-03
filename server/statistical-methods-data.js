@@ -333,7 +333,7 @@ $$t = \\frac{\\bar{d} - \\mu_0}{s_d/\\sqrt{n}}$$
 
 Different from the one-sample t-test statistic calculation formula (One-sample t-test - theoretical introduction), $\\bar{d}$ is the difference of each pair of data, $\\bar{d}$ is the sample mean of differences, $s_d$ is the standard deviation of differences, $s_d$ is the standard error of the sample mean of differences, and $n$ is the number of pairs.
 
-| ID   | Before | After  | 差值 $\\bar{d}$ |
+| ID   | Before | After  | Difference $\\bar{d}$ |
 | ---- | ------ | ------ | --------------- |
 | 1    | 0.287  | 0.2745 | 0.0125          |
 | 2    | 0.2921 | 0.2834 | 0.0087          |
@@ -419,11 +419,11 @@ $$SS_{total} = SS_{between} + SS_{within}$$
 
 The ANOVA calculation formula is shown in Table 1, where the correction factor $C = \\frac{T^2}{N}$, $N$ is the sample size, and $k$ is the number of treatment groups.
 
-| 变异来源     | 平方和 $SS$ | 自由度 $df$ | 均方 $MS$ | $F$ |
+| Source of Variation | Sum of Squares $SS$ | Degrees of Freedom $df$ | Mean Square $MS$ | $F$ |
 | ------------ | ----------- | ----------- | --------- | --- |
-| **总变异**   | $SS_{总} = \\sum X^2 - C$ | $N-1$ |  |  |
-| **组间变异** | $SS_{组间} = \\sum \\frac{T_i^2}{n_i} - C$ | $k-1$ | $MS_{组间} = \\frac{SS_{组间}}{k-1}$ | $F = \\frac{MS_{组间}}{MS_{组内}}$ |
-| **组内变异** | $SS_{组内} = SS_{总} - SS_{组间}$ | $N-k$ | $MS_{组内} = \\frac{SS_{组内}}{N-k}$ |  |
+| **Total Variation**   | $SS_{total} = \\sum X^2 - C$ | $N-1$ |  |  |
+| **Between-group Variation** | $SS_{between} = \\sum \\frac{T_i^2}{n_i} - C$ | $k-1$ | $MS_{between} = \\frac{SS_{between}}{k-1}$ | $F = \\frac{MS_{between}}{MS_{within}}$ |
+| **Within-group Variation** | $SS_{within} = SS_{total} - SS_{between}$ | $N-k$ | $MS_{within} = \\frac{SS_{within}}{N-k}$ |  |
 
 **Table 1 One-way ANOVA Table**
 
@@ -507,45 +507,45 @@ A doctor used three treatment plans A, B, and C to treat anemic patients with lo
 | group | C    | C    | C    |      |      |      |      |      |      |      |      |      |      |      |      |
 | Hb    | 1.2  | 0.6  | 0.6  |      |      |      |      |      |      |      |      |      |      |      |      |
 
-表2
+**Table 2**
 
-## 四、假设检验
+## IV. Hypothesis Testing
 
-### （一）正态性检验
+### (I) Normality Test
 
-在方差分析中，有两种选择来检验正态性(参考"方差分析的基本思想和应用条件")。本例中一共有3个分组，每个分组有很多观测值，那么可以检验每组观测值的正态性。本文采用jamovi软件进行数据的正态性检验，具体过程参考"单因素方差分析-jamovi软件实现"，结果如图1和图2所示。
+In analysis of variance, there are two options to test normality (refer to "Basic ideas and applicable conditions of analysis of variance"). In this example, there are 3 groups in total, each group has many observed values, so the normality of each group's observed values can be tested. This article uses jamovi software for data normality testing. The specific process refers to "One-way ANOVA - jamovi software implementation", and the results are shown in Figures 1 and 2.
 
-图1和图2按照组别列出了三组的正态性检验结果。图1的Q-Q图上三组散点基本围绕对角线分布，提示三组数据呈正态分布；图2的正态性检验结果分别显示三组的*P*=0.296、0.486、0.435，均>0.1，也提示三组数据满足正态性条件。综上，本案例满足正态性条件。
+Figures 1 and 2 list the normality test results of the three groups by group. The scatter points of the three groups in the Q-Q plot in Figure 1 are basically distributed around the diagonal, suggesting that the three groups of data follow a normal distribution; the normality test results in Figure 2 show that the *P* values of the three groups are 0.296, 0.486, and 0.435 respectively, all >0.1, which also suggests that the three groups of data meet the normality condition. In summary, this case meets the normality condition.
 
-### (二) 方差齐性检验
+### (II) Homogeneity of Variance Test
 
-此处使用Levene检验进行方差齐性检验，使用jamovi软件完成计算过程，具体操作详见"单因素方差分析—jamovi软件实现"，结果如图3和图4所示。
+Here, the Levene test is used for homogeneity of variance testing, using jamovi software to complete the calculation process. For specific operations, see "One-way ANOVA - jamovi software implementation", and the results are shown in Figures 3 and 4.
 
-由图3"Descriptives（描述性分析）"表格中"Std. deviation（标准差）"和"Variance（方差）"结果可知，A、B、C三组的标准差分别为0.867、0.738、0.538，方差分别为0.752、0.545和0.290，三组的方差数值存在差异，但还需要依据统计学检验的结果进行判断。
+From the "Std. deviation" and "Variance" results in the "Descriptives" table in Figure 3, it can be seen that the standard deviations of groups A, B, and C are 0.867, 0.738, and 0.538 respectively, and the variances are 0.752, 0.545, and 0.290 respectively. There are differences in the variance values of the three groups, but judgment still needs to be based on the results of statistical testing.
 
-图4"Homogeneity of Variances Test (Levene's) (Levene's方差齐性检验)"为方差齐性检验结果，可见 $F = 4.83$，$P = 0.011 < 0.05$，提示三组数据方差不齐，不满足方差齐性的要求。
+Figure 4 "Homogeneity of Variances Test (Levene's)" shows the homogeneity of variance test results. It can be seen that $F = 4.83$, $P = 0.011 < 0.05$, suggesting that the variances of the three groups of data are not homogeneous and do not meet the requirements of homogeneity of variance.
 
-本案例数据满足正态性要求，不满足方差齐性要求，但方差并非严重不齐，可采用Welch检验进行数据分析。
+The data in this case meets the normality requirement but does not meet the homogeneity of variance requirement. However, the variance is not severely heterogeneous, so the Welch test can be used for data analysis.
 
-### （三）单因素方差分析(Welch检验)
+### (III) One-way ANOVA (Welch Test)
 
-#### 1. 建立检验假设，确定检验水准
+#### 1. Establish Test Hypothesis and Determine Significance Level
 
 $H_0: \\mu_A = \\mu_B = \\mu_C$
 
-即三种治疗方案受试者血红蛋白的上升克数相等
+That is, the grams of hemoglobin increase in subjects of the three treatment plans are equal
 
-$H_1: \\mu_A, \\mu_B, \\mu_C$ 不全相等
+$H_1: \\mu_A, \\mu_B, \\mu_C$ are not all equal
 
-三种治疗方案受试者血红蛋白的上升克数不全相等
+The grams of hemoglobin increase in subjects of the three treatment plans are not all equal
 
 $\\alpha = 0.05$
 
-#### 2. 计算检验统计量
+#### 2. Calculate Test Statistic
 
-本案例中A、B、C三组的样本量分别为 $n_A = 26$、$n_B = 26$、$n_C = 26$，三组的均数分别为 $\\bar{x_A} = 1.665$、$\\bar{x_B} = 1.227$、$\\bar{x_C} = 1.000$，三组的标准差分别为 $s_A = 0.867$、$s_B = 0.738$、$s_C = 0.538$。
+In this case, the sample sizes of groups A, B, and C are $n_A = 26$, $n_B = 26$, $n_C = 26$ respectively, the means of the three groups are $\\bar{x_A} = 1.665$, $\\bar{x_B} = 1.227$, $\\bar{x_C} = 1.000$ respectively, and the standard deviations of the three groups are $s_A = 0.867$, $s_B = 0.738$, $s_C = 0.538$ respectively.
 
-根据Welch检验统计量计算公式可计算相应参数值为：
+According to the Welch test statistic calculation formula, the corresponding parameter values can be calculated as:
 
 $w_A = \\frac{26}{0.867^2} = 34.62$
 
@@ -561,29 +561,29 @@ $\\lambda = 1 + \\frac{2(3-2)}{3^2-1} \\times 0.259 = 1.065$
 
 $df_2 = \\frac{3^2 - 1}{3 \\times 1.065} = 2.50$
 
-#### 3. 确定 $P$ 值，作出推断结论
+#### 3. Determine P Value and Make Inference Conclusion
 
-以 $df_1 = 2$，$df_2 = 2.50$ 查（$F$ 界值表）得 $F_{0.05(2,2.50)} = 9.00$。本例 $F_w = 7.63 < 9.00$，则 $P > 0.05$。按 $\\alpha = 0.05$ 检验水准，拒绝 $H_0$，接受 $H_1$，差异有统计学意义，表明三种治疗方案受试者血红蛋白的上升克数不全相等。
+With $df_1 = 2$, $df_2 = 2.50$, consulting the (F critical value table) gives $F_{0.05(2,2.50)} = 9.00$. In this example, $F_w = 7.63 < 9.00$, then $P > 0.05$. At the $\\alpha = 0.05$ significance level, reject $H_0$ and accept $H_1$. The difference is statistically significant, indicating that the grams of hemoglobin increase in subjects of the three treatment plans are not all equal.
 
-### （四）多个样本均数间的多重比较 (Games-Howell法)
+### (IV) Multiple Comparisons Between Multiple Sample Means (Games-Howell Method)
 
-方差不齐时，多个均数事后检验两两比较常采用 Games-Howell 法。
+When variances are unequal, the Games-Howell method is commonly used for post-hoc pairwise comparisons of multiple means.
 
-#### 1. 建立检验假设，确定检验水准
+#### 1. Establish Test Hypothesis and Determine Significance Level
 
 $H_0: \\mu_i = \\mu_j$ (i≠j)
 
-即任何两种治疗方案受试者血红蛋白的上升克数相等
+That is, the grams of hemoglobin increase in subjects of any two treatment plans are equal
 
 $H_1: \\mu_i \\neq \\mu_j$ (i≠j)
 
-即任何两种治疗方案受试者血红蛋白的上升克数不等
+That is, the grams of hemoglobin increase in subjects of any two treatment plans are not equal
 
 $\\alpha = 0.05$
 
-#### 2. 计算检验统计量
+#### 2. Calculate Test Statistic
 
-**A组与 B 组治疗方案比较**：
+**Comparison between Group A and Group B treatment plans**:
 
 $\\bar{x_A} - \\bar{x_B} = 1.665 - 1.227 = 0.438$
 
@@ -593,22 +593,22 @@ $q = \\frac{0.438}{0.158} = 2.77$
 
 $df = 49$
 
-基于 ( $\\alpha$ = 0.05 )、$k$ (组数)=3和 $df$ = 49 的(studentized range q 表)，可得 ( $q_{临界}$ = 3.418 )，所以
-$q = 2.77 < 3.418$。
+Based on ($\\alpha$ = 0.05), $k$ (number of groups) = 3 and $df$ = 49 from the (studentized range q table), we get ($q_{critical}$ = 3.418), so
+$q = 2.77 < 3.418$.
 
-同理可计算出其他两组的统计量，如表3所示：
+Similarly, the statistics for the other two groups can be calculated, as shown in Table 3:
 
-| group  | $\\bar{x_i} - \\bar{x_j}$ | $SE$ | $df$ | $q_{临界}$ | $q$ |
+| group  | $\\bar{x_i} - \\bar{x_j}$ | $SE$ | $df$ | $q_{critical}$ | $q$ |
 | ------ | ------------------------ | ---- | ---- | ---------- | --- |
 | A vs B | 0.438                    | 0.158| 49   | 3.418      | 0.540 |
 | A vs C | 0.665                    | 0.142| 42   | 3.436      | 0.486 |
 | B vs C | 0.227                    | 0.127| 46   | 3.425      | 0.434 |
 
-表3
+**Table 3**
 
-1. 确定$P$值，作出推断结论
+#### 3. Determine P Value and Make Inference Conclusion
 
-根据表3中的统计量，A组和C组相比时，$q = 4.68 > 3.436$，可得$P < 0.05$。按$\\alpha = 0.05$水准，拒绝$H_0$，接受 $H_1$，差异具有统计学意义，说明A组和C组治疗方案受试者血红蛋白的上升克数不相等。而其余两组$q < q_{临界}$，可得 $P > 0.05$。按 $\\alpha = 0.05$水准，不拒绝$H_0$，差异不具有统计学意义。
+According to the statistics in Table 3, when comparing Group A and Group C, $q = 4.68 > 3.436$, we get $P < 0.05$. At the $\\alpha = 0.05$ significance level, reject $H_0$ and accept $H_1$. The difference is statistically significant, indicating that the grams of hemoglobin increase in subjects of Group A and Group C treatment plans are not equal. For the other two groups, $q < q_{critical}$, we get $P > 0.05$. At the $\\alpha = 0.05$ significance level, do not reject $H_0$, and the difference is not statistically significant.
 
 **Source:** https://mengte.online/archives/920
 
@@ -655,79 +655,79 @@ When $n \\leq 25$, consult the (T value critical value table). When consulting t
 - If the $T$ value is exactly equal to the critical value, its $P$ value is equal to (generally approximately equal to) the corresponding probability level;  
 - If the $T$ value is outside the upper and lower critical value range, its $P$ value is less than the corresponding probability level, and you can move one column to the right and compare with the critical value again.
 
-#### 3. T界值表制作的原理
+#### 3. Principles of T Critical Value Table Construction
 
-为简单起见，现以对子数为$n=4$进行介绍（T界值表）的编制原理：
-假定配对的有效对子数$n=4$，总体秩为$1,2,3,4$。正秩（或负秩）从总体中取秩，可取$0$个、$1$个、$2$个、$3$个和$4$个，取秩的$2^4=16$种可能组合情况及秩和$T$见图1。
+For simplicity, the construction principle of the (T critical value table) is introduced using the number of pairs $n=4$:
+Assuming the effective number of paired pairs $n=4$, the population ranks are $1,2,3,4$. Positive ranks (or negative ranks) can take $0$, $1$, $2$, $3$, and $4$ ranks from the population, with $2^4=16$ possible combination situations and rank sum $T$ shown in Figure 1.
 
-每种组合情况对应的$T$取值的概率为$1/16$。归纳成$n=4$时$T$的概率分布见图2。
+The probability of each combination situation corresponding to $T$ value is $1/16$. The probability distribution of $T$ when $n=4$ is summarized in Figure 2.
 
-$T$的概率分布是对称的非连续分布。$T$的最小值为$0$，最大值为$n(n+1)/2$，均数为$n(n+1)/4$。如$n=4$时，最大值为$10$，均数为$2.5$。
+The probability distribution of $T$ is a symmetric discontinuous distribution. The minimum value of $T$ is $0$, the maximum value is $n(n+1)/2$, and the mean is $n(n+1)/4$. For example, when $n=4$, the maximum value is $10$ and the mean is $2.5$.
 
-根据图2可计算$n=4$时$T$的单侧和双侧累计概率。如下：  
+According to Figure 2, the one-sided and two-sided cumulative probabilities of $T$ when $n=4$ can be calculated as follows:
 
-- $T$为$0$或$10$的单侧累计概率等于$1/16$（$P=0.062$或$P=0.937$），双侧累计概率等于$2/16$（$P=0.125$）；  
-- $T$为$1$~$9$的单侧累积概率等于$2/16$（$P=0.125$或$P=0.875$），双侧累积概率等于$4/16$（$P=0.25$）。
+- The one-sided cumulative probability of $T$ being $0$ or $10$ equals $1/16$ ($P=0.062$ or $P=0.937$), and the two-sided cumulative probability equals $2/16$ ($P=0.125$);
+- The one-sided cumulative probability of $T$ being $1$~$9$ equals $2/16$ ($P=0.125$ or $P=0.875$), and the two-sided cumulative probability equals $4/16$ ($P=0.25$).
 
-无论$n$有多大，其$T$界值的制作步骤和$n=4$时相同。由于$n=4$时最小单侧累计概率大于$0.05$，故（T界值表）的$n$从$6$起。$T$的下侧界值与上侧界值之和为$n(n+1)/2$，由于正秩和（$T^+$）与负秩和（$T^-$）之和均为$n(n+1)/2$，故若正秩和（$T^+$）、负秩和（$T^-$）中的小者小于或等于下侧界值，则大者大于或等于上侧界值。
+Regardless of how large $n$ is, the construction steps of its $T$ critical values are the same as when $n=4$. Since the minimum one-sided cumulative probability when $n=4$ is greater than $0.05$, the (T critical value table) starts from $n=6$. The sum of the lower critical value and upper critical value of $T$ is $n(n+1)/2$. Since the sum of positive rank sum ($T^+$) and negative rank sum ($T^-$) is both $n(n+1)/2$, if the smaller of positive rank sum ($T^+$) and negative rank sum ($T^-$) is less than or equal to the lower critical value, then the larger one is greater than or equal to the upper critical value.
 
-### （二）正态近似法
+### (II) Normal Approximation Method
 
-当$n$增加时，$T$分布接近均数为$n(n+1)/4$，方差为$n(n+1)(2n+1)/24$的正态分布。当$n \\geq 25$时，近似程度已较为满意，故可按照正态分布的原理，利用以下公式计算$Z$值：
+When $n$ increases, the $T$ distribution approaches a normal distribution with mean $n(n+1)/4$ and variance $n(n+1)(2n+1)/24$. When $n \\geq 25$, the approximation is satisfactory, so the $Z$ value can be calculated using the following formula according to the principle of normal distribution:
 
 $$Z = \\frac{T - n(n+1)/4}{\\sqrt{n(n+1)(2n+1)/24}} \\pm 0.5$$
 
-公式中的$0.5$是连续校正系数，因为$Z$值是连续的，而$T$值是不连续的。
+The $0.5$ in the formula is the continuity correction coefficient, because the $Z$ value is continuous while the $T$ value is discontinuous.
 
-当相同的秩次较多时（指绝对值，不包括差值为$0$者），用上述公式求得的$Z$值偏小，需用以下公式进行校正：
+When there are many tied ranks (referring to absolute values, not including those with differences of $0$), the $Z$ value obtained using the above formula is too small and needs to be corrected using the following formula:
 
 $$Z_c = \\frac{T - n(n+1)/4}{\\sqrt{n(n+1)(2n+1)/24 - \\sum t_i(t_i^2-1)/48}} \\pm 0.5$$
 
-式中$t_i$为第$i$个相同秩的个数。假定相同秩（即平均秩）中有2个4，5个6，3个7，则：
-$\\sum t_i(t_i^2-1)/48 = \\frac{2(2^2-1) + 5(5^2-1) + 3(3^2-1)}{48}$，
-$= \\frac{2 \\times 3 + 5 \\times 24 + 3 \\times 8}{48} = \\frac{6+120+24}{48} = \\frac{150}{48} = 3.125$。
+Where $t_i$ is the number of tied ranks in the $i$-th group. Assuming there are 2 tied ranks of 4, 5 tied ranks of 6, and 3 tied ranks of 7, then:
+$\\sum t_i(t_i^2-1)/48 = \\frac{2(2^2-1) + 5(5^2-1) + 3(3^2-1)}{48}$,
+$= \\frac{2 \\times 3 + 5 \\times 24 + 3 \\times 8}{48} = \\frac{6+120+24}{48} = \\frac{150}{48} = 3.125$.
 
-## 三、案例数据
+## III. Case Data
 
-某地正常人尿氟含量的中位数为$45.2μg/L$。今在该地某厂随机抽取$12$名工人，测得尿氟含量。问该厂工人的尿氟含量是否与当地正常人的尿氟含量有差异？数据见图3。
+The median urine fluoride content of normal people in a certain area is $45.2μg/L$. Now 12 workers are randomly selected from a factory in this area, and their urine fluoride content is measured. Is there a difference between the urine fluoride content of workers in this factory and that of normal people in the local area? The data are shown in Figure 3.
 
-## 四、假设检验
+## IV. Hypothesis Testing
 
-本例样本资料经 "Normality Test (Shapiro-Wilk) (夏皮罗-威尔克正态性)"正态性检验结果显示*P*=0.062<0.1，提示数据不满足正态性条件。可使用单样本Wilcoxon符号秩检验。
+The sample data in this example showed *P*=0.062<0.1 after "Normality Test (Shapiro-Wilk)" normality testing, suggesting that the data does not meet the normality condition. The one-sample Wilcoxon signed rank test can be used.
 
-### （一）建立检验假设，确定检验水准
+### (I) Establish Test Hypothesis and Determine Significance Level
 
-$H_0$：尿氟含量的总体中位数 $M = 45.2μg/L$
-$H_1$：$M \\neq 45.2μg/L$
-$\\alpha = 0.05$  
+$H_0$: The population median of urine fluoride content $M = 45.2μg/L$
+$H_1$: $M \\neq 45.2μg/L$
+$\\alpha = 0.05$
 
-### （二）计算检验统计量  
+### (II) Calculate Test Statistic
 
-#### **1.计算差值**
+#### **1. Calculate Differences**
 
-使用新发减去原法计算两组数据的差值，即图4中(2)=(1)-45.2。  
+Calculate the differences between the two groups of data using the new method minus the original method, i.e., (2)=(1)-45.2 in Figure 4.
 
-#### **2.编秩**
+#### **2. Ranking**
 
-(1) 将图4中差值都取绝对值。
+(1) Take the absolute values of all differences in Figure 4.
 
-(2) 以绝对值的大小从小到大编秩次（即编秩序号）：若遇到差值为0的对子数应舍去，同时样本例数相应减少；若遇到绝对值相等的差值，则取平均秩次，又称同秩或结。
+(2) Rank the absolute values from small to large (i.e., assign rank numbers): If pairs with differences of 0 are encountered, they should be discarded and the sample size should be reduced accordingly; if differences with equal absolute values are encountered, take the average rank, also called tied ranks.
 
-(3) 让秩次保持原差值的正负号（即符号秩）。
+(3) Let the ranks maintain the positive or negative sign of the original difference (i.e., signed ranks).
 
-(4) 求秩和，正秩和（$T^+$）为76，负秩和（$T^+$）为2。本例有效差值个数$n=12$，则总秩和为
+(4) Calculate rank sums. The positive rank sum ($T^+$) is 76, and the negative rank sum ($T^-$) is 2. In this example, the number of effective differences $n=12$, so the total rank sum is
 
 $$\\frac{n(n+1)}{2} = \\frac{12 \\times 13}{2} = 78$$
 
-   正秩和与负秩和相加为76+2=78，秩和计算无误。  
+The sum of positive rank sum and negative rank sum is 76+2=78, so the rank sum calculation is correct.
 
-#### **3.计算T值**
+#### **3. Calculate T Value**
 
-据图4第(3)和(4)栏，取$T^+ = 76$或$T^- = 2$。
+According to columns (3) and (4) in Figure 4, take $T^+ = 76$ or $T^- = 2$.
 
-### （三）确定P值，作出推断结论
+### (III) Determine P Value and Make Inference Conclusion
 
-本例有效差值个数$n = 12$。据$n = 12$和$T^+ = 76$或$T^- = 2$查（$T$界值表 ），得单侧$P = 0.005 < 0.05$，按$\\alpha = 0.05$水准，拒绝$H_0$，接受$H_1$，可认为该厂工人的尿氟含量高于当地正常人的尿氟含量。
+In this example, the number of effective differences $n = 12$. According to $n = 12$ and $T^+ = 76$ or $T^- = 2$, consulting the ($T$ critical value table) gives one-sided $P = 0.005 < 0.05$. At the $\\alpha = 0.05$ significance level, reject $H_0$ and accept $H_1$. It can be concluded that the urine fluoride content of workers in this factory is higher than that of normal people in the local area.
 
 **Source:** https://mengte.online/archives/333
 
