@@ -1,37 +1,37 @@
-// 统计方法详细资料存储模块
-// 存储常见统计方法的详细介绍，避免频繁调用AI API
+// Statistical methods detailed information storage module
+// Stores detailed introductions of common statistical methods to avoid frequent AI API calls
 
 const STATISTICAL_METHODS = {
-  // 单样本t检验
-  '单样本t检验': {
-    keywords: ['单样本t检验', 'one sample t-test', 'one-sample t-test', '单样本t'],
-    content: `# 单样本t检验(One Sample t-test)
+  // One Sample t-test
+  'One Sample t-test': {
+    keywords: ['One Sample t-test', 'one sample t-test', 'one-sample t-test', 'single sample t-test'],
+    content: `# One Sample t-test
 
-在计量资料统计分析中，最简单和常用的方法是 **t 检验**（*t-test* / *Student's t-test*），包括：单样本 t 检验（One-sample t-test）、独立样本 t 检验（Independent-samples t-test）、配对样本 t 检验（Paired-samples t-test）。以下将举例介绍单样本 t 检验的适用条件及假设检验理论。
+In statistical analysis of quantitative data, the simplest and most commonly used method is the **t-test** (*t-test* / *Student's t-test*), which includes: One-sample t-test, Independent-samples t-test, and Paired-samples t-test. The following will introduce the applicable conditions and hypothesis testing theory of the one-sample t-test with examples.
 
-## 一、适用条件
+## I. Applicable Conditions
 
-单样本*t*检验，需要满足四个条件：
+The one-sample *t*-test must satisfy four conditions:
 
-条件1：观察变量为连续变量。
+Condition 1: The observed variable is a continuous variable.
 
-条件2：观察变量相互独立。
+Condition 2: The observed variables are independent of each other.
 
-条件3：观察变量不存在显著的异常值。
+Condition 3: The observed variables have no significant outliers.
 
-条件4：观察变量为(近似)正态分布。
+Condition 4: The observed variables follow a (approximately) normal distribution.
 
-## 二、统计量计算
+## II. Statistical Calculation
 
-单样本t检验（one sample/group t-test）即已知样本均数$\\bar{x}$（代表未知总体均数$\\mu$）与已知总体均数 $\\mu_0$（一般为理论值、标准值或经过大量观察所得的稳定值等）的比较。其检验统计量为：
+The one-sample t-test is a comparison between the known sample mean $\\bar{x}$ (representing the unknown population mean $\\mu$) and the known population mean $\\mu_0$ (usually theoretical values, standard values, or stable values obtained through extensive observation). Its test statistic is:
 
 $$t = \\frac{\\bar{x} - \\mu_0}{s/\\sqrt{n}}$$
 
-其中，$df = n-1$为自由度（degree of freedom, df），指能够自由取值的变量个数。$s_{\\bar{x}} = s/\\sqrt{n}$为均数标准误的估计值，即样本均数的标准差，反映样本均数分布的离散程度，也反映样本均数与相应总体均数间的差异，说明了均数抽样误差的大小；与样本标准差的大小成正比，与样本含量$n$的平方根成反比。
+Where $df = n-1$ is the degrees of freedom, indicating the number of variables that can take values freely. $s_{\\bar{x}} = s/\\sqrt{n}$ is the estimated value of the standard error of the mean, which is the standard deviation of the sample mean, reflecting the dispersion of the sample mean distribution and the difference between the sample mean and the corresponding population mean, indicating the magnitude of sampling error of the mean; it is directly proportional to the sample standard deviation and inversely proportional to the square root of sample size $n$.
 
-## 三、案例数据
+## III. Case Data
 
-某医生测量了52名特殊作业成年男性工人的血红蛋白含量。假设已知正常成年男性血红蛋白含量均数为145g/L，试问特殊作业成年男性工人的血红蛋白含量是否与正常成年男性有差异？数据见下表1。
+A doctor measured the hemoglobin content of 52 adult male workers engaged in special operations. Assuming that the known mean hemoglobin content of normal adult males is 145g/L, is there a difference between the hemoglobin content of adult male workers engaged in special operations and normal adult males? The data are shown in Table 1 below.
 
 | ID | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -49,91 +49,91 @@ $$t = \\frac{\\bar{x} - \\mu_0}{s/\\sqrt{n}}$$
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Hb(g/L) | 151 | 156 | 157 | 159 | 161 | 162 | 145 | 148 | 165 | 130 | 135 | 129 | 132 |
 
-**表1. 数据详情**
+**Table 1. Data Details**
 
-## 四、假设检验
+## IV. Hypothesis Testing
 
-### (一) 建立检验假设，确定检验水准
+### (I) Establish Test Hypothesis and Determine Significance Level
 
-- $H_0$: $\\mu = 145$，即从事特殊作业的男性工人与正常成年男性的血红蛋白含量均数相等  
-- $H_1$: $\\mu \\neq 145$，即从事特殊作业的男性工人与正常成年男性的血红蛋白含量均数不等  
-- 显著性水平：$\\alpha = 0.05$
+- $H_0$: $\\mu = 145$, i.e., the mean hemoglobin content of male workers engaged in special operations equals that of normal adult males  
+- $H_1$: $\\mu \\neq 145$, i.e., the mean hemoglobin content of male workers engaged in special operations does not equal that of normal adult males  
+- Significance level: $\\alpha = 0.05$
 
-### (二) 计算检验统计量
+### (II) Calculate Test Statistic
 
-本例 $n = 52$，$\\bar{x} = 128.9$，$s = 20.0$，$\\mu_0 = 145$。
-按上述样本量公式计算得：
+In this example, $n = 52$, $\\bar{x} = 128.9$, $s = 20.0$, $\\mu_0 = 145$.
+Using the above formula, we calculate:
 
 $$t = \\frac{128.9 - 145}{20.0/\\sqrt{52}} = -5.80$$
 
-### (三) 确定 P 值，作出推断结论
+### (III) Determine P Value and Make Inference Conclusion
 
-以自由度 $df = 51$，查双侧 $t$ 分布表可得：
+With degrees of freedom $df = 51$, consulting the two-tailed $t$ distribution table gives:
 
 $P < 0.001$
 
-因此，$P < 0.05$。
+Therefore, $P < 0.05$.
 
-在 $\\alpha = 0.05$ 显著性水平下，拒绝原假设 $H_0$，接受备择假设 $H_1$，差异具有统计学意义。
+At the $\\alpha = 0.05$ significance level, reject the null hypothesis $H_0$ and accept the alternative hypothesis $H_1$. The difference is statistically significant.
 
-结合本题，可认为从事特殊作业的男性工人的平均血红蛋白含量**低于**正常成年男性的平均血红蛋白含量。
+In combination with this problem, it can be concluded that the average hemoglobin content of male workers engaged in special operations is **lower than** that of normal adult males.
 
-## 五、分析小技巧
+## V. Analysis Tips
 
-### (一) 异常值的检测
+### (I) Outlier Detection
 
-异常值的检测有多种方法，包括：
+There are various methods for outlier detection, including:
 
-- **专业判断**。基于专业角度判断数值是否为异常值往往是最基础且可靠的方法，很多通过统计学方法检测提示的异常值，最终也需要从专业角度衡量是否为真正的异常值；但在实际研究过程中，一些变量指标难以从专业角度进行衡量是否异常。
-- **图形法**，包括直方图法、箱式图法等。在直方图上，位于图形两端，并远离均数的数值，一般提示可能存在异常；在箱式图上位于上下四分位数±1.5倍四分位间距的数值，一般提示可能存在异常。
-- **统计描述法**。一般位于均数±3倍标准差之外的数据，提示可能存在异常。
-- **马氏距离法**，常用于多变量异常值的检测。
+- **Professional judgment**. Judging whether values are outliers from a professional perspective is often the most basic and reliable method. Many outliers detected through statistical methods ultimately need to be evaluated from a professional perspective to determine whether they are true outliers; however, in actual research processes, some variable indicators are difficult to assess for abnormality from a professional perspective.
+- **Graphical methods**, including histogram method and box plot method. In histograms, values located at both ends of the graph and far from the mean generally suggest possible outliers; in box plots, values located outside the upper and lower quartiles ±1.5 times the interquartile range generally suggest possible outliers.
+- **Statistical description method**. Generally, data located outside the mean ±3 times the standard deviation suggest possible outliers.
+- **Mahalanobis distance method**, commonly used for multivariate outlier detection.
 
-### (二) 异常值的处理
+### (II) Outlier Treatment
 
-对于异常值的处理需要注意：
+Attention should be paid to outlier treatment:
 
-- 异常值产生的原因不明之前，不应简单决定其取舍，通过图形法和统计描述法检测出的异常值，最好再从专业角度进行判断是否为真正的异常值。
-- 尽可能核对原始记录，如果确认数据有逻辑错误，又无法纠正，可直接删除。
-- 如果数据无明显逻辑错误，可将数据删除前后各做一次分析，若结果不矛盾，则不予删除；若结果矛盾且需要删除数据时，必须给予充分合理的解释。
-- 如果采用其他数值替换异常值，最好对替换前后的数据各做一次分析，并对结果进行比较。
+- Before the cause of outliers is unclear, their inclusion or exclusion should not be simply decided. Outliers detected through graphical and statistical description methods should preferably be evaluated from a professional perspective to determine whether they are true outliers.
+- Check original records as much as possible. If data is confirmed to have logical errors and cannot be corrected, it can be directly deleted.
+- If data has no obvious logical errors, perform analysis both before and after data deletion. If results are not contradictory, do not delete; if results are contradictory and data needs to be deleted, sufficient reasonable explanation must be provided.
+- If other values are used to replace outliers, it is best to perform analysis on data both before and after replacement and compare the results.
 
-**转自：** https://mengte.online/archives/194
+**Source:** https://mengte.online/archives/194
 
-SPSS实操案例：https://mengte.online/archives/214`
+SPSS practical case: https://mengte.online/archives/214`
   },
   
-  // 独立样本t检验
-  '独立样本t检验': {
-    keywords: ['独立样本t检验', 'independent samples t-test', 'independent t-test', '独立t检验', '成组t检验'],
-    content: `# 独立样本t检验(Independent Samples t-test)
+  // Independent samples t-test
+  'Independent samples t-test': {
+    keywords: ['Independent samples t-test', 'independent samples t-test', 'independent t-test', 'independent t test', 'two-sample t-test'],
+    content: `# Independent Samples t-test
 
-独立样本t检验又称成组t检验(two-sample/group t-test)或两独立样本t检验(two independent-sample t-test)，医学研究中常用于完全随机设计两样本均数的比较，即将受试对象完全随机分配到两个不同处理组，研究者关心的是两样本均数所代表的两总体均数是否不等。此外，在观察性研究中，独立从两个总体中进行完全随机抽样，获得的两样本均数的比较，也可采用独立样本t检验。
+The independent samples t-test is also called the two-sample/group t-test or two independent-sample t-test. It is commonly used in medical research for comparing the means of two samples in a completely randomized design, where subjects are completely randomly assigned to two different treatment groups, and researchers are concerned with whether the two sample means representing two population means are unequal. In addition, in observational studies, the comparison of two sample means obtained by completely random sampling from two populations can also use the independent samples t-test.
 
-## 一、适用条件
+## I. Applicable Conditions
 
-独立样本 t 检验需要满足六个条件：
+The independent samples t-test must satisfy six conditions:
 
-- **条件1**：观察变量为连续变量。
-- **条件2**：观察变量相互独立。
-- **条件3**：观察变量分为 2 组。
-- **条件4**：观察变量不存在显著的异常值。
-- **条件5**：各组观察变量为正态（或近似正态）分布。
-- **条件6**：两组观察变量的方差相等。
+- **Condition 1**: The observed variable is a continuous variable.
+- **Condition 2**: The observed variables are independent of each other.
+- **Condition 3**: The observed variables are divided into 2 groups.
+- **Condition 4**: The observed variables have no significant outliers.
+- **Condition 5**: The observed variables in each group follow a normal (or approximately normal) distribution.
+- **Condition 6**: The variances of the observed variables in the two groups are equal.
 
-## 二、统计量计算
+## II. Statistical Calculation
 
-当两样本均来自正态总体，但样本含量较小，如 $n_1 < 30$ 或/和 $n_2 < 30$ 时，要根据两总体方差是否相等而采用不同检验方法。
+When both samples come from normal populations but the sample sizes are small, such as $n_1 < 30$ or/and $n_2 < 30$, different testing methods should be adopted according to whether the variances of the two populations are equal.
 
-### (一) 总体方差相等的 t 检验
+### (I) t-test for Equal Population Variances
 
-当两总体方差相等，即 $\\sigma_1^2 = \\sigma_2^2$ 时，可将两样本方差合并，求两者的共同方差——合并方差 $s_p^2$。
+When the variances of the two populations are equal, i.e., $\\sigma_1^2 = \\sigma_2^2$, the two sample variances can be pooled to obtain their common variance—pooled variance $s_p^2$.
 
-两样本 t 检验的检验统计量可按照单样本 t 检验 (One Sample t-test) 统计量计算公式进行计算，在 $H_0: \\mu_1 = \\mu_2$，即 $\\mu_1 - \\mu_2 = 0$ 条件下构造。其检验统计量为：
+The test statistic for the two-sample t-test can be calculated according to the one-sample t-test statistic calculation formula, constructed under the condition $H_0: \\mu_1 = \\mu_2$, i.e., $\\mu_1 - \\mu_2 = 0$. Its test statistic is:
 
 $$t = \\frac{(\\bar{x_1} - \\bar{x_2}) - (\\mu_1 - \\mu_2)}{s_{\\bar{x_1} - \\bar{x_2}}}$$
 
-即
+That is:
 
 $$t = \\frac{\\bar{x_1} - \\bar{x_2}}{s_{\\bar{x_1} - \\bar{x_2}}}$$
 
@@ -145,40 +145,40 @@ $$t = \\frac{\\bar{x_1} - \\bar{x_2}}{s_p\\sqrt{\\frac{1}{n_1} + \\frac{1}{n_2}}
 
 $$t = \\frac{\\bar{x_1} - \\bar{x_2}}{\\sqrt{\\frac{s_p^2}{n_1} + \\frac{s_p^2}{n_2}}}$$
 
-### (二) 总体方差不等的近似 t 检验
+### (II) Approximate t-test for Unequal Population Variances
 
-进行两小样本均数比较，若总体服从正态分布，但两总体方差不等，即 $\\sigma_1^2 \\neq \\sigma_2^2$ 时，可采用数据变换（如两样本几何均数的 t 检验，就是将原始数据取对数后进行 t 检验）或下述近似 t 检验——$t'$ 检验或秩转换的非参数检验。
+For comparing the means of two small samples, if the populations follow normal distributions but the variances of the two populations are unequal, i.e., $\\sigma_1^2 \\neq \\sigma_2^2$, data transformation (such as t-test for geometric means of two samples, which involves taking logarithms of the original data before conducting the t-test) or the following approximate t-test—$t'$ test or rank transformation non-parametric test can be used.
 
-近似 t 检验有以下三种方法可供选择：Cochran & Cox 法、Satterthwaite 法和 Welch 法。
+There are three methods available for approximate t-tests: Cochran & Cox method, Satterthwaite method, and Welch method.
 
-#### 1. Cochran & Cox 近似 t 检验
+#### 1. Cochran & Cox Approximate t-test
 
-Cochran & Cox 法 (1950) 的检验统计量为 $t'$，按下方公式计算。因 $t'$ 分布较复杂，故常利用 $t$ 计算其近似临界值。
+The test statistic of the Cochran & Cox method (1950) is $t'$, calculated according to the formula below. Since the $t'$ distribution is complex, the approximate critical value is often calculated using $t$.
 
 $$t' = \\frac{\\bar{x_1} - \\bar{x_2}}{\\sqrt{\\frac{s_1^2}{n_1} + \\frac{s_2^2}{n_2}}}$$
 
 $$t_{\\alpha(v)} = \\frac{t_{\\alpha(v_1)} \\cdot \\frac{s_1^2}{n_1} + t_{\\alpha(v_2)} \\cdot \\frac{s_2^2}{n_2}}{\\frac{s_1^2}{n_1} + \\frac{s_2^2}{n_2}}$$
 
-$t'$ 值与 $P$ 值的关系同 $t$ 值与 $P$ 值的关系。注意：
+The relationship between $t'$ values and $P$ values is the same as that between $t$ values and $P$ values. Note:
 
-1. 当 $s_1^2 = s_2^2$ 时，$t_{\\alpha(v)} = t_{\\alpha(v_1)} = t_{\\alpha(v_2)}$，$v = v_1 + v_2$（不是 $v_1 \\cdot v_2$）；
-2. 用双侧概率时，$t_{\\alpha(v)}$ 取 $t_{\\alpha/2(v_1)}$ 和 $t_{\\alpha/2(v_2)}$。
+1. When $s_1^2 = s_2^2$, $t_{\\alpha(v)} = t_{\\alpha(v_1)} = t_{\\alpha(v_2)}$, $v = v_1 + v_2$ (not $v_1 \\cdot v_2$);
+2. When using two-sided probability, $t_{\\alpha(v)}$ takes $t_{\\alpha/2(v_1)}$ and $t_{\\alpha/2(v_2)}$.
 
-#### 2. Satterthwaite 近似 t 检验
+#### 2. Satterthwaite Approximate t-test
 
-Cochran & Cox 法是对临界值校正，而 Satterthwaite 法 (1946) 则是对自由度校正。即用上述公式中的 $t'$ 代替 $t$，自由度校正按以下公式计算。最终结果根据 $t$ 界值表进行判定。
+The Cochran & Cox method corrects the critical value, while the Satterthwaite method (1946) corrects the degrees of freedom. That is, use $t'$ in the above formula instead of $t$, and calculate the degrees of freedom correction according to the following formula. The final result is determined according to the $t$ critical value table.
 
 $$v' = \\frac{(\\frac{s_1^2}{n_1} + \\frac{s_2^2}{n_2})^2}{\\frac{(\\frac{s_1^2}{n_1})^2}{n_1-1} + \\frac{(\\frac{s_2^2}{n_2})^2}{n_2-1}}$$
 
-#### 3. Welch 近似 t 检验
+#### 3. Welch Approximate t-test
 
-Welch 法 (1947) 也是对自由度进行校正。其校正按以下公式计算得：
+The Welch method (1947) also corrects the degrees of freedom. The correction is calculated according to the following formula:
 
 $$v'' = \\frac{(\\frac{s_1^2}{n_1} + \\frac{s_2^2}{n_2})^2}{\\frac{(\\frac{s_1^2}{n_1})^2}{n_1+1} + \\frac{(\\frac{s_2^2}{n_2})^2}{n_2+1}} - 2$$
 
-## 三、案例数据
+## III. Case Data
 
-某医生研究某生化指标(X)对病毒性肝炎诊断的临床意义，测得20名正常人和19名病毒性肝炎患者生化指标(X)含量(μg/dl)，问病毒性肝炎患者和正常人生化指标(X)含量是否存在差异？数据见下表。
+A doctor studied the clinical significance of a biochemical indicator (X) for the diagnosis of viral hepatitis, measuring the content of biochemical indicator (X) (μg/dl) in 20 normal people and 19 viral hepatitis patients. Is there a difference in biochemical indicator (X) content between viral hepatitis patients and normal people? The data are shown in the table below.
 
 | ID    | 1     | 2     | 3     | 4     | 5     | 6     | 7     | 8     | 9     | 10    |
 | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
@@ -200,138 +200,138 @@ $$v'' = \\frac{(\\frac{s_1^2}{n_1} + \\frac{s_2^2}{n_2})^2}{\\frac{(\\frac{s_1^2
 | group | 2     | 2     | 2     | 2     | 2     | 2     | 2     | 2     | 2     |       |
 | X     | 230.9 | 240.7 | 255.8 | 260.7 | 224.4 | 232.7 | 231.5 | 240.7 | 257.3 |       |
 
-**表1.具体数据**
+**Table 1. Specific Data**
 
-## 四、假设检验
+## IV. Hypothesis Testing
 
-### (一) 方差齐性检验
+### (I) Homogeneity of Variance Test
 
-此处使用Levene检验进行方差齐性检验，由于该检验的计算量巨大，使用jamovi软件完成计算过程。
+Here, the Levene test is used for homogeneity of variance testing. Due to the massive computational load of this test, jamovi software is used to complete the calculation process.
 
-方差齐性检验（Levene检验）
+Homogeneity of Variance Test (Levene's Test)
 
 |      | F     | df   | df2  | p     |
 | ---- | ----- | ---- | ---- | ----- |
 | X    | 3.883 | 1    | 37   | 0.056 |
 
-*注*：较低的p值提示可能违反方差齐性假设
+*Note*: Lower p values suggest possible violation of the homogeneity of variance assumption
 
-### (二) Cochran & Cox近似t检验
+### (II) Cochran & Cox Approximate t-test
 
-#### 1. 建立检验假设，确定检验水准
+#### 1. Establish Test Hypothesis and Determine Significance Level
 
-H0：μ1= μ2，即病毒性肝炎患者和正常人生化指标(X)含量均数相等
-H1：μ1 ≠ μ2，即病毒性肝炎患者和正常人生化指标(X)含量均数不等
+H0: μ1= μ2, i.e., the mean biochemical indicator (X) content of viral hepatitis patients and normal people is equal
+H1: μ1 ≠ μ2, i.e., the mean biochemical indicator (X) content of viral hepatitis patients and normal people is not equal
 a = 0.05
 
-#### 2. 计算检验统计量
+#### 2. Calculate Test Statistic
 
-根据数据：
+According to the data:
 
 $n_1 = 20$, $n_2 = 19$, $\\bar{x_1} = 270.7$, $\\bar{x_2} = 235.9$
 
-按Cochran & Cox近似t检验统计量计算公式得：
+Calculated according to the Cochran & Cox approximate t-test statistic formula:
 
 $t' = 9.352$,$t_{0.025(18)} = 2.101$, $t_{0.025(19)} = 2.093$
 
-查t界值表,$t_{0.025(18)} = 2.101$,$t_{0.025(19)} = 2.093$,计算临界值：
+Consulting the t critical value table,$t_{0.025(18)} = 2.101$,$t_{0.025(19)} = 2.093$, calculating the critical value:
 
 $t_{0.05(v)} = \\frac{2.101 \\times 8.47 + 2.093 \\times 8.46}{8.47 + 8.46} = 2.098611$
 
-#### 3. 确定P值，作出推断结论
+#### 3. Determine P Value and Make Inference Conclusion
 
-由|t′|=9.352>2.098611得P<0.05。按a = 0.05水准，拒绝H0，接受H1，差异有统计学意义。可以认为病毒性肝炎患者和正常人生化指标(X)含量存在差异。
+Since |t′|=9.352>2.098611, P<0.05. At a = 0.05 significance level, reject H0 and accept H1, the difference is statistically significant. It can be concluded that there is a difference in biochemical indicator (X) content between viral hepatitis patients and normal people.
 
-### (三) Satterthwaite近似t检验
+### (III) Satterthwaite Approximate t-test
 
-#### 1. 建立检验假设，确定检验水准
+#### 1. Establish Test Hypothesis and Determine Significance Level
 
-$H_0$：$\\mu_1 = \\mu_2$，即病毒性肝炎患者和正常人生化指标(X)含量均数相等  
+$H_0$: $\\mu_1 = \\mu_2$, i.e., the mean biochemical indicator (X) content of viral hepatitis patients and normal people is equal  
 
-$H_1$：$\\mu_1 \\neq \\mu_2$，即病毒性肝炎患者和正常人生化指标(X)含量均数不等  
+$H_1$: $\\mu_1 \\neq \\mu_2$, i.e., the mean biochemical indicator (X) content of viral hepatitis patients and normal people is not equal  
 
 $\\alpha = 0.05$  
 
-#### 2. 计算检验统计量
+#### 2. Calculate Test Statistic
 
-$n_1 = 20$, $n_2 = 19$, $\\bar{x_1} = 270.7$, $\\bar{x_2} = 235.9$，按Cochran & Cox近似t检验统计量计算公式得：  
+$n_1 = 20$, $n_2 = 19$, $\\bar{x_1} = 270.7$, $\\bar{x_2} = 235.9$, calculated according to the Cochran & Cox approximate t-test statistic formula:  
 
 $t' = 9.352$  ,$t_{0.025(18)} = 2.101$, $t_{0.025(19)} = 2.093$  
 
-根据Satterthwaite法自由度校正公式计算可得：
+According to the Satterthwaite method degrees of freedom correction formula:
 
 $v' = \\frac{(8.47 + 8.46)^2}{\\frac{8.47^2}{19} + \\frac{8.46^2}{18}} = 36.97$  
 
-#### 3. 确定P值，作出推断结论
+#### 3. Determine P Value and Make Inference Conclusion
 
-以$df = 37$查t界值表得$t_{0.025(37)} = 2.026$，即$|t'| = 9.352 > 2.026$，得$P < 0.05$。按$\\alpha = 0.05$水准，拒绝$H_0$，接受$H_1$，差异具有统计学意义。可以认为病毒性肝炎患者和正常人生化指标(X)含量存在差异。结论与Cochran & Cox近似t检验一致。
+With $df = 37$, consulting the t critical value table gives $t_{0.025(37)} = 2.026$, i.e., $|t'| = 9.352 > 2.026$, thus $P < 0.05$. At $\\alpha = 0.05$ significance level, reject $H_0$ and accept $H_1$, the difference is statistically significant. It can be concluded that there is a difference in biochemical indicator (X) content between viral hepatitis patients and normal people. The conclusion is consistent with the Cochran & Cox approximate t-test.
 
-### (四) Welch近似t检验
+### (IV) Welch Approximate t-test
 
-#### 1. 建立检验假设，确定检验水准
+#### 1. Establish Test Hypothesis and Determine Significance Level
 
-$H_0$：$\\mu_1 = \\mu_2$，即病毒性肝炎患者和正常人生化指标(X)含量均数相等  
+$H_0$: $\\mu_1 = \\mu_2$, i.e., the mean biochemical indicator (X) content of viral hepatitis patients and normal people is equal  
 
-$H_1$：$\\mu_1 \\neq \\mu_2$，即病毒性肝炎患者和正常人生化指标(X)含量均数不等  
+$H_1$: $\\mu_1 \\neq \\mu_2$, i.e., the mean biochemical indicator (X) content of viral hepatitis patients and normal people is not equal  
 
 $\\alpha = 0.05$  
 
-#### 2. 计算检验统计量
+#### 2. Calculate Test Statistic
 
-$n_1 = 20$, $n_2 = 19$, $\\bar{x_1} = 270.7$, $\\bar{x_2} = 235.9$，按Cochran & Cox近似t检验统计量计算公式得：  
+$n_1 = 20$, $n_2 = 19$, $\\bar{x_1} = 270.7$, $\\bar{x_2} = 235.9$, calculated according to the Cochran & Cox approximate t-test statistic formula:  
 
-$t' = 9.352$  ，$t_{0.025(18)} = 2.101$, $t_{0.025(19)} = 2.093$  
+$t' = 9.352$  , $t_{0.025(18)} = 2.101$, $t_{0.025(19)} = 2.093$  
 
-根据Welch法自由度校正公式计算可得：
+According to the Welch method degrees of freedom correction formula:
 
 $v'' = \\frac{(8.47 + 8.46)^2}{\\frac{8.47^2}{21} + \\frac{8.46^2}{20}} - 2 = 36.97$  
 
-#### 3. 确定P值，作出推断结论
+#### 3. Determine P Value and Make Inference Conclusion
 
-以$df = 37$查t界值表得$t_{0.025(37)} = 2.026$，即$|t'| = 9.352 > 2.026$，得$P < 0.05$。按$\\alpha = 0.05$水准，拒绝$H_0$，接受$H_1$，差异具有统计学意义。可以认为病毒性肝炎患者和正常人生化指标(X)含量存在差异。结论与Cochran & Cox近似t检验和Satterthwaite近似t检验一致。
+With $df = 37$, consulting the t critical value table gives $t_{0.025(37)} = 2.026$, i.e., $|t'| = 9.352 > 2.026$, thus $P < 0.05$. At $\\alpha = 0.05$ significance level, reject $H_0$ and accept $H_1$, the difference is statistically significant. It can be concluded that there is a difference in biochemical indicator (X) content between viral hepatitis patients and normal people. The conclusion is consistent with both the Cochran & Cox approximate t-test and Satterthwaite approximate t-test.
 
-## 五、分析小技巧
+## V. Analysis Tips
 
-- 在进行独立样本*t*检验时，正态性检验应分组进行，而不是对全部数据进行一次正态性检验。
-- *t*检验对数据的非正态性有一定的耐受能力，如果资料只是稍微偏态，结果仍然稳健。
-- 独立样本*t*检验时对两组数据之间的方差齐性要求较为严格，与数据违反正态性相比，方差不齐对结论的影响较大。
-- 如果数据对条件1至条件5都满足，仅不满足方差齐，此时可使用校正t检验(Welch's *t*检验)。但如果数据的方差相差太大，最好使用非参数检验(Mann-Whitney U检验)。如果数据正态性和方差齐性都不满足，最好使用非参数检验(Mann-Whitney U检验)。
-- 如果两组数据之间方差的差异无统计学意义，此时student's *t*检验比Welch's *t*检验具有更高的统计学检验效能(发生第II类错误的概率更低)，如果两组数据方差差异较大，此时Welch's *t*检验发生第II类错误的概率更低，结果更为可信。
-- 与数据违反正态性相比，方差不齐对结论的影响较大，所以主要依靠假设检验进行考察。然而"方差齐性检验(Levene's)"的结果易受到样本量的影响，并不是很稳定。当样本量较大时，倾向于得出*P*值低于检验水准的结论，尽管可能组别之间的方差差异并不大；反之，当样本量较小时，尽管组别之间的方差差异可能较大，但倾向于得出*P*值高于检验水准的结论。因此，以统计描述的形式报告各组数据的具体标准差和方差，并将其纳入综合考量是必要的。
+- When conducting independent samples *t*-tests, normality tests should be performed by group, rather than conducting one normality test on all data.
+- The *t*-test has some tolerance for non-normality of data. If the data is only slightly skewed, the results remain robust.
+- Independent samples *t*-tests have relatively strict requirements for homogeneity of variance between two groups of data. Compared to data violating normality, variance heterogeneity has a greater impact on conclusions.
+- If data satisfies conditions 1 to 5 but only fails to meet variance homogeneity, corrected t-tests (Welch's *t*-test) can be used. However, if the variance difference between data is too large, it's better to use non-parametric tests (Mann-Whitney U test). If data fails both normality and variance homogeneity, it's better to use non-parametric tests (Mann-Whitney U test).
+- If there is no statistically significant difference in variance between two groups of data, Student's *t*-test has higher statistical test efficiency (lower probability of Type II error) than Welch's *t*-test. If there is a large variance difference between two groups of data, Welch's *t*-test has a lower probability of Type II error and more reliable results.
+- Compared to data violating normality, variance heterogeneity has a greater impact on conclusions, so it mainly relies on hypothesis testing for examination. However, the results of "homogeneity of variance test (Levene's)" are easily affected by sample size and are not very stable. When the sample size is large, it tends to conclude that the *P* value is below the test criterion, although the variance difference between groups may not be large; conversely, when the sample size is small, although the variance difference between groups may be large, it tends to conclude that the *P* value is above the test criterion. Therefore, it is necessary to report the specific standard deviations and variances of each group data in the form of statistical description and include them in comprehensive consideration.
 
-**转自：** https://mengte.online/archives/327
+**Source:** https://mengte.online/archives/327
 
-SPSS实操案例：https://mengte.online/archives/2171`
+SPSS practical case: https://mengte.online/archives/2171`
   },
   
-  // 配对样本t检验
-  '配对样本t检验': {
-    keywords: ['配对样本t检验', 'paired samples t-test', 'paired t-test', '配对t检验'],
-    content: `# 配对样本t检验(Paired Samples t-test)
+  // Paired samples t-test
+  'Paired samples t-test': {
+    keywords: ['Paired samples t-test', 'paired samples t-test', 'paired t-test', 'matched t-test'],
+    content: `# Paired Samples t-test
 
-配对样本t检验简称配(成)对t检验(paired/matched t-test)，也称关联样本t检验(related-sample t-test)，适用于配对设计或自身对照设计的计量资料的比较。配对设计是将受试对象按照某些重要特征(如性别、年龄等可疑混杂因素)配成对子，再将每对中的两个受试对象随机分配到两处理组。在医学科研中，配对设计主要有以下情形：①同一组研究对象身体不同部位配对，如癌组织与癌旁组织某种基因的表达、左手和右手的血压比较。②条件配对，如在同一窝老鼠中选择性别和体重相同的2只作为一个对子，组成多个对子；再将每个对子中的2只老鼠随机分配到2个处理组中去，然后比较两种处理方法的效果。③同一批标本不同检测方法配对，如同一批血液，被分成2份，分别用两种方法检测某种生化指标的含量。④还有一类特殊的研究设计，同一组研究对象干预前后配对，如同一组病人使用降血糖药物前后空腹血糖值的比较。对于这类设计，尽管可使用配对样本t检验进行数据分析，但严格来说并不属于配对设计，而是属于干预前后的重复测量设计。
+The paired samples t-test, abbreviated as paired/matched t-test, is also called related-sample t-test. It is suitable for comparing quantitative data from paired designs or self-controlled designs. Paired design involves pairing subjects according to some important characteristics (such as gender, age, and other suspected confounding factors), then randomly assigning the two subjects in each pair to two treatment groups. In medical research, paired designs mainly include the following situations: ① Pairing different body parts of the same group of subjects, such as the expression of a gene in cancer tissue and adjacent normal tissue, or blood pressure comparison between left and right hands. ② Conditional pairing, such as selecting 2 mice with the same gender and weight from the same litter as a pair, forming multiple pairs; then randomly assigning the 2 mice in each pair to 2 treatment groups, and then comparing the effects of two treatment methods. ③ Pairing the same batch of specimens with different detection methods, such as dividing the same batch of blood into 2 parts and using two methods to detect the content of a biochemical indicator. ④ There is also a special research design where the same group of subjects is paired before and after intervention, such as comparing fasting blood glucose values before and after using hypoglycemic drugs in the same group of patients. For this type of design, although paired samples t-test can be used for data analysis, strictly speaking, it does not belong to paired design but rather to repeated measurement design before and after intervention.
 
-## 一、适用条件
+## I. Applicable Conditions
 
-配对样本t检验需要满足五个条件：  
+Paired samples t-test must satisfy five conditions:
 
-**条件1**：观察变量为连续变量。  
+**Condition 1**: The observed variable is a continuous variable.
 
-**条件2**：观察变量为配对设计。  
+**Condition 2**: The observed variable is from a paired design.
 
-**条件3**：观察变量可分为2组。  
+**Condition 3**: The observed variables can be divided into 2 groups.
 
-**条件4**：观察变量不存在显著的异常值。  
+**Condition 4**: The observed variables have no significant outliers.
 
-**条件5**：两个配对组别间观察变量的差值服从正态(或近似正态)分布。  
+**Condition 5**: The differences between the observed variables in the two paired groups follow a normal (or approximately normal) distribution.  
 
-## 二、统计量计算
+## II. Statistical Calculation
 
-在将配对数据表差值后，配对t检验的实质与单样本t检验相同。以上述第②种情形条件配对为例，两同质受试对象配对分别接受两种不同处理。若两处理效应相同，即$\\mu_d = 0$(当已知总体均数$\\mu_0 = 0$))。即配对数据的差值应由图6上下波动，不会高于0太远，因此可将此类资料看成是差值的样本均数$\\bar{d}$所代表的未知总体均数$\\mu_0$与已知总体均数$\\mu_0 = 0$的比较，其检验统计量可按如下公式计算：
+After calculating the differences in paired data, the essence of the paired t-test is the same as the one-sample t-test. Taking the above-mentioned ② conditional pairing as an example, two homogeneous subjects are paired to receive two different treatments respectively. If the two treatment effects are the same, i.e., $\\mu_d = 0$ (when the known population mean $\\mu_0 = 0$). That is, the differences in paired data should fluctuate around 0 and not be too far above 0. Therefore, this type of data can be regarded as a comparison between the unknown population mean $\\mu_0$ represented by the sample mean of differences $\\bar{d}$ and the known population mean $\\mu_0 = 0$. Its test statistic can be calculated according to the following formula:
 
 $$t = \\frac{\\bar{d} - \\mu_0}{s_d/\\sqrt{n}}$$
 
-与单样本t检验统计量计算公式(单样本t检验-理论介绍)不同的是，$\\bar{d}$为每对数据的差值，$\\bar{d}$为差值的样本均数，$s_d$为差值的标准差，$s_d$为差值样本均数的标准误，$n$为对子数。
+Different from the one-sample t-test statistic calculation formula (One-sample t-test - theoretical introduction), $\\bar{d}$ is the difference of each pair of data, $\\bar{d}$ is the sample mean of differences, $s_d$ is the standard deviation of differences, $s_d$ is the standard error of the sample mean of differences, and $n$ is the number of pairs.
 
 | ID   | Before | After  | 差值 $\\bar{d}$ |
 | ---- | ------ | ------ | --------------- |
@@ -353,71 +353,71 @@ $$t = \\frac{\\bar{d} - \\mu_0}{s_d/\\sqrt{n}}$$
 | 16   | 0.313  | 0.2945 | 0.0185          |
 | 17   | 0.333  | 0.299  | 0.034           |
 
-## 三、假设检验
+## III. Hypothesis Testing
 
-### （一）建立检验假设，确定检验水准
+### (I) Establish Test Hypothesis and Determine Significance Level
 
-$H_0: \\mu_d = 0$，即两种方法对肌肉组织中生化指标(X)含量的检测结果无影响；
+$H_0: \\mu_d = 0$, i.e., the two methods have no effect on the detection results of biochemical indicator (X) content in muscle tissue;
 
-$H_1: \\mu_d \\neq 0$，即两种方法对肌肉组织中生化指标(X)含量的检测结果有影响。
+$H_1: \\mu_d \\neq 0$, i.e., the two methods have an effect on the detection results of biochemical indicator (X) content in muscle tissue.
 
 $\\alpha = 0.05$
 
-### （二）计算检验统计量
+### (II) Calculate Test Statistic
 
-本例 $n = 17$
+In this example, $n = 17$
 
 $\\bar{d} = 0.0386$, $s_d = 0.0213$
 
-根据上面公式得：
+According to the above formula:
 
 $$t = \\frac{0.0386 - 0}{0.0213/\\sqrt{17}} = 7.468$$
 
-## （三）确定P值，作出推断结论
+## (III) Determine P Value and Make Inference Conclusion
 
-以 $df = 16$ 查(界值表)得 $t_{0.025(16)} = 2.120$，得$P < 0.05$。按$\\alpha = 0.05$水准，拒绝$H_0$，接受$H_1$，差异有统计学意义。可以认为两种方法对肌肉组织中生化指标(X)含量的检测结果有影响。
+With $df = 16$, consulting the (critical value table) gives $t_{0.025(16)} = 2.120$, thus $P < 0.05$. At $\\alpha = 0.05$ significance level, reject $H_0$ and accept $H_1$, the difference is statistically significant. It can be concluded that the two methods have an effect on the detection results of biochemical indicator (X) content in muscle tissue.
 
-**转自：** https://mengte.online/archives/331
+**Source:** https://mengte.online/archives/331
 
-SPSS实操案例：https://mengte.online/archives/2205`
+SPSS practical case: https://mengte.online/archives/2205`
   },
   
-  // 单因素方差分析
-  '单因素方差分析': {
-    keywords: ['单因素方差分析', 'one-way anova', 'one way anova', '单因素anova', 'anova'],
-    content: `# 单因素方差分析(One-way ANOVA)
+  // One-way ANOVA
+  'One-way ANOVA': {
+    keywords: ['One-way ANOVA', 'one-way anova', 'one way anova', 'single factor anova', 'anova', '单因素方差分析', '单因素anova'],
+    content: `# One-way ANOVA
 
-单因素方差分析(One-way ANOVA)，又称完全随机设计的方差分析，是指采用完全随机化的分组方法，是将受试对象随机地分配到各个处理组，再比较各组均数之间的差别有无统计学意义，推论处理因素的效应。本篇文章举例介绍单因素方差分析的适用条件及假设检验。
+One-way Analysis of Variance (One-way ANOVA), also known as completely randomized design ANOVA, refers to a method that uses completely randomized grouping to randomly assign subjects to different treatment groups, then compares whether the differences between group means are statistically significant, thereby inferring the effects of treatment factors. This article introduces the applicable conditions and hypothesis testing of one-way ANOVA with examples.
 
-## 一、适用条件
+## I. Applicable Conditions
 
-单因素方差分析，需要满足6个条件：
+One-way ANOVA must satisfy 6 conditions:
 
-**条件1**: 观察变量为连续变量。
+**Condition 1**: The observed variable is a continuous variable.
 
-**条件2**: 观测值相互独立。
+**Condition 2**: The observations are independent of each other.
 
-**条件3**: 观测值可分为多组(≥2)。
+**Condition 3**: The observations can be divided into multiple groups (≥2).
 
-**条件4**: 观察变量不存在显著的异常值。
+**Condition 4**: The observed variables have no significant outliers.
 
-**条件5**: 各组观测值为正态(或近似正态)分布。
+**Condition 5**: The observations in each group follow a normal (or approximately normal) distribution.
 
-**条件6**: 多组观测值的整体方差相等。
+**Condition 6**: The overall variances of multiple groups of observations are equal.
 
-## 二、统计量计算
+## II. Statistical Calculation
 
-### （一）单因素方差分析
+### (I) One-way ANOVA
 
-当多组观察变量的整体方差相等时，即满足方差齐性时，可采用F检验进行单因素方差分析。当多组观察变量的整体方差不相等时，即不满足方差齐性时，可通过变量变换达到方差齐性要求，或者采用校正的单因素方差分析法(Welch检验)进行比较。
+When the overall variances of multiple groups of observed variables are equal, i.e., when homogeneity of variance is satisfied, F-test can be used for one-way ANOVA. When the overall variances of multiple groups of observed variables are not equal, i.e., when homogeneity of variance is not satisfied, variable transformation can be performed to meet the homogeneity of variance requirement, or corrected one-way ANOVA (Welch test) can be used for comparison.
 
-#### 1. F检验
+#### 1. F-test
 
-单因素方差分析的总变异可拆分为组间变异和组内变异两部分：
+The total variation in one-way ANOVA can be decomposed into between-group variation and within-group variation:
 
-$$SS_{总} = SS_{组间} + SS_{组内}$$
+$$SS_{total} = SS_{between} + SS_{within}$$
 
-方差分析计算公式见表1，表中校正数 $C = \\frac{T^2}{N}$，$N$ 为样本量，$k$ 为处理组数。
+The ANOVA calculation formula is shown in Table 1, where the correction factor $C = \\frac{T^2}{N}$, $N$ is the sample size, and $k$ is the number of treatment groups.
 
 | 变异来源     | 平方和 $SS$ | 自由度 $df$ | 均方 $MS$ | $F$ |
 | ------------ | ----------- | ----------- | --------- | --- |
@@ -425,57 +425,57 @@ $$SS_{总} = SS_{组间} + SS_{组内}$$
 | **组间变异** | $SS_{组间} = \\sum \\frac{T_i^2}{n_i} - C$ | $k-1$ | $MS_{组间} = \\frac{SS_{组间}}{k-1}$ | $F = \\frac{MS_{组间}}{MS_{组内}}$ |
 | **组内变异** | $SS_{组内} = SS_{总} - SS_{组间}$ | $N-k$ | $MS_{组内} = \\frac{SS_{组内}}{N-k}$ |  |
 
-**表1 单因素方差分析表**
+**Table 1 One-way ANOVA Table**
 
-#### **2. Welch检验**
+#### **2. Welch Test**
 
-Welch检验是指采用Welch分布的统计量检验各组均值是否相等。Welch分布近似于F分布，采用Welch检验对方差齐性没有要求，所以当数据的分布不满足方差齐性的要求时，采用Welch检验比F检验更稳妥。其计算公式如下：
+The Welch test refers to using the statistics of the Welch distribution to test whether the means of each group are equal. The Welch distribution is approximately an F distribution. The Welch test has no requirement for homogeneity of variance, so when the data distribution does not meet the requirement of homogeneity of variance, the Welch test is more reliable than the F test. Its calculation formula is as follows:
 
 $$F_w = \\frac{\\sum_{i=1}^{k} w_i(\\bar{x_i} - \\bar{x_w})^2}{k-1}$$
 
-其中，$w_i = \\frac{n_i}{s_i^2}$，$\\bar{x_w} = \\frac{\\sum_{i=1}^{k} w_i \\bar{x_i}}{\\sum_{i=1}^{k} w_i}$，$n_i$为各组样本量，$k$为处理组数。
+Where $w_i = \\frac{n_i}{s_i^2}$, $\\bar{x_w} = \\frac{\\sum_{i=1}^{k} w_i \\bar{x_i}}{\\sum_{i=1}^{k} w_i}$, $n_i$ is the sample size of each group, and $k$ is the number of treatment groups.
 
 $$\\lambda = 1 + \\frac{2(k-2)}{k^2-1} \\sum_{i=1}^{k} \\frac{1}{n_i-1}(1 - \\frac{w_i}{\\sum_{j=1}^{k} w_j})^2$$
 
-自由度：
+Degrees of freedom:
 
 $$df_2 = \\frac{k^2 - 1}{3\\lambda}$$
 
-### **（二）多个样本均数的两两比较**
+### **(II) Pairwise Comparisons of Multiple Sample Means**
 
-单因素方差分析整体比较，推断结论为拒绝$H_0$。接受$H_1$时，只能认为各总体均数之间整体比较有差异，但尚不能说明任意两个总体均数之间都有差别。若要进一步推断具体哪两个总体均数有差别，需要进一步事后检验(两两比较)。多个样本均数比较的事后检验可分为两种情况，一是各组间均要相互比较，以了解任何两组间是否有差别；二是仅考虑某指定组与其它各组比较，例如有一组为对照组，意欲了解其它各组均数与该对照组是否有差别。多重比较的方法很多，这里介绍三种方法，即适用于多组间两两比较的SNK法(q检验)，适用于某指定组与其它各组比较的Dunnett-t法(q检验)，以及适用于方差不齐的多组间两两比较的Games-Howell法。
+In one-way ANOVA overall comparison, when the inference conclusion is to reject $H_0$ and accept $H_1$, we can only consider that there are differences in the overall comparison between population means, but it cannot explain that there are differences between any two population means. To further infer which specific two population means are different, further post-hoc testing (pairwise comparison) is needed. Post-hoc testing for multiple sample mean comparisons can be divided into two situations: first, all groups need to be compared with each other to understand whether there are differences between any two groups; second, only consider comparing a specific group with other groups, for example, when there is a control group, we want to know whether the means of other groups are different from the control group. There are many methods for multiple comparisons. Here we introduce three methods: the SNK method (q test) suitable for pairwise comparisons between multiple groups, the Dunnett-t method (q test) suitable for comparing a specific group with other groups, and the Games-Howell method suitable for pairwise comparisons between multiple groups with unequal variances.
 
-#### **1. SNK法**
+#### **1. SNK Method**
 
-SNK法(Student-Newman-Keuls)用于比较每两个样本均数所代表的总体均数是否不同，其检验统计量为q，又称q检验。
+The SNK method (Student-Newman-Keuls) is used to compare whether the population means represented by every two sample means are different. Its test statistic is q, also called the q test.
 
 $$q = \\frac{|\\bar{x_i} - \\bar{x_j}|}{\\sqrt{\\frac{MS_e}{2}(\\frac{1}{n_i} + \\frac{1}{n_j})}}$$
 
-式中 $\\bar{x_i}$、$\\bar{x_j}$为两对比组的样本均数，$MS_e$为方差分析中算得的误差均方(或称组内均方)，$n_i$和$n_j$分别对两对比组样本例数。
+Where $\\bar{x_i}$ and $\\bar{x_j}$ are the sample means of the two comparison groups, $MS_e$ is the error mean square (or within-group mean square) calculated in ANOVA, and $n_i$ and $n_j$ are the sample sizes of the two comparison groups respectively.
 
-#### **2. Dunnett-t法**
+#### **2. Dunnett-t Method**
 
-Dunnett-t法适用于多个实验组与一个对照组间的两两比较，其检验统计量为q'，又称q'检验。
+The Dunnett-t method is suitable for pairwise comparisons between multiple experimental groups and one control group. Its test statistic is q', also called the q' test.
 
 $$q' = \\frac{|\\bar{x_i} - \\bar{x_0}|}{\\sqrt{MS_e(\\frac{1}{n_i} + \\frac{1}{n_0})}}$$
 
-上式中 $\\bar{x_i}$ 与 $n_i$ 为实验组均数和样本例数，$\\bar{x_0}$ 与 $n_0$ 为对照组均数和样本例数。算得q'值后需查(q'界值表c)，(q'界值表c')中的u仍为方差分析中误差项的自由度，a仍为两对比组包含的组数。
+In the above formula, $\\bar{x_i}$ and $n_i$ are the experimental group mean and sample size, and $\\bar{x_0}$ and $n_0$ are the control group mean and sample size. After calculating the q' value, it is necessary to consult the (q' critical value table c). In the (q' critical value table c'), u is still the degrees of freedom of the error term in ANOVA, and a is still the number of groups included in the two comparison groups.
 
-#### **3. Games-Howell法**
+#### **3. Games-Howell Method**
 
-Games-Howell法适用于方差不齐的多组间的两两比较。这种方法背后的理念是关注两组平均值之间差异的最大值。其统计量计算为：
+The Games-Howell method is suitable for pairwise comparisons between multiple groups with unequal variances. The concept behind this method is to focus on the maximum difference between the means of two groups. Its statistic is calculated as:
 
 $$q = \\frac{|\\bar{x_i} - \\bar{x_j}|}{\\sqrt{\\frac{s_i^2}{n_i} + \\frac{s_j^2}{n_j}}}$$
 
-$n$为每组样本量。统计量q的分布称为studentized range q分布。该分布的临界值在基于a、k(组数和df_w值的(studentized range q表c')中给出。如果$q > q_{临界}$，则两组均值有统计学差异。
+$n$ is the sample size of each group. The distribution of statistic q is called the studentized range q distribution. The critical values of this distribution are given in the (studentized range q table c') based on a, k (number of groups) and df_w values. If $q > q_{critical}$, then there is a statistical difference between the two group means.
 
-此检验相当于
+This test is equivalent to
 
 $$t = \\frac{|\\bar{x_i} - \\bar{x_j}|}{\\sqrt{\\frac{s_i^2}{n_i} + \\frac{s_j^2}{n_j}}} > t_{\\alpha/2,df}$$
 
-## 三、案例数据
+## III. Case Data
 
-某医生用A、B、C三种方案治疗血红蛋白低下的贫血患者，治疗两个月后，记录每名受试者血红蛋白的上升克数。问3种治疗方案对患者贫血的疗效是否有差别？具体数据见表2。
+A doctor used three treatment plans A, B, and C to treat anemic patients with low hemoglobin. After two months of treatment, the increase in hemoglobin (in grams) for each subject was recorded. The question is whether the three treatment plans have different effects on patient anemia? The specific data are shown in Table 2.
 
 | ID    | 1    | 2    | 3    | 4    | 5    | 6    | 7    | 8    | 9    | 10   | 11   | 12   | 13   | 14   | 15   |
 | ----- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
@@ -610,50 +610,50 @@ $q = 2.77 < 3.418$。
 
 根据表3中的统计量，A组和C组相比时，$q = 4.68 > 3.436$，可得$P < 0.05$。按$\\alpha = 0.05$水准，拒绝$H_0$，接受 $H_1$，差异具有统计学意义，说明A组和C组治疗方案受试者血红蛋白的上升克数不相等。而其余两组$q < q_{临界}$，可得 $P > 0.05$。按 $\\alpha = 0.05$水准，不拒绝$H_0$，差异不具有统计学意义。
 
-**转自：** https://mengte.online/archives/920
+**Source:** https://mengte.online/archives/920
 
-SPSS实操案例：https://mengte.online/archives/2066`
+SPSS practical case: https://mengte.online/archives/2066`
   },
   
-  // Wilcoxon符号秩检验
-  'wilcoxon符号秩检验': {
-    keywords: ['wilcoxon符号秩检验', 'wilcoxon signed rank test', '单样本wilcoxon', 'wilcoxon检验', '符号秩检验', '非参数检验'],
-    content: `# 单样本Wilcoxon符号秩检验(One Sample Wilcoxon Signed Rank Test)
+  // Wilcoxon Signed Rank Test
+  'Wilcoxon Signed Rank Test': {
+    keywords: ['Wilcoxon Signed Rank Test', 'wilcoxon signed rank test', 'one sample wilcoxon', 'wilcoxon test', 'signed rank test', 'non-parametric test', 'wilcoxon符号秩检验', '单样本wilcoxon', 'wilcoxon检验', '符号秩检验', '非参数检验'],
+    content: `# One Sample Wilcoxon Signed Rank Test
 
-非参数检验(nonparametric test)是相对于参数检(parametric test)而言。秩转换的非参数检验是先将数值变量资料从小到大、等级资料从弱到强转换成秩后，再计算检验统计量，其特点是假设检验的结果对总体分布的形状差别不敏感，只对总体分布的位置差别敏感。
+Non-parametric tests are relative to parametric tests. Rank transformation non-parametric tests first convert numerical variable data from small to large and ordinal data from weak to strong into ranks, then calculate test statistics. Their characteristic is that the results of hypothesis testing are not sensitive to differences in the shape of population distributions, but only sensitive to differences in the location of population distributions.
 
-### 简介：
+### Introduction:
 
-对于以下情形，常使用秩转换的非参数检验：①对于计量资料，若不满足正态和方差齐性条件，这时小样本资料选t检验或F检验是不妥的，而选秩转换的非参数检验是恰当的；②对于分布不知是否正态的小样本资料，为保险起见，宜选秩转换的非参数检验；③对于一端或两端是不确定数值(如<20岁、≥65岁等)的资料，不管是否正态分布，只能选秩转换的非参数检验；④对于等级资料，若选择行×列(R×C)列联表资料的检验，只能推断构成比差别，而选择秩转换的非参数检验，可推断等级强度差别。
+Rank transformation non-parametric tests are commonly used in the following situations: ① For quantitative data that does not meet the conditions of normality and homogeneity of variance, it is inappropriate to choose t-test or F-test for small sample data, while choosing rank transformation non-parametric test is appropriate; ② For small sample data where the distribution is unknown to be normal, it is advisable to choose rank transformation non-parametric test for safety; ③ For data with uncertain values at one or both ends (such as <20 years old, ≥65 years old, etc.), regardless of whether the distribution is normal, only rank transformation non-parametric test can be chosen; ④ For ordinal data, if row×column (R×C) contingency table data test is chosen, only differences in composition ratios can be inferred, while choosing rank transformation non-parametric test can infer differences in ordinal intensity.
 
-需要注意的是，如果已知计量资料满足(或近似满足)t检验或F检验条件，应选t检验或F检验；若选秩转换的非参数检验，会降低检验效能。
+It should be noted that if it is known that quantitative data satisfies (or approximately satisfies) t-test or F-test conditions, t-test or F-test should be chosen; if rank transformation non-parametric test is chosen, it will reduce test efficiency.
 
-秩转换的非参数检验主要包括单个样本中位数和总体中位数比较的单样本Wilcoxon符号秩检验(One Sample Wilcoxon Signed Rank Test)、两个独立样本比较的Wilcoxon秩和检验 (Wilcoxon Rank Sum Test)、配对样本差值的中位数和0比较的配对样本Wilcoxon符号秩检验(Paired Samples Wilcoxon Signed Rank Test)、完全随机设计多个独立样本比较的Kruskal-Wallis H检验(Kruskal-Wallis H Test)、随机区组设计多个相关样本比较的Friedman M检验(The Friedman Non-parametric Repeated Measures ANOVA Test)。本篇文章将举例介绍单样本Wilcoxon符号秩检验的假设检验理论。
+Rank transformation non-parametric tests mainly include: One Sample Wilcoxon Signed Rank Test for comparing individual sample median with population median, Wilcoxon Rank Sum Test for comparing two independent samples, Paired Samples Wilcoxon Signed Rank Test for comparing the median of paired sample differences with 0, Kruskal-Wallis H Test for comparing multiple independent samples in completely randomized design, and Friedman M Test (The Friedman Non-parametric Repeated Measures ANOVA Test) for comparing multiple related samples in randomized block design. This article will introduce the hypothesis testing theory of the one-sample Wilcoxon signed rank test with examples.
 
-## 一、适用条件
+## I. Applicable Conditions
 
-单样本Wilcoxon符号秩检验的目的是推断样本所来自的总体中位数$M$和某个已知的总体中位数$M_0$是否有差别。用样本各变量值和$M_0$的差值，即推断差值的总体中位数和$0$是否有差别。其适用条件为：观察变量为不满足正态分布的连续变量。
+The purpose of the one-sample Wilcoxon signed rank test is to infer whether there is a difference between the population median $M$ from which the sample comes and a known population median $M_0$. Using the differences between each variable value in the sample and $M_0$, i.e., inferring whether there is a difference between the population median of differences and $0$. Its applicable condition is: the observed variable is a continuous variable that does not satisfy normal distribution.
 
-## 二、统计量计算
+## II. Statistical Calculation
 
-### （一）T值法
+### (I) T Value Method
 
-T值法是指对数据编号计算后，通过T值表确定P值，做出统计推断。
+The T value method refers to calculating data numbering, then determining P values through T value tables to make statistical inferences.
 
-#### 1. 检验统计量T值的计算
+#### 1. Calculation of Test Statistic T Value
 
-1. 每个样本数据都与已知总体中位数$M_0$配成对子，并计算差值；  
-2. 省略所有差值为$0$的对子数，令余下的有效对子数为$n$；  
-3. 按$n$个差值的绝对值从小到大编正秩和负秩，递增值的绝对值相等者取平均秩，称为相同秩（ties）（样本较小时，如果相同秩较多，检验结果会存在偏性，因此应提高测量精度，尽量避免出现较多相同秩）；  
-4. 任意取正秩和（$T^+$）或负秩和（$T^-$）为$T$。
+1. Each sample data is paired with the known population median $M_0$, and the difference is calculated;  
+2. Omit all pairs with a difference of $0$, and let the remaining effective pairs be $n$;  
+3. Rank the absolute values of $n$ differences from small to large into positive and negative ranks. Those with equal absolute values of incremental values take average ranks, called tied ranks (when the sample is small, if there are many tied ranks, the test results will be biased, so measurement accuracy should be improved to avoid too many tied ranks);  
+4. Arbitrarily take the positive rank sum ($T^+$) or negative rank sum ($T^-$) as $T$.
 
-#### 2. 确定P值，做出统计推断
+#### 2. Determine P Value and Make Statistical Inference
 
-当$n \\leq 25$时，查（T值界值表）。查表时，自左侧找到$n$，将检验统计量$T$值与相邻左侧一栏的界值相比：  
+When $n \\leq 25$, consult the (T value critical value table). When consulting the table, find $n$ from the left side, and compare the test statistic $T$ value with the critical value in the adjacent left column:  
 
-- 若$T$在上、下界值范围内，其$P$值大于表上方相应概率水平；  
-- 若$T$值恰好等于界值，其$P$值等于（一般是近似等于）相应概率水平；  
-- 若$T$值在上、下界值范围外，其$P$值小于相应概率水平，可向右移一栏，再与界值相比。
+- If $T$ is within the upper and lower critical value range, its $P$ value is greater than the corresponding probability level above the table;  
+- If the $T$ value is exactly equal to the critical value, its $P$ value is equal to (generally approximately equal to) the corresponding probability level;  
+- If the $T$ value is outside the upper and lower critical value range, its $P$ value is less than the corresponding probability level, and you can move one column to the right and compare with the critical value again.
 
 #### 3. T界值表制作的原理
 
@@ -729,13 +729,13 @@ $$\\frac{n(n+1)}{2} = \\frac{12 \\times 13}{2} = 78$$
 
 本例有效差值个数$n = 12$。据$n = 12$和$T^+ = 76$或$T^- = 2$查（$T$界值表 ），得单侧$P = 0.005 < 0.05$，按$\\alpha = 0.05$水准，拒绝$H_0$，接受$H_1$，可认为该厂工人的尿氟含量高于当地正常人的尿氟含量。
 
-**转自：** https://mengte.online/archives/333
+**Source:** https://mengte.online/archives/333
 
-SPSS实操案例：https://mengte.online/archives/2245`
+SPSS practical case: https://mengte.online/archives/2245`
   }
 };
 
-// 方法匹配函数
+// Method matching function
 const findStatisticalMethod = (queryMethod) => {
   if (!queryMethod || typeof queryMethod !== 'string') {
     return null;
@@ -743,9 +743,9 @@ const findStatisticalMethod = (queryMethod) => {
   
   const query = queryMethod.toLowerCase().trim();
   
-  // 遍历所有预存的方法
+  // Traverse all pre-stored methods
   for (const [methodName, methodData] of Object.entries(STATISTICAL_METHODS)) {
-    // 检查是否匹配任何关键词
+    // Check if any keyword matches
     const isMatch = methodData.keywords.some(keyword => {
       const keywordLower = keyword.toLowerCase();
       return query.includes(keywordLower) || keywordLower.includes(query);
