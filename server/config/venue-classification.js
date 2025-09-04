@@ -488,7 +488,7 @@ const getAllConferenceNames = () => {
 };
 
 // 导出所有数据和函数
-module.exports = {
+export default {
   // 原始分类数据
   A_CLASS_JOURNALS,
   B_CLASS_JOURNALS,
