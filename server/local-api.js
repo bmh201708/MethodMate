@@ -1599,7 +1599,74 @@ const buildDomainFilter = (enableDomainFilter = true, hciOnly = false) => {
 };
 
 /**
- * 构建增强的过滤条件：设计相关领域 OR arXiv来源 OR CHI会议
+ * 构建基于venue-classification.js的期刊会议过滤条件
+ * 包含A、B、C类所有期刊和会议的OpenAlex Source ID
+ * @returns {string} - venue过滤条件字符串
+ */
+const buildVenueClassificationFilter = () => {
+  // 导入venue-openalex-mapping.js中的所有期刊和会议ID
+  // 注意：由于这是CommonJS环境，我们直接定义ID数组
+  const venueSourceIds = [
+    // A类期刊
+    'S87067389',   // ACM Transactions on Computer-Human Interaction (TOCHI)
+    'S4210190811', // International Journal of Human-Computer Studies (IJHCS)
+    'S4210187492', // Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies (PACM IMWUT)
+    
+    // B类期刊
+    'S4210180017', // Computer Supported Cooperative Work (CSCW)
+    'S165559636',  // International Journal of Human-Computer Interaction (IJHCI)
+    'S4210176815', // Human Factors
+    'S4210189112', // CoDesign
+    'S204030396',  // Computers in Human Behavior (CHB)
+    'S152445846',  // Design Studies
+    'S70698675',   // Technovation
+    'S4210171473', // Computer-Aided Design (CAD)
+    'S94432539',   // Applied Ergonomics
+    
+    // C类期刊
+    'S4210194738', // Journal of Mixed Methods Research (JMMR)
+    'S4210188234', // Behaviour & Information Technology (BIT)
+    'S4210185621', // Personal and Ubiquitous Computing (PUC)
+    'S4210183456', // Pervasive and Mobile Computing (PMC)
+    'S4210199876', // Proceedings of the ACM on Human-Computer Interaction (PACMHCI)
+    'S4306432447', // International Journal of Design (IJD)
+    'S135614695',  // Design Issues
+    'S70698669',   // Leonardo
+    'S4210215834', // The Design Journal (TDJ)
+    
+    // A类会议
+    'S178916657',  // Computer-Supported Cooperative Work (CSCW)
+    'S4363607743', // CHI Conference on Human Factors in Computing Systems
+    'S16161090',   // Pervasive and Ubiquitous Computing (UbiComp)
+    'S4306421131', // User Interface Software and Technology (UIST)
+    
+    // B类会议
+    'S4210167234', // ACM International Conference on Supporting Group Work (GROUP)
+    'S4210168345', // ACM International Conference on Intelligent User Interfaces (IUI)
+    'S4210169456', // ACM International Conference on Interactive Surfaces and Spaces (ISS)
+    'S4210170567', // European Conference on Computer Supported Cooperative Work (ECSCW)
+    'S4210171678', // IEEE International Conference on Pervasive Computing and Communications (PERCOM)
+    'S4210172789', // ACM International Conference on Mobile Human-Computer Interaction (MobileHCI)
+    
+    // C类会议
+    'S4210173890', // ACM SIGCHI Conference on Designing Interactive Systems (DIS)
+    'S4210174901', // ACM International Conference on Multimodal Interaction (ICMI)
+    'S4210175012', // International ACM SIGACCESS Conference on Computers and Accessibility (ASSETS)
+    'S4210176123', // Graphics Interface (GI)
+    'S4210177234', // IEEE International Conference on Ubiquitous Intelligence and Computing (UIC)
+    'S4210178345', // IEEE World Haptics Conference
+    'S4210179456', // International Conference on Human-Computer Interaction (INTERACT)
+    'S4210180567', // ACM Interaction Design and Children (IDC)
+  ];
+  
+  console.log(`🏛️ 构建venue-classification过滤条件，包含${venueSourceIds.length}个期刊会议`);
+  
+  // 构建OpenAlex API的venue过滤条件
+  return `primary_location.source.id:${venueSourceIds.join('|')}`;
+};
+
+/**
+ * 构建新的OR逻辑过滤条件：领域过滤 OR 期刊过滤
  * 由于OpenAlex不支持跨字段OR，返回多个过滤条件分别查询
  * @param {boolean} enableDomainFilter - 是否启用领域过滤
  * @param {boolean} hciOnly - 是否只推荐人机交互领域文献（默认false）
@@ -1612,7 +1679,7 @@ const buildEnhancedDomainFilters = (enableDomainFilter = true, hciOnly = false) 
 
   const filters = [];
   
-  // 1. 设计相关领域过滤
+  // 1. 领域过滤：Computer Science, Arts & Humanities, Psychology, Social Sciences
   if (hciOnly) {
     filters.push('primary_topic.subfield.id:1709'); // HCI专门领域
     console.log('🎯 添加HCI专门领域过滤');
@@ -1623,15 +1690,14 @@ const buildEnhancedDomainFilters = (enableDomainFilter = true, hciOnly = false) 
     console.log('🌐 添加多领域过滤 (CS+Arts+Psychology+Social)');
   }
 
-  // 2. arXiv来源过滤
-  filters.push('primary_location.source.id:S4306400194');
-  console.log('📋 添加arXiv来源过滤');
+  // 2. 期刊过滤：基于venue-classification.js中的所有期刊和会议
+  const venueFilter = buildVenueClassificationFilter();
+  if (venueFilter) {
+    filters.push(venueFilter);
+    console.log('🏛️ 添加venue-classification期刊会议过滤');
+  }
 
-  // 3. CHI会议过滤
-  filters.push('primary_location.source.id:S4363607743');
-  console.log('🏛️ 添加CHI会议过滤');
-
-  console.log(`🔗 构建${filters.length}个独立过滤条件，将分别查询并合并结果`);
+  console.log(`📊 共生成${filters.length}个独立过滤条件，将分别查询并合并结果`);
   return filters;
 };
 

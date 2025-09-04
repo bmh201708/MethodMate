@@ -7,7 +7,13 @@
   "scripts": {
     "start": "node local-api.js",
     "dev": "nodemon local-api.js",
-    "migrate-methods": "node run-migrate-statistical-methods.js"
+    "migrate-methods": "node run-migrate-statistical-methods.js",
+    "test:filter": "node simple-filter-test.js",
+    "test:filter:full": "node test-filter-comprehensive.js",
+    "test:filter:quick": "node run-filter-tests.js",
+    "test:filter:edge": "node test-edge-cases.js",
+    "test:filter:performance": "node test-performance.js",
+    "test:all": "npm run test:filter && npm run test:filter:edge"
   },
   "dependencies": {
     "@coze/api": "^1.2.0",

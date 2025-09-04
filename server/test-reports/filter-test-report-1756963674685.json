@@ -1,0 +1,299 @@
+{
+  "summary": {
+    "totalTests": 15,
+    "passed": 15,
+    "failed": 0,
+    "successRate": "100%",
+    "totalTime": "27s"
+  },
+  "details": [
+    {
+      "testName": "领域过滤-计算机科学领域",
+      "query": "machine learning",
+      "totalResults": 451720,
+      "sampleSize": 50,
+      "responseTime": "1247ms",
+      "fieldDistribution": {
+        "Social Sciences": 2,
+        "Computer Science": 47,
+        "Psychology": 1
+      },
+      "passed": true,
+      "details": {
+        "url": "https://api.openalex.org/works?search=machine%20learning&filter=primary_topic.field.id:17|12|32|33,publication_year:>2019,is_retracted:false,is_paratext:false&per-page=50&select=id,title,primary_topic,publication_year,primary_location",
+        "expectedFields": [
+          "Computer Science"
+        ],
+        "actualFields": [
+          "Social Sciences",
+          "Computer Science",
+          "Psychology"
+        ]
+      }
+    },
+    {
+      "testName": "领域过滤-心理学领域",
+      "query": "cognitive psychology",
+      "totalResults": 114788,
+      "sampleSize": 50,
+      "responseTime": "380ms",
+      "fieldDistribution": {
+        "Computer Science": 17,
+        "Social Sciences": 14,
+        "Psychology": 18,
+        "Arts and Humanities": 1
+      },
+      "passed": true,
+      "details": {
+        "url": "https://api.openalex.org/works?search=cognitive%20psychology&filter=primary_topic.field.id:17|12|32|33,publication_year:>2019,is_retracted:false,is_paratext:false&per-page=50&select=id,title,primary_topic,publication_year,primary_location",
+        "expectedFields": [
+          "Psychology"
+        ],
+        "actualFields": [
+          "Computer Science",
+          "Social Sciences",
+          "Psychology",
+          "Arts and Humanities"
+        ]
+      }
+    },
+    {
+      "testName": "领域过滤-跨领域查询",
+      "query": "artificial intelligence",
+      "totalResults": 260774,
+      "sampleSize": 50,
+      "responseTime": "394ms",
+      "fieldDistribution": {
+        "Computer Science": 38,
+        "Social Sciences": 11,
+        "Psychology": 1
+      },
+      "passed": true,
+      "details": {
+        "url": "https://api.openalex.org/works?search=artificial%20intelligence&filter=primary_topic.field.id:17|12|32|33,publication_year:>2019,is_retracted:false,is_paratext:false&per-page=50&select=id,title,primary_topic,publication_year,primary_location",
+        "expectedFields": [
+          "Computer Science",
+          "Psychology"
+        ],
+        "actualFields": [
+          "Computer Science",
+          "Social Sciences",
+          "Psychology"
+        ]
+      }
+    },
+    {
+      "testName": "期刊过滤-顶级期刊测试",
+      "query": "deep learning",
+      "totalResults": 977,
+      "sampleSize": 50,
+      "responseTime": "1251ms",
+      "venueDistribution": {
+        "ACM transactions on office information systems": 11,
+        "Computer": 6,
+        "Computers in Human Behavior": 12,
+        "International Journal of Human-Computer Interaction": 7,
+        "Computer-Aided Design": 8,
+        "Proceedings of the Human Factors and Ergonomics Society Annual Meeting": 1,
+        "International Journal of Human-Computer Studies": 1,
+        "Technovation": 1,
+        "CHI Conference on Human Factors in Computing Systems": 2,
+        "Design Studies": 1
+      },
+      "passed": true,
+      "details": {
+        "url": "https://api.openalex.org/works?search=deep%20learning&filter=primary_location.source.id:S87067389|S4210190811|S4210187492|S4210180017|S165559636|S4210176815|S4210189112|S204030396|S152445846|S70698675|S4210171473|S94432539|S4210194738|S4210188234|S4210185621|S4210183456|S4210199876|S4306432447|S135614695|S70698669|S4210215834|S178916657|S4363607743|S16161090|S4306421131|S4210167234|S4210168345|S4210169456|S4210170567|S4210171678|S4210172789|S4210173890|S4210174901|S4210175012|S4210176123|S4210177234|S4210178345|S4210179456|S4210180567,publication_year:>2019,is_retracted:false,is_paratext:false&per-page=50&select=id,title,primary_location,publication_year,primary_topic",
+        "expectedVenues": [
+          "Nature",
+          "Science",
+          "Cell"
+        ],
+        "actualVenues": [
+          "ACM transactions on office information systems",
+          "Computer",
+          "Computers in Human Behavior",
+          "International Journal of Human-Computer Interaction",
+          "Computer-Aided Design",
+          "Proceedings of the Human Factors and Ergonomics Society Annual Meeting",
+          "International Journal of Human-Computer Studies",
+          "Technovation",
+          "CHI Conference on Human Factors in Computing Systems",
+          "Design Studies"
+        ]
+      }
+    },
+    {
+      "testName": "期刊过滤-计算机顶会测试",
+      "query": "neural networks",
+      "totalResults": 609,
+      "sampleSize": 50,
+      "responseTime": "1135ms",
+      "venueDistribution": {
+        "ACM transactions on office information systems": 17,
+        "Computers in Human Behavior": 5,
+        "Computer-Aided Design": 10,
+        "International Journal of Human-Computer Interaction": 5,
+        "Technovation": 1,
+        "Applied Ergonomics": 2,
+        "Proceedings of the Human Factors and Ergonomics Society Annual Meeting": 6,
+        "Computer": 3,
+        "International Journal of Human-Computer Studies": 1
+      },
+      "passed": true,
+      "details": {
+        "url": "https://api.openalex.org/works?search=neural%20networks&filter=primary_location.source.id:S87067389|S4210190811|S4210187492|S4210180017|S165559636|S4210176815|S4210189112|S204030396|S152445846|S70698675|S4210171473|S94432539|S4210194738|S4210188234|S4210185621|S4210183456|S4210199876|S4306432447|S135614695|S70698669|S4210215834|S178916657|S4363607743|S16161090|S4306421131|S4210167234|S4210168345|S4210169456|S4210170567|S4210171678|S4210172789|S4210173890|S4210174901|S4210175012|S4210176123|S4210177234|S4210178345|S4210179456|S4210180567,publication_year:>2019,is_retracted:false,is_paratext:false&per-page=50&select=id,title,primary_location,publication_year,primary_topic",
+        "expectedVenues": [
+          "ICML",
+          "NeurIPS",
+          "ICLR"
+        ],
+        "actualVenues": [
+          "ACM transactions on office information systems",
+          "Computers in Human Behavior",
+          "Computer-Aided Design",
+          "International Journal of Human-Computer Interaction",
+          "Technovation",
+          "Applied Ergonomics",
+          "Proceedings of the Human Factors and Ergonomics Society Annual Meeting",
+          "Computer",
+          "International Journal of Human-Computer Studies"
+        ]
+      }
+    },
+    {
+      "testName": "组合过滤逻辑",
+      "query": "artificial intelligence",
+      "domainResults": 0,
+      "venueResults": 0,
+      "combinedSample": 199,
+      "responseTime": "2056ms",
+      "passed": true,
+      "coverage": {
+        "domainOnly": -199,
+        "venueOnly": -199,
+        "overlap": 0
+      }
+    },
+    {
+      "testName": "边界测试-空查询",
+      "query": "",
+      "passed": true,
+      "message": "空查询被正确处理"
+    },
+    {
+      "testName": "边界测试-特殊字符",
+      "query": "machine-learning & AI",
+      "totalResults": 84235,
+      "responseTime": "612ms",
+      "passed": true,
+      "message": "边界情况处理正常"
+    },
+    {
+      "testName": "边界测试-超长查询",
+      "query": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "totalResults": 0,
+      "responseTime": "366ms",
+      "passed": true,
+      "message": "边界情况处理正常"
+    },
+    {
+      "testName": "组合过滤逻辑",
+      "query": "AI",
+      "domainResults": 0,
+      "venueResults": 0,
+      "combinedSample": 198,
+      "responseTime": "1265ms",
+      "passed": true,
+      "coverage": {
+        "domainOnly": -198,
+        "venueOnly": -198,
+        "overlap": 0
+      }
+    },
+    {
+      "testName": "组合过滤逻辑",
+      "query": "machine learning",
+      "domainResults": 0,
+      "venueResults": 0,
+      "combinedSample": 200,
+      "responseTime": "580ms",
+      "passed": true,
+      "coverage": {
+        "domainOnly": -200,
+        "venueOnly": -200,
+        "overlap": 0
+      }
+    },
+    {
+      "testName": "组合过滤逻辑",
+      "query": "deep learning",
+      "domainResults": 0,
+      "venueResults": 0,
+      "combinedSample": 200,
+      "responseTime": "1277ms",
+      "passed": true,
+      "coverage": {
+        "domainOnly": -200,
+        "venueOnly": -200,
+        "overlap": 0
+      }
+    },
+    {
+      "testName": "组合过滤逻辑",
+      "query": "neural networks",
+      "domainResults": 0,
+      "venueResults": 0,
+      "combinedSample": 200,
+      "responseTime": "946ms",
+      "passed": true,
+      "coverage": {
+        "domainOnly": -200,
+        "venueOnly": -200,
+        "overlap": 0
+      }
+    },
+    {
+      "testName": "组合过滤逻辑",
+      "query": "data science",
+      "domainResults": 0,
+      "venueResults": 0,
+      "combinedSample": 198,
+      "responseTime": "1733ms",
+      "passed": true,
+      "coverage": {
+        "domainOnly": -198,
+        "venueOnly": -198,
+        "overlap": 0
+      }
+    },
+    {
+      "testName": "性能测试",
+      "averageResponseTime": "1161ms",
+      "results": [
+        {
+          "query": "AI",
+          "responseTime": 1265
+        },
+        {
+          "query": "machine learning",
+          "responseTime": 581
+        },
+        {
+          "query": "deep learning",
+          "responseTime": 1279
+        },
+        {
+          "query": "neural networks",
+          "responseTime": 947
+        },
+        {
+          "query": "data science",
+          "responseTime": 1734
+        }
+      ],
+      "passed": true,
+      "message": "性能良好"
+    }
+  ],
+  "timestamp": "2025-09-04T05:27:54.685Z"
+}

@@ -1,0 +1,71 @@
+{
+  "testConfig": {
+    "baseUrl": "https://api.openalex.org/works",
+    "timeout": 30000,
+    "maxRetries": 3,
+    "requestDelay": 1000,
+    "performanceThreshold": 10000
+  },
+  "testQueries": {
+    "computer_science": [
+      "machine learning",
+      "artificial intelligence", 
+      "deep learning",
+      "neural networks",
+      "computer vision",
+      "natural language processing"
+    ],
+    "psychology": [
+      "cognitive psychology",
+      "behavioral psychology", 
+      "social psychology",
+      "developmental psychology"
+    ],
+    "interdisciplinary": [
+      "computational neuroscience",
+      "digital humanities",
+      "social computing",
+      "human-computer interaction"
+    ]
+  },
+  "expectedFields": {
+    "targetFields": [
+      "Computer Science",
+      "Arts and Humanities", 
+      "Psychology",
+      "Social Sciences"
+    ],
+    "fieldIds": [17, 12, 32, 33]
+  },
+  "testCategories": {
+    "domain_filter": {
+      "description": "测试基于学科领域的过滤功能",
+      "priority": "high"
+    },
+    "venue_filter": {
+      "description": "测试基于期刊会议的过滤功能", 
+      "priority": "high"
+    },
+    "combined_filter": {
+      "description": "测试OR逻辑的组合过滤",
+      "priority": "critical"
+    },
+    "edge_cases": {
+      "description": "测试边界情况和错误处理",
+      "priority": "medium"
+    },
+    "performance": {
+      "description": "测试响应时间和性能",
+      "priority": "medium"
+    }
+  },
+  "validation": {
+    "minResultsThreshold": 1,
+    "maxResponseTime": 15000,
+    "requiredFields": ["id", "title", "publication_year"],
+    "timeRange": {
+      "minYear": 2020,
+      "maxYear": 2024
+    }
+  }
+}
