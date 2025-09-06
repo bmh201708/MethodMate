@@ -2648,7 +2648,7 @@ const generateResearchPlan = async (mode = 'auto', customTopic = '') => {
     await parseResearchPlanResponse(response.content, generationContext)
     
     // 解析成功，显示成功提示
-    alert('Generate research proposal successfully!')
+    alert('Research proposal generated successfully!')
     
   } catch (error) {
     console.error('生成研究方案失败:', error)

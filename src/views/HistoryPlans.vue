@@ -586,7 +586,7 @@ const applyPlan = (plan) => {
         )
 
         console.log('应用方案:', planTitle)
-        alert(`方案"${planTitle}"已成功应用！您可以前往研究方案页面查看。`)
+        alert(`Plan "${planTitle}" has been successfully applied! You can go to the research plan page to view it.`)
 
         // 可选：跳转到研究方案页面
         router.push('/research-plan')
@@ -652,7 +652,7 @@ const confirmClearAll = async () => {
             await clearHistoryPlans()
 
             console.log('所有历史方案清除完成')
-            alert('所有历史方案已成功清除！')
+            alert('All historical plans have been successfully cleared!')
 
             // 清空当前选中的方案
             selectedPlan.value = null
@@ -664,7 +664,7 @@ const confirmClearAll = async () => {
 
         } catch (error) {
             console.error('清除历史方案失败:', error)
-            alert(`清除历史方案时发生错误：${error.message}`)
+            alert(`Error occurred while clearing historical plans: ${error.message}`)
 
             // 更新调试信息
             debugInfo.value.errorMessage = `清除失败: ${error.message}`
@@ -733,11 +733,11 @@ const downloadTXT = async (plan) => {
         URL.revokeObjectURL(url)
         
         console.log('TXT文件生成完成')
-        alert('研究方案已导出为文本文件！')
+        alert('Research plan has been exported as a text file!')
         
     } catch (error) {
         console.error('TXT文件生成失败:', error)
-        alert(`TXT文件生成失败：${error.message}`)
+        alert(`TXT file generation failed: ${error.message}`)
     }
 }
 
@@ -795,21 +795,21 @@ const regenerateTitle = async (plan) => {
                         historyState.historyPlans[planIndex].title = originalTitle
                     }
                     
-                    alert(`标题更新失败：${dbError.message}\n已恢复原标题。`)
+                    alert(`Title update failed: ${dbError.message}\nOriginal title has been restored.`)
                     return
                 }
             }
             
             console.log('标题重新生成完成:', newTitle)
-            alert(`标题已更新为："${newTitle}"`)
+            alert(`Title has been updated to: "${newTitle}"`)
         } else {
             console.log('生成的标题与原标题相同或生成失败')
-            alert('标题生成失败或与原标题相同')
+            alert('Title generation failed or is the same as the original title')
         }
         
     } catch (error) {
         console.error('重新生成标题失败:', error)
-        alert(`重新生成标题失败：${error.message}`)
+        alert(`Title regeneration failed: ${error.message}`)
     } finally {
         isRegeneratingTitle.value = false
     }
@@ -925,7 +925,7 @@ const regenerateAllTitles = async () => {
         
     } catch (error) {
         console.error('批量重新生成标题失败:', error)
-        alert(`批量重新生成标题失败：${error.message}`)
+        alert(`Batch title regeneration failed: ${error.message}`)
     } finally {
         isRegeneratingTitle.value = false
     }

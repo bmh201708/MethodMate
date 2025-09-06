@@ -1104,7 +1104,7 @@ const reanalyzeResearchMethod = async () => {
     
   } catch (error) {
     console.error('重新分析研究方法出错:', error)
-    alert('重新分析研究方法出错: ' + error.message)
+    alert('Error re-analyzing research methods: ' + error.message)
   } finally {
     isLoadingPaperContent.value = false
   }
@@ -1188,7 +1188,7 @@ const fetchPaperContent = async () => {
     }
   } catch (error) {
     console.error('获取论文内容出错:', error)
-    alert('获取论文内容出错: ' + error.message)
+    alert('Error getting paper content: ' + error.message)
   } finally {
     isLoadingPaperContent.value = false
   }
@@ -1372,7 +1372,7 @@ const toggleTranslation = async () => {
     
   } catch (error) {
     console.error('翻译失败:', error)
-    alert('翻译失败：' + error.message)
+    alert('Translation failed: ' + error.message)
   }
 }
 
@@ -1397,7 +1397,7 @@ const toggleMethodTranslation = async () => {
       showMethodTranslation.value = true
     } catch (error) {
       console.error('研究方法翻译失败:', error)
-      alert('研究方法翻译失败：' + error.message)
+      alert('Research method translation failed: ' + error.message)
     } finally {
       isTranslatingMethod.value = false
     }
@@ -1423,7 +1423,7 @@ const extractKeywordsFromChat = async () => {
     const chatHistory = chatState.messages.filter(msg => msg.isComplete && !msg.isError)
     
     if (chatHistory.length === 0) {
-      alert('没有找到有效的对话历史，无法提取关键词')
+      alert('No valid conversation history found, unable to extract keywords')
       return
     }
     
@@ -1434,12 +1434,12 @@ const extractKeywordsFromChat = async () => {
     if (keywords) {
       console.log('提取到关键词:', keywords)
       searchKeywords.value = keywords
-      alert('关键词提取成功！')
+      alert('Keyword extraction successful!')
     } else {
       throw new Error('提取关键词失败');
     }
   } catch (error) {
-    console.error('提取关键词出错:', error)
+    console.error('Keyword extraction error!:', error)
     alert(error.message)
   } finally {
     isExtractingKeywords.value = false
@@ -1685,7 +1685,7 @@ const getRecommendedPapers = async () => {
 // 保存论文到本地缓存
 const savePaperToCache = async (paper) => {
   if (!paper || !paper.title) {
-    alert('无效的论文信息')
+    alert('Invalid paper information')
     return
   }
 
@@ -1758,7 +1758,7 @@ const savePaperToCache = async (paper) => {
 
   } catch (error) {
     console.error('保存论文到缓存失败:', error)
-    alert('保存失败: ' + error.message)
+    alert('Save failed: ' + error.message)
     paperCacheStatus.value = ''
   } finally {
     isSavingToCache.value = false
