@@ -1613,7 +1613,7 @@
             // 检查是否已登录
             const token = getAuthToken();
             if (!token) {
-                alert('请先登录再执行删除操作');
+                alert('Please log in first before deleting');
                 return;
             }
 
@@ -1640,7 +1640,7 @@
                     console.log('✅ 论文删除成功');
                     
                     // 显示成功消息
-                    alert('论文删除成功！');
+                    alert('Paper deleted successfully!');
                     
                     // 从当前论文列表中移除已删除的论文
                     currentPapers = currentPapers.filter(paper => paper.id !== paperId);
@@ -1654,16 +1654,16 @@
                 } else {
                     console.error('❌ 删除论文失败:', data);
                     if (response.status === 401) {
-                        alert('登录状态已过期，请重新登录');
+                        alert('Login session has expired, please log in again');
                         logout();
                     } else {
-                        alert('删除失败: ' + (data.error || '未知错误'));
+                        alert('Delete failed: ' + (data.error || 'Unknown error'));
                     }
                 }
 
             } catch (error) {
                 console.error('❌ 删除论文时发生错误:', error);
-                alert('删除失败: 网络错误，请稍后重试');
+                alert('Delete failed: Network error, please try again later');
             }
         }
 
@@ -1806,7 +1806,7 @@
             // 检查是否已登录
             const token = getAuthToken();
             if (!token) {
-                alert('请先登录再添加论文');
+                alert('Please log in first before adding papers');
                 return;
             }
 
@@ -1831,7 +1831,7 @@
 
             // 验证必填字段
             if (!paperData.title) {
-                alert('请输入论文标题');
+                alert('Please enter paper title');
                 return;
             }
 
@@ -1853,7 +1853,7 @@
                     console.log('✅ 论文添加成功');
                     
                     // 显示成功消息
-                    alert(data.message || '论文添加成功！');
+                    alert(data.message || 'Paper added successfully!');
                     
                     // 清空并隐藏表单
                     cancelAddPaper();
@@ -1865,16 +1865,16 @@
                 } else {
                     console.error('❌ 添加论文失败:', data);
                     if (response.status === 401) {
-                        alert('登录状态已过期，请重新登录');
+                        alert('Login session has expired, please log in again');
                         logout();
                     } else {
-                        alert('添加失败: ' + (data.error || '未知错误'));
+                        alert('Add failed: ' + (data.error || 'Unknown error'));
                     }
                 }
 
             } catch (error) {
                 console.error('❌ 添加论文时发生错误:', error);
-                alert('添加失败: 网络错误，请稍后重试');
+                alert('Add failed: Network error, please try again later');
             }
         }
 
@@ -1994,13 +1994,13 @@
         // 保存研究方法
         async function saveResearchMethod() {
             if (!currentEditingPaper) {
-                alert('无法保存：未找到当前编辑的论文');
+                alert('Unable to save: Current edited paper not found');
                 return;
             }
             
             const token = getAuthToken();
             if (!token) {
-                alert('请先登录再执行保存操作');
+                alert('Please log in first before saving');
                 return;
             }
             
@@ -2008,7 +2008,7 @@
             
             // 检查是否有变化
             if (newResearchMethod === originalResearchMethod) {
-                alert('内容没有变化');
+                alert('No content changes detected');
                 resetEditState();
                 return;
             }
@@ -2058,7 +2058,7 @@
                     // 重置编辑状态
                     resetEditState();
                     
-                    alert('论文研究方法保存成功！');
+                    alert('Paper research method saved successfully!');
                     
                 } else {
                     throw new Error(result.error || '保存失败');
@@ -2066,7 +2066,7 @@
                 
             } catch (error) {
                 console.error('保存论文研究方法失败:', error);
-                alert('保存失败: ' + error.message);
+                alert('Save failed: ' + error.message);
             } finally {
                 // 恢复按钮状态
                 const saveBtn = document.getElementById('saveBtn');
@@ -2130,7 +2130,7 @@
                 
             } catch (error) {
                 console.error('编辑论文失败:', error);
-                alert('编辑失败: ' + error.message);
+                alert('Edit failed: ' + error.message);
             }
         }
 
@@ -2152,13 +2152,13 @@
             const paperId = form.dataset.paperId;
             
             if (!paperId) {
-                alert('错误：未找到论文ID');
+                alert('Error: Paper ID not found');
                 return;
             }
             
             const token = getAuthToken();
             if (!token) {
-                alert('请先登录再执行编辑操作');
+                alert('Please log in first before editing');
                 return;
             }
             
@@ -2220,7 +2220,7 @@
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                     
-                    alert('论文信息保存成功！');
+                    alert('Paper information saved successfully!');
                     
                     // 关闭模态框
                     closeEditPaperModal();
@@ -2234,7 +2234,7 @@
                 
             } catch (error) {
                 console.error('保存论文编辑失败:', error);
-                alert('保存失败: ' + error.message);
+                alert('Save failed: ' + error.message);
                 
                 // 恢复按钮状态
                 submitBtn.textContent = originalText;
