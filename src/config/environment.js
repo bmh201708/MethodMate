@@ -11,22 +11,22 @@ export const ENVIRONMENT_TYPES = {
 // 环境配置
 export const ENVIRONMENT_CONFIG = {
   [ENVIRONMENT_TYPES.LOCAL]: {
-    name: '本地环境',
+    name: 'Local Environment',
     apiBaseUrl: '/api', // 使用相对路径，通过Vite代理到本地服务器
     chatApiUrl: '/api/chat',
-    description: '本地开发服务器'
+    description: 'Local Development Server'
   },
   [ENVIRONMENT_TYPES.REMOTE]: {
-    name: '云服务器',
+    name: 'Cloud Server',
     apiBaseUrl: 'http://119.45.20.245:3004/api', // 直接访问云服务器
     chatApiUrl: 'http://119.45.20.245:3004/api/chat',
-    description: '生产环境云服务器'
+    description: 'Production Environment Cloud Server'
   },
   [ENVIRONMENT_TYPES.DEVELOPMENT]: {
-    name: '开发环境',
+    name: 'Development Environment',
     apiBaseUrl: import.meta.env.DEV ? '/api' : 'http://119.45.20.245:3004/api',
     chatApiUrl: import.meta.env.DEV ? '/api/chat' : 'http://119.45.20.245:3004/api/chat',
-    description: '根据开发/生产环境自动切换'
+    description: 'Automatically switch based on development/production environment'
   }
 }
 
