@@ -1827,7 +1827,7 @@ const createNewTag = () => {
 
 // 删除标签
 const deleteTag = (tagId) => {
-  if (!confirm('确定要删除这个标签吗？删除后所有文献的此标签也会被移除。')) return
+  if (!confirm('Are you sure you want to delete this tag? All literature with this tag will also have it removed.')) return
   
   // 从所有标签中移除
   allTags.value = allTags.value.filter(tag => tag.id !== tagId)

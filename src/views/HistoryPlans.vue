@@ -577,7 +577,7 @@ const applyPlan = (plan) => {
     // 确保plan对象存在且有title属性
     const planTitle = plan?.title || '未命名方案'
     
-    if (confirm(`确定要应用方案"${planTitle}"吗？这将替换当前的研究方案。`)) {
+    if (confirm(`Are you sure you want to apply the plan "${planTitle}"? This will replace the current research plan.`)) {
         // 应用方案到当前方案
         applyPlanAsCurrentPlan(
             plan.fullPlan,
@@ -632,7 +632,7 @@ const confirmDelete = (plan) => {
     // 关闭下拉菜单
     showMoreActions.value = null
     
-    if (confirm(`确定要删除方案"${plan.title}"吗？`)) {
+    if (confirm(`Are you sure you want to delete the plan "${plan.title}"?`)) {
         removeHistoryPlan(plan.id)
         // 如果删除的是当前选中的方案，清空选中状态
         if (selectedPlan.value && selectedPlan.value.id === plan.id) {
@@ -644,7 +644,7 @@ const confirmDelete = (plan) => {
 // 确认清除所有方案
 const confirmClearAll = async () => {
     const planCount = historyState.historyPlans.length
-    if (confirm(`确定要清除所有 ${planCount} 个历史方案吗？此操作不可撤销。`)) {
+    if (confirm(`Are you sure you want to clear all ${planCount} history plans? This operation cannot be undone.`)) {
         try {
             isLoading.value = true
             console.log('开始清除所有历史方案...')
@@ -820,7 +820,7 @@ const regenerateAllTitles = async () => {
     if (isRegeneratingTitle.value || historyState.historyPlans.length === 0) return
     
     const planCount = historyState.historyPlans.length
-    if (!confirm(`确定要重新生成所有 ${planCount} 个方案的标题吗？此操作不可撤销。`)) {
+    if (!confirm(`Are you sure you want to regenerate titles for all ${planCount} plans? This operation cannot be undone.`)) {
         return
     }
     

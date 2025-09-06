@@ -539,7 +539,7 @@ ${JSON.stringify(data, null, 2)}
         // 删除迭代历史
         const testDeleteIteration = async () => {
             try {
-                const iterationId = prompt('请输入要删除的迭代ID:');
+                const iterationId = prompt('Please enter the iteration ID to delete:');
                 if (!iterationId) return;
                 
                 const response = await fetch(`${API_BASE_URL}/api/plan-iterations/${iterationId}`, {
@@ -565,7 +565,7 @@ ${JSON.stringify(data, null, 2)}
         const testClearIterations = async () => {
             try {
                 const planId = document.getElementById('planId').value;
-                const confirmed = confirm(`确定要清理方案 ${planId} 的所有迭代历史吗？`);
+                const confirmed = confirm(`Are you sure you want to clear all iteration history for plan ${planId}?`);
                 if (!confirmed) return;
                 
                 const response = await fetch(`${API_BASE_URL}/api/plan-iterations/clear/${planId}`, {
