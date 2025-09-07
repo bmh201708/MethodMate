@@ -242,10 +242,10 @@
           <div v-if="selectedPlan" class="bg-white rounded-xl shadow-sm p-8">
                                                     <div class="space-y-8">
                             <!-- 方案导航按钮 -->
-                            <div class="flex space-x-4 mb-8">
+                            <div class="flex justify-between items-center mb-4 pb-1">
                                 <button v-for="section in sections" :key="section.id"
                                     @click="activeSection = section.id"
-                                    class="px-4 py-2 rounded-lg font-medium transition-colors" :class="[
+                                    class="px-3 py-1.5 rounded text-xs font-bold transition-colors whitespace-nowrap flex-1 mx-1 text-center" :class="[
                                         activeSection === section.id
                                             ? 'bg-purple-100 text-purple-700'
                                             : 'text-gray-600 hover:bg-gray-100'
