@@ -261,26 +261,26 @@
                                     <div class="flex space-x-2 flex-shrink-0">
                                         <button @click="downloadPDF(selectedPlan)"
                                             :disabled="isGeneratingPDF"
-                                            class="w-32 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2">
-                                            <svg v-if="isGeneratingPDF" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                            class="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1 shadow-sm min-w-[80px]">
+                                            <svg v-if="isGeneratingPDF" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                             </svg>
-                                            <span class="text-sm">{{ isGeneratingPDF ? 'Generating...' : 'Download PDF' }}</span>
+                                            <span>{{ isGeneratingPDF ? 'Generating...' : 'Download PDF' }}</span>
                                         </button>
                                         <button @click="downloadTXT(selectedPlan)"
-                                            class="w-32 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            class="px-3 py-1.5 text-xs bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors flex items-center justify-center space-x-1 shadow-sm min-w-[80px]">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                             </svg>
-                                            <span class="text-sm">Export TXT</span>
+                                            <span>Export TXT</span>
                                         </button>
                                         <button @click="applyPlan(selectedPlan)"
-                                            class="w-32 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center">
-                                            <span class="text-sm">Apply This Proposal</span>
+                                            class="px-3 py-1.5 text-xs bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors flex items-center justify-center space-x-1 shadow-sm min-w-[80px]">
+                                            <span>Apply This Proposal</span>
                                         </button>
                                     </div>
                                 </div>
