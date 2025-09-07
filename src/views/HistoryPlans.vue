@@ -1175,7 +1175,7 @@ const generateTitleFromPlan = (plan, maxLength = 50) => {
         return null
     }
     
-    console.log('开始从方案内容生成标题...')
+    console.log('Starting title generation from plan content...')
     
     // Strategy 1: Extract keywords from research hypothesis
     if (plan.fullPlan.hypotheses && plan.fullPlan.hypotheses.length > 0) {
@@ -1216,40 +1216,46 @@ const generateTitleFromPlan = (plan, maxLength = 50) => {
     if (allContent.length > 50) {
         const titleFromAll = extractTitleFromContent(allContent)
         if (titleFromAll) {
-            console.log('从综合内容提取标题:', titleFromAll)
+            console.log('Title extracted from comprehensive content:', titleFromAll)
             return titleFromAll
         }
     }
     
-    // 策略5：生成基于时间的默认标题
+    // Strategy 5: Generate default English title based on timestamp
     const now = new Date()
-    const timeStr = `${now.getMonth() + 1}月${now.getDate()}日-${now.getHours()}时${now.getMinutes()}分`
-    const smartTitle = `智能重命名研究方案-${timeStr}`
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const hours = String(now.getHours()).padStart(2, '0')
+    const minutes = String(now.getMinutes()).padStart(2, '0')
+    const timeStr = `${month}-${day}-${hours}${minutes}`
+    const smartTitle = `Research Plan ${timeStr}`
     
-    console.log('使用默认重命名标题:', smartTitle)
+    console.log('Using default English title:', smartTitle)
     return smartTitle
 }
 
-// 从内容中提取标题的函数（与ResearchPlanDetail.vue中的函数相同）
+// Extract English title from content
 const extractTitleFromContent = (content, maxLength = 50) => {
     if (!content || content.length < 10) return null
     
-    // 提取关键概念和技术术语
+    // Extract English keywords and technical terms
     const keywordPatterns = [
-        // 技术和方法相关
-        /(?:基于|使用|采用|通过)([^，。！？]{3,15}?)(?:的|技术|方法|算法|系统|平台)/g,
-        // 研究对象和领域
-        /([A-Za-z\u4e00-\u9fa5]{3,15}?)(?:对|与|在)([^，。！？]{3,15}?)(?:的影响|的关系|的效果|中的应用)/g,
-        // 实验和测试相关
-        /(?:实验|测试|验证|评估)([^，。！？]{3,15}?)(?:的|效果|性能|准确性)/g,
-        // 界面和交互相关
-        /([^，。！？]{3,15}?)(?:界面|交互|设计|体验|用户体验)/g,
-        // AI和智能相关
-        /(人工智能|机器学习|深度学习|神经网络|AI|智能)[^，。！？]{0,10}?(?:在|对|与)([^，。！？]{3,15})/g,
-        // 研究主题相关
-        /(?:探讨|研究|分析|调查)([^，。！？]{3,15}?)(?:的影响|的关系|的效果|的作用)/g,
-        // 比较研究相关
-        /比较([^，。！？]{3,15}?)(?:与|和)([^，。！？]{3,15})/g
+        // Technology and method related
+        /\b(using|based on|through|via|with)\s+([A-Za-z][A-Za-z0-9\s]{2,15})\b(?:\s+(?:technology|method|algorithm|system|platform|approach|technique))?/gi,
+        // Research subjects and domains
+        /\b([A-Za-z][A-Za-z0-9\s]{2,15})\s+(?:impact|effect|influence|relationship|application|performance|evaluation)/gi,
+        // Experimental and testing related
+        /\b(?:experiment|test|validation|evaluation|assessment)\s+(?:of|on|for)\s+([A-Za-z][A-Za-z0-9\s]{2,15})/gi,
+        // Interface and interaction related
+        /\b([A-Za-z][A-Za-z0-9\s]{2,15})\s+(?:interface|interaction|design|experience|usability)/gi,
+        // AI and intelligence related
+        /\b(AI|artificial intelligence|machine learning|deep learning|neural network|intelligent)\s+([A-Za-z][A-Za-z0-9\s]{2,15})/gi,
+        // Research topics
+        /\b(?:study|research|analysis|investigation)\s+(?:of|on|for)\s+([A-Za-z][A-Za-z0-9\s]{2,15})/gi,
+        // Comparative research
+        /\b(?:comparison|comparing)\s+([A-Za-z][A-Za-z0-9\s]{2,15})\s+(?:and|vs|versus)\s+([A-Za-z][A-Za-z0-9\s]{2,15})/gi,
+        // General English technical terms
+        /\b([A-Za-z]{3,15})\s+(?:optimization|enhancement|improvement|development|implementation)/gi
     ]
     
     const extractedKeywords = new Set()
@@ -1257,52 +1263,74 @@ const extractTitleFromContent = (content, maxLength = 50) => {
     for (const pattern of keywordPatterns) {
         let match
         while ((match = pattern.exec(content)) !== null) {
-            if (match[1] && match[1].trim().length > 2) {
-                extractedKeywords.add(match[1].trim())
-            }
-            if (match[2] && match[2].trim().length > 2) {
-                extractedKeywords.add(match[2].trim())
+            // Extract meaningful keywords from matches
+            for (let i = 1; i < match.length; i++) {
+                if (match[i] && match[i].trim().length > 2) {
+                    const keyword = match[i].trim()
+                    // Clean up the keyword
+                    const cleaned = keyword.replace(/\s+/g, ' ').trim()
+                    if (cleaned.length >= 3 && cleaned.length <= 15) {
+                        extractedKeywords.add(cleaned)
+                    }
+                }
             }
         }
     }
     
-    // 清理和筛选关键词
+    // Filter and clean keywords
     const cleanedKeywords = Array.from(extractedKeywords)
-        .filter(keyword => 
-            keyword.length > 2 && 
-            keyword.length < 15 &&
-            !keyword.includes('假设') &&
-            !keyword.includes('实验') &&
-            !keyword.includes('研究') &&
-            !keyword.includes('分析') &&
-            !keyword.includes('方法') &&
-            !keyword.includes('user') &&
-            !keyword.includes('data') &&
-            !keyword.includes('results') &&
-            !keyword.includes('design') &&
-            !keyword.includes('test') &&
-            !keyword.includes('evaluation') &&
-            !keyword.includes('validation')
-        )
+        .filter(keyword => {
+            const lowerKeyword = keyword.toLowerCase()
+            return (
+                keyword.length >= 3 && 
+                keyword.length <= 15 &&
+                // Filter out common generic terms
+                !lowerKeyword.includes('experiment') &&
+                !lowerKeyword.includes('research') &&
+                !lowerKeyword.includes('analysis') &&
+                !lowerKeyword.includes('method') &&
+                !lowerKeyword.includes('study') &&
+                !lowerKeyword.includes('test') &&
+                !lowerKeyword.includes('evaluation') &&
+                !lowerKeyword.includes('validation') &&
+                !lowerKeyword.includes('design') &&
+                !lowerKeyword.includes('results') &&
+                // Ensure it contains at least one letter
+                /[A-Za-z]/.test(keyword)
+            )
+        })
         .slice(0, 2) // Take at most 2 keywords
     
     if (cleanedKeywords.length > 0) {
-        let title = cleanedKeywords.join(' and ')
-        if (title.length > maxLength * 0.7) { // 如果超过最大长度的70%，只用第一个关键词
+        let title = cleanedKeywords.join(' & ')
+        
+        // If title is too long, use only the first keyword
+        if (title.length > maxLength * 0.7) {
             title = cleanedKeywords[0]
         }
-        // Add research suffix if there's room
-        if (!title.includes('research') && !title.includes('analysis') && !title.includes('evaluation')) {
-            const withSuffix = title + ' research'
+        
+        // Add "Study" suffix if there's room and it doesn't already contain research terms
+        const researchTerms = ['study', 'research', 'analysis', 'evaluation', 'investigation']
+        const hasResearchTerm = researchTerms.some(term => 
+            title.toLowerCase().includes(term)
+        )
+        
+        if (!hasResearchTerm) {
+            const withSuffix = title + ' Study'
             if (withSuffix.length <= maxLength) {
                 title = withSuffix
             }
         }
         
-        // 确保标题不超过最大长度
+        // Ensure title doesn't exceed max length
         if (title.length > maxLength) {
             title = title.substring(0, maxLength - 3) + '...'
         }
+        
+        // Capitalize first letter of each word
+        title = title.split(' ').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ')
         
         return title
     }
