@@ -121,7 +121,8 @@
                                                 <div v-if="showMoreActions === plan.id" 
                                                     class="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 transform transition-all duration-150 ease-out">
                                                     <div class="py-1">
-                                                        <button @click.stop="regenerateTitle(plan)"
+                                                        <!-- Auto Rename Option -->
+                                                        <button @click.stop="autoRename(plan)"
                                                             :disabled="isRegeneratingTitle"
                                                             class="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 transition-colors">
                                                             <svg v-if="isRegeneratingTitle" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
@@ -131,7 +132,16 @@
                                                             <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                                             </svg>
-                                                            <span>{{ isRegeneratingTitle ? 'Generating' : 'Rename' }}</span>
+                                                            <span>{{ isRegeneratingTitle ? 'Generating...' : 'Auto Rename' }}</span>
+                                                        </button>
+                                                        
+                                                        <!-- Manual Rename Option -->
+                                                        <button @click.stop="manualRename(plan)"
+                                                            class="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 flex items-center space-x-2 transition-colors">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                                            </svg>
+                                                            <span>Manual Rename</span>
                                                         </button>
                                                         <div class="border-t border-gray-100"></div>
                                                         <button @click.stop="confirmDelete(plan)"
@@ -407,10 +417,52 @@
             </div>
         </main>
     </div>
+
+    <!-- 手动重命名对话框 -->
+    <div v-if="manualRenameDialog.show" 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+         @click.self="cancelManualRename">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Rename Plan</h3>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Plan Title
+                </label>
+                <input 
+                    v-model="manualRenameDialog.newTitle"
+                    type="text"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    placeholder="Enter new plan title..."
+                    maxlength="24"
+                    @keyup.enter="confirmManualRename"
+                    @keyup.escape="cancelManualRename"
+                    ref="titleInput"
+                />
+                <p class="text-xs text-gray-500 mt-1">
+                    {{ manualRenameDialog.newTitle.length }}/24 characters
+                </p>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button 
+                    @click="cancelManualRename"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button 
+                    @click="confirmManualRename"
+                    :disabled="!manualRenameDialog.newTitle.trim() || manualRenameDialog.newTitle.trim().length > 24 || manualRenameDialog.newTitle.trim() === manualRenameDialog.plan?.title"
+                    class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    Rename
+                </button>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { historyState, removeHistoryPlan, clearHistoryPlans, setCurrentViewingPlan, papersState, loadUserData, applyPlanAsCurrentPlan, researchPlanAPI } from '../stores/chatStore'
 import { useUserStore } from '../stores/userStore.js'
@@ -427,6 +479,8 @@ const activeSection = ref('full')
 const isGeneratingPDF = ref(false)
 const isRegeneratingTitle = ref(false) // 添加标题重新生成状态
 const showMoreActions = ref(null) // 控制下拉菜单显示
+const manualRenameDialog = ref({ show: false, plan: null, newTitle: '' }) // 手动重命名对话框状态
+const titleInput = ref(null) // 标题输入框的引用
 
 // 方案导航部分
 const sections = [
@@ -522,6 +576,17 @@ const isDev = import.meta.env.DEV
 const referencedCount = computed(() => papersState.referencedPapers.size)
 
 // 页面加载时主动加载数据
+// 监听手动重命名对话框的显示状态，自动聚焦输入框
+watch(() => manualRenameDialog.value.show, async (newShow) => {
+    if (newShow) {
+        await nextTick()
+        if (titleInput.value) {
+            titleInput.value.focus()
+            titleInput.value.select() // 选中所有文本
+        }
+    }
+})
+
 onMounted(async () => {
     await refreshData()
     
@@ -741,7 +806,180 @@ const downloadTXT = async (plan) => {
     }
 }
 
-// 重新生成单个方案标题
+// Auto Rename功能 - 自动生成标题
+const autoRename = async (plan) => {
+    if (!plan || isRegeneratingTitle.value) return
+    
+    try {
+        isRegeneratingTitle.value = true
+        // 关闭下拉菜单
+        showMoreActions.value = null
+        console.log('Starting auto rename for plan:', plan.title)
+        
+        // 使用方案内容生成新标题，确保长度不超过24个字符
+        const newTitle = generateTitleFromPlan(plan, 24)
+        
+        if (newTitle && newTitle !== plan.title) {
+            const originalTitle = plan.title
+            
+            // 先更新前端显示
+            plan.title = newTitle
+            
+            // 如果当前选中的是这个方案，也要更新
+            if (selectedPlan.value && selectedPlan.value.id === plan.id) {
+                selectedPlan.value.title = newTitle
+            }
+            
+            // 更新本地存储中的标题
+            const planIndex = historyState.historyPlans.findIndex(p => p.id === plan.id)
+            if (planIndex !== -1) {
+                historyState.historyPlans[planIndex].title = newTitle
+            }
+            
+            // 如果用户已登录且方案有数据库ID，同步更新数据库
+            if (userStore.isAuthenticated && plan.databaseId) {
+                try {
+                    console.log('Syncing title to database...', plan.databaseId)
+                    const updateResult = await researchPlanAPI.update(plan.databaseId, {
+                        title: newTitle
+                    })
+                    
+                    if (updateResult.success) {
+                        console.log('Title successfully synced to database')
+                    } else {
+                        throw new Error(updateResult.error || 'Database update failed')
+                    }
+                } catch (dbError) {
+                    console.error('Failed to sync title to database:', dbError)
+                    // 恢复原标题
+                    plan.title = originalTitle
+                    if (selectedPlan.value && selectedPlan.value.id === plan.id) {
+                        selectedPlan.value.title = originalTitle
+                    }
+                    if (planIndex !== -1) {
+                        historyState.historyPlans[planIndex].title = originalTitle
+                    }
+                    
+                    alert(`Title update failed: ${dbError.message}\nOriginal title has been restored.`)
+                    return
+                }
+            }
+            
+            console.log('Auto rename completed:', newTitle)
+            alert(`Title has been updated to: "${newTitle}"`)
+        } else {
+            console.log('Generated title is same as original or generation failed')
+            alert('Title generation failed or is the same as the original title')
+        }
+        
+    } catch (error) {
+        console.error('Auto rename failed:', error)
+        alert(`Auto rename failed: ${error.message}`)
+    } finally {
+        isRegeneratingTitle.value = false
+    }
+}
+
+// Manual Rename功能 - 手动输入标题
+const manualRename = (plan) => {
+    if (!plan) return
+    
+    // 关闭下拉菜单
+    showMoreActions.value = null
+    
+    // 显示手动重命名对话框
+    manualRenameDialog.value = {
+        show: true,
+        plan: plan,
+        newTitle: plan.title
+    }
+}
+
+// 确认手动重命名
+const confirmManualRename = async () => {
+    const { plan, newTitle } = manualRenameDialog.value
+    
+    if (!plan || !newTitle.trim()) {
+        alert('Please enter a valid title.')
+        return
+    }
+    
+    if (newTitle.trim().length > 24) {
+        alert('Title cannot exceed 24 characters.')
+        return
+    }
+    
+    if (newTitle.trim() === plan.title) {
+        alert('The new title is the same as the current title.')
+        cancelManualRename()
+        return
+    }
+    
+    try {
+        const originalTitle = plan.title
+        const trimmedTitle = newTitle.trim()
+        
+        // 先更新前端显示
+        plan.title = trimmedTitle
+        
+        // 如果当前选中的是这个方案，也要更新
+        if (selectedPlan.value && selectedPlan.value.id === plan.id) {
+            selectedPlan.value.title = trimmedTitle
+        }
+        
+        // 更新本地存储中的标题
+        const planIndex = historyState.historyPlans.findIndex(p => p.id === plan.id)
+        if (planIndex !== -1) {
+            historyState.historyPlans[planIndex].title = trimmedTitle
+        }
+        
+        // 如果用户已登录且方案有数据库ID，同步更新数据库
+        if (userStore.isAuthenticated && plan.databaseId) {
+            try {
+                console.log('Syncing manual title to database...', plan.databaseId)
+                const updateResult = await researchPlanAPI.update(plan.databaseId, {
+                    title: trimmedTitle
+                })
+                
+                if (updateResult.success) {
+                    console.log('Manual title successfully synced to database')
+                } else {
+                    throw new Error(updateResult.error || 'Database update failed')
+                }
+            } catch (dbError) {
+                console.error('Failed to sync manual title to database:', dbError)
+                // 恢复原标题
+                plan.title = originalTitle
+                if (selectedPlan.value && selectedPlan.value.id === plan.id) {
+                    selectedPlan.value.title = originalTitle
+                }
+                if (planIndex !== -1) {
+                    historyState.historyPlans[planIndex].title = originalTitle
+                }
+                
+                alert(`Title update failed: ${dbError.message}\nOriginal title has been restored.`)
+                cancelManualRename()
+                return
+            }
+        }
+        
+        console.log('Manual rename completed:', trimmedTitle)
+        alert(`Title has been updated to: "${trimmedTitle}"`)
+        
+    } catch (error) {
+        console.error('Manual rename failed:', error)
+        alert(`Manual rename failed: ${error.message}`)
+    } finally {
+        cancelManualRename()
+    }
+}
+
+// 取消手动重命名
+const cancelManualRename = () => {
+    manualRenameDialog.value = { show: false, plan: null, newTitle: '' }
+}
+
+// 重新生成单个方案标题 (保留原函数用于兼容性)
 const regenerateTitle = async (plan) => {
     if (!plan || isRegeneratingTitle.value) return
     
@@ -932,7 +1170,7 @@ const regenerateAllTitles = async () => {
 }
 
 // 从方案内容生成标题的函数
-const generateTitleFromPlan = (plan) => {
+const generateTitleFromPlan = (plan, maxLength = 50) => {
     if (!plan || !plan.fullPlan) {
         return null
     }
@@ -942,7 +1180,7 @@ const generateTitleFromPlan = (plan) => {
     // Strategy 1: Extract keywords from research hypothesis
     if (plan.fullPlan.hypotheses && plan.fullPlan.hypotheses.length > 0) {
         const hypothesesText = plan.fullPlan.hypotheses.join(' ')
-        const titleFromHypotheses = extractTitleFromContent(hypothesesText)
+        const titleFromHypotheses = extractTitleFromContent(hypothesesText, maxLength)
         if (titleFromHypotheses) {
             console.log('Title extracted from research hypothesis:', titleFromHypotheses)
             return titleFromHypotheses
@@ -951,7 +1189,7 @@ const generateTitleFromPlan = (plan) => {
     
     // Strategy 2: Extract keywords from experimental design
     if (plan.fullPlan.experimentalDesign) {
-        const titleFromDesign = extractTitleFromContent(plan.fullPlan.experimentalDesign)
+        const titleFromDesign = extractTitleFromContent(plan.fullPlan.experimentalDesign, maxLength)
         if (titleFromDesign) {
             console.log('Title extracted from experimental design:', titleFromDesign)
             return titleFromDesign
@@ -960,7 +1198,7 @@ const generateTitleFromPlan = (plan) => {
     
     // Strategy 3: Extract keywords from data analysis
     if (plan.fullPlan.analysisMethod) {
-        const titleFromAnalysis = extractTitleFromContent(plan.fullPlan.analysisMethod)
+        const titleFromAnalysis = extractTitleFromContent(plan.fullPlan.analysisMethod, maxLength)
         if (titleFromAnalysis) {
             console.log('Title extracted from data analysis:', titleFromAnalysis)
             return titleFromAnalysis
@@ -993,7 +1231,7 @@ const generateTitleFromPlan = (plan) => {
 }
 
 // 从内容中提取标题的函数（与ResearchPlanDetail.vue中的函数相同）
-const extractTitleFromContent = (content) => {
+const extractTitleFromContent = (content, maxLength = 50) => {
     if (!content || content.length < 10) return null
     
     // 提取关键概念和技术术语
@@ -1050,13 +1288,22 @@ const extractTitleFromContent = (content) => {
     
     if (cleanedKeywords.length > 0) {
         let title = cleanedKeywords.join(' and ')
-        if (title.length > 20) {
+        if (title.length > maxLength * 0.7) { // 如果超过最大长度的70%，只用第一个关键词
             title = cleanedKeywords[0]
         }
-        // Add research suffix
+        // Add research suffix if there's room
         if (!title.includes('research') && !title.includes('analysis') && !title.includes('evaluation')) {
-            title += ' research'
+            const withSuffix = title + ' research'
+            if (withSuffix.length <= maxLength) {
+                title = withSuffix
+            }
         }
+        
+        // 确保标题不超过最大长度
+        if (title.length > maxLength) {
+            title = title.substring(0, maxLength - 3) + '...'
+        }
+        
         return title
     }
     
