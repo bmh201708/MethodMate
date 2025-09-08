@@ -2311,9 +2311,9 @@ const parseResearchPlanResponse = async (content, context = {}) => {
       } else {
         currentPlanState.hypotheses = [hypothesis]
       }
-      // Initialize source introduction for research hypotheses section
+      // Initialize empty source introduction for research hypotheses section
       currentPlanState.hypothesis = {
-        sourceIntro: 'This research hypotheses are based on existing literature and theoretical foundations, combined with research objectives and specific contexts.'
+        sourceIntro: ''
       }
       console.log('Updated research hypotheses:', currentPlanState.hypotheses)
       updatedFields++
@@ -2322,9 +2322,9 @@ const parseResearchPlanResponse = async (content, context = {}) => {
     // Update experimental design
     if (design) {
       currentPlanState.experimentalDesign = design
-      // Initialize source introduction for experimental design section
+      // Initialize empty source introduction for experimental design section
       currentPlanState.design = {
-        sourceIntro: 'The experimental design plan references classic experimental paradigms and latest research methods in related fields.'
+        sourceIntro: ''
       }
       console.log('Updated experimental design:', design.substring(0, 100) + '...')
       updatedFields++
@@ -2333,10 +2333,10 @@ const parseResearchPlanResponse = async (content, context = {}) => {
     // Update data analysis
     if (analysis) {
       currentPlanState.analysisMethod = analysis
-      // Initialize source introduction and method introduction for data analysis section
+      // Initialize empty source introduction and method introduction for data analysis section
       currentPlanState.analysis = {
-        sourceIntro: 'Data analysis methods are based on research objectives and data characteristics, using appropriate statistical analysis methods.',
-        methodIntro: 'The statistical methods used in this study include descriptive statistics and inferential statistics. You can use the query function below to learn detailed information about specific statistical methods.'
+        sourceIntro: '',
+        methodIntro: ''
       }
       console.log('Updated data analysis:', analysis.substring(0, 100) + '...')
       updatedFields++
@@ -2345,9 +2345,9 @@ const parseResearchPlanResponse = async (content, context = {}) => {
     // Update results presentation
     if (results) {
       currentPlanState.expectedResults = results
-      // Initialize source introduction for results presentation section
+      // Initialize empty source introduction for results presentation section
       currentPlanState.results = {
-        sourceIntro: 'Results presentation follows the standard format of academic papers, ensuring research findings are clear and understandable.'
+        sourceIntro: ''
       }
       console.log('Updated results presentation:', results.substring(0, 100) + '...')
       updatedFields++
@@ -2363,9 +2363,9 @@ const parseResearchPlanResponse = async (content, context = {}) => {
     
     console.log('Generated plan title:', generatedTitle)
     
-    // Initialize source introduction for complete plan section
+    // Initialize empty source introduction for complete plan section
     currentPlanState.full = {
-              sourceIntro: 'This research proposal integrates various research methods and literature resources, aiming to provide a comprehensive and scientific quantitative research framework.'
+      sourceIntro: ''
     }
     
     // If at least one field is updated, consider it successful

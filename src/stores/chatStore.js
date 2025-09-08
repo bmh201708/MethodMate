@@ -389,24 +389,24 @@ const loadCurrentPlanFromStorage = () => {
           }
         ],
         full: parsed.full || {
-          sourceIntro: 'This paper examines the role that enchantment plays in the design of AI things by constructing a taxonomy of design approaches that increase or decrease the perception of magic and enchantment. We start from the design discourse surrounding recent developments in AI technologies, highlighting specific interaction qualities such as algorithmic uncertainties and errors and articulating relations to the rhetoric of magic and supernatural thinking.',
-          methodIntro: 'The research methodology follows a mixed-methods approach, combining experimental research with survey methods. The experimental group and control group will be exposed to AI-edited and traditionally edited media content respectively.'
+          sourceIntro: '',
+          methodIntro: ''
         },
         hypothesis: parsed.hypothesis || {
-          sourceIntro: 'The formation of research hypotheses is based on a systematic review of existing literature, particularly research on the impact of AI technology on human cognition. We integrated the latest findings from cognitive science, artificial intelligence, and human-computer interaction.',
-          methodIntro: 'Hypothesis validation will use experimental research methods to test the impact of AI-edited content on memory formation through a strictly controlled experimental environment. The experimental design includes pre-tests and post-tests to ensure result reliability.'
+          sourceIntro: '',
+          methodIntro: ''
         },
         design: parsed.design || {
-          sourceIntro: 'The experimental design references multiple classic memory research paradigms and incorporates the latest AI technology development characteristics. The design proposal has been optimized through expert reviews and pilot experiments.',
-          methodIntro: 'Adopt a 2x2 mixed experimental design, manipulating media type (AI-edited vs. traditional editing) and presentation style (static vs. dynamic). All experimental materials have been standardized.'
+          sourceIntro: '',
+          methodIntro: ''
         },
         analysis: parsed.analysis || {
-          sourceIntro: 'The selection of data analysis methods is based on recently published similar studies and considers the characteristics of the data and research objectives. The analysis framework has been reviewed and validated by methodological experts.',
-          methodIntro: 'Use SPSS 26.0 for quantitative analysis, including descriptive statistics, analysis of variance, and regression analysis. Qualitative data uses thematic coding methods with NVivo software for assisted analysis.'
+          sourceIntro: '',
+          methodIntro: ''
         },
         results: parsed.results || {
-          sourceIntro: 'The presentation of research results references standards from top journals in the field, ensuring clarity and scientific rigor in data visualization.',
-          methodIntro: 'Results presentation uses multiple visualization methods, including interaction effect plots, heat maps, and box plots. All charts follow APA formatting standards.'
+          sourceIntro: '',
+          methodIntro: ''
         },
         isGenerated: parsed.isGenerated || false,
         sourceIntroductions: parsed.sourceIntroductions || {
@@ -460,24 +460,24 @@ const loadCurrentPlanFromStorage = () => {
       }
     ],
     full: {
-      sourceIntro: 'This paper examines the role that enchantment plays in the design of AI things by constructing a taxonomy of design approaches that increase or decrease the perception of magic and enchantment. We start from the design discourse surrounding recent developments in AI technologies, highlighting specific interaction qualities such as algorithmic uncertainties and errors and articulating relations to the rhetoric of magic and supernatural thinking.',
-      methodIntro: 'The research methodology follows a mixed-methods approach, combining experimental research with survey methods. The experimental group and control group will be exposed to AI-edited and traditionally edited media content respectively.'
+      sourceIntro: '',
+      methodIntro: ''
     },
     hypothesis: {
-      sourceIntro: 'The formation of research hypotheses is based on a systematic review of existing literature, particularly research on the impact of AI technology on human cognition. We integrated the latest findings from cognitive science, artificial intelligence, and human-computer interaction.',
-      methodIntro: 'Hypothesis validation will use experimental research methods to test the impact of AI-edited content on memory formation through a strictly controlled experimental environment. The experimental design includes pre-tests and post-tests to ensure result reliability.'
+      sourceIntro: '',
+      methodIntro: ''
     },
     design: {
-      sourceIntro: 'The experimental design references multiple classic memory research paradigms and incorporates the latest AI technology development characteristics. The design proposal has been optimized through expert reviews and pilot experiments.',
-      methodIntro: 'Adopt a 2x2 mixed experimental design, manipulating media type (AI-edited vs. traditional editing) and presentation style (static vs. dynamic). All experimental materials have been standardized.'
+      sourceIntro: '',
+      methodIntro: ''
     },
     analysis: {
-      sourceIntro: 'The selection of data analysis methods is based on recently published similar studies and considers the characteristics of the data and research objectives. The analysis framework has been reviewed and validated by methodological experts.',
-      methodIntro: 'Use SPSS 26.0 for quantitative analysis, including descriptive statistics, analysis of variance, and regression analysis. Qualitative data uses thematic coding methods with NVivo software for assisted analysis.'
+      sourceIntro: '',
+      methodIntro: ''
     },
     results: {
-      sourceIntro: 'The presentation of research results references standards from top journals in the field, ensuring clarity and scientific rigor in data visualization.',
-      methodIntro: 'Results presentation uses multiple visualization methods, including interaction effect plots, heat maps, and box plots. All charts follow APA formatting standards.'
+      sourceIntro: '',
+      methodIntro: ''
     },
     isGenerated: false,
     sourceIntroductions: {
