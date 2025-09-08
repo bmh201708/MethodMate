@@ -228,6 +228,7 @@ Predict the possible differences or trends among the main dependent variables un
 **Specific quality requirements:**
 {{qualityRequirements}}
 {{/if}}
+ 
 
 **Important formatting requirements:**
 - Do NOT include any reference citations in square brackets format such as [1], [2], [18], [22], etc.
