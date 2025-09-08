@@ -481,6 +481,7 @@ Please generate a source introduction in table format, output directly in markdo
 **Important requirements:**
 - Add one sentence as an overall overview before the table
 - Output markdown table directly without code block wrapping
+- **Each reference literature must have at least 2 rows in the table** - provide different aspects of contribution or multiple citations from the same literature
 - The "Specific Citation Content" column must provide English original text, format like: "Original text: 'English original text here' (From: Reference X - Title abbreviation)"
 - Each cell content should be concise and clear, avoid being too long
 
