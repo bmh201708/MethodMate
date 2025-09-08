@@ -46,7 +46,13 @@ export const chatState = reactive({
     {
       id: 1,
       type: 'assistant',
-      content: 'Hello! I am MethodMate AI Assistant. How can I help you today?',
+      content: 'Hi! I\'m the MethodMate assistant. How can I help you today?',
+      isComplete: true
+    },
+    {
+      id: 2,
+      type: 'assistant',
+      content: 'Could you please tell me your research background and objectives?',
       isComplete: true
     }
   ],
@@ -1180,7 +1186,13 @@ export const clearMessages = () => {
     {
       id: 1,
       type: 'assistant',
-      content: 'Hello! I am MethodMate AI Assistant. How can I help you today?',
+      content: 'Hi! I\'m the MethodMate assistant. How can I help you today?',
+      isComplete: true
+    },
+    {
+      id: 2,
+      type: 'assistant',
+      content: 'Could you please tell me your research background and objectives?',
       isComplete: true
     }
   ]

@@ -477,7 +477,13 @@ const switchToConversation = async (conversation) => {
         {
           id: 1,
           type: 'assistant',
-          content: 'Hello! I am MethodMate AI Assistant. Is there anything I can do for you?',
+          content: 'Hi! I\'m the MethodMate assistant. How can I help you today?',
+          isComplete: true
+        },
+        {
+          id: 2,
+          type: 'assistant',
+          content: 'Could you please tell me your research background and objectives?',
           isComplete: true
         }
       ]
