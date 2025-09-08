@@ -491,11 +491,11 @@ const titleInput = ref(null) // 标题输入框的引用
 
 // 方案导航部分
 const sections = [
-    { id: 'full', name: 'Complete Plan' },
-    { id: 'hypothesis', name: 'Research Hypothesis' },
+    { id: 'full', name: 'Full Proposal' },
+    { id: 'hypothesis', name: 'Hypothesis' },
     { id: 'design', name: 'Experimental Design' },
     { id: 'analysis', name: 'Data Analysis' },
-    { id: 'results', name: 'Results Presentation' }
+    { id: 'results', name: 'Expected Results' }
 ]
 
 // 配置marked选项，支持LaTeX数学公式
