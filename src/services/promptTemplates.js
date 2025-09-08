@@ -229,6 +229,11 @@ Predict the possible differences or trends among the main dependent variables un
 {{qualityRequirements}}
 {{/if}}
 
+**Important formatting requirements:**
+- Do NOT include any reference citations in square brackets format such as [1], [2], [18], [22], etc.
+- Avoid any text that resembles academic paper citation format like "[number]"
+- Focus on content description rather than citation formatting
+
 **Final checklist:**
 {{checklist}}
 ✓ Does it maintain academic normativity and expression accuracy?
@@ -333,7 +338,12 @@ Predict the possible differences or trends among the main dependent variables un
 {{checklist}}
 ✓ Does it maintain the integrity and consistency of other sections?
 ✓ Does it highly match the user's specific suggestions?
-✓ Does it maintain academic normativity and expression accuracy?`;
+✓ Does it maintain academic normativity and expression accuracy?
+
+**Important formatting requirements:**
+- Do NOT include any reference citations in square brackets format such as [1], [2], [18], [22], etc.
+- Avoid any text that resembles academic paper citation format like "[number]"
+- Focus on content description rather than citation formatting`;
 
 // Source introduction generation template - Research Hypotheses section
 export const SOURCE_INTRODUCTION_HYPOTHESIS_TEMPLATE = `**Please analyze and point out how the specific design of research hypotheses in the current research proposal is inspired by or borrowed from existing literature, based on the "Research Hypotheses" section content and the referenced literature.**
