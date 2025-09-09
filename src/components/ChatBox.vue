@@ -706,8 +706,10 @@ const parseAndDisplayResearchPlan = (content) => {
       return null
     }
     
-    // 研究假设提取模式（支持markdown格式和中英文）
+    // 研究假设提取模式（支持markdown格式、罗马数字格式和中英文）
     const hypothesisPatterns = [
+      // Roman numeral format: I. Research Hypotheses
+      /I\.?\s*(?:Research Hypotheses|Experimental Hypotheses|Hypotheses).*?\n([\s\S]*?)(?=II\.?\s*(?:Experimental Design|Research Design)|$)/i,
       // English Markdown format: # Research Hypotheses
       /(?:#+\s*(?:Research Hypotheses|Experimental Hypotheses|Hypotheses).*?)\n((?:(?!#+\s*(?:Experimental Design|Data Analysis|Results Presentation|Research Design|Statistical Analysis|Expected Results)).)+?)(?=\n#+\s*(?:Experimental Design|Data Analysis|Results Presentation|Research Design|Statistical Analysis|Expected Results)|$)/is,
       // Chinese Markdown format: # 研究假设
@@ -720,8 +722,10 @@ const parseAndDisplayResearchPlan = (content) => {
       /((?:H\d+[:：]|假设\d+[:：]).*(?:\n(?:H\d+[:：]|假设\d+[:：]).*)*)/i
     ]
     
-    // Experimental design extraction patterns (markdown format and English)
+    // Experimental design extraction patterns (支持markdown格式、罗马数字格式和英文)
     const designPatterns = [
+      // Roman numeral format: II. Experimental Design
+      /II\.?\s*(?:Experimental Design|Research Design|Design Plan).*?\n([\s\S]*?)(?=III\.?\s*(?:Data Analysis|Statistical Analysis)|$)/i,
       // English Markdown format: # Experimental Design
       /(?:#+\s*(?:Experimental Design|Research Design|Design Plan).*?)\n((?:(?!#+\s*(?:Data Analysis|Results Presentation|Research Hypotheses|Statistical Analysis|Expected Results)).)+?)(?=\n#+\s*(?:Data Analysis|Results Presentation|Research Hypotheses|Statistical Analysis|Expected Results)|$)/is,
       // English colon format
@@ -729,8 +733,10 @@ const parseAndDisplayResearchPlan = (content) => {
       /(?:Design Plan|Experimental Method)[：:\s]*\n?((?:(?!(?:Data Analysis|Results Presentation|Research Hypotheses)).)+?)(?=(?:\n\s*(?:Data Analysis|Results Presentation|Research Hypotheses|$)))/is
     ]
     
-    // Data analysis extraction patterns (markdown format and English)
+    // Data analysis extraction patterns (支持markdown格式、罗马数字格式和英文)
     const analysisPatterns = [
+      // Roman numeral format: III. Data Analysis
+      /III\.?\s*(?:Data Analysis|Statistical Analysis|Analysis Method).*?\n([\s\S]*?)(?=IV\.?\s*(?:Results Presentation|Expected Results)|$)/i,
       // English Markdown format: # Data Analysis
       /(?:#+\s*(?:Data Analysis|Statistical Analysis|Analysis Method).*?)\n((?:(?!#+\s*(?:Results Presentation|Research Hypotheses|Experimental Design|Expected Results)).)+?)(?=\n#+\s*(?:Results Presentation|Research Hypotheses|Experimental Design|Expected Results)|$)/is,
       // English colon format
@@ -738,8 +744,10 @@ const parseAndDisplayResearchPlan = (content) => {
       /(?:Analysis Tool|Statistical Method|Data Processing)[：:\s]*\n?((?:(?!(?:Results Presentation|Research Hypotheses|Experimental Design)).)+?)(?=(?:\n\s*(?:Results Presentation|Research Hypotheses|Experimental Design|$)))/is
     ]
     
-    // Results presentation extraction patterns (markdown format and English)
+    // Results presentation extraction patterns (支持markdown格式、罗马数字格式和英文)
     const resultsPatterns = [
+      // Roman numeral format: IV. Results Presentation
+      /IV\.?\s*(?:Results Presentation|Expected Results|Research Results).*?\n([\s\S]*?)$/i,
       // English Markdown format: # Results Presentation
       /(?:#+\s*(?:Results Presentation|Expected Results|Research Results).*?)\n((?:(?!#+\s*(?:Research Hypotheses|Experimental Design|Data Analysis)).)+?)(?=\n#+\s*(?:Research Hypotheses|Experimental Design|Data Analysis)|$)/is,
       // English colon format
