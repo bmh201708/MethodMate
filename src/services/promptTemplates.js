@@ -68,17 +68,57 @@ Please write a high-quality quantitative research proposal for the Human-Compute
 I. Research Hypotheses
 Briefly describe the experimental purpose and propose research hypotheses that correspond highly to the research objectives. Each hypothesis should be numbered (H1, H2...).
 
+Requirements:
+- Briefly describe the each experimental purpose (1-2 sentences maximum)
+- Propose specific, testable research hypotheses that correspond directly to the research objectives
+- Each hypothesis should be numbered (H1, H2, etc.) and clearly stated
+- Hypotheses should be directional (predict the direction of expected effects) when possible
+- Focus exclusively on what you expect to find, not how you will test it
+- Avoid mentioning statistical methods, significance levels, or analysis procedures
+
 II. Experimental Design
 Participant characteristics: Consider but not limited to sample size estimation, age and gender composition, professional or technical background, recruitment methods, inclusion and exclusion criteria, as well as sample representativeness or research adaptability, etc., listed in detail.
 Grouping method: Describe the grouping method and research design type (such as within-subject design, between-subject design, etc.), clarify the definition and operationalization of independent and dependent variables, list all experimental conditions and control variables. In addition, the grouping method can refer to cited reference literature to ensure the rationality of grouping. When involving experiments with different systems or technical conditions, it is necessary to describe in detail or give examples of the tools used by the control group (such as Adobe Illustrator, etc.), avoiding vague expressions such as "traditional systems" or "baseline" only. When setting up control groups, full consideration should be given to whether there are types that can be further distinguished internally, combined with reference literature for divergent thinking, to ensure that the control conditions are set sufficiently and representatively, to improve the interpretability and external validity of the results.
 Experimental procedure: Describe the experimental procedure in as much detail as possible, including the task settings and execution sequence of each stage. If it includes different types of tasks (such as closed tasks and open creative tasks), please explain the task objectives, task content, whether reference information is provided (such as example images), etc. In addition, please describe the name of each stage, whether the experiment includes pre-experiments, pre-tests or system explanations and other preparation processes. In the evaluation section, please briefly introduce the specific evaluation methods (such as subjective questionnaires, semi-structured interviews) and evaluation content, indicators, etc., to ensure that the process is complete, clear, and reproducible.
 
 III. Data Analysis
-Please describe in detail the types of user data collected in this study, which may include but are not limited to the following: Subjective rating data, need to clarify the measured subjective indicators (such as satisfaction, immersion, cognitive load, etc.), and point out the scale form used, including but not limited to Likert scales (such as 7-point or 5-point rating), percentile sliders, self-designed scales or standard scales. Please explain the measurement purpose and rating range of each dimension (for example: "The immersion dimension is used to evaluate the user's subjective immersion experience during the task process, using a 7-point rating, where 1 represents 'completely not immersed' and 7 represents 'completely immersed'"). If it is a standard scale, the name and source need to be noted; if it is a self-designed scale, please explain the design basis, dimension division and measurement objectives, and provide typical item examples to show the specific aspects that the scale focuses on. Regardless of whether standard scales or self-designed scales are used, it is recommended to explain whether reliability tests (such as Cronbach's α) have been conducted and report relevant results to support scale quality and usage rationality.
+
+Please describe in detail the types of user data collected in this study, which may include but are not limited to the following: Subjective rating data, need to clarify the measured subjective indicators (such as satisfaction, immersion, cognitive load, etc.), and point out the scale form used, including but not limited to Likert scales (such as 7-point or 5-point rating), percentile sliders, self-designed scales or standard scales. Please explain the measurement purpose and rating range of each dimension (for example: "The immersion dimension is used to evaluate the user's subjective immersion experience during the task process, using a 7-point rating, where 1 represents 'completely not immersed' and 7 represents 'completely immersed'"). If it is a standard scale, the name need to be noted; if it is a self-designed scale, please explain the design basis, dimension division and measurement objectives, and provide typical item examples to show the specific aspects that the scale focuses on. Regardless of whether standard scales or self-designed scales are used, it is recommended to explain whether reliability tests (such as Cronbach's α) have been conducted and report relevant results to support scale quality and usage rationality.
+
 For behavioral data, please list the specific indicators recorded (such as click count, task completion time, generated content quantity, interaction steps, etc.), and explain the data collection method (such as system logs or front-end buried points), clarifying whether it includes dynamic information such as interaction sequence, editing path, and dwell time. If the collected content covers the user's operation process or strategy selection during the task, it should also be explained to support process analysis.
+
 For system recorded data, please explain whether user-generated text, images, prompts, interaction trajectories, etc. are retained, and whether this content is used for subsequent analysis, such as automatic scoring, content comparison, behavioral modeling, etc. If automatic evaluation is involved, please list the indicators used and their evaluation dimensions (such as IoU for image region overlap calculation), and briefly explain their principles and applicability. In addition, if combined with manual annotation or used as qualitative analysis materials, please explain the annotation method and analysis purpose.
-In the data analysis section, please explain the statistical analysis methods used around key dependent variables and clearly correspond each method to the corresponding research hypotheses (such as H1, H2, etc.). Please explain the basis for method selection and set significance standards (such as α = 0.05), explain whether to control covariates (such as user background or pre-test results), and whether to use Bonferroni, Holm and other correction methods when conducting multiple comparisons. The overall analysis proposal should clearly show the correspondence between variables, hypotheses and methods to ensure that research questions can be effectively verified through systematic data analysis.
-This section should be no less than 800 words
+
+Statistical Analysis
+For this section, please select and explain only the 1–3 most appropriate statistical analysis methods for this specific research design. For each selected method, you must:
+1. Clearly explain why this method is the best choice for the specific research hypotheses and data types.
+2. Specify which dependent variables and research hypotheses (H1, H2, etc.) this method will address.
+3. Ensure the method matches the experimental design (between-subject, within-subject, mixed design).
+4. Set appropriate significance standards (such as α = 0.05) and explain any necessary corrections for multiple comparisons.
+5. Verify that sample size and data distribution assumptions are met for the chosen methods.
+6. You must answer this section (Statistical Methods) point by point.
+
+Method appropriateness
+The choice of method must directly reflect the experimental design (between-subject, within-subject, or mixed) and the nature of the data (e.g., categorical vs. continuous, distributional assumptions). Methods should be chosen based on whether they directly and appropriately test the stated hypotheses.
+· Between-subject comparisons of two groups → Independent-samples t-test (or nonparametric alternative such as Mann–Whitney U if normality is violated).
+· Within-subject comparisons of the same group across two conditions → Paired-samples t-test (or Wilcoxon signed-rank test if assumptions are violated).
+· Comparisons across more than two groups or conditions → One-way or factorial ANOVA (with appropriate post-hoc tests and corrections for multiple comparisons). For nonparametric data, use Kruskal–Wallis H test or Friedman test.
+· Mixed design (both between- and within-subject factors) → Mixed-design ANOVA (or linear mixed-effects models if data structure is more complex, e.g., repeated measures with nested participants).
+· Associations between continuous variables → Pearson correlation (or Spearman correlation if normality is violated).
+· Prediction and relationships involving multiple predictors → Regression analysis (linear regression for continuous dependent variables, logistic regression for binary dependent variables, multinomial or ordinal regression for categorical dependent variables).
+· Models accounting for random effects (e.g., participants, stimuli) → Linear mixed-effects models (LMMs) or generalized linear mixed-effects models (GLMMs). Particularly appropriate for repeated measures and hierarchical/nested designs (e.g., multiple items evaluated by the same participant).
+· Categorical outcomes or frequency data → Chi-square tests (goodness-of-fit, independence, or exact tests if sample size is small).
+· Multivariate data (multiple dependent variables simultaneously) → MANOVA or multivariate regression.
+· Exploratory analysis (if clearly separated from confirmatory hypothesis testing) → Factor analysis, cluster analysis, or principal component analysis (PCA) for dimensionality reduction or structure discovery, but these must not be confused with hypothesis testing.
+
+Important restrictions:
+· Do not use paired tests for between-group hypotheses or invent within-subject contrasts unless explicitly stated in the hypotheses.
+· Avoid listing multiple unrelated methods for the same hypothesis. Select only the most appropriate one and justify it clearly.
+
+Final principle: The methods listed above are common options, but the actual choice must always be justified based on the specific hypothesis, study design, and data characteristics. According to the principle of fit-for-purpose analysis, the selected statistical method should be determined case by case rather than restricted to a fixed menu.
+
+Length requirement:
+This section should be no less than 1000 words, ensuring sufficient detail in linking hypotheses → data types → analysis methods, with a strong focus on correctness, appropriateness, and justification.
 
 IV. Results Presentation
 Predict the possible differences or trends among the main dependent variables under different experimental conditions, and speculate on possible explanatory mechanisms based on previous research. The output needs to be presented in a structured manner, and each paragraph should clearly correspond to a hypothesis (such as H1, H2, etc.) and include the following three points:
@@ -331,7 +371,7 @@ Predict the possible differences or trends among the main dependent variables un
 **Important implementation requirements:**
 - Must return complete 4 sections, strictly organize content according to the above detailed structure
 - Focus on optimizing the "{{sectionName}}" section to ensure improvement effects meet user suggestions
-- Other sections remain the same or make necessary coordination adjustments, avoid major modifications
+- Try to avoid modifying other sections as much as possible ， remain the same or just make necessary coordination adjustments.
 - Must use Markdown format, content should be detailed and specific, conform to academic standards
 - Style should be close to formal research reports or thesis proposal materials
 
