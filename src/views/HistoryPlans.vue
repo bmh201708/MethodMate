@@ -294,7 +294,7 @@
                                 <div class="space-y-6">
                                     <div
                                         v-if="selectedPlan.fullPlan.hypotheses && selectedPlan.fullPlan.hypotheses.length > 0">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Research Hypothesis</h3>
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Hypothesis</h3>
                                         <div class="space-y-2">
                                             <div v-for="(hypothesis, index) in selectedPlan.fullPlan.hypotheses"
                                                 :key="index" class="p-4 bg-gray-50 rounded-lg">
@@ -317,7 +317,7 @@
                                     </div>
 
                                     <div v-if="selectedPlan.fullPlan.expectedResults">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Results Presentation</h3>
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Expected Results</h3>
                                         <div class="text-gray-600 leading-relaxed prose prose-sm"
                                             v-html="safeMarkdownRender(selectedPlan.fullPlan.expectedResults)"></div>
                                     </div>
@@ -326,7 +326,7 @@
 
                             <!-- Research Hypothesis Section -->
                             <div v-if="activeSection === 'hypothesis'" class="w-full">
-                                <h2 class="text-2xl font-bold text-gray-900 mb-6">Research Hypothesis</h2>
+                                <h2 class="text-2xl font-bold text-gray-900 mb-6">Hypothesis</h2>
                                 <div v-if="selectedPlan.fullPlan.hypotheses && selectedPlan.fullPlan.hypotheses.length > 0"
                                     class="space-y-4 w-full">
                                     <div v-for="(hypothesis, index) in selectedPlan.fullPlan.hypotheses" :key="index"
@@ -385,9 +385,9 @@
                                 </div>
                             </div>
 
-                            <!-- Results Presentation Section -->
+                            <!-- Expected Results Section -->
                             <div v-if="activeSection === 'results'" class="w-full">
-                                <h2 class="text-2xl font-bold text-gray-900 mb-6">Results Presentation</h2>
+                                <h2 class="text-2xl font-bold text-gray-900 mb-6">Expected Results</h2>
                                 <div v-if="selectedPlan.fullPlan.expectedResults" class="space-y-6 w-full">
                                     <div class="text-gray-600 leading-relaxed prose prose-sm max-w-none w-full min-w-[600px]"
                                         v-html="safeMarkdownRender(selectedPlan.fullPlan.expectedResults)"></div>
@@ -400,7 +400,7 @@
                                                 d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                                         </svg>
                                     </div>
-                                    <p class="text-gray-500">This plan has no results presentation content</p>
+                                    <p class="text-gray-500">This plan has no expected results content</p>
                                 </div>
                             </div>
                         </div>
