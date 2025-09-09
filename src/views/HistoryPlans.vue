@@ -1143,16 +1143,16 @@ const regenerateAllTitles = async () => {
         console.log(`- 数据库成功: ${dbSuccessCount} 个`)
         console.log(`- 数据库失败: ${dbFailureCount} 个`)
         
-        // 构建结果消息
-        let resultMessage = `批量标题重新生成完成！\n`
-        resultMessage += `共处理 ${totalPlans} 个方案，成功更新 ${updatedCount} 个标题。`
+        // Build result message
+        let resultMessage = `Batch title regeneration completed!\n`
+        resultMessage += `Processed ${totalPlans} plans, successfully updated ${updatedCount} titles.`
         
         if (userStore.isAuthenticated) {
-            resultMessage += `\n\n数据库同步情况：`
-            resultMessage += `\n✅ 成功：${dbSuccessCount} 个`
+            resultMessage += `\n\nDatabase synchronization status:`
+            resultMessage += `\n✅ Success: ${dbSuccessCount} plans`
             if (dbFailureCount > 0) {
-                resultMessage += `\n❌ 失败：${dbFailureCount} 个`
-                resultMessage += `\n\n注意：部分标题因数据库同步失败已恢复原状，刷新页面后将显示原标题。`
+                resultMessage += `\n❌ Failed: ${dbFailureCount} plans`
+                resultMessage += `\n\nNote: Some titles have been reverted to original due to database sync failure. Original titles will be displayed after page refresh.`
             }
         }
         
