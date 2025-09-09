@@ -2782,21 +2782,24 @@ const generatePlanTitle = () => {
 const extractTitleFromContent = (content) => {
   if (!content || content.length < 10) return null
   
-  // 提取关键概念和技术术语
+  // 提取关键概念和技术术语 (改进版本，避免提取无意义词汇)
   const keywordPatterns = [
-    // 技术和方法相关 (中英文)
-    /(?:基于|使用|采用|通过|based on|using|through|with)([^，。！？.,!?]{3,15}?)(?:的|技术|方法|算法|系统|平台|technology|method|algorithm|system|platform)/gi,
-    // 研究对象和领域 (中英文)
-    /([A-Za-z\u4e00-\u9fa5]{3,15}?)(?:对|与|在|on|with|in|for)([^，。！？.,!?]{3,15}?)(?:的影响|的关系|的效果|中的应用|impact|relationship|effect|application)/gi,
-    // 实验和测试相关 (中英文)
-    /(?:实验|测试|验证|评估|experiment|test|validation|evaluation)([^，。！？.,!?]{3,15}?)(?:的|效果|性能|准确性|effect|performance|accuracy)/gi,
-    // 界面和交互相关 (中英文)
-    /([^，。！？.,!?]{3,15}?)(?:界面|交互|设计|体验|用户体验|interface|interaction|design|experience|user experience|UI|UX)/gi,
-    // AI和智能相关 (中英文)
-    /(人工智能|机器学习|深度学习|神经网络|AI|智能|artificial intelligence|machine learning|deep learning|neural network|intelligent)[^，。！？.,!?]{0,10}?(?:在|对|与|in|on|for|with)([^，。！？.,!?]{3,15})/gi,
-    // 英文专有名词和概念
-    /\b([A-Z][a-zA-Z]{2,14})\s+(technology|system|method|approach|framework|model|algorithm)\b/gi,
-    /\b(virtual reality|augmented reality|human-computer interaction|user interface|machine learning|deep learning|natural language processing|computer vision|VR|AR|HCI|NLP|CV)\b/gi
+    // 技术和方法相关 (中英文) - 更严格的匹配
+    /(?:基于|使用|采用|通过|based on|using|through)([A-Z\u4e00-\u9fa5][A-Za-z\u4e00-\u9fa5]{2,14})(?:的|技术|方法|算法|系统|平台|technology|method|algorithm|system|platform)/gi,
+    // 研究对象和领域 (中英文) - 要求首字母大写或中文
+    /([A-Z\u4e00-\u9fa5][A-Za-z\u4e00-\u9fa5]{2,14})(?:对|与|在|的影响|的关系|的效果|中的应用|impact|relationship|effect|application)/gi,
+    // 实验和测试相关 (中英文) - 避免提取动词本身
+    /(?:实验|测试|验证|评估|experiment|test|validation|evaluation)(?:的|对|关于|of|on|about)([A-Z\u4e00-\u9fa5][A-Za-z\u4e00-\u9fa5]{2,14})/gi,
+    // 界面和交互相关 (中英文) - 专注于具体名词
+    /([A-Z\u4e00-\u9fa5][A-Za-z\u4e00-\u9fa5]{2,14})(?:界面|交互|设计|体验|系统|平台|interface|interaction|design|experience|system|platform)/gi,
+    // AI和智能相关 (中英文) - 具体技术术语
+    /(人工智能|机器学习|深度学习|神经网络|计算机视觉|自然语言处理|人机交互|Machine Learning|Deep Learning|Neural Network|Computer Vision|Natural Language Processing|Human Computer Interaction|AI|ML|DL|NLP|CV|HCI)/gi,
+    // 英文专有名词和概念 - 要求首字母大写
+    /\b([A-Z][a-zA-Z]{2,14})\s+(?:Technology|System|Method|Approach|Framework|Model|Algorithm|Platform|Interface|Application)\b/gi,
+    // 特定技术术语 - 完整匹配
+    /\b(Virtual Reality|Augmented Reality|User Interface|User Experience|Internet of Things|Artificial Intelligence|VR|AR|UI|UX|IoT|API|GPU|CPU)\b/gi,
+    // 中文技术术语
+    /(虚拟现实|增强现实|用户界面|用户体验|物联网|区块链|云计算|大数据|数据挖掘|图像识别|语音识别)/gi
   ]
   
   const extractedKeywords = new Set()
@@ -2813,28 +2816,103 @@ const extractTitleFromContent = (content) => {
     }
   }
   
-  // 清理和筛选关键词
+  // 清理和筛选关键词 (增强版本，更严格的过滤)
   const cleanedKeywords = Array.from(extractedKeywords)
-    .filter(keyword => 
-      keyword.length > 2 && 
-      keyword.length < 15 &&
-      !keyword.includes('假设') &&
-      !keyword.includes('实验') &&
-      !keyword.includes('研究') &&
-      !keyword.includes('分析') &&
-      !keyword.includes('方法') &&
-      !keyword.includes('用户') &&
-      !keyword.includes('数据') &&
-      !keyword.includes('结果') &&
-      !keyword.includes('hypothesis') &&
-      !keyword.includes('experiment') &&
-      !keyword.includes('research') &&
-      !keyword.includes('analysis') &&
-      !keyword.includes('method') &&
-      !keyword.includes('user') &&
-      !keyword.includes('data') &&
-      !keyword.includes('result')
-    )
+    .filter(keyword => {
+      const lowerKeyword = keyword.toLowerCase()
+      const trimmedKeyword = keyword.trim()
+      
+      return (
+        trimmedKeyword.length > 2 && 
+        trimmedKeyword.length < 15 &&
+        // 必须以字母开头
+        /^[A-Za-z\u4e00-\u9fa5]/.test(trimmedKeyword) &&
+        // 过滤中文通用词汇
+        !keyword.includes('假设') &&
+        !keyword.includes('实验') &&
+        !keyword.includes('研究') &&
+        !keyword.includes('分析') &&
+        !keyword.includes('方法') &&
+        !keyword.includes('用户') &&
+        !keyword.includes('数据') &&
+        !keyword.includes('结果') &&
+        !keyword.includes('系统') &&
+        !keyword.includes('设计') &&
+        !keyword.includes('开发') &&
+        !keyword.includes('应用') &&
+        !keyword.includes('技术') &&
+        !keyword.includes('平台') &&
+        // 过滤英文通用词汇
+        !lowerKeyword.includes('hypothesis') &&
+        !lowerKeyword.includes('experiment') &&
+        !lowerKeyword.includes('research') &&
+        !lowerKeyword.includes('analysis') &&
+        !lowerKeyword.includes('method') &&
+        !lowerKeyword.includes('user') &&
+        !lowerKeyword.includes('data') &&
+        !lowerKeyword.includes('result') &&
+        !lowerKeyword.includes('system') &&
+        !lowerKeyword.includes('design') &&
+        !lowerKeyword.includes('development') &&
+        !lowerKeyword.includes('application') &&
+        !lowerKeyword.includes('technology') &&
+        !lowerKeyword.includes('platform') &&
+        !lowerKeyword.includes('approach') &&
+        !lowerKeyword.includes('technique') &&
+        // 过滤连接词和介词
+        lowerKeyword !== 'with' &&
+        lowerKeyword !== 'and' &&
+        lowerKeyword !== 'the' &&
+        lowerKeyword !== 'an' &&
+        lowerKeyword !== 'on' &&
+        lowerKeyword !== 'in' &&
+        lowerKeyword !== 'of' &&
+        lowerKeyword !== 'for' &&
+        lowerKeyword !== 'to' &&
+        lowerKeyword !== 'from' &&
+        lowerKeyword !== 'by' &&
+        lowerKeyword !== 'at' &&
+        lowerKeyword !== 'as' &&
+        // 过滤常见动词
+        lowerKeyword !== 'is' &&
+        lowerKeyword !== 'are' &&
+        lowerKeyword !== 'was' &&
+        lowerKeyword !== 'were' &&
+        lowerKeyword !== 'be' &&
+        lowerKeyword !== 'been' &&
+        lowerKeyword !== 'being' &&
+        lowerKeyword !== 'have' &&
+        lowerKeyword !== 'has' &&
+        lowerKeyword !== 'had' &&
+        // 过滤可能被错误提取的短语
+        !lowerKeyword.includes('emphasis') &&
+        !lowerKeyword.includes('focus') &&
+        !lowerKeyword.includes('attention') &&
+        !lowerKeyword.includes('consideration') &&
+        !lowerKeyword.includes('regard') &&
+        !lowerKeyword.includes('respect') &&
+        !lowerKeyword.includes('context') &&
+        // 确保是英文技术术语或专有名词（不包含中文）
+        (
+          // 必须不包含中文字符
+          !/[\u4e00-\u9fa5]/.test(trimmedKeyword) &&
+          (
+            // 英文专有名词（首字母大写）
+            /^[A-Z][a-z]+/.test(trimmedKeyword) ||
+            // 技术缩写（全大写，2-5个字母）
+            /^[A-Z]{2,5}$/.test(trimmedKeyword) ||
+            // 包含数字的技术术语
+            /[A-Za-z]+\d/.test(trimmedKeyword) ||
+            // 已知的技术术语和缩写
+            /\b(AI|ML|DL|NLP|CV|HCI|VR|AR|UI|UX|IoT|API|GPU|CPU|HTML|CSS|JavaScript|Python|Java|React|Vue|Angular|Node|Express|MongoDB|MySQL|PostgreSQL|Redis|Docker|Kubernetes|AWS|Azure|GCP)\b/i.test(trimmedKeyword) ||
+            // 常见技术术语（不区分大小写）
+            /\b(machine learning|deep learning|neural network|computer vision|natural language processing|artificial intelligence|virtual reality|augmented reality|user experience|user interface|frontend|backend|fullstack|database|framework|library|algorithm|data science|web development|mobile development|cloud computing|microservices|devops)\b/i.test(trimmedKeyword) ||
+            // 编程语言和技术
+            /\b(typescript|javascript|python|java|golang|rust|swift|kotlin|dart|flutter|reactjs|vuejs|angular|nodejs|express|django|flask|spring|laravel|rails|nextjs|nuxtjs|svelte|tailwind|bootstrap)\b/i.test(trimmedKeyword)
+          )
+        )
+      )
+    })
     .slice(0, 2) // 最多取2个关键词
   
   if (cleanedKeywords.length > 0) {
@@ -2842,15 +2920,93 @@ const extractTitleFromContent = (content) => {
     if (title.length > 30) {
       title = cleanedKeywords[0]
     }
+    
+    // 验证标题质量
+    if (!isValidResearchTitle(title)) {
+      return null // 返回null表示标题无效
+    }
+    
     // 添加研究后缀
     if (!title.includes('研究') && !title.includes('分析') && !title.includes('评估') &&
         !title.includes('Research') && !title.includes('Analysis') && !title.includes('Study')) {
       title += ' Research'
     }
+    
+    // 最终验证
+    if (!isValidResearchTitle(title)) {
+      return null
+    }
+    
     return title
   }
   
   return null
+}
+
+// 标题验证函数，确保生成的标题有意义
+const isValidResearchTitle = (title) => {
+  if (!title || typeof title !== 'string') return false
+  
+  const trimmedTitle = title.trim()
+  
+  // 基本长度和内容检查
+  if (trimmedTitle.length < 3 || trimmedTitle.length > 50) return false
+  
+  // 必须包含至少一个字母或中文字符
+  if (!/[A-Za-z\u4e00-\u9fa5]/.test(trimmedTitle)) return false
+  
+  // 检查无意义的组合
+  const lowerTitle = trimmedTitle.toLowerCase()
+  
+  // 拒绝只包含连接词或介词的标题
+  const meaninglessWords = [
+    'with', 'and', 'the', 'an', 'on', 'in', 'of', 'for', 'to', 'from', 'by', 'at', 'as',
+    'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
+    'emphasis', 'focus', 'attention', 'consideration', 'regard', 'respect',
+    '的', '与', '和', '在', '对', '从', '由', '通过', '关于', '针对'
+  ]
+  
+  // 如果标题只包含无意义的词汇，拒绝它
+  const titleWords = trimmedTitle.toLowerCase().split(/\s+/)
+  const chineseWords = trimmedTitle.match(/[\u4e00-\u9fa5]+/g) || []
+  const allWords = [...titleWords, ...chineseWords]
+  const meaningfulWords = allWords.filter(word => !meaninglessWords.includes(word))
+  
+  if (meaningfulWords.length === 0) return false
+  
+  // 拒绝过于通用或模糊的标题
+  const genericPatterns = [
+    /^(with|and|the|an|on|in|of|for|to|from|by|at|as)\s/i,
+    /\s(with|and|the|an|on|in|of|for|to|from|by|at|as)$/i,
+    /^(emphasis|focus|attention)\s/i,
+    /\bemphasis\s+on\b/i,
+    /^(的|与|和|在|对|从|由|通过|关于|针对)/,
+    /^study$/i,
+    /^research$/i,
+    /^analysis$/i,
+    /^method$/i,
+    /^approach$/i,
+    /^研究$/,
+    /^分析$/,
+    /^方法$/,
+    /^评估$/
+  ]
+  
+  for (const pattern of genericPatterns) {
+    if (pattern.test(trimmedTitle)) return false
+  }
+  
+  // 必须包含至少一个实质性的词汇（3个字符以上，不是常见词汇）
+  const substantialWords = meaningfulWords.filter(word => {
+    if (word.length < 3) return false
+    
+    const commonEnglishWords = ['the', 'and', 'for', 'are', 'was', 'you', 'all', 'can', 'had', 'her', 'his', 'how', 'man', 'new', 'now', 'old', 'see', 'two', 'way', 'who', 'boy', 'did', 'its', 'let', 'put', 'say', 'she', 'too', 'use']
+    const commonChineseWords = ['这个', '那个', '什么', '怎么', '可以', '应该', '需要', '进行', '实现', '完成']
+    
+    return !commonEnglishWords.includes(word.toLowerCase()) && !commonChineseWords.includes(word)
+  })
+  
+  return substantialWords.length > 0
 }
 
 // 新增：从用户需求中提取标题的函数

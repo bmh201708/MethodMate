@@ -1245,24 +1245,34 @@ const generateTitleFromPlan = (plan, maxLength = 50) => {
 const extractTitleFromContent = (content, maxLength = 50) => {
     if (!content || content.length < 10) return null
     
-    // Extract English keywords and technical terms
+    // Extract English keywords and technical terms with improved patterns
     const keywordPatterns = [
-        // Technology and method related
-        /\b(using|based on|through|via|with)\s+([A-Za-z][A-Za-z0-9\s]{2,15})\b(?:\s+(?:technology|method|algorithm|system|platform|approach|technique))?/gi,
-        // Research subjects and domains
-        /\b([A-Za-z][A-Za-z0-9\s]{2,15})\s+(?:impact|effect|influence|relationship|application|performance|evaluation)/gi,
-        // Experimental and testing related
-        /\b(?:experiment|test|validation|evaluation|assessment)\s+(?:of|on|for)\s+([A-Za-z][A-Za-z0-9\s]{2,15})/gi,
-        // Interface and interaction related
-        /\b([A-Za-z][A-Za-z0-9\s]{2,15})\s+(?:interface|interaction|design|experience|usability)/gi,
-        // AI and intelligence related
-        /\b(AI|artificial intelligence|machine learning|deep learning|neural network|intelligent)\s+([A-Za-z][A-Za-z0-9\s]{2,15})/gi,
-        // Research topics
-        /\b(?:study|research|analysis|investigation)\s+(?:of|on|for)\s+([A-Za-z][A-Za-z0-9\s]{2,15})/gi,
-        // Comparative research
-        /\b(?:comparison|comparing)\s+([A-Za-z][A-Za-z0-9\s]{2,15})\s+(?:and|vs|versus)\s+([A-Za-z][A-Za-z0-9\s]{2,15})/gi,
-        // General English technical terms
-        /\b([A-Za-z]{3,15})\s+(?:optimization|enhancement|improvement|development|implementation)/gi
+        // Specific technology and methods (avoid generic connectors)
+        /\b(?:using|based on|through|via)\s+([A-Z][A-Za-z0-9]{2,14}(?:\s+[A-Z][A-Za-z0-9]{2,14}){0,2})\s+(?:technology|method|algorithm|system|platform|approach|technique|framework|model)/gi,
+        
+        // Research subjects with clear context
+        /\b([A-Z][A-Za-z0-9]{2,14}(?:\s+[A-Z][A-Za-z0-9]{2,14}){0,2})\s+(?:impact|effect|influence|relationship|application|performance|evaluation|assessment|optimization)/gi,
+        
+        // Experimental subjects (avoid generic prepositions)
+        /\b(?:experiment|test|validation|evaluation|assessment)\s+(?:of|on)\s+([A-Z][A-Za-z0-9]{2,14}(?:\s+[A-Z][A-Za-z0-9]{2,14}){0,2})/gi,
+        
+        // Interface and interaction with proper nouns
+        /\b([A-Z][A-Za-z0-9]{2,14}(?:\s+[A-Z][A-Za-z0-9]{2,14}){0,2})\s+(?:interface|interaction|design|experience|usability|system|platform)/gi,
+        
+        // AI and intelligence related (specific terms only)
+        /\b(Machine Learning|Deep Learning|Neural Network|Computer Vision|Natural Language Processing|Artificial Intelligence|AI|ML|DL|NLP|CV)\b/gi,
+        
+        // Research topics with proper nouns
+        /\b(?:study|research|analysis|investigation)\s+(?:of|on)\s+([A-Z][A-Za-z0-9]{2,14}(?:\s+[A-Z][A-Za-z0-9]{2,14}){0,2})/gi,
+        
+        // Comparative research (proper nouns only)
+        /\b(?:comparison|comparing)\s+([A-Z][A-Za-z0-9]{2,14}(?:\s+[A-Z][A-Za-z0-9]{2,14}){0,1})\s+(?:and|vs|versus)\s+([A-Z][A-Za-z0-9]{2,14}(?:\s+[A-Z][A-Za-z0-9]{2,14}){0,1})/gi,
+        
+        // Technical terms with proper context
+        /\b([A-Z][A-Za-z0-9]{2,14}(?:\s+[A-Z][A-Za-z0-9]{2,14}){0,1})\s+(?:optimization|enhancement|improvement|development|implementation|algorithm|framework|model|system)/gi,
+        
+        // Standalone technical terms (capitalized, likely proper nouns)
+        /\b([A-Z][A-Za-z0-9]{2,14}(?:\s+[A-Z][A-Za-z0-9]{2,14}){0,2})\b(?=\s+(?:technology|system|platform|framework|algorithm|method|approach|model|interface|application|software|hardware|protocol|standard))/gi
     ]
     
     const extractedKeywords = new Set()
@@ -1284,13 +1294,20 @@ const extractTitleFromContent = (content, maxLength = 50) => {
         }
     }
     
-    // Filter and clean keywords
+    // Filter and clean keywords with enhanced filtering
     const cleanedKeywords = Array.from(extractedKeywords)
         .filter(keyword => {
             const lowerKeyword = keyword.toLowerCase()
+            const trimmedKeyword = keyword.trim()
+            
+            // Enhanced filtering conditions
             return (
-                keyword.length >= 3 && 
-                keyword.length <= 15 &&
+                trimmedKeyword.length >= 3 && 
+                trimmedKeyword.length <= 15 &&
+                // Must start with a letter (not a number or symbol)
+                /^[A-Za-z]/.test(trimmedKeyword) &&
+                // Must contain meaningful content (not just common words)
+                /[A-Za-z]{3,}/.test(trimmedKeyword) &&
                 // Filter out common generic terms
                 !lowerKeyword.includes('experiment') &&
                 !lowerKeyword.includes('research') &&
@@ -1302,8 +1319,71 @@ const extractTitleFromContent = (content, maxLength = 50) => {
                 !lowerKeyword.includes('validation') &&
                 !lowerKeyword.includes('design') &&
                 !lowerKeyword.includes('results') &&
-                // Ensure it contains at least one letter
-                /[A-Za-z]/.test(keyword)
+                !lowerKeyword.includes('approach') &&
+                !lowerKeyword.includes('technique') &&
+                // Filter out common connecting words and prepositions
+                lowerKeyword !== 'with' &&
+                lowerKeyword !== 'and' &&
+                lowerKeyword !== 'the' &&
+                lowerKeyword !== 'an' &&
+                lowerKeyword !== 'on' &&
+                lowerKeyword !== 'in' &&
+                lowerKeyword !== 'of' &&
+                lowerKeyword !== 'for' &&
+                lowerKeyword !== 'to' &&
+                lowerKeyword !== 'from' &&
+                lowerKeyword !== 'by' &&
+                lowerKeyword !== 'at' &&
+                lowerKeyword !== 'as' &&
+                lowerKeyword !== 'is' &&
+                lowerKeyword !== 'are' &&
+                lowerKeyword !== 'was' &&
+                lowerKeyword !== 'were' &&
+                lowerKeyword !== 'be' &&
+                lowerKeyword !== 'been' &&
+                lowerKeyword !== 'being' &&
+                lowerKeyword !== 'have' &&
+                lowerKeyword !== 'has' &&
+                lowerKeyword !== 'had' &&
+                lowerKeyword !== 'do' &&
+                lowerKeyword !== 'does' &&
+                lowerKeyword !== 'did' &&
+                lowerKeyword !== 'will' &&
+                lowerKeyword !== 'would' &&
+                lowerKeyword !== 'could' &&
+                lowerKeyword !== 'should' &&
+                lowerKeyword !== 'can' &&
+                lowerKeyword !== 'may' &&
+                lowerKeyword !== 'might' &&
+                lowerKeyword !== 'must' &&
+                // Filter out common phrases that might be captured
+                !lowerKeyword.includes('emphasis') &&
+                !lowerKeyword.includes('focus') &&
+                !lowerKeyword.includes('attention') &&
+                !lowerKeyword.includes('consideration') &&
+                !lowerKeyword.includes('regard') &&
+                !lowerKeyword.includes('respect') &&
+                !lowerKeyword.includes('context') &&
+                !lowerKeyword.includes('background') &&
+                !lowerKeyword.includes('introduction') &&
+                !lowerKeyword.includes('conclusion') &&
+                // Ensure it's an English technical term or proper noun (no Chinese characters)
+                (
+                    // Must not contain Chinese characters
+                    !/[\u4e00-\u9fa5]/.test(trimmedKeyword) &&
+                    (
+                        // English proper nouns (starts with capital letter)
+                        /^[A-Z][a-z]+/.test(trimmedKeyword) || 
+                        // Technical acronyms (all caps, 2-5 letters)
+                        /^[A-Z]{2,5}$/.test(trimmedKeyword) ||
+                        // Known technical terms and acronyms
+                        /\b(AI|ML|DL|NLP|CV|API|UI|UX|VR|AR|IoT|GPU|CPU|HTML|CSS|JavaScript|Python|Java|React|Vue|Angular|Node|Express|MongoDB|MySQL|PostgreSQL|Redis|Docker|Kubernetes|AWS|Azure|GCP)\b/i.test(trimmedKeyword) ||
+                        // Common technical terms (case insensitive)
+                        /\b(machine learning|deep learning|neural network|computer vision|natural language processing|artificial intelligence|virtual reality|augmented reality|user experience|user interface|frontend|backend|fullstack|database|framework|library|algorithm|data science|web development|mobile development|cloud computing|microservices|devops)\b/i.test(trimmedKeyword) ||
+                        // Programming languages and technologies
+                        /\b(typescript|javascript|python|java|golang|rust|swift|kotlin|dart|flutter|reactjs|vuejs|angular|nodejs|express|django|flask|spring|laravel|rails|nextjs|nuxtjs|svelte|tailwind|bootstrap)\b/i.test(trimmedKeyword)
+                    )
+                )
             )
         })
         .slice(0, 2) // Take at most 2 keywords
@@ -1314,6 +1394,11 @@ const extractTitleFromContent = (content, maxLength = 50) => {
         // If title is too long, use only the first keyword
         if (title.length > maxLength * 0.7) {
             title = cleanedKeywords[0]
+        }
+        
+        // Validate title quality before proceeding
+        if (!isValidTitle(title)) {
+            return null // Return null for invalid titles
         }
         
         // Add "Study" suffix if there's room and it doesn't already contain research terms
@@ -1339,10 +1424,69 @@ const extractTitleFromContent = (content, maxLength = 50) => {
             word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
         ).join(' ')
         
+        // Final validation after processing
+        if (!isValidTitle(title)) {
+            return null
+        }
+        
         return title
     }
     
     return null
+}
+
+// Title validation function to ensure generated titles are meaningful
+const isValidTitle = (title) => {
+    if (!title || typeof title !== 'string') return false
+    
+    const trimmedTitle = title.trim()
+    
+    // Basic length and content checks
+    if (trimmedTitle.length < 3 || trimmedTitle.length > 50) return false
+    
+    // Must contain at least one letter
+    if (!/[A-Za-z\u4e00-\u9fa5]/.test(trimmedTitle)) return false
+    
+    // Check for meaningless combinations
+    const lowerTitle = trimmedTitle.toLowerCase()
+    
+    // Reject titles that are just connecting words or prepositions
+    const meaninglessWords = [
+        'with', 'and', 'the', 'an', 'on', 'in', 'of', 'for', 'to', 'from', 'by', 'at', 'as',
+        'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
+        'emphasis', 'focus', 'attention', 'consideration', 'regard', 'respect'
+    ]
+    
+    // If title consists only of meaningless words, reject it
+    const titleWords = trimmedTitle.toLowerCase().split(/\s+/)
+    const meaningfulWords = titleWords.filter(word => !meaninglessWords.includes(word))
+    
+    if (meaningfulWords.length === 0) return false
+    
+    // Reject titles that are too generic or vague
+    const genericPatterns = [
+        /^(with|and|the|an|on|in|of|for|to|from|by|at|as)\s/i,
+        /\s(with|and|the|an|on|in|of|for|to|from|by|at|as)$/i,
+        /^(emphasis|focus|attention)\s/i,
+        /\bemphasis\s+on\b/i,
+        /^study$/i,
+        /^research$/i,
+        /^analysis$/i,
+        /^method$/i,
+        /^approach$/i
+    ]
+    
+    for (const pattern of genericPatterns) {
+        if (pattern.test(trimmedTitle)) return false
+    }
+    
+    // Must contain at least one substantial word (3+ characters, not a common word)
+    const substantialWords = meaningfulWords.filter(word => 
+        word.length >= 3 && 
+        !['the', 'and', 'for', 'are', 'was', 'you', 'all', 'can', 'had', 'her', 'his', 'how', 'man', 'new', 'now', 'old', 'see', 'two', 'way', 'who', 'boy', 'did', 'its', 'let', 'put', 'say', 'she', 'too', 'use'].includes(word)
+    )
+    
+    return substantialWords.length > 0
 }
 
 // 下载PDF功能
