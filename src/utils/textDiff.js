@@ -332,11 +332,11 @@ function renderMarkdownLine(text, diffClass = '') {
         htmlContent = htmlContent.replace(/^<p>(.*?)<\/p>$/s, '$1')
       }
       
-      return `<div class="markdown-content ${diffClass}">${htmlContent}</div>`
+      return `<div class="markdown-content ${diffClass}" data-diff-type="${diffClass}">${htmlContent}</div>`
     } else {
       // 对于简单的行内内容，使用inline渲染
       const htmlContent = marked.parseInline(cleanText)
-      return `<span class="markdown-inline ${diffClass}">${htmlContent}</span>`
+      return `<span class="markdown-inline ${diffClass}" data-diff-type="${diffClass}">${htmlContent}</span>`
     }
   } catch (error) {
     console.warn('Markdown行渲染失败，回退到纯文本:', error)

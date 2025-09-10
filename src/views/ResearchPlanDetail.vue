@@ -5119,64 +5119,89 @@ const closePlanComparison = () => {
 :deep(.diff-line.removed .markdown-content),
 :deep(.diff-line.removed .markdown-inline *),
 :deep(.diff-line.removed .markdown-content *) {
-  color: inherit !important;
-  background: inherit !important;
+  color: #dc2626 !important;
+  background-color: #fef2f2 !important;
 }
 
 :deep(.diff-line.added .markdown-inline),
 :deep(.diff-line.added .markdown-content),
 :deep(.diff-line.added .markdown-inline *),
 :deep(.diff-line.added .markdown-content *) {
-  color: inherit !important;
-  background: inherit !important;
+  color: #16a34a !important;
+  background-color: #f0fdf4 !important;
 }
 
 :deep(.diff-line.unchanged .markdown-inline),
 :deep(.diff-line.unchanged .markdown-content),
 :deep(.diff-line.unchanged .markdown-inline *),
 :deep(.diff-line.unchanged .markdown-content *) {
-  color: inherit !important;
-  background: inherit !important;
+  color: #374151 !important;
+  background-color: transparent !important;
 }
 
 :deep(.diff-line.no-change .markdown-inline),
 :deep(.diff-line.no-change .markdown-content),
 :deep(.diff-line.no-change .markdown-inline *),
 :deep(.diff-line.no-change .markdown-content *) {
-  color: inherit !important;
-  background: inherit !important;
+  color: #6b7280 !important;
+  background-color: #f8fafc !important;
 }
 
 :deep(.diff-item.removed .markdown-inline),
 :deep(.diff-item.removed .markdown-content),
 :deep(.diff-item.removed .markdown-inline *),
 :deep(.diff-item.removed .markdown-content *) {
-  color: inherit !important;
-  background: inherit !important;
+  color: #dc2626 !important;
+  background-color: #fef2f2 !important;
 }
 
 :deep(.diff-item.added .markdown-inline),
 :deep(.diff-item.added .markdown-content),
 :deep(.diff-item.added .markdown-inline *),
 :deep(.diff-item.added .markdown-content *) {
-  color: inherit !important;
-  background: inherit !important;
+  color: #16a34a !important;
+  background-color: #f0fdf4 !important;
 }
 
 :deep(.diff-item.unchanged .markdown-inline),
 :deep(.diff-item.unchanged .markdown-content),
 :deep(.diff-item.unchanged .markdown-inline *),
 :deep(.diff-item.unchanged .markdown-content *) {
-  color: inherit !important;
-  background: inherit !important;
+  color: #374151 !important;
+  background-color: transparent !important;
 }
 
 :deep(.diff-item.no-change .markdown-inline),
 :deep(.diff-item.no-change .markdown-content),
 :deep(.diff-item.no-change .markdown-inline *),
 :deep(.diff-item.no-change .markdown-content *) {
-  color: inherit !important;
-  background: inherit !important;
+  color: #6b7280 !important;
+  background-color: #f8fafc !important;
+}
+
+/* 额外确保差异颜色对所有Markdown元素生效 */
+:deep(.diff-line.removed),
+:deep(.diff-line.removed *) {
+  color: #dc2626 !important;
+  background-color: #fef2f2 !important;
+}
+
+:deep(.diff-line.added),
+:deep(.diff-line.added *) {
+  color: #16a34a !important;
+  background-color: #f0fdf4 !important;
+}
+
+:deep(.diff-item.removed),
+:deep(.diff-item.removed *) {
+  color: #dc2626 !important;
+  background-color: #fef2f2 !important;
+}
+
+:deep(.diff-item.added),
+:deep(.diff-item.added *) {
+  color: #16a34a !important;
+  background-color: #f0fdf4 !important;
 }
 
 /* 保持Markdown格式，但确保背景透明 */
