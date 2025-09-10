@@ -1029,6 +1029,10 @@
                 <div class="w-3 h-3 bg-gray-100 rounded-full border border-gray-300"></div>
                 <span class="text-gray-700">Unchanged</span>
               </div>
+              <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 bg-slate-100 rounded-full border border-slate-300"></div>
+                <span class="text-slate-700">No Changes</span>
+              </div>
             </div>
             <div v-html="planComparisonHTML"></div>
           </div>
@@ -4957,6 +4961,179 @@ const closePlanComparison = () => {
   font-style: italic;
   color: #9ca3af;
   text-align: center;
+}
+
+/* Markdown渲染内容的差异样式 */
+:deep(.markdown-content),
+:deep(.markdown-inline) {
+  display: contents; /* 让容器不影响布局 */
+}
+
+/* 确保Markdown渲染的内容继承父元素的diff颜色 */
+:deep(.diff-line.removed .markdown-inline),
+:deep(.diff-line.removed .markdown-content),
+:deep(.diff-line.removed .markdown-inline *),
+:deep(.diff-line.removed .markdown-content *) {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+:deep(.diff-line.added .markdown-inline),
+:deep(.diff-line.added .markdown-content),
+:deep(.diff-line.added .markdown-inline *),
+:deep(.diff-line.added .markdown-content *) {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+:deep(.diff-line.unchanged .markdown-inline),
+:deep(.diff-line.unchanged .markdown-content),
+:deep(.diff-line.unchanged .markdown-inline *),
+:deep(.diff-line.unchanged .markdown-content *) {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+:deep(.diff-line.no-change .markdown-inline),
+:deep(.diff-line.no-change .markdown-content),
+:deep(.diff-line.no-change .markdown-inline *),
+:deep(.diff-line.no-change .markdown-content *) {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+:deep(.diff-item.removed .markdown-inline),
+:deep(.diff-item.removed .markdown-content),
+:deep(.diff-item.removed .markdown-inline *),
+:deep(.diff-item.removed .markdown-content *) {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+:deep(.diff-item.added .markdown-inline),
+:deep(.diff-item.added .markdown-content),
+:deep(.diff-item.added .markdown-inline *),
+:deep(.diff-item.added .markdown-content *) {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+:deep(.diff-item.unchanged .markdown-inline),
+:deep(.diff-item.unchanged .markdown-content),
+:deep(.diff-item.unchanged .markdown-inline *),
+:deep(.diff-item.unchanged .markdown-content *) {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+:deep(.diff-item.no-change .markdown-inline),
+:deep(.diff-item.no-change .markdown-content),
+:deep(.diff-item.no-change .markdown-inline *),
+:deep(.diff-item.no-change .markdown-content *) {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+/* 保持Markdown格式，但确保背景透明 */
+:deep(.markdown-inline h1), :deep(.markdown-inline h2), :deep(.markdown-inline h3),
+:deep(.markdown-inline h4), :deep(.markdown-inline h5), :deep(.markdown-inline h6),
+:deep(.markdown-content h1), :deep(.markdown-content h2), :deep(.markdown-content h3),
+:deep(.markdown-content h4), :deep(.markdown-content h5), :deep(.markdown-content h6) {
+  background: transparent !important;
+  margin: 0.25rem 0 !important;
+  font-weight: bold !important;
+  font-size: inherit !important; /* 继承父级字体大小，避免标题过大 */
+}
+
+/* 标题大小调整 */
+:deep(.markdown-content h1) { font-size: 1.2em !important; }
+:deep(.markdown-content h2) { font-size: 1.15em !important; }
+:deep(.markdown-content h3) { font-size: 1.1em !important; }
+:deep(.markdown-content h4) { font-size: 1.05em !important; }
+:deep(.markdown-content h5) { font-size: 1em !important; }
+:deep(.markdown-content h6) { font-size: 1em !important; }
+
+/* 列表样式 */
+:deep(.markdown-content ul), :deep(.markdown-content ol) {
+  background: transparent !important;
+  margin: 0.25rem 0 !important;
+  padding-left: 1.5rem !important;
+}
+
+:deep(.markdown-content li) {
+  background: transparent !important;
+  margin: 0.125rem 0 !important;
+  color: inherit !important;
+}
+
+:deep(.markdown-content p) {
+  background: transparent !important;
+  margin: 0.25rem 0 !important;
+  color: inherit !important;
+}
+
+/* 减少diff容器中的空白 */
+:deep(.diff-line) {
+  padding: 0.25rem 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-radius: 0.25rem;
+  margin: 0.125rem 0;
+  line-height: 1.4 !important; /* 减少行高 */
+}
+
+:deep(.diff-line:empty),
+:deep(.diff-line:blank),
+:deep(.diff-line > *:empty) {
+  display: none !important; /* 强制隐藏所有空行 */
+}
+
+/* 移除所有不必要的空白 */
+:deep(.markdown-content br),
+:deep(.markdown-inline br) {
+  display: none !important; /* 移除所有换行符 */
+}
+
+:deep(.column-content > div:empty),
+:deep(.no-change-content > div:empty) {
+  display: none !important; /* 隐藏空的内容容器 */
+}
+
+:deep(.markdown-content) {
+  line-height: 1.4 !important; /* 统一行高 */
+}
+
+:deep(.markdown-content > *:first-child) {
+  margin-top: 0 !important; /* 移除第一个元素的上边距 */
+}
+
+:deep(.markdown-content > *:last-child) {
+  margin-bottom: 0 !important; /* 移除最后一个元素的下边距 */
+}
+
+:deep(.markdown-inline strong), :deep(.markdown-content strong) {
+  font-weight: bold !important;
+  background: transparent !important;
+}
+
+:deep(.markdown-inline em), :deep(.markdown-content em) {
+  font-style: italic !important;
+  background: transparent !important;
+}
+
+:deep(.markdown-inline code), :deep(.markdown-content code) {
+  background: rgba(0, 0, 0, 0.1) !important;
+  padding: 0.125rem 0.25rem !important;
+  border-radius: 0.25rem !important;
+  font-family: 'Courier New', monospace !important;
+}
+
+:deep(.markdown-inline pre), :deep(.markdown-content pre) {
+  background: rgba(0, 0, 0, 0.05) !important;
+  padding: 0.5rem !important;
+  border-radius: 0.25rem !important;
+  overflow-x: auto !important;
+  margin: 0.25rem 0 !important;
 }
 
 /* 响应式设计 */
