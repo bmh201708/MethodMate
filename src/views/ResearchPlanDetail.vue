@@ -709,9 +709,9 @@
     <div v-if="showIterateDialogModal" 
          class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
          @click.self="closeIterateDialog">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden transform transition-all duration-300">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col transform transition-all duration-300">
         <!-- 头部 -->
-        <div class="px-8 py-6 border-b border-gray-100">
+        <div class="px-8 py-6 border-b border-gray-100 flex-shrink-0">
           <div class="flex items-center justify-between">
             <div>
               <h3 class="text-xl font-semibold text-gray-900">{{ getIterateDialogTitle() }}</h3>
@@ -721,7 +721,7 @@
             </div>
             <button
               @click="closeIterateDialog"
-              class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-xl hover:bg-gray-100"
+              class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-xl hover:bg-gray-100 flex-shrink-0"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -730,9 +730,8 @@
           </div>
         </div>
         
-        <!-- 内容区域 -->
-        <div class="px-8 py-6 max-h-[60vh] overflow-y-auto">
-        
+        <!-- 内容区域 - 可滚动 -->
+        <div class="flex-1 px-8 py-6 overflow-y-auto min-h-0">
           <!-- 预设建议选项 -->
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-3">Quick selection suggestions</label>
@@ -753,7 +752,7 @@
             </div>
           </div>
         
-                  <!-- 迭代建议输入框 -->
+          <!-- 迭代建议输入框 -->
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-3">Iterative suggestions</label>
             <textarea
@@ -765,8 +764,8 @@
           </div>
         </div>
 
-        <!-- 操作按钮 -->
-        <div class="px-8 py-6 border-t border-gray-100 flex justify-end space-x-3">
+        <!-- 操作按钮 - 固定在底部 -->
+        <div class="px-8 py-6 border-t border-gray-100 flex justify-end space-x-3 flex-shrink-0">
           <button
             @click="closeIterateDialog"
             class="px-6 py-3 text-gray-700 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors font-medium"
@@ -4892,6 +4891,72 @@ const closePlanComparison = () => {
   background: #f9fafb;
   border-left-color: #6b7280;
   color: #374151;
+}
+
+/* 无变化内容显示样式 */
+:deep(.no-change-display),
+:deep(.no-change-array-display) {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: white;
+  margin-bottom: 1rem;
+}
+
+:deep(.no-change-indicator) {
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+:deep(.no-change-badge) {
+  display: inline-block;
+  background: #6b7280;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+:deep(.no-change-content) {
+  padding: 1rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+:deep(.diff-line.no-change) {
+  color: #6b7280;
+  background: #f8fafc;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  margin: 0.125rem 0;
+}
+
+:deep(.diff-line.no-change.empty) {
+  font-style: italic;
+  color: #9ca3af;
+  text-align: center;
+}
+
+:deep(.diff-item.no-change) {
+  background: #f8fafc;
+  border-left-color: #6b7280;
+  color: #6b7280;
+  border-left-width: 3px;
+  border-left-style: solid;
+  padding: 0.5rem;
+  margin: 0.25rem 0;
+  border-radius: 0.25rem;
+}
+
+:deep(.diff-item.no-change.empty) {
+  font-style: italic;
+  color: #9ca3af;
+  text-align: center;
 }
 
 /* 响应式设计 */
