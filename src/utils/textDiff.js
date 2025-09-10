@@ -3,6 +3,30 @@
  * 用于比较迭代前后的方案内容，生成带有颜色标记的差异显示
  */
 
+import { marked } from 'marked'
+import markedKatex from 'marked-katex-extension'
+
+// 配置Markdown解析器
+marked.use(markedKatex({
+  throwOnError: false,
+  delimiters: [
+    {left: '$$', right: '$$', display: true},
+    {left: '$', right: '$', display: false},
+    {left: '\\(', right: '\\)', display: false},
+    {left: '\\[', right: '\\]', display: true}
+  ]
+}))
+
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+  sanitize: false,
+  smartLists: true,
+  smartypants: true,
+  headerIds: false, // 禁用标题ID生成
+  mangle: false    // 禁用email地址混淆
+})
+
 // 改进的文本差异比较函数 - 支持多级对比
 export function compareText(oldText, newText) {
   if (!oldText && !newText) return { added: [], removed: [], unchanged: [] }
@@ -31,10 +55,18 @@ export function compareText(oldText, newText) {
   return lineResult
 }
 
-// 行级比较（原有逻辑）
+// 行级比较（原有逻辑）- 完全移除空行
 function compareByLines(oldText, newText) {
-  const oldLines = oldText.split('\n').filter(line => line.trim() !== '')
-  const newLines = newText.split('\n').filter(line => line.trim() !== '')
+  // 完全移除所有空行
+  const splitAndClean = (text) => {
+    return text
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line !== '') // 只保留非空行
+  }
+  
+  const oldLines = splitAndClean(oldText)
+  const newLines = splitAndClean(newText)
   
   const result = {
     added: [],
@@ -73,8 +105,12 @@ function compareByLines(oldText, newText) {
 function compareBySentences(oldText, newText) {
   // 按句子分割（考虑中英文句号、问号、感叹号）
   const sentenceRegex = /[.!?。！？]+\s*/g
-  const oldSentences = oldText.split(sentenceRegex).filter(s => s.trim() !== '')
-  const newSentences = newText.split(sentenceRegex).filter(s => s.trim() !== '')
+  const oldSentences = oldText.split(sentenceRegex)
+    .map(s => s.trim())
+    .filter(s => s !== '') // 完全移除空句子
+  const newSentences = newText.split(sentenceRegex)
+    .map(s => s.trim())
+    .filter(s => s !== '') // 完全移除空句子
   
   const result = {
     added: [],
@@ -241,6 +277,71 @@ function escapeHtml(text) {
   const div = document.createElement('div')
   div.textContent = text
   return div.innerHTML
+}
+
+// 安全的Markdown渲染函数，保持diff样式类
+function renderMarkdownWithDiffClass(text, diffClass = '') {
+  try {
+    // 渲染Markdown
+    const htmlContent = marked.parse(text)
+    
+    // 如果有diff类，需要包装在带有diff类的容器中
+    if (diffClass) {
+      return `<div class="markdown-content ${diffClass}">${htmlContent}</div>`
+    }
+    
+    return `<div class="markdown-content">${htmlContent}</div>`
+  } catch (error) {
+    console.warn('Markdown渲染失败，回退到纯文本:', error)
+    // 如果Markdown渲染失败，回退到转义的HTML
+    return escapeHtml(text)
+  }
+}
+
+// 渲染Markdown行内容
+function renderMarkdownLine(text, diffClass = '') {
+  try {
+    // 清理文本，移除多余的空白
+    const cleanText = text.trim()
+    if (!cleanText) {
+      return '' // 返回空字符串而不是空span，减少空行
+    }
+    
+    // 检查是否是多行内容或包含块级元素
+    const hasBlockElements = cleanText.includes('\n') || 
+                            cleanText.match(/^#{1,6}\s/) || 
+                            cleanText.match(/^\s*[-*+]\s/) || 
+                            cleanText.match(/^\s*\d+\.\s/) ||
+                            cleanText.includes('```') ||
+                            cleanText.includes('$$')
+    
+    if (hasBlockElements) {
+      // 使用完整的Markdown解析
+      let htmlContent = marked.parse(cleanText)
+      // 清理HTML：完全移除空行和空段落
+      htmlContent = htmlContent
+        .replace(/<p>\s*<\/p>/g, '') // 移除空段落
+        .replace(/\n\s*\n/g, '') // 完全移除换行
+        .replace(/\n/g, '') // 移除所有换行符
+        .replace(/^\s+|\s+$/g, '') // 移除首尾空白
+        .replace(/<\/p>\s*<p>/g, '</p><p>') // 清理段落间的空白
+        .replace(/>\s+</g, '><') // 移除标签间的空白
+      
+      // 移除外层的<p>标签如果整个内容只是一个段落
+      if (htmlContent.match(/^<p>.*<\/p>$/s) && !htmlContent.includes('</p><p>')) {
+        htmlContent = htmlContent.replace(/^<p>(.*?)<\/p>$/s, '$1')
+      }
+      
+      return `<div class="markdown-content ${diffClass}">${htmlContent}</div>`
+    } else {
+      // 对于简单的行内内容，使用inline渲染
+      const htmlContent = marked.parseInline(cleanText)
+      return `<span class="markdown-inline ${diffClass}">${htmlContent}</span>`
+    }
+  } catch (error) {
+    console.warn('Markdown行渲染失败，回退到纯文本:', error)
+    return escapeHtml(text)
+  }
 }
 
 // 比较两个对象数组（如研究假设）
@@ -583,7 +684,7 @@ export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
   return html
 }
 
-// 生成左右分栏的文本差异HTML（左边原文，右边修改后）
+// 生成左右分栏的文本差异HTML（左边原文，右边修改后）- 支持Markdown渲染
 export function generateLeftRightDiffHTML(oldText, newText) {
   const diff = compareText(oldText, newText)
   
@@ -598,14 +699,20 @@ export function generateLeftRightDiffHTML(oldText, newText) {
   // 显示删除的内容（红色）
   if (diff.removed.length > 0) {
     diff.removed.forEach(line => {
-      html += `<div class="diff-line removed">${escapeHtml(line)}</div>`
+      const renderedContent = renderMarkdownLine(line, 'removed-content')
+      if (renderedContent.trim()) { // 只显示非空内容
+        html += `<div class="diff-line removed">${renderedContent}</div>`
+      }
     })
   }
   
   // 显示保持不变的内容
   if (diff.unchanged.length > 0) {
     diff.unchanged.forEach(line => {
-      html += `<div class="diff-line unchanged">${escapeHtml(line)}</div>`
+      const renderedContent = renderMarkdownLine(line, 'unchanged-content')
+      if (renderedContent.trim()) { // 只显示非空内容
+        html += `<div class="diff-line unchanged">${renderedContent}</div>`
+      }
     })
   }
   
@@ -619,14 +726,17 @@ export function generateLeftRightDiffHTML(oldText, newText) {
   // 显示新增的内容（绿色）
   if (diff.added.length > 0) {
     diff.added.forEach(line => {
-      html += `<div class="diff-line added">${escapeHtml(line)}</div>`
+      const renderedContent = renderMarkdownLine(line, 'added-content')
+      if (renderedContent.trim()) { // 只显示非空内容
+        html += `<div class="diff-line added">${renderedContent}</div>`
+      }
     })
   }
   
   // 显示保持不变的内容
   if (diff.unchanged.length > 0) {
     diff.unchanged.forEach(line => {
-      html += `<div class="diff-line unchanged">${escapeHtml(line)}</div>`
+      html += `<div class="diff-line unchanged">${renderMarkdownLine(line, 'unchanged-content')}</div>`
     })
   }
   
@@ -636,7 +746,7 @@ export function generateLeftRightDiffHTML(oldText, newText) {
   return html
 }
 
-// 生成左右分栏的数组差异HTML（左边原文，右边修改后）
+// 生成左右分栏的数组差异HTML（左边原文，右边修改后）- 支持Markdown渲染
 export function generateLeftRightArrayDiffHTML(oldArray, newArray, title = '') {
   const diff = compareArrays(oldArray, newArray)
   
@@ -655,14 +765,20 @@ export function generateLeftRightArrayDiffHTML(oldArray, newArray, title = '') {
   // 显示删除的项目（红色）
   if (diff.removed.length > 0) {
     diff.removed.forEach(item => {
-      html += `<div class="diff-item removed">${escapeHtml(item)}</div>`
+      const renderedContent = renderMarkdownLine(item, 'removed-content')
+      if (renderedContent.trim()) { // 只显示非空内容
+        html += `<div class="diff-item removed">${renderedContent}</div>`
+      }
     })
   }
   
   // 显示保持不变的项目
   if (diff.unchanged.length > 0) {
     diff.unchanged.forEach(item => {
-      html += `<div class="diff-item unchanged">${escapeHtml(item)}</div>`
+      const renderedContent = renderMarkdownLine(item, 'unchanged-content')
+      if (renderedContent.trim()) { // 只显示非空内容
+        html += `<div class="diff-item unchanged">${renderedContent}</div>`
+      }
     })
   }
   
@@ -676,14 +792,17 @@ export function generateLeftRightArrayDiffHTML(oldArray, newArray, title = '') {
   // 显示新增的项目（绿色）
   if (diff.added.length > 0) {
     diff.added.forEach(item => {
-      html += `<div class="diff-item added">${escapeHtml(item)}</div>`
+      const renderedContent = renderMarkdownLine(item, 'added-content')
+      if (renderedContent.trim()) { // 只显示非空内容
+        html += `<div class="diff-item added">${renderedContent}</div>`
+      }
     })
   }
   
   // 显示保持不变的项目
   if (diff.unchanged.length > 0) {
     diff.unchanged.forEach(item => {
-      html += `<div class="diff-item unchanged">${escapeHtml(item)}</div>`
+      html += `<div class="diff-item unchanged">${renderMarkdownLine(item, 'unchanged-content')}</div>`
     })
   }
   
@@ -693,7 +812,7 @@ export function generateLeftRightArrayDiffHTML(oldArray, newArray, title = '') {
   return html
 }
 
-// 生成无变化文本内容的HTML显示
+// 生成无变化文本内容的HTML显示 - 支持Markdown渲染
 export function generateNoChangeHTML(content, sectionType = '') {
   let html = '<div class="no-change-display">'
   html += '<div class="no-change-indicator">'
@@ -701,11 +820,16 @@ export function generateNoChangeHTML(content, sectionType = '') {
   html += '</div>'
   html += '<div class="no-change-content">'
   
-  // 分割内容为行并显示
-  const lines = content.split('\n').filter(line => line.trim() !== '')
+  // 分割内容为行并显示（完全移除空行）
+  const lines = content.split('\n')
+    .map(line => line.trim())
+    .filter(line => line !== '') // 完全移除空行
   if (lines.length > 0) {
     lines.forEach(line => {
-      html += `<div class="diff-line no-change">${escapeHtml(line.trim())}</div>`
+      const renderedContent = renderMarkdownLine(line, 'no-change-content')
+      if (renderedContent.trim()) { // 只显示非空内容
+        html += `<div class="diff-line no-change">${renderedContent}</div>`
+      }
     })
   } else {
     html += `<div class="diff-line no-change empty">No content available</div>`
@@ -715,7 +839,7 @@ export function generateNoChangeHTML(content, sectionType = '') {
   return html
 }
 
-// 生成无变化数组内容的HTML显示
+// 生成无变化数组内容的HTML显示 - 支持Markdown渲染
 export function generateNoChangeArrayHTML(array, sectionType = '') {
   let html = '<div class="no-change-array-display">'
   html += '<div class="no-change-indicator">'
@@ -724,9 +848,18 @@ export function generateNoChangeArrayHTML(array, sectionType = '') {
   html += '<div class="no-change-content">'
   
   if (array && array.length > 0) {
-    array.forEach(item => {
-      html += `<div class="diff-item no-change">${escapeHtml(item)}</div>`
-    })
+    // 过滤空项目
+    const filteredArray = array.filter(item => item && item.trim() !== '')
+    if (filteredArray.length > 0) {
+      filteredArray.forEach(item => {
+        const renderedContent = renderMarkdownLine(item.trim(), 'no-change-content')
+        if (renderedContent.trim()) { // 只显示非空内容
+          html += `<div class="diff-item no-change">${renderedContent}</div>`
+        }
+      })
+    } else {
+      html += `<div class="diff-item no-change empty">No content available</div>`
+    }
   } else {
     html += `<div class="diff-item no-change empty">No content available</div>`
   }

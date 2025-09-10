@@ -254,6 +254,179 @@
   text-align: center;
 }
 
+/* Markdown渲染内容的差异样式 */
+.markdown-content,
+.markdown-inline {
+  display: contents; /* 让容器不影响布局 */
+}
+
+/* 确保Markdown渲染的内容继承父元素的diff颜色 */
+.diff-line.removed .markdown-inline,
+.diff-line.removed .markdown-content,
+.diff-line.removed .markdown-inline *,
+.diff-line.removed .markdown-content * {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+.diff-line.added .markdown-inline,
+.diff-line.added .markdown-content,
+.diff-line.added .markdown-inline *,
+.diff-line.added .markdown-content * {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+.diff-line.unchanged .markdown-inline,
+.diff-line.unchanged .markdown-content,
+.diff-line.unchanged .markdown-inline *,
+.diff-line.unchanged .markdown-content * {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+.diff-line.no-change .markdown-inline,
+.diff-line.no-change .markdown-content,
+.diff-line.no-change .markdown-inline *,
+.diff-line.no-change .markdown-content * {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+.diff-item.removed .markdown-inline,
+.diff-item.removed .markdown-content,
+.diff-item.removed .markdown-inline *,
+.diff-item.removed .markdown-content * {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+.diff-item.added .markdown-inline,
+.diff-item.added .markdown-content,
+.diff-item.added .markdown-inline *,
+.diff-item.added .markdown-content * {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+.diff-item.unchanged .markdown-inline,
+.diff-item.unchanged .markdown-content,
+.diff-item.unchanged .markdown-inline *,
+.diff-item.unchanged .markdown-content * {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+.diff-item.no-change .markdown-inline,
+.diff-item.no-change .markdown-content,
+.diff-item.no-change .markdown-inline *,
+.diff-item.no-change .markdown-content * {
+  color: inherit !important;
+  background: inherit !important;
+}
+
+/* 保持Markdown格式，但确保背景透明 */
+.markdown-inline h1, .markdown-inline h2, .markdown-inline h3,
+.markdown-inline h4, .markdown-inline h5, .markdown-inline h6,
+.markdown-content h1, .markdown-content h2, .markdown-content h3,
+.markdown-content h4, .markdown-content h5, .markdown-content h6 {
+  background: transparent !important;
+  margin: 0.25rem 0 !important;
+  font-weight: bold !important;
+  font-size: inherit !important; /* 继承父级字体大小，避免标题过大 */
+}
+
+/* 标题大小调整 */
+.markdown-content h1 { font-size: 1.2em !important; }
+.markdown-content h2 { font-size: 1.15em !important; }
+.markdown-content h3 { font-size: 1.1em !important; }
+.markdown-content h4 { font-size: 1.05em !important; }
+.markdown-content h5 { font-size: 1em !important; }
+.markdown-content h6 { font-size: 1em !important; }
+
+/* 列表样式 */
+.markdown-content ul, .markdown-content ol {
+  background: transparent !important;
+  margin: 0.25rem 0 !important;
+  padding-left: 1.5rem !important;
+}
+
+.markdown-content li {
+  background: transparent !important;
+  margin: 0.125rem 0 !important;
+  color: inherit !important;
+}
+
+.markdown-content p {
+  background: transparent !important;
+  margin: 0.25rem 0 !important;
+  color: inherit !important;
+}
+
+/* 减少diff容器中的空白 */
+.diff-line {
+  padding: 0.25rem 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-radius: 0.25rem;
+  margin: 0.125rem 0;
+  line-height: 1.4 !important; /* 减少行高 */
+}
+
+.diff-line:empty,
+.diff-line:blank,
+.diff-line > *:empty {
+  display: none !important; /* 强制隐藏所有空行 */
+}
+
+/* 移除所有不必要的空白 */
+.markdown-content br,
+.markdown-inline br {
+  display: none !important; /* 移除所有换行符 */
+}
+
+.column-content > div:empty,
+.no-change-content > div:empty {
+  display: none !important; /* 隐藏空的内容容器 */
+}
+
+.markdown-content {
+  line-height: 1.4 !important; /* 统一行高 */
+}
+
+.markdown-content > *:first-child {
+  margin-top: 0 !important; /* 移除第一个元素的上边距 */
+}
+
+.markdown-content > *:last-child {
+  margin-bottom: 0 !important; /* 移除最后一个元素的下边距 */
+}
+
+.markdown-inline strong, .markdown-content strong {
+  font-weight: bold !important;
+  background: transparent !important;
+}
+
+.markdown-inline em, .markdown-content em {
+  font-style: italic !important;
+  background: transparent !important;
+}
+
+.markdown-inline code, .markdown-content code {
+  background: rgba(0, 0, 0, 0.1) !important;
+  padding: 0.125rem 0.25rem !important;
+  border-radius: 0.25rem !important;
+  font-family: 'Courier New', monospace !important;
+}
+
+.markdown-inline pre, .markdown-content pre {
+  background: rgba(0, 0, 0, 0.05) !important;
+  padding: 0.5rem !important;
+  border-radius: 0.25rem !important;
+  overflow-x: auto !important;
+  margin: 0.25rem 0 !important;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .diff-columns {
