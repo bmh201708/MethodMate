@@ -212,6 +212,11 @@ export const FULL_PLAN_ITERATION_TEMPLATE = `{{tone}}.
 Current research proposal:
 {{planContent}}
 
+**OPTIMIZATION PHILOSOPHY:**
+🎯 **TARGETED IMPROVEMENT** - Focus optimization on areas directly addressed by user suggestions
+🎯 **PRESERVE QUALITY CONTENT** - Maintain existing high-quality content and only improve what needs improvement
+🎯 **MINIMAL NECESSARY CHANGES** - Avoid rewriting content that already meets requirements
+
 **Targeted optimization requirements:**
 {{requirements}}
 
@@ -230,6 +235,14 @@ Research background and context: {{researchContext}}
 4. Ensure that the optimized proposal can directly serve the user's research objectives
 {{/if}}
 
+**CONTENT PRESERVATION GUIDELINES:**
+- **Maintain original terminology** - Keep existing technical terms, variable names, and specific references unless they conflict with suggested changes
+- **Preserve successful formulations** - Do not rewrite well-constructed sentences or paragraphs unless they directly address the user's suggestions
+- **Retain specific details** - Keep existing numbers, percentages, timeframes, and technical specifications unless optimization requires changes
+- **Avoid unnecessary paraphrasing** - Do not change wording simply for variety; focus changes on addressing user feedback
+- **Return exact original content** - For sections that don't need changes, return the exact original text, never use "remains unchanged" or similar phrases
+- **Use proper line breaks** - Add line breaks within long paragraphs to improve readability and text comparison accuracy
+
 Please return the complete optimized proposal according to the following format, and must use the following precise title format:
 
 # Research Hypotheses:
@@ -243,6 +256,12 @@ Please return the complete optimized proposal according to the following format,
 
 # Results Presentation:
 <Results presentation content>
+
+**STRATEGIC OPTIMIZATION APPROACH:**
+1. **Identify target areas** based on user suggestions (e.g., if suggestion is about "statistical rigor", focus primarily on Data Analysis section)
+2. **Preserve non-target content** that already meets quality standards
+3. **Make coherent updates** across sections only when necessary for consistency
+4. **Enhance specific elements** mentioned in user feedback
 
 Please optimize the proposal according to the following detailed structure, ensuring that each part is detailed and specific (at least 3 sentences per item):
 
@@ -277,6 +296,9 @@ Predict the possible differences or trends among the main dependent variables un
 
 **Final checklist:**
 {{checklist}}
+✓ Have I preserved high-quality existing content where possible?
+✓ Have I focused improvements on areas specifically mentioned in user suggestions?
+✓ Have I maintained original terminology and technical specifications unless changes were necessary?
 ✓ Does it maintain academic normativity and expression accuracy?
 ✓ Does it highly match the user's specific suggestions?`;
 
@@ -300,6 +322,12 @@ Current complete research proposal:
 
 **Key optimization target: {{sectionName}} section**
 
+**CRITICAL MODIFICATION REQUIREMENTS:**
+🚨 **ONLY MODIFY THE "{{sectionName}}" SECTION** - Other sections should remain EXACTLY as they are unless absolutely necessary for consistency
+🚨 **PRESERVE ORIGINAL WORDING** - When making consistency adjustments to other sections, keep the original phrasing and only make minimal changes
+🚨 **AVOID WHOLESALE REWRITES** - Do not rewrite entire paragraphs in other sections unless they contain direct contradictions
+🚨 **RETURN ORIGINAL CONTENT** - For unchanged sections, return the EXACT original content, do NOT write "remains unchanged" or similar phrases
+
 **Targeted optimization requirements:**
 {{requirements}}
 
@@ -312,10 +340,16 @@ Current complete research proposal:
 {{/if}}
 
 **Overall coordination requirements:**
-1. Focus on optimizing the "{{sectionName}}" section to ensure improvement effects meet user's specific suggestions
-2. Appropriately adjust other sections to maintain logical consistency, but avoid major modifications
-3. Ensure all sections form a complete, coordinated research methodology system
-4. According to the direction of user suggestions, improve proposal quality in a targeted manner
+1. **PRIMARY FOCUS**: Concentrate optimization efforts ONLY on the "{{sectionName}}" section to ensure improvement effects meet user's specific suggestions
+2. **MINIMAL ADJUSTMENTS**: For other sections, make ONLY the minimal adjustments necessary to maintain logical consistency (e.g., updating a variable name if it changes)
+3. **PRESERVE STRUCTURE**: Keep the structure, content, and wording of other sections as close to the original as possible
+4. **AVOID PARAPHRASING**: Do not rephrase or rewrite content in non-target sections even if you think it could be improved
+
+**Specific preservation guidelines:**
+- If the original text says "participants will complete a task", do NOT change it to "subjects will perform an activity" 
+- If the original uses specific terminology, keep that exact terminology unless it directly conflicts with changes in the target section
+- Preserve exact numbers, percentages, and statistical specifications in non-target sections
+- Keep original sentence structures and paragraph organization in non-target sections
 
 {{#if hasUserRequirements}}
 **Deep integration of user research requirements:**
@@ -343,6 +377,12 @@ Please return the complete optimized proposal according to the following format,
 # Results Presentation:
 <Results presentation content>
 
+**IMPLEMENTATION STRATEGY:**
+1. **Target Section ("{{sectionName}}")**: Apply comprehensive optimization based on user suggestions
+2. **Other Sections**: Copy content EXACTLY as provided in the original, making only essential consistency updates
+3. **Cross-references**: Update only direct references to changed elements (e.g., if you change a hypothesis number in the target section, update references to that number in other sections)
+4. **Content Integrity**: Never replace original content with placeholder text like "remains the same" - always provide the full original content
+
 Please optimize the proposal according to the following detailed structure, ensuring that each part is detailed and specific (at least 3 sentences per item):
 
 I. Research Hypotheses
@@ -368,15 +408,21 @@ Predict the possible differences or trends among the main dependent variables un
 {{qualityRequirements}}
 {{/if}}
 
-**Important implementation requirements:**
-- Must return complete 4 sections, strictly organize content according to the above detailed structure
-- Focus on optimizing the "{{sectionName}}" section to ensure improvement effects meet user suggestions
-- Try to avoid modifying other sections as much as possible ， remain the same or just make necessary coordination adjustments.
-- Must use Markdown format, content should be detailed and specific, conform to academic standards
-- Style should be close to formal research reports or thesis proposal materials
+**CRITICAL IMPLEMENTATION REQUIREMENTS:**
+- **MUST return complete 4 sections** with ALL original content preserved for non-target sections
+- **Focus 90% of optimization effort** on the "{{sectionName}}" section only
+- **Make minimal necessary adjustments** to other sections (typically just updating cross-references)
+- **Preserve original language and terminology** in non-target sections
+- **Use Markdown format** with detailed, specific, academic-standard content
+- **Maintain consistency** with formal research reports or thesis proposal materials
+- **NEVER use placeholder text** - Always provide full content for all sections, even if unchanged
+- **Add appropriate line breaks** - Use line breaks within paragraphs for better readability and comparison
 
 **Final checklist:**
 {{checklist}}
+✓ Have I preserved the original wording of non-target sections as much as possible?
+✓ Have I focused my optimization efforts primarily on the "{{sectionName}}" section?
+✓ Have I made only minimal, necessary consistency adjustments to other sections?
 ✓ Does it maintain the integrity and consistency of other sections?
 ✓ Does it highly match the user's specific suggestions?
 ✓ Does it maintain academic normativity and expression accuracy?

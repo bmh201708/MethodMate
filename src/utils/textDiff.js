@@ -3,15 +3,38 @@
  * 用于比较迭代前后的方案内容，生成带有颜色标记的差异显示
  */
 
-// 简单的文本差异比较函数
+// 改进的文本差异比较函数 - 支持多级对比
 export function compareText(oldText, newText) {
   if (!oldText && !newText) return { added: [], removed: [], unchanged: [] }
   if (!oldText) return { added: [newText], removed: [], unchanged: [] }
   if (!newText) return { added: [], removed: [oldText], unchanged: [] }
   
-  // 将文本按行分割
-  const oldLines = oldText.split('\n')
-  const newLines = newText.split('\n')
+  // 首先尝试行级比较
+  const lineResult = compareByLines(oldText, newText)
+  
+  // 如果行级比较发现大量变化，尝试句子级比较
+  const totalLines = lineResult.added.length + lineResult.removed.length + lineResult.unchanged.length
+  const changeRate = (lineResult.added.length + lineResult.removed.length) / totalLines
+  
+  if (changeRate > 0.6) { // 如果超过60%的行发生变化，尝试句子级比较
+    const sentenceResult = compareBySentences(oldText, newText)
+    
+    // 如果句子级比较效果更好，使用句子级结果
+    const sentenceTotal = sentenceResult.added.length + sentenceResult.removed.length + sentenceResult.unchanged.length
+    const sentenceChangeRate = (sentenceResult.added.length + sentenceResult.removed.length) / sentenceTotal
+    
+    if (sentenceChangeRate < changeRate) {
+      return sentenceResult
+    }
+  }
+  
+  return lineResult
+}
+
+// 行级比较（原有逻辑）
+function compareByLines(oldText, newText) {
+  const oldLines = oldText.split('\n').filter(line => line.trim() !== '')
+  const newLines = newText.split('\n').filter(line => line.trim() !== '')
   
   const result = {
     added: [],
@@ -19,7 +42,6 @@ export function compareText(oldText, newText) {
     unchanged: []
   }
   
-  // 简单的行级比较
   const oldSet = new Set(oldLines)
   const newSet = new Set(newLines)
   
@@ -45,6 +67,110 @@ export function compareText(oldText, newText) {
   }
   
   return result
+}
+
+// 句子级比较
+function compareBySentences(oldText, newText) {
+  // 按句子分割（考虑中英文句号、问号、感叹号）
+  const sentenceRegex = /[.!?。！？]+\s*/g
+  const oldSentences = oldText.split(sentenceRegex).filter(s => s.trim() !== '')
+  const newSentences = newText.split(sentenceRegex).filter(s => s.trim() !== '')
+  
+  const result = {
+    added: [],
+    removed: [],
+    unchanged: []
+  }
+  
+  // 使用相似度比较来匹配句子
+  const oldMatched = new Set()
+  const newMatched = new Set()
+  
+  // 首先找完全匹配的句子
+  for (let i = 0; i < oldSentences.length; i++) {
+    const oldSentence = oldSentences[i].trim()
+    for (let j = 0; j < newSentences.length; j++) {
+      const newSentence = newSentences[j].trim()
+      if (oldSentence === newSentence && !oldMatched.has(i) && !newMatched.has(j)) {
+        result.unchanged.push(oldSentence)
+        oldMatched.add(i)
+        newMatched.add(j)
+        break
+      }
+    }
+  }
+  
+  // 然后找高相似度的句子（相似度 > 0.8）
+  for (let i = 0; i < oldSentences.length; i++) {
+    if (oldMatched.has(i)) continue
+    
+    const oldSentence = oldSentences[i].trim()
+    let bestMatch = -1
+    let bestSimilarity = 0
+    
+    for (let j = 0; j < newSentences.length; j++) {
+      if (newMatched.has(j)) continue
+      
+      const newSentence = newSentences[j].trim()
+      const similarity = calculateSimilarity(oldSentence, newSentence)
+      
+      if (similarity > 0.8 && similarity > bestSimilarity) {
+        bestSimilarity = similarity
+        bestMatch = j
+      }
+    }
+    
+    if (bestMatch !== -1) {
+      // 如果相似度很高但不完全相同，标记为修改（删除旧的，添加新的）
+      result.removed.push(oldSentences[i].trim())
+      result.added.push(newSentences[bestMatch].trim())
+      oldMatched.add(i)
+      newMatched.add(bestMatch)
+    }
+  }
+  
+  // 剩余的句子标记为删除或新增
+  for (let i = 0; i < oldSentences.length; i++) {
+    if (!oldMatched.has(i)) {
+      result.removed.push(oldSentences[i].trim())
+    }
+  }
+  
+  for (let j = 0; j < newSentences.length; j++) {
+    if (!newMatched.has(j)) {
+      result.added.push(newSentences[j].trim())
+    }
+  }
+  
+  return result
+}
+
+// 计算两个字符串的相似度（使用编辑距离）
+function calculateSimilarity(str1, str2) {
+  const len1 = str1.length
+  const len2 = str2.length
+  
+  if (len1 === 0) return len2 === 0 ? 1 : 0
+  if (len2 === 0) return 0
+  
+  const matrix = Array(len1 + 1).fill().map(() => Array(len2 + 1).fill(0))
+  
+  for (let i = 0; i <= len1; i++) matrix[i][0] = i
+  for (let j = 0; j <= len2; j++) matrix[0][j] = j
+  
+  for (let i = 1; i <= len1; i++) {
+    for (let j = 1; j <= len2; j++) {
+      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,      // deletion
+        matrix[i][j - 1] + 1,      // insertion
+        matrix[i - 1][j - 1] + cost // substitution
+      )
+    }
+  }
+  
+  const maxLen = Math.max(len1, len2)
+  return (maxLen - matrix[len1][len2]) / maxLen
 }
 
 // 生成带颜色标记的HTML差异显示
@@ -218,60 +344,61 @@ export function generateArrayDiffHTML(oldArray, newArray, title = '') {
   return html
 }
 
-// 生成完整的方案对比HTML（左右分栏布局）
+// 生成完整的方案对比HTML（左右分栏布局）- 总是显示所有部分
 export function generatePlanComparisonHTML(beforePlan, afterPlan) {
   let html = '<div class="plan-comparison-side-by-side">'
   
-  // 标题对比
+  // 标题对比 - 总是显示
+  html += '<div class="comparison-section">'
+  html += '<h3 class="section-title">Research Title</h3>'
   if (beforePlan.title !== afterPlan.title) {
-    html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">Research Title</h3>'
     html += generateSideBySideDiffHTML(beforePlan.title || '', afterPlan.title || '')
-    html += '</div>'
+  } else {
+    html += generateNoChangeHTML(beforePlan.title || 'No title', 'title')
   }
+  html += '</div>'
   
-  // 研究假设对比
+  // 研究假设对比 - 总是显示
+  html += '<div class="comparison-section">'
+  html += '<h3 class="section-title">Research Hypotheses</h3>'
   const hypothesesDiff = compareArrays(beforePlan.hypotheses || [], afterPlan.hypotheses || [])
-  if (hypothesesDiff.added.length > 0 || hypothesesDiff.removed.length > 0) {
-    html += '<div class="comparison-section">'
-    html += generateSideBySideArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], 'Research Hypotheses')
-    html += '</div>'
-  } else if (beforePlan.hypotheses && afterPlan.hypotheses && 
-             JSON.stringify(beforePlan.hypotheses) !== JSON.stringify(afterPlan.hypotheses)) {
-    // 如果数组内容相同但顺序不同，也显示对比
-    html += '<div class="comparison-section">'
-    html += generateSideBySideArrayDiffHTML(beforePlan.hypotheses, afterPlan.hypotheses, 'Research Hypotheses')
-    html += '</div>'
-  } else if (beforePlan.hypotheses || afterPlan.hypotheses) {
-    // 如果其中一个有假设，另一个没有，也显示对比
-    html += '<div class="comparison-section">'
-    html += generateSideBySideArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], 'Research Hypotheses')
-    html += '</div>'
+  if (hypothesesDiff.added.length > 0 || hypothesesDiff.removed.length > 0 || 
+      JSON.stringify(beforePlan.hypotheses || []) !== JSON.stringify(afterPlan.hypotheses || [])) {
+    html += generateSideBySideArrayDiffHTML(beforePlan.hypotheses || [], afterPlan.hypotheses || [], '')
+  } else {
+    html += generateNoChangeArrayHTML(beforePlan.hypotheses || [], 'hypotheses')
   }
+  html += '</div>'
   
-  // 实验设计对比
+  // 实验设计对比 - 总是显示
+  html += '<div class="comparison-section">'
+  html += '<h3 class="section-title">Experimental Design</h3>'
   if (beforePlan.experimentalDesign !== afterPlan.experimentalDesign) {
-    html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">Experimental Design</h3>'
     html += generateSideBySideDiffHTML(beforePlan.experimentalDesign || '', afterPlan.experimentalDesign || '')
-    html += '</div>'
+  } else {
+    html += generateNoChangeHTML(beforePlan.experimentalDesign || 'No experimental design', 'experimental-design')
   }
+  html += '</div>'
   
-  // 数据分析对比
+  // 数据分析对比 - 总是显示
+  html += '<div class="comparison-section">'
+  html += '<h3 class="section-title">Data Analysis</h3>'
   if (beforePlan.analysisMethod !== afterPlan.analysisMethod) {
-    html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">Data Analysis</h3>'
     html += generateSideBySideDiffHTML(beforePlan.analysisMethod || '', afterPlan.analysisMethod || '')
-    html += '</div>'
+  } else {
+    html += generateNoChangeHTML(beforePlan.analysisMethod || 'No analysis method', 'analysis-method')
   }
+  html += '</div>'
   
-  // 结果呈现对比
+  // 结果呈现对比 - 总是显示
+  html += '<div class="comparison-section">'
+  html += '<h3 class="section-title">Expected Results</h3>'
   if (beforePlan.expectedResults !== afterPlan.expectedResults) {
-    html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">Expected Results</h3>'
     html += generateSideBySideDiffHTML(beforePlan.expectedResults || '', afterPlan.expectedResults || '')
-    html += '</div>'
+  } else {
+    html += generateNoChangeHTML(beforePlan.expectedResults || 'No expected results', 'expected-results')
   }
+  html += '</div>'
   
   html += '</div>'
   return html
@@ -388,6 +515,7 @@ export function generateSideBySideArrayDiffHTML(oldArray, newArray, title = '') 
 }
 
 // 生成左右分栏的完整方案对比HTML（左边原文，右边修改后）
+// 生成左右分栏的完整方案对比HTML - 总是显示所有部分
 export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
   // 参数验证
   if (!beforePlan || !afterPlan) {
@@ -395,61 +523,61 @@ export function generateLeftRightComparisonHTML(beforePlan, afterPlan) {
   }
   
   let html = '<div class="left-right-comparison">'
-  let hasChanges = false
   
-  // 标题对比
+  // 标题对比 - 总是显示
+  html += '<div class="comparison-section">'
+  html += '<h3 class="section-title">Research Title</h3>'
   if (beforePlan.title !== afterPlan.title) {
-    html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">Research Title</h3>'
     html += generateLeftRightDiffHTML(beforePlan.title || '', afterPlan.title || '')
-    html += '</div>'
-    hasChanges = true
+  } else {
+    html += generateNoChangeHTML(beforePlan.title || 'No title', 'title')
   }
+  html += '</div>'
   
-  // 研究假设对比
+  // 研究假设对比 - 总是显示
+  html += '<div class="comparison-section">'
+  html += '<h3 class="section-title">Research Hypotheses</h3>'
   const beforeHypotheses = Array.isArray(beforePlan.hypotheses) ? beforePlan.hypotheses : []
   const afterHypotheses = Array.isArray(afterPlan.hypotheses) ? afterPlan.hypotheses : []
   const hypothesesDiff = compareArrays(beforeHypotheses, afterHypotheses)
   
   if (hypothesesDiff.added.length > 0 || hypothesesDiff.removed.length > 0 || 
       JSON.stringify(beforeHypotheses) !== JSON.stringify(afterHypotheses)) {
-    html += '<div class="comparison-section">'
-    html += generateLeftRightArrayDiffHTML(beforeHypotheses, afterHypotheses, 'Research Hypotheses')
-    html += '</div>'
-    hasChanges = true
+    html += generateLeftRightArrayDiffHTML(beforeHypotheses, afterHypotheses, '')
+  } else {
+    html += generateNoChangeArrayHTML(beforeHypotheses, 'hypotheses')
   }
+  html += '</div>'
   
-  // 实验设计对比
+  // 实验设计对比 - 总是显示
+  html += '<div class="comparison-section">'
+  html += '<h3 class="section-title">Experimental Design</h3>'
   if (beforePlan.experimentalDesign !== afterPlan.experimentalDesign) {
-    html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">Experimental Design</h3>'
     html += generateLeftRightDiffHTML(beforePlan.experimentalDesign || '', afterPlan.experimentalDesign || '')
-    html += '</div>'
-    hasChanges = true
+  } else {
+    html += generateNoChangeHTML(beforePlan.experimentalDesign || 'No experimental design', 'experimental-design')
   }
+  html += '</div>'
   
-  // 数据分析对比
+  // 数据分析对比 - 总是显示
+  html += '<div class="comparison-section">'
+  html += '<h3 class="section-title">Data Analysis</h3>'
   if (beforePlan.analysisMethod !== afterPlan.analysisMethod) {
-    html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">Data Analysis</h3>'
     html += generateLeftRightDiffHTML(beforePlan.analysisMethod || '', afterPlan.analysisMethod || '')
-    html += '</div>'
-    hasChanges = true
+  } else {
+    html += generateNoChangeHTML(beforePlan.analysisMethod || 'No analysis method', 'analysis-method')
   }
+  html += '</div>'
   
-  // 结果呈现对比
+  // 结果呈现对比 - 总是显示
+  html += '<div class="comparison-section">'
+  html += '<h3 class="section-title">Expected Results</h3>'
   if (beforePlan.expectedResults !== afterPlan.expectedResults) {
-    html += '<div class="comparison-section">'
-    html += '<h3 class="section-title">Expected Results</h3>'
     html += generateLeftRightDiffHTML(beforePlan.expectedResults || '', afterPlan.expectedResults || '')
-    html += '</div>'
-    hasChanges = true
+  } else {
+    html += generateNoChangeHTML(beforePlan.expectedResults || 'No expected results', 'expected-results')
   }
-  
-  // 如果没有变化，显示提示信息
-  if (!hasChanges) {
-    html += '<div class="text-center text-gray-500 py-8">The two plans have identical content, no differences found</div>'
-  }
+  html += '</div>'
   
   html += '</div>'
   return html
@@ -560,6 +688,48 @@ export function generateLeftRightArrayDiffHTML(oldArray, newArray, title = '') {
   }
   
   html += '</div></div>'
+  
+  html += '</div></div>'
+  return html
+}
+
+// 生成无变化文本内容的HTML显示
+export function generateNoChangeHTML(content, sectionType = '') {
+  let html = '<div class="no-change-display">'
+  html += '<div class="no-change-indicator">'
+  html += '<span class="no-change-badge">No Changes</span>'
+  html += '</div>'
+  html += '<div class="no-change-content">'
+  
+  // 分割内容为行并显示
+  const lines = content.split('\n').filter(line => line.trim() !== '')
+  if (lines.length > 0) {
+    lines.forEach(line => {
+      html += `<div class="diff-line no-change">${escapeHtml(line.trim())}</div>`
+    })
+  } else {
+    html += `<div class="diff-line no-change empty">No content available</div>`
+  }
+  
+  html += '</div></div>'
+  return html
+}
+
+// 生成无变化数组内容的HTML显示
+export function generateNoChangeArrayHTML(array, sectionType = '') {
+  let html = '<div class="no-change-array-display">'
+  html += '<div class="no-change-indicator">'
+  html += '<span class="no-change-badge">No Changes</span>'
+  html += '</div>'
+  html += '<div class="no-change-content">'
+  
+  if (array && array.length > 0) {
+    array.forEach(item => {
+      html += `<div class="diff-item no-change">${escapeHtml(item)}</div>`
+    })
+  } else {
+    html += `<div class="diff-item no-change empty">No content available</div>`
+  }
   
   html += '</div></div>'
   return html
