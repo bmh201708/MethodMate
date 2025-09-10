@@ -97,8 +97,8 @@ For this section, please select and explain only the 1–3 most appropriate stat
 4. Set appropriate significance standards (such as α = 0.05) and explain any necessary corrections for multiple comparisons.
 5. Verify that sample size and data distribution assumptions are met for the chosen methods.
 6. You must answer this section (Statistical Methods) point by point.
+7. In the Types of Data Collected section, it must include 3 parts: Subjective Data,Behavioral Data and System Recorded Data.
 
-Method appropriateness
 The choice of method must directly reflect the experimental design (between-subject, within-subject, or mixed) and the nature of the data (e.g., categorical vs. continuous, distributional assumptions). Methods should be chosen based on whether they directly and appropriately test the stated hypotheses.
 · Between-subject comparisons of two groups → Independent-samples t-test (or nonparametric alternative such as Mann–Whitney U if normality is violated).
 · Within-subject comparisons of the same group across two conditions → Paired-samples t-test (or Wilcoxon signed-rank test if assumptions are violated).

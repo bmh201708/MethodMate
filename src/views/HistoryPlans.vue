@@ -1306,6 +1306,8 @@ const extractTitleFromContent = (content, maxLength = 50) => {
                 trimmedKeyword.length <= 15 &&
                 // Must start with a letter (not a number or symbol)
                 /^[A-Za-z]/.test(trimmedKeyword) &&
+                // Must contain only English characters, numbers and spaces
+                /^[A-Za-z0-9\s]+$/.test(trimmedKeyword) &&
                 // Must contain meaningful content (not just common words)
                 /[A-Za-z]{3,}/.test(trimmedKeyword) &&
                 // Filter out common generic terms
@@ -1401,7 +1403,7 @@ const extractTitleFromContent = (content, maxLength = 50) => {
             return null // Return null for invalid titles
         }
         
-        // Add "Study" suffix if there's room and it doesn't already contain research terms
+        // Add "Study" suffix if there's room and it doesn't already contain research terms (English only)
         const researchTerms = ['study', 'research', 'analysis', 'evaluation', 'investigation']
         const hasResearchTerm = researchTerms.some(term => 
             title.toLowerCase().includes(term)

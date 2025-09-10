@@ -2666,10 +2666,21 @@ const generatePlanTitle = () => {
   const generationInfo = currentGenerationInfo.value
   console.log('开始生成方案标题，生成信息:', generationInfo)
   
-  // 策略1：如果是自定义主题模式且有具体主题，直接使用
+  // 策略1：如果是自定义主题模式且有具体主题，转换为英文标题
   if (generationInfo.mode === 'custom' && generationInfo.customTopic) {
     console.log('使用自定义主题模式，原始主题:', generationInfo.customTopic)
-    // 清理主题，移除多余的词汇，保持简洁
+    
+    // 如果主题包含中文，提取关键词并转换为英文标题
+    if (/[\u4e00-\u9fa5]/.test(generationInfo.customTopic)) {
+      // 从中文主题中提取英文标题
+      const englishTitle = extractEnglishTitleFromChinese(generationInfo.customTopic)
+      if (englishTitle) {
+        console.log('从中文主题提取的英文标题:', englishTitle)
+        return englishTitle
+      }
+    }
+    
+    // 清理主题，移除多余的词汇，保持简洁（强制英文处理）
     let cleanedTopic = generationInfo.customTopic
       .replace(/^(探讨|研究|分析|调查|实验|测试|评估|关于|explore|research|analyze|investigate|experiment|test|evaluate|about|study)+/gi, '') // 移除开头的动词
       .replace(/(的影响|的关系|的效果|的作用|研究|分析|实验|方案|设计|impact|relationship|effect|influence|research|analysis|experiment|plan|design)+$/gi, '') // 移除结尾的研究词汇
@@ -2677,9 +2688,14 @@ const generatePlanTitle = () => {
       .replace(/\s+/g, ' ') // 合并多个空格
       .trim()
     
-    // 如果清理后太短，使用原始主题
+    // 如果仍包含中文，生成通用英文标题
+    if (/[\u4e00-\u9fa5]/.test(cleanedTopic)) {
+      return 'Custom Research Topic Study'
+    }
+    
+    // 如果清理后太短，使用通用英文标题
     if (cleanedTopic.length < 3) {
-      cleanedTopic = generationInfo.customTopic.trim()
+      return 'Custom Research Study'
     }
     
     // 限制长度，过长则截断，保持在合理范围内
@@ -2687,19 +2703,16 @@ const generatePlanTitle = () => {
       // 尝试在词语边界截断
       const truncated = cleanedTopic.substring(0, 35)
       const lastSpace = truncated.lastIndexOf(' ')
-      const lastChineseChar = truncated.search(/[\u4e00-\u9fa5][，。！？]?$/)
       
       if (lastSpace > 20) {
         cleanedTopic = truncated.substring(0, lastSpace) + '...'
-      } else if (lastChineseChar > 20) {
-        cleanedTopic = truncated.substring(0, lastChineseChar + 1) + '...'
       } else {
         cleanedTopic = truncated + '...'
       }
     }
     
-    // 确保标题不为空
-    if (!cleanedTopic || cleanedTopic === '...') {
+    // 确保标题不为空且为英文
+    if (!cleanedTopic || cleanedTopic === '...' || /[\u4e00-\u9fa5]/.test(cleanedTopic)) {
       cleanedTopic = 'User Custom Research Proposal'
     }
     
@@ -2762,7 +2775,7 @@ const generatePlanTitle = () => {
     }
   }
   
-  // 策略6：基于时间的智能默认标题（更具描述性）
+  // 策略6：基于时间的智能默认标题（更具描述性，强制英文）
   const now = new Date()
   const timeStr = `${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`
   const referencedCount = Array.from(papersState.referencedPapersList).length
@@ -2781,28 +2794,83 @@ const generatePlanTitle = () => {
   return finalTitle
 }
 
+// 新增：从中文主题提取英文标题的函数
+const extractEnglishTitleFromChinese = (chineseTopic) => {
+  if (!chineseTopic || typeof chineseTopic !== 'string') return null
+  
+  // 常见的中文研究主题到英文的映射
+  const topicMappings = {
+    '人工智能': 'Artificial Intelligence',
+    'AI': 'AI',
+    '机器学习': 'Machine Learning',
+    '深度学习': 'Deep Learning',
+    '用户体验': 'User Experience',
+    'UX': 'UX',
+    'UI': 'UI',
+    '界面设计': 'Interface Design',
+    '交互设计': 'Interaction Design',
+    '人机交互': 'Human-Computer Interaction',
+    'HCI': 'HCI',
+    '虚拟现实': 'Virtual Reality',
+    'VR': 'VR',
+    '增强现实': 'Augmented Reality',
+    'AR': 'AR',
+    '移动应用': 'Mobile Application',
+    '网页设计': 'Web Design',
+    '数据可视化': 'Data Visualization',
+    '社交媒体': 'Social Media',
+    '在线学习': 'Online Learning',
+    '电子商务': 'E-commerce',
+    '游戏设计': 'Game Design',
+    '可用性测试': 'Usability Testing',
+    '认知负荷': 'Cognitive Load',
+    '注意力': 'Attention',
+    '记忆': 'Memory',
+    '情感计算': 'Affective Computing',
+    '推荐系统': 'Recommendation System'
+  }
+  
+  // 尝试找到匹配的关键词
+  let englishKeywords = []
+  for (const [chinese, english] of Object.entries(topicMappings)) {
+    if (chineseTopic.includes(chinese)) {
+      englishKeywords.push(english)
+    }
+  }
+  
+  // 如果找到关键词，组合成标题
+  if (englishKeywords.length > 0) {
+    let title = englishKeywords.slice(0, 2).join(' and ')
+    if (!title.includes('Study') && !title.includes('Research') && !title.includes('Analysis')) {
+      title += ' Study'
+    }
+    return title
+  }
+  
+  // 如果没有找到特定映射，返回通用英文标题
+  return 'Cross-Cultural Research Study'
+}
+
 // 新增：从内容中提取标题的函数
 const extractTitleFromContent = (content) => {
   if (!content || content.length < 10) return null
   
-  // 提取关键概念和技术术语 (改进版本，避免提取无意义词汇)
+  // 提取关键概念和技术术语 (只提取英文关键词)
   const keywordPatterns = [
-    // 技术和方法相关 (中英文) - 更严格的匹配
-    /(?:基于|使用|采用|通过|based on|using|through)([A-Z\u4e00-\u9fa5][A-Za-z\u4e00-\u9fa5]{2,14})(?:的|技术|方法|算法|系统|平台|technology|method|algorithm|system|platform)/gi,
-    // 研究对象和领域 (中英文) - 要求首字母大写或中文
-    /([A-Z\u4e00-\u9fa5][A-Za-z\u4e00-\u9fa5]{2,14})(?:对|与|在|的影响|的关系|的效果|中的应用|impact|relationship|effect|application)/gi,
-    // 实验和测试相关 (中英文) - 避免提取动词本身
-    /(?:实验|测试|验证|评估|experiment|test|validation|evaluation)(?:的|对|关于|of|on|about)([A-Z\u4e00-\u9fa5][A-Za-z\u4e00-\u9fa5]{2,14})/gi,
-    // 界面和交互相关 (中英文) - 专注于具体名词
-    /([A-Z\u4e00-\u9fa5][A-Za-z\u4e00-\u9fa5]{2,14})(?:界面|交互|设计|体验|系统|平台|interface|interaction|design|experience|system|platform)/gi,
-    // AI和智能相关 (中英文) - 具体技术术语
-    /(人工智能|机器学习|深度学习|神经网络|计算机视觉|自然语言处理|人机交互|Machine Learning|Deep Learning|Neural Network|Computer Vision|Natural Language Processing|Human Computer Interaction|AI|ML|DL|NLP|CV|HCI)/gi,
+    // 技术和方法相关 (仅英文) - 更严格的匹配
+    /(?:based on|using|through)\s+([A-Z][A-Za-z]{2,14})(?:\s+technology|method|algorithm|system|platform)?/gi,
+    // 研究对象和领域 (仅英文) - 要求首字母大写
+    /([A-Z][A-Za-z]{2,14})(?:\s+impact|relationship|effect|application)/gi,
+    // 实验和测试相关 (仅英文) - 避免提取动词本身
+    /(?:experiment|test|validation|evaluation)\s+(?:of|on|about)\s+([A-Z][A-Za-z]{2,14})/gi,
+    // 界面和交互相关 (仅英文) - 专注于具体名词
+    /([A-Z][A-Za-z]{2,14})(?:\s+interface|interaction|design|experience|system|platform)/gi,
+    // AI和智能相关 (仅英文) - 具体技术术语
+    /(Machine Learning|Deep Learning|Neural Network|Computer Vision|Natural Language Processing|Human Computer Interaction|Artificial Intelligence|AI|ML|DL|NLP|CV|HCI)/gi,
     // 英文专有名词和概念 - 要求首字母大写
     /\b([A-Z][a-zA-Z]{2,14})\s+(?:Technology|System|Method|Approach|Framework|Model|Algorithm|Platform|Interface|Application)\b/gi,
     // 特定技术术语 - 完整匹配
-    /\b(Virtual Reality|Augmented Reality|User Interface|User Experience|Internet of Things|Artificial Intelligence|VR|AR|UI|UX|IoT|API|GPU|CPU)\b/gi,
-    // 中文技术术语
-    /(虚拟现实|增强现实|用户界面|用户体验|物联网|区块链|云计算|大数据|数据挖掘|图像识别|语音识别)/gi
+    /\b(Virtual Reality|Augmented Reality|User Interface|User Experience|Internet of Things|Artificial Intelligence|VR|AR|UI|UX|IoT|API|GPU|CPU)\b/gi
   ]
   
   const extractedKeywords = new Set()
@@ -2828,23 +2896,9 @@ const extractTitleFromContent = (content) => {
       return (
         trimmedKeyword.length > 2 && 
         trimmedKeyword.length < 15 &&
-        // 必须以字母开头
-        /^[A-Za-z\u4e00-\u9fa5]/.test(trimmedKeyword) &&
-        // 过滤中文通用词汇
-        !keyword.includes('假设') &&
-        !keyword.includes('实验') &&
-        !keyword.includes('研究') &&
-        !keyword.includes('分析') &&
-        !keyword.includes('方法') &&
-        !keyword.includes('用户') &&
-        !keyword.includes('数据') &&
-        !keyword.includes('结果') &&
-        !keyword.includes('系统') &&
-        !keyword.includes('设计') &&
-        !keyword.includes('开发') &&
-        !keyword.includes('应用') &&
-        !keyword.includes('技术') &&
-        !keyword.includes('平台') &&
+        // 必须以英文字母开头，且只包含英文字符
+        /^[A-Za-z]/.test(trimmedKeyword) &&
+        /^[A-Za-z0-9\s]+$/.test(trimmedKeyword) &&
         // 过滤英文通用词汇
         !lowerKeyword.includes('hypothesis') &&
         !lowerKeyword.includes('experiment') &&
@@ -2929,9 +2983,8 @@ const extractTitleFromContent = (content) => {
       return null // 返回null表示标题无效
     }
     
-    // 添加研究后缀
-    if (!title.includes('研究') && !title.includes('分析') && !title.includes('评估') &&
-        !title.includes('Research') && !title.includes('Analysis') && !title.includes('Study')) {
+    // 添加研究后缀（强制英文）
+    if (!title.includes('Research') && !title.includes('Analysis') && !title.includes('Study')) {
       title += ' Research'
     }
     
@@ -2946,205 +2999,297 @@ const extractTitleFromContent = (content) => {
   return null
 }
 
-// 标题验证函数，确保生成的标题有意义
+// 标题验证函数，确保生成的标题有意义且为英文
 const isValidResearchTitle = (title) => {
   if (!title || typeof title !== 'string') return false
   
   const trimmedTitle = title.trim()
   
-  // 基本长度和内容检查
+  // 基本长度检查
   if (trimmedTitle.length < 3 || trimmedTitle.length > 50) return false
   
-  // 必须包含至少一个字母或中文字符
-  if (!/[A-Za-z\u4e00-\u9fa5]/.test(trimmedTitle)) return false
+  // 强制要求只能是英文字符（字母、数字、空格、连字符）
+  if (!/^[A-Za-z0-9\s\-&]+$/.test(trimmedTitle)) return false
+  
+  // 必须包含至少一个字母
+  if (!/[A-Za-z]/.test(trimmedTitle)) return false
   
   // 检查无意义的组合
   const lowerTitle = trimmedTitle.toLowerCase()
   
-  // 拒绝只包含连接词或介词的标题
-  const meaninglessWords = [
+  // 拒绝只包含连接词或介词的英文标题
+  const meaninglessEnglishWords = [
     'with', 'and', 'the', 'an', 'on', 'in', 'of', 'for', 'to', 'from', 'by', 'at', 'as',
     'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
     'emphasis', 'focus', 'attention', 'consideration', 'regard', 'respect',
-    '的', '与', '和', '在', '对', '从', '由', '通过', '关于', '针对'
+    'that', 'this', 'they', 'them', 'what', 'how', 'when', 'where', 'why',
+    'can', 'could', 'should', 'would', 'will', 'may', 'might', 'must'
   ]
   
-  // 如果标题只包含无意义的词汇，拒绝它
+  // 如果标题只包含无意义的英文词汇，拒绝它
   const titleWords = trimmedTitle.toLowerCase().split(/\s+/)
-  const chineseWords = trimmedTitle.match(/[\u4e00-\u9fa5]+/g) || []
-  const allWords = [...titleWords, ...chineseWords]
-  const meaningfulWords = allWords.filter(word => !meaninglessWords.includes(word))
+  const meaningfulWords = titleWords.filter(word => !meaninglessEnglishWords.includes(word))
   
   if (meaningfulWords.length === 0) return false
   
-  // 拒绝过于通用或模糊的标题
-  const genericPatterns = [
+  // 拒绝过于通用或模糊的英文标题
+  const genericEnglishPatterns = [
     /^(with|and|the|an|on|in|of|for|to|from|by|at|as)\s/i,
     /\s(with|and|the|an|on|in|of|for|to|from|by|at|as)$/i,
     /^(emphasis|focus|attention)\s/i,
     /\bemphasis\s+on\b/i,
-    /^(的|与|和|在|对|从|由|通过|关于|针对)/,
     /^study$/i,
     /^research$/i,
     /^analysis$/i,
     /^method$/i,
     /^approach$/i,
-    /^研究$/,
-    /^分析$/,
-    /^方法$/,
-    /^评估$/
+    /^investigation$/i,
+    /^evaluation$/i,
+    /^assessment$/i,
+    /^experiment$/i,
+    /^test$/i,
+    /^design$/i,
+    /^system$/i,
+    /^application$/i,
+    /^technology$/i,
+    /^platform$/i,
+    /^framework$/i,
+    /^model$/i,
+    /^algorithm$/i,
+    /^data$/i,
+    /^user$/i,
+    /^interface$/i,
+    /^experience$/i
   ]
   
-  for (const pattern of genericPatterns) {
+  for (const pattern of genericEnglishPatterns) {
     if (pattern.test(trimmedTitle)) return false
   }
   
-  // 必须包含至少一个实质性的词汇（3个字符以上，不是常见词汇）
+  // 必须包含至少一个实质性的英文词汇（3个字符以上，不是常见词汇）
   const substantialWords = meaningfulWords.filter(word => {
     if (word.length < 3) return false
     
-    const commonEnglishWords = ['the', 'and', 'for', 'are', 'was', 'you', 'all', 'can', 'had', 'her', 'his', 'how', 'man', 'new', 'now', 'old', 'see', 'two', 'way', 'who', 'boy', 'did', 'its', 'let', 'put', 'say', 'she', 'too', 'use']
-    const commonChineseWords = ['这个', '那个', '什么', '怎么', '可以', '应该', '需要', '进行', '实现', '完成']
+    const commonEnglishWords = [
+      'the', 'and', 'for', 'are', 'was', 'you', 'all', 'can', 'had', 'her', 'his', 
+      'how', 'man', 'new', 'now', 'old', 'see', 'two', 'way', 'who', 'boy', 'did', 
+      'its', 'let', 'put', 'say', 'she', 'too', 'use', 'but', 'not', 'get', 'has',
+      'him', 'may', 'out', 'day', 'get', 'use', 'man', 'new', 'now', 'way', 'may',
+      'say', 'each', 'which', 'their', 'time', 'will', 'about', 'if', 'up', 'out',
+      'many', 'then', 'them', 'these', 'so', 'some', 'her', 'would', 'make', 'like',
+      'into', 'him', 'has', 'two', 'more', 'very', 'what', 'know', 'just', 'first',
+      'get', 'over', 'think', 'also', 'your', 'work', 'life', 'only', 'can', 'still',
+      'should', 'after', 'being', 'now', 'made', 'before', 'here', 'through', 'when',
+      'where', 'much', 'take', 'than', 'only', 'think', 'also', 'back', 'after', 'use',
+      'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want',
+      'because', 'any', 'these', 'give', 'day', 'most', 'us'
+    ]
     
-    return !commonEnglishWords.includes(word.toLowerCase()) && !commonChineseWords.includes(word)
+    return !commonEnglishWords.includes(word.toLowerCase())
   })
   
-  return substantialWords.length > 0
+  // 至少要有一个实质性的词汇
+  if (substantialWords.length === 0) return false
+  
+  // 检查标题是否包含研究相关的英文术语（可选，但建议有）
+  const researchTerms = [
+    'study', 'research', 'analysis', 'investigation', 'evaluation', 'assessment',
+    'experiment', 'test', 'design', 'development', 'implementation', 'optimization',
+    'enhancement', 'improvement', 'comparison', 'examination', 'exploration',
+    'validation', 'verification', 'measurement', 'modeling', 'simulation'
+  ]
+  
+  const hasResearchTerm = researchTerms.some(term => 
+    lowerTitle.includes(term)
+  )
+  
+  // 如果没有研究术语，至少要有实质性的技术或学术词汇
+  if (!hasResearchTerm && substantialWords.length < 2) {
+    return false
+  }
+  
+  return true
 }
 
-// 新增：从用户需求中提取标题的函数
+// 新增：从用户需求中提取标题的函数（强制英文输出）
 const extractTitleFromRequirements = (requirements) => {
   if (!requirements || requirements.length < 10) return null
   
-  // 提取研究主题关键词
-  const topicKeywords = []
+  // 提取英文关键词和技术术语
+  const englishKeywords = []
   
-  // 更全面的研究主题模式
-  const patterns = [
-    /(?:探讨|研究|分析|调查|实验|测试|评估)([^。！？\n]{3,25}?)(?:的影响|的关系|的效果|的作用|研究|分析|实验|$)/g,
-    /([^。！？\n]{3,15}?)(?:对|与)([^。！？\n]{3,15}?)(?:的影响|的关系|的效果|的作用)/g,
-    /(?:关于|针对|面向|基于)([^。！？\n]{3,20}?)(?:的|进行|研究|分析)/g,
-    /([A-Za-z\u4e00-\u9fa5]{3,20}?)(?:系统|平台|工具|方法|技术|设计|界面|交互|应用|效果)/g,
-    /(?:提高|改善|优化|增强)([^。！？\n]{3,20}?)(?:的|效果|性能|体验)/g,
-    /([^。！？\n]{3,20}?)(?:在|中的)([^。！？\n]{3,20}?)(?:应用|使用|效果)/g,
-    // 新增模式
-    /(?:如何|怎样)([^。！？\n]{3,20}?)(?:影响|改善|提升)/g,
-    /([^。！？\n]{3,15}?)(?:与|和)([^。！？\n]{3,15}?)(?:之间的关系|的关联)/g,
-    /比较([^。！？\n]{3,15}?)(?:与|和)([^。！？\n]{3,15})/g
+  // 只匹配英文内容的模式
+  const englishPatterns = [
+    // 技术和方法相关（英文）
+    /\b(?:using|based on|through|via|with|for)\s+([A-Z][A-Za-z0-9]{2,20}(?:\s+[A-Z][A-Za-z0-9]{2,20}){0,2})\s+(?:technology|method|algorithm|system|platform|approach|technique|framework|model|interface|design)/gi,
+    
+    // 研究对象和领域（英文）
+    /\b([A-Z][A-Za-z0-9]{2,20}(?:\s+[A-Z][A-Za-z0-9]{2,20}){0,2})\s+(?:impact|effect|influence|relationship|application|performance|evaluation|assessment|optimization|analysis|study|research)/gi,
+    
+    // 实验和测试相关（英文）
+    /\b(?:experiment|test|validation|evaluation|assessment|study|research)\s+(?:of|on|for)\s+([A-Z][A-Za-z0-9]{2,20}(?:\s+[A-Z][A-Za-z0-9]{2,20}){0,2})/gi,
+    
+    // 界面和交互相关（英文）
+    /\b([A-Z][A-Za-z0-9]{2,20}(?:\s+[A-Z][A-Za-z0-9]{2,20}){0,2})\s+(?:interface|interaction|design|experience|usability|system|platform|application)/gi,
+    
+    // AI和技术术语
+    /\b(Machine Learning|Deep Learning|Neural Network|Computer Vision|Natural Language Processing|Artificial Intelligence|User Experience|Human Computer Interaction|Virtual Reality|Augmented Reality|Data Visualization|AI|ML|DL|NLP|CV|UX|HCI|VR|AR|UI)\b/gi,
+    
+    // 比较研究（英文）
+    /\b(?:comparison|comparing|compare)\s+([A-Z][A-Za-z0-9]{2,20}(?:\s+[A-Z][A-Za-z0-9]{2,20}){0,1})\s+(?:and|vs|versus|with)\s+([A-Z][A-Za-z0-9]{2,20}(?:\s+[A-Z][A-Za-z0-9]{2,20}){0,1})/gi,
+    
+    // 技术优化相关（英文）
+    /\b([A-Z][A-Za-z0-9]{2,20}(?:\s+[A-Z][A-Za-z0-9]{2,20}){0,1})\s+(?:optimization|enhancement|improvement|development|implementation)/gi
   ]
   
-  for (const pattern of patterns) {
+  for (const pattern of englishPatterns) {
     let match
     while ((match = pattern.exec(requirements)) !== null) {
       if (match[1] && match[1].trim().length > 2) {
-        topicKeywords.push(match[1].trim())
+        englishKeywords.push(match[1].trim())
       }
       if (match[2] && match[2].trim().length > 2) {
-        topicKeywords.push(match[2].trim())
+        englishKeywords.push(match[2].trim())
       }
     }
   }
   
-  // 去重并选择最有意义的关键词
-  const uniqueKeywords = [...new Set(topicKeywords)]
-    .filter(keyword => 
-      keyword.length > 2 && 
-      keyword.length < 20 &&
-      !keyword.includes('用户') && 
-      !keyword.includes('我们') &&
-      !keyword.includes('他们') &&
-      !keyword.includes('这个') &&
-      !keyword.includes('那个') &&
-      !keyword.includes('什么') &&
-      !keyword.includes('如何') &&
-      !keyword.includes('怎么') &&
-      !keyword.includes('方式') &&
-      !keyword.includes('方法')
-    )
+  // 去重并选择最有意义的英文关键词
+  const uniqueKeywords = [...new Set(englishKeywords)]
+    .filter(keyword => {
+      // 确保是英文且有意义
+      const isEnglish = /^[A-Za-z0-9\s]+$/.test(keyword)
+      const isNotGeneric = !['the', 'and', 'for', 'with', 'from', 'that', 'this', 'they', 'them', 'what', 'how', 'when', 'where'].includes(keyword.toLowerCase())
+      const hasSubstance = keyword.length > 2 && keyword.length < 25
+      
+      return isEnglish && isNotGeneric && hasSubstance
+    })
     .slice(0, 3)
   
   if (uniqueKeywords.length > 0) {
-    // 清理关键词，移除多余词汇
+    // 清理关键词，移除多余的英文词汇
     const cleanedKeywords = uniqueKeywords.map(kw => 
-      kw.replace(/^(对|与|的|在|中|和)/, '').replace(/(的|效果|影响|关系)$/, '').trim()
-    ).filter(kw => kw.length > 1)
+      kw.replace(/^(the|and|for|with|from|that|this)\s+/gi, '')
+        .replace(/\s+(the|and|for|with|from|that|this)$/gi, '')
+        .trim()
+    ).filter(kw => kw.length > 2)
     
     if (cleanedKeywords.length > 0) {
-      // 组合关键词生成标题
-      let title = cleanedKeywords.join('与')
-      if (title.length > 25) {
+      // 组合关键词生成英文标题
+      let title = cleanedKeywords.join(' and ')
+      if (title.length > 35) {
         title = cleanedKeywords[0]
       }
-      // 如果标题不包含"研究"相关词汇，则添加
-      if (!title.includes('研究') && !title.includes('分析') && !title.includes('评估')) {
-        title += '研究'
+      
+      // 添加英文研究后缀
+      const researchSuffixes = ['Study', 'Research', 'Analysis', 'Investigation', 'Evaluation']
+      const hasResearchTerm = researchSuffixes.some(suffix => 
+        title.toLowerCase().includes(suffix.toLowerCase())
+      )
+      
+      if (!hasResearchTerm) {
+        title += ' Study'
       }
+      
+      // 首字母大写处理
+      title = title.split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      ).join(' ')
+      
       return title
     }
   }
   
+  // 如果没有提取到英文关键词，返回null而不是中文标题
   return null
 }
 
-// 新增：从参考文献中提取标题的函数
+// 新增：从参考文献中提取标题的函数（强制英文输出）
 const extractTitleFromPapers = (referencedPapers) => {
   if (!referencedPapers || referencedPapers.length === 0) return null
   
   // 从参考文献标题中提取共同主题
   const paperTitles = referencedPapers.map(paper => paper.title).join(' ')
   
-  // 提取高频关键词
-  const commonKeywords = []
-  const keywordPatterns = [
-    /([A-Za-z]+(?:\s+[A-Za-z]+){0,2})/g, // 英文关键词组
-    /([\u4e00-\u9fa5]{2,8})/g, // 中文关键词
-    // 新增：特定领域术语
-    /(人工智能|机器学习|深度学习|神经网络|计算机视觉|自然语言处理|人机交互|用户体验|界面设计)/g,
-    /(算法|模型|系统|平台|框架|工具|方法|技术)/g
+  // 提取高频英文关键词
+  const englishKeywords = []
+  const englishKeywordPatterns = [
+    // 只匹配英文关键词组（2-3个词的组合）
+    /\b([A-Z][A-Za-z0-9]{2,15}(?:\s+[A-Z][A-Za-z0-9]{2,15}){0,2})\b/g,
+    
+    // 特定技术术语（英文）
+    /\b(Machine Learning|Deep Learning|Neural Network|Computer Vision|Natural Language Processing|Artificial Intelligence|User Experience|Human Computer Interaction|Virtual Reality|Augmented Reality|Data Visualization|Interface Design|Interaction Design|Usability Testing|Cognitive Load|Recommendation System|Algorithm|Framework|Platform|System|Technology|Method|Approach|Model|Application|Software|Hardware|Protocol|Standard)\b/gi,
+    
+    // 研究领域术语（英文）
+    /\b(Psychology|Cognitive Science|Computer Science|Information Technology|Digital Media|Social Media|Mobile Application|Web Design|Game Design|E-commerce|Online Learning|Educational Technology|Healthcare|Biomedical|Engineering|Mathematics|Statistics|Data Science|Analytics)\b/gi
   ]
   
-  for (const pattern of keywordPatterns) {
+  for (const pattern of englishKeywordPatterns) {
     let match
     while ((match = pattern.exec(paperTitles)) !== null) {
-      const keyword = match[1].trim().toLowerCase()
-      if (keyword.length > 2 && 
-          !keyword.includes('study') && 
-          !keyword.includes('research') &&
-          !keyword.includes('analysis') &&
-          !keyword.includes('method') &&
-          !keyword.includes('approach') &&
-          !keyword.includes('based') &&
-          !keyword.includes('using')) {
-        commonKeywords.push(match[1].trim()) // 保持原始大小写
+      const keyword = match[1].trim()
+      // 确保是英文且有意义
+      if (/^[A-Za-z0-9\s]+$/.test(keyword) && 
+          keyword.length > 2 && 
+          keyword.length < 30 &&
+          !keyword.toLowerCase().includes('study') && 
+          !keyword.toLowerCase().includes('research') &&
+          !keyword.toLowerCase().includes('analysis') &&
+          !keyword.toLowerCase().includes('investigation') &&
+          !keyword.toLowerCase().includes('evaluation') &&
+          !keyword.toLowerCase().includes('assessment') &&
+          !keyword.toLowerCase().includes('based') &&
+          !keyword.toLowerCase().includes('using') &&
+          !keyword.toLowerCase().includes('approach') &&
+          !keyword.toLowerCase().includes('method')) {
+        englishKeywords.push(keyword)
       }
     }
   }
   
-  // 统计词频并选择最高频的词
+  // 统计英文关键词词频并选择最高频的词
   const keywordCount = {}
-  commonKeywords.forEach(keyword => {
+  englishKeywords.forEach(keyword => {
     const normalizedKeyword = keyword.toLowerCase()
     keywordCount[normalizedKeyword] = (keywordCount[normalizedKeyword] || 0) + 1
   })
   
   const sortedKeywords = Object.entries(keywordCount)
+    .filter(entry => entry[1] >= 2) // 至少出现2次才考虑
     .sort((a, b) => b[1] - a[1])
     .slice(0, 2)
     .map(entry => {
       // 找到原始大小写的版本
-      const originalKeyword = commonKeywords.find(kw => kw.toLowerCase() === entry[0])
+      const originalKeyword = englishKeywords.find(kw => kw.toLowerCase() === entry[0])
       return originalKeyword || entry[0]
     })
   
   if (sortedKeywords.length > 0) {
-    let title = sortedKeywords.join('与')
-    if (title.length > 25) {
+    // 生成英文标题
+    let title = sortedKeywords.join(' and ')
+    if (title.length > 35) {
       title = sortedKeywords[0]
     }
-    const finalTitle = title + '研究'
-    return finalTitle
+    
+    // 添加英文研究后缀
+    const researchSuffixes = ['Study', 'Research', 'Analysis', 'Investigation', 'Evaluation']
+    const hasResearchTerm = researchSuffixes.some(suffix => 
+      title.toLowerCase().includes(suffix.toLowerCase())
+    )
+    
+    if (!hasResearchTerm) {
+      title += ' Research'
+    }
+    
+    // 首字母大写处理
+    title = title.split(' ').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ')
+    
+    return title
   }
   
+  // 如果没有提取到有效的英文关键词，返回null
   return null
 }
 
